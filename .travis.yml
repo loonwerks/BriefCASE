@@ -15,6 +15,9 @@ addons:
     - python3
     - python3-pip
 
+script:
+- mvn clean verify
+
 env:
   global:
   - DISPLAY=:99.0
