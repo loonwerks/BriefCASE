@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/loonwerks/BriefCASE.svg?branch=master)](https://travis-ci.org/loonwerks/BriefCASE)
+
 # BriefCASE
 
 TBD
