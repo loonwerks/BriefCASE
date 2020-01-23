@@ -87,14 +87,14 @@ follows:
    will likely be encountered due to the apparent failure to be able
    to resolve the new version of the target. DON'T PANIC! If this
    occurs, edit the parent-level pom.xml and update the version of the
-   target at approximately line 155, updating it to the new release
+   target at approximately line 137, updating it to the new release
    version. Then resume the release process with the same command line
    as before.
 
    And, the same thing will happen again as it updates the manifests
    for the new development version.  Again edit the parent-level
    pom.xml and update the version of the target at approximately line
-   155, updating to the new development version.  Then, again, resume
+   137, updating to the new development version.  Then, again, resume
    the release process with the same command line as before.
 
 1. Ordinarily one would expect to actually perform the release using
