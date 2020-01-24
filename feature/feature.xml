@@ -17,6 +17,41 @@
       [Enter License Description here.]
    </license>
 
+   <requires>
+      <import feature="org.osate.core.feature" version="2.5.0" match="equivalent"/>
+      <import plugin="org.eclipse.jface"/>
+      <import plugin="org.osate.aadl2"/>
+      <import plugin="org.eclipse.xtext.ui"/>
+      <import plugin="org.eclipse.emf.common"/>
+      <import plugin="org.eclipse.ui.console"/>
+      <import plugin="org.osate.pluginsupport"/>
+      <import plugin="org.eclipse.debug.ui"/>
+      <import plugin="org.eclipse.ui.ide"/>
+      <import plugin="org.osate.aadl2.instantiation"/>
+      <import plugin="org.osate.aadl2.modelsupport"/>
+      <import plugin="org.osate.annexsupport"/>
+      <import plugin="org.osate.workspace"/>
+      <import plugin="org.eclipse.ui.workbench"/>
+      <import plugin="org.osate.ui"/>
+      <import plugin="org.osate.xtext.aadl2.properties"/>
+      <import plugin="org.osate.aadl2" version="1.0.0" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.xtext.ui" version="2.12.0" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.ui.navigator" version="3.7.0" match="compatible"/>
+      <import plugin="org.eclipse.emf.ecore"/>
+      <import plugin="com.rockwellcollins.atc.resolute.analysis"/>
+      <import plugin="com.rockwellcollins.atc.agree.ui"/>
+      <import plugin="org.osate.xtext.aadl2.ui" version="1.0.0" match="greaterOrEqual"/>
+      <import plugin="com.rockwellcollins.atc.agree"/>
+      <import plugin="com.rockwellcollins.atc.resolute.ui"/>
+      <import plugin="com.rockwellcollins.atc.resolute"/>
+      <import plugin="org.osate.ge"/>
+      <import plugin="org.osate.ge.diagram"/>
+      <import plugin="org.eclipse.ui"/>
+      <import plugin="org.eclipse.core.runtime"/>
+      <import plugin="org.eclipse.core.resources"/>
+      <import plugin="com.rockwellcollins.atc.agree.analysis"/>
+   </requires>
+
    <plugin
          id="com.collins.trustedsystems.briefcase"
          download-size="0"
