@@ -7,7 +7,7 @@
             locationURI="popup:org.osate.xtext.aadl2.ui.outline?after=additions">
          <menu
                id="com.collins.trustedsystems.briefcase.menus.outline.main"
-               label="CASE">
+               label="BriefCASE">
             <menu
                   id="com.collins.trustedsystems.briefcase.menus.outline.requirements"
                   label="Cyber Requirements">
@@ -123,7 +123,7 @@
             locationURI="menu:org.eclipse.ui.main.menu?after=additions">
          <menu
                id="com.collins.trustedsystems.briefcase.menus.menubar.main"
-               label="CASE">
+               label="BriefCASE">
             <menu
                   id="com.collins.trustedsystems.briefcase.menus.menubar.requirements"
                   label="Cyber Requirements">
@@ -259,7 +259,7 @@
             locationURI="popup:#TextEditorContext?after=additions">
          <menu
                id="com.collins.trustedsystems.briefcase.menus.editor.main"
-               label="CASE">
+               label="BriefCASE">
             <menu
                   id="com.collins.trustedsystems.briefcase.menus.editor.requirements"
                   label="Cyber Requirements">
