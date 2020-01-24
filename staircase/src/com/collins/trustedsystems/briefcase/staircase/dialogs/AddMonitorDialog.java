@@ -25,6 +25,10 @@ import com.collins.trustedsystems.briefcase.staircase.handlers.AddMonitorHandler
 public class AddMonitorDialog extends TitleAreaDialog {
 
 	private Text txtMonitorImplementationName;
+	private Label lblResetConnectionField;
+	private Button btnReset;
+	private Combo cboResetPort;
+	private Button btnLatched;
 	private Combo cboExpectedPort;
 	private Combo cboAlertPort;
 	private List<Button> btnDispatchProtocol = new ArrayList<>();
@@ -32,6 +36,8 @@ public class AddMonitorDialog extends TitleAreaDialog {
 	private Text txtAgreeProperty;
 
 	private String monitorImplementationName;
+	private String resetPort = "";
+	private boolean latched = false;
 	private String expectedPort = "";
 	private String alertPort = "";
 	private String dispatchProtocol = "";
@@ -76,6 +82,8 @@ public class AddMonitorDialog extends TitleAreaDialog {
 
 		// Add monitor information fields
 		createMonitorImplementationNameField(container);
+		createResetPortField(container);
+		createLatchedField(container);
 		createExpectedPortField(container);
 		createAlertPortField(container);
 		createDispatchProtocolField(container);
@@ -91,7 +99,7 @@ public class AddMonitorDialog extends TitleAreaDialog {
 	 */
 	private void createMonitorImplementationNameField(Composite container) {
 		Label lblMonitorImplNameField = new Label(container, SWT.NONE);
-		lblMonitorImplNameField.setText("Monitor Implementation Name");
+		lblMonitorImplNameField.setText("Monitor implementation name");
 
 		GridData dataInfoField = new GridData();
 		dataInfoField.grabExcessHorizontalSpace = true;
@@ -101,6 +109,62 @@ public class AddMonitorDialog extends TitleAreaDialog {
 		txtMonitorImplementationName.setText(AddMonitorHandler.MONITOR_IMPL_NAME);
 	}
 
+	/**
+	 * Creates the checkbox field for adding a reset port
+	 * @param container
+	 */
+	private void createResetPortField(Composite container) {
+
+		Label lblResetField = new Label(container, SWT.NONE);
+		lblResetField.setText("Create reset port");
+
+		GridData dataInfoField = new GridData();
+		dataInfoField.grabExcessHorizontalSpace = true;
+		dataInfoField.horizontalAlignment = SWT.FILL;
+		btnReset = new Button(container, SWT.CHECK);
+		btnReset.setSelection(false);
+		btnReset.setLayoutData(dataInfoField);
+		btnReset.addListener(SWT.Selection, e -> {
+			if (e.type == SWT.Selection) {
+				lblResetConnectionField.setEnabled(btnReset.getSelection());
+				cboResetPort.setEnabled(btnReset.getSelection());
+			}
+		});
+
+		lblResetConnectionField = new Label(container, SWT.NONE);
+		lblResetConnectionField.setText("    Reset port connection");
+		lblResetConnectionField.setEnabled(false);
+
+		dataInfoField = new GridData();
+		dataInfoField.grabExcessHorizontalSpace = true;
+		dataInfoField.horizontalAlignment = GridData.FILL;
+		cboResetPort = new Combo(container, SWT.BORDER);
+		cboResetPort.setLayoutData(dataInfoField);
+		cboResetPort.add(NO_PORT_SELECTED);
+		outports.forEach(p -> cboResetPort.add(p));
+		cboResetPort.setText(NO_PORT_SELECTED);
+		cboResetPort.setEnabled(false);
+
+	}
+
+
+	/**
+	 * Creates the checkbox field for specifying if the monitor is latched
+	 * @param container
+	 */
+	private void createLatchedField(Composite container) {
+
+		Label lblLatchedField = new Label(container, SWT.NONE);
+		lblLatchedField.setText("Latched");
+
+		GridData dataInfoField = new GridData();
+		dataInfoField.grabExcessHorizontalSpace = true;
+		dataInfoField.horizontalAlignment = SWT.FILL;
+		btnLatched = new Button(container, SWT.CHECK);
+		btnLatched.setSelection(false);
+		btnLatched.setLayoutData(dataInfoField);
+
+	}
 
 	/**
 	 * Creates the input field for specifying what to connect the 'expected' port to
@@ -215,6 +279,20 @@ public class AddMonitorDialog extends TitleAreaDialog {
 	 */
 	private boolean saveInput() {
 		monitorImplementationName = txtMonitorImplementationName.getText();
+		if (btnReset.getSelection()) {
+			resetPort = cboResetPort.getText();
+			if (resetPort.equals(NO_PORT_SELECTED)) {
+				resetPort = "";
+			} else if (!outports.contains(resetPort)) {
+				Dialog.showError("Add Monitor", "Port " + resetPort
+						+ " does not exist in the model.  Select a port from the list to connect the monitor's 'reset' port to, or choose "
+						+ NO_PORT_SELECTED + ".");
+				return false;
+			}
+		} else {
+			resetPort = null;
+		}
+		latched = btnLatched.getSelection();
 		expectedPort = cboExpectedPort.getText();
 		if (expectedPort.equals(NO_PORT_SELECTED)) {
 			expectedPort = "";
@@ -264,6 +342,14 @@ public class AddMonitorDialog extends TitleAreaDialog {
 
 	public String getMonitorImplementationName() {
 		return monitorImplementationName;
+	}
+
+	public String getResetPort() {
+		return resetPort;
+	}
+
+	public boolean getLatched() {
+		return latched;
 	}
 
 	public String getExpectedPort() {

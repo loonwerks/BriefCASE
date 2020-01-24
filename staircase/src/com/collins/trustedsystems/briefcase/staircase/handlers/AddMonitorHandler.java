@@ -17,6 +17,7 @@ import org.osate.aadl2.ComponentType;
 import org.osate.aadl2.ConnectedElement;
 import org.osate.aadl2.DataPort;
 import org.osate.aadl2.DataSubcomponentType;
+import org.osate.aadl2.DefaultAnnexSubclause;
 import org.osate.aadl2.EnumerationLiteral;
 import org.osate.aadl2.EventDataPort;
 import org.osate.aadl2.EventPort;
@@ -47,11 +48,14 @@ public class AddMonitorHandler extends AadlHandler {
 	static final String MONITOR_EXPECTED_PORT_NAME = "expected";
 	static final String MONITOR_OBSERVED_PORT_NAME = "observed";
 	static final String MONITOR_ALERT_PORT_NAME = "alert";
+	static final String MONITOR_RESET_PORT_NAME = "reset";
 	public static final String MONITOR_IMPL_NAME = "MON";
 	static final String CONNECTION_IMPL_NAME = "c";
 
 	private String monitorImplementationName;
 	private String dispatchProtocol;
+	private String resetPort;
+	private boolean latched;
 	private String expectedPort;
 	private String alertPort;
 	private String monitorRequirement;
@@ -92,6 +96,8 @@ public class AddMonitorHandler extends AadlHandler {
 			if (monitorImplementationName == "") {
 				monitorImplementationName = MONITOR_IMPL_NAME;
 			}
+			resetPort = wizard.getResetPort();
+			latched = wizard.getLatched();
 			dispatchProtocol = wizard.getDispatchProtocol();
 			expectedPort = wizard.getExpectedPort();
 			alertPort = wizard.getAlertPort();
@@ -240,6 +246,29 @@ public class AddMonitorHandler extends AadlHandler {
 			monAlertPort.setOut(true);
 			monAlertPort.setName(MONITOR_ALERT_PORT_NAME);
 
+			// Create monitor reset port, if needed
+			Port monResetPort = null;
+			Port srcResetPort = null;
+			if (resetPort != null) {
+				srcResetPort = getPort(containingImpl, resetPort);
+				// If user didn't specify a reset outport, make it an event data port
+				if (srcResetPort == null) {
+					monResetPort = ComponentCreateHelper.createOwnedEventDataPort(monitorType);
+				} else if (srcResetPort instanceof EventDataPort) {
+					monResetPort = ComponentCreateHelper.createOwnedEventDataPort(monitorType);
+					dataFeatureClassifier = ((EventDataPort) srcResetPort).getDataFeatureClassifier();
+					((EventDataPort) monResetPort).setDataFeatureClassifier(dataFeatureClassifier);
+				} else if (srcResetPort instanceof DataPort) {
+					monResetPort = ComponentCreateHelper.createOwnedDataPort(monitorType);
+					dataFeatureClassifier = ((DataPort) srcResetPort).getDataFeatureClassifier();
+					((DataPort) monResetPort).setDataFeatureClassifier(dataFeatureClassifier);
+				} else if (srcResetPort instanceof EventPort) {
+					monResetPort = ComponentCreateHelper.createOwnedEventPort(monitorType);
+				}
+				monResetPort.setIn(true);
+				monResetPort.setName(MONITOR_RESET_PORT_NAME);
+			}
+
 			// Add monitor properties
 			// CASE::COMP_TYPE Property
 			if (!CaseUtils.addCasePropertyAssociation("COMP_TYPE", "MONITOR", monitorType)) {
@@ -248,20 +277,20 @@ public class AddMonitorHandler extends AadlHandler {
 
 			// CASE::COMP_SPEC property
 			// Parse the ID from the Monitor AGREE property
-			String monitorPropId = "";
-			try {
-				monitorPropId = monitorAgreeProperty
-						.substring(monitorAgreeProperty.toLowerCase().indexOf("guarantee ") + "guarantee ".length(),
-								monitorAgreeProperty.indexOf("\""))
-						.trim();
-
-			} catch (IndexOutOfBoundsException e) {
-				if (!monitorAgreeProperty.isEmpty()) {
-					// Agree property is malformed
-					Dialog.showWarning("Add Monitor", "Monitor AGREE statement is malformed.");
-				}
-//					return;
-			}
+			String monitorPropId = "monitor_policy";
+//			try {
+//				monitorPropId = monitorAgreeProperty
+//						.substring(monitorAgreeProperty.toLowerCase().indexOf("guarantee ") + "guarantee ".length(),
+//								monitorAgreeProperty.indexOf("\""))
+//						.trim();
+//
+//			} catch (IndexOutOfBoundsException e) {
+//				if (!monitorAgreeProperty.isEmpty()) {
+//					// Agree property is malformed
+//					Dialog.showWarning("Add Monitor", "Monitor AGREE statement is malformed.");
+//				}
+////					return;
+//			}
 
 			if (!monitorPropId.isEmpty()) {
 				if (!CaseUtils.addCasePropertyAssociation("COMP_SPEC", monitorPropId, monitorType)) {
@@ -361,8 +390,9 @@ public class AddMonitorHandler extends AadlHandler {
 			}
 
 			// Create Alert connection, if provided
+			PortConnection portConnAlert = null;
 			if (!alertPort.isEmpty()) {
-				final PortConnection portConnAlert = containingImpl.createOwnedPortConnection();
+				portConnAlert = containingImpl.createOwnedPortConnection();
 				portConnAlert
 						.setName(getUniqueName(CONNECTION_IMPL_NAME, false, containingImpl.getOwnedPortConnections()));
 				portConnAlert.setBidirectional(false);
@@ -377,6 +407,47 @@ public class AddMonitorHandler extends AadlHandler {
 				containingImpl.getOwnedPortConnections().move(
 						getIndex(destName, containingImpl.getOwnedPortConnections()) + 1,
 						containingImpl.getOwnedPortConnections().size() - 1);
+			}
+
+			// Create Reset connection, if provided
+			if (resetPort != null && !resetPort.isEmpty()) {
+				final PortConnection portConnReset = containingImpl.createOwnedPortConnection();
+				portConnReset
+						.setName(getUniqueName(CONNECTION_IMPL_NAME, false, containingImpl.getOwnedPortConnections()));
+				portConnReset.setBidirectional(false);
+				final ConnectedElement monitorResetSrc = portConnReset.createSource();
+				monitorResetSrc.setContext(getSubcomponent(containingImpl, resetPort));
+				monitorResetSrc.setConnectionEnd(srcResetPort);
+				final ConnectedElement monitorResetDst = portConnReset.createDestination();
+				monitorResetDst.setContext(monitorSubcomp);
+				monitorResetDst.setConnectionEnd(monResetPort);
+				// Put portConnExpected in right place (after alert)
+				destName = portConnAlert.getName();
+				containingImpl.getOwnedPortConnections().move(
+						getIndex(destName, containingImpl.getOwnedPortConnections()) + 1,
+						containingImpl.getOwnedPortConnections().size() - 1);
+			}
+
+			// AGREE
+			if (monitorAgreeProperty.length() > 0) {
+				String agreeClauses = "{**" + System.lineSeparator();
+
+				agreeClauses += "const latched : bool = " + latched + System.lineSeparator();
+				agreeClauses += "property monitor_policy = " + monitorAgreeProperty + System.lineSeparator();
+//				agreeClauses += "guarantee \"...\" : if";
+				agreeClauses = agreeClauses + "**}";
+
+				final DefaultAnnexSubclause annexSubclauseImpl = ComponentCreateHelper
+						.createOwnedAnnexSubclause(monitorType);
+				annexSubclauseImpl.setName("agree");
+				annexSubclauseImpl.setSourceText(agreeClauses);
+			}
+
+			if (isProcess) {
+
+				// TODO: Wrap thread component in a process
+
+				// TODO: Bind process to processor
 			}
 
 			// Add add_monitor claims to resolute prove statement, if applicable
