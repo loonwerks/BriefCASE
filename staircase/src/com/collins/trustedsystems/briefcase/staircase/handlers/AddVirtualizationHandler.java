@@ -26,6 +26,7 @@ import org.osate.aadl2.ListValue;
 import org.osate.aadl2.ModalPropertyValue;
 import org.osate.aadl2.PackageSection;
 import org.osate.aadl2.PrivatePackageSection;
+import org.osate.aadl2.ProcessImplementation;
 import org.osate.aadl2.ProcessSubcomponent;
 import org.osate.aadl2.ProcessorSubcomponent;
 import org.osate.aadl2.Property;
@@ -118,6 +119,28 @@ public class AddVirtualizationHandler extends AadlHandler {
 			virtualizationRequirement = wizard.getRequirement();
 		} else {
 			return;
+		}
+
+		// If all threads in a thread group are selected, only keep the thread group
+		// in the boundComponents list
+		if (sub instanceof ProcessSubcomponent) {
+			ProcessSubcomponent pSub = (ProcessSubcomponent) sub;
+			ProcessImplementation pi = ((ProcessImplementation) pSub.getComponentImplementation());
+			for (ThreadGroupSubcomponent tg : pi.getOwnedThreadGroupSubcomponents()) {
+				int threadCount = 0;
+				final String threadGroupName = sub.getQualifiedName() + "." + tg.getName();
+				for (Subcomponent t : tg.getComponentImplementation().getOwnedSubcomponents()) {
+					if (boundComponents.contains(threadGroupName + "." + t.getName())) {
+						threadCount++;
+					} else {
+						break;
+					}
+				}
+				if (threadCount == tg.getComponentImplementation().getOwnedSubcomponents().size()) {
+					boundComponents.removeIf(c -> c.toLowerCase().startsWith(threadGroupName.toLowerCase()));
+					boundComponents.add(threadGroupName);
+				}
+			}
 		}
 
 		// create set of bound processors

@@ -493,7 +493,7 @@ public
 		subcomponents_not_bound_to_other_processors(bound_components : {component}, virtual_machine : component) <=
 			** "Subcomponents are not bound to other processors" **
 			let subs : {component} = get_subcomponents(next_subcomponent(bound_components));
-			forall (s : subs) . not exists (v : component) . (is_bound_to(s, v) and not (v = virtual_machine))
+			forall (s : subs) . not exists (v : component) . (is_bound_to_processor(s, v) and not (v = virtual_machine))
 			
 		-- Get set of descendants
 		get_subcomponents(curr : {component}) : {component} =
@@ -512,9 +512,11 @@ public
 			
 		-- checks that a component will run on seL4 by checking that the processors it is bound to have the seL4 OS property
 		is_seL4_component(comp : component) : bool =
-			let proc : {component} = {c for (c : component) | (is_processor(c) or is_virtual_processor(c)) and is_bound_to(comp, c)};
+			let proc : {component} = {c for (c : component) | is_bound_to_processor(comp, c)};
 			(size(proc) > 0) and forall (p : proc) . (has_property(p, CASE_Properties::OS) and property(p, CASE_Properties::OS) = "seL4")
 		
+		is_bound_to_processor(c : component, p : component) : bool =
+			is_bound_to(c, p) and (is_processor(p) or is_virtual_processor(p))
 		
 	**};
 	
