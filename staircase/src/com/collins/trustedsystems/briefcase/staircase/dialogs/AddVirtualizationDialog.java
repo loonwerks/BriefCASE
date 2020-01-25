@@ -18,6 +18,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.osate.aadl2.ComponentCategory;
+import org.osate.aadl2.ComponentImplementation;
 import org.osate.aadl2.Subcomponent;
 import org.osate.ui.dialogs.Dialog;
 
@@ -170,10 +171,20 @@ public class AddVirtualizationDialog extends TitleAreaDialog {
 		compSelectionField.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 		compSelectionField.setLayout(new GridLayout(3, true));
 		for (Subcomponent sub : this.component.getComponentImplementation().getOwnedSubcomponents()) {
-			Button comp = new Button(compSelectionField, SWT.CHECK);
-			comp.setText(sub.getName());
-			comp.setSelection(false);
-			btnComponents.add(comp);
+			if (sub.getCategory() == ComponentCategory.THREAD_GROUP) {
+				ComponentImplementation ci = sub.getComponentImplementation();
+				for (Subcomponent tgSub : ci.getOwnedSubcomponents()) {
+					Button comp = new Button(compSelectionField, SWT.CHECK);
+					comp.setText(sub.getName() + "." + tgSub.getName());
+					comp.setSelection(false);
+					btnComponents.add(comp);
+				}
+			} else {
+				Button comp = new Button(compSelectionField, SWT.CHECK);
+				comp.setText(sub.getName());
+				comp.setSelection(false);
+				btnComponents.add(comp);
+			}
 		}
 
 		// Initialize check boxes

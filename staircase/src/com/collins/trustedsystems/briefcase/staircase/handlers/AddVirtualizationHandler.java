@@ -330,9 +330,21 @@ public class AddVirtualizationHandler extends AadlHandler {
 					cpe.setNamedElement(selectedSub);
 					if (!s.equalsIgnoreCase(selectedSub.getQualifiedName())) {
 						for (Subcomponent sub : selectedSub.getComponentImplementation().getOwnedSubcomponents()) {
-							if (s.equalsIgnoreCase(selectedSub.getQualifiedName() + "." + sub.getName())) {
+//							if (s.equalsIgnoreCase(selectedSub.getQualifiedName() + "." + sub.getName())) {
+							if (s.toLowerCase()
+									.startsWith((selectedSub.getQualifiedName() + "." + sub.getName()).toLowerCase())) {
 								cpe = cpe.createPath();
 								cpe.setNamedElement(sub);
+								if (sub.getCategory() == ComponentCategory.THREAD_GROUP) {
+									for (Subcomponent sc : sub.getComponentImplementation().getOwnedSubcomponents()) {
+										if (s.equalsIgnoreCase(selectedSub.getQualifiedName() + "." + sub.getName()
+												+ "." + sc.getName())) {
+											cpe = cpe.createPath();
+											cpe.setNamedElement(sc);
+											break;
+										}
+									}
+								}
 								break;
 							}
 						}
@@ -362,10 +374,20 @@ public class AddVirtualizationHandler extends AadlHandler {
 		Map<String, Set<String>> processorMap = new HashMap<>();
 
 		// Get selected subcomponent + child subcomponents
+		// If child subcomponent is a thread group, get contained threads as well
 		Set<String> subcomponents = new HashSet<>();
 		subcomponents.add(sub.getName());
-		sub.getComponentImplementation().getOwnedSubcomponents()
-				.forEach(s -> subcomponents.add(sub.getName() + "." + s.getName()));
+//		sub.getComponentImplementation().getOwnedSubcomponents()
+//				.forEach(s -> subcomponents.add(sub.getName() + "." + s.getName()));
+		for (Subcomponent s : sub.getComponentImplementation().getOwnedSubcomponents()) {
+			if (s.getCategory() == ComponentCategory.THREAD_GROUP) {
+				for (Subcomponent sc : s.getComponentImplementation().getOwnedSubcomponents()) {
+					subcomponents.add(sub.getName() + "." + s.getName() + "." + sc.getName());
+				}
+			} else {
+				subcomponents.add(sub.getName() + "." + s.getName());
+			}
+		}
 
 		// Get processor bindings for all components within containing component implementation of selected subcomponent
 		ComponentImplementation ci = sub.getContainingComponentImpl();

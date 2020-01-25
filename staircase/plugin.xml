@@ -85,8 +85,8 @@
                         style="push">
                   </command>
                   <command
-                        commandId="com.collins.trustedsystems.briefcase.staircase.commands.seL4Transform"
-                        id="com.collins.trustedsystems.briefcase.menus.outline.resiliency.transformations.seL4Transform"
+                        commandId="com.collins.trustedsystems.briefcase.staircase.commands.Sel4Transform"
+                        id="com.collins.trustedsystems.briefcase.menus.outline.resiliency.transformations.Sel4Transform"
                         label="Transform for seL4 build"
                         style="push">
                   </command>
@@ -197,12 +197,12 @@
                   <command
                         commandId="om.collins.trustedsystems.briefcase.staircase.commands.AddSimplex"
                         id="com.collins.trustedsystems.briefcase.menus.menubar.resiliency.transformations.AddSimplex"
-                        label="Add Simplex staircase"
+                        label="Add Simplex Architecture"
                         style="push">
                   </command>
                   <command
-                        commandId="com.collins.trustedsystems.briefcase.staircase.commands.seL4Transform"
-                        id="com.collins.trustedsystems.briefcase.menus.menubar.resiliency.transformations.seL4Transform"
+                        commandId="com.collins.trustedsystems.briefcase.staircase.commands.Sel4Transform"
+                        id="com.collins.trustedsystems.briefcase.menus.menubar.resiliency.transformations.Sel4Transform"
                         label="Transform for seL4 build"
                         style="push">
                   </command>
@@ -333,12 +333,12 @@
                   <command
                         commandId="om.collins.trustedsystems.briefcase.staircase.commands.AddSimplex"
                         id="com.collins.trustedsystems.briefcase.menus.editor.resiliency.transformations.AddSimplex"
-                        label="Add Simplex staircase"
+                        label="Add Simplex Architecture"
                         style="push">
                   </command>
                   <command
-                        commandId="com.collins.trustedsystems.briefcase.staircase.commands.seL4Transform"
-                        id="com.collins.trustedsystems.briefcase.menus.editor.resiliency.transformations.seL4Transform"
+                        commandId="com.collins.trustedsystems.briefcase.staircase.commands.Sel4Transform"
+                        id="com.collins.trustedsystems.briefcase.menus.editor.resiliency.transformations.Sel4Transform"
                         label="Transform for seL4 build"
                         style="push">
                   </command>
@@ -423,8 +423,8 @@
             name="Add Simplex Architecture">
       </command>
       <command
-            id="com.collins.trustedsystems.briefcase.staircase.commands.seL4Transform"
-            name="Transform for sel4 build">
+            id="com.collins.trustedsystems.briefcase.staircase.commands.Sel4Transform"
+            name="Transform for seL4 build">
       </command>
       <command
             id="com.collins.trustedsystems.briefcase.staircase.commands.ModelAnnotations"
@@ -496,6 +496,10 @@
       <handler
             class="com.collins.trustedsystems.briefcase.staircase.handlers.TouchHandler"
             commandId="com.collins.trustedsystems.briefcase.staircase.commands.Touch">
+      </handler>
+      <handler
+            class="com.collins.trustedsystems.briefcase.staircase.handlers.Sel4TransformHandler"
+            commandId="com.collins.trustedsystems.briefcase.staircase.commands.Sel4Transform">
       </handler>
    </extension>
    <extension
