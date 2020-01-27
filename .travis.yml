@@ -15,9 +15,6 @@ addons:
     - python3
     - python3-pip
 
-script:
-- mvn clean verify
-
 env:
   global:
   - DISPLAY=:99.0
@@ -27,6 +24,11 @@ before_install:
 - pip3 install --user --upgrade setuptools
 - pip3 install --user GitPython github3.py
 - "./git-setup.sh"
+
+install: /bin/true
+
+script:
+- mvn clean verify
 
 before_deploy:
 - export RELEASE_PKG_FILE=$(ls repository/target/com.collins.trustedsystems.briefcase.repository-*.zip)
