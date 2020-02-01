@@ -336,6 +336,7 @@ public
 		-- Top-level claim for proper insertion of a monitor
 		add_monitor(comp_context : component, monitor : component) <=
 			** "Monitor " monitor " inserted on " comp_context **
+			-- make sure reset can't be triggered by observed signal
 			true
 		
 		-- Top-level claim for proper insertion of a switch

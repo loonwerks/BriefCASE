@@ -26,9 +26,11 @@ import org.osate.aadl2.EventPort;
 import org.osate.aadl2.Feature;
 import org.osate.aadl2.NamedValue;
 import org.osate.aadl2.PortCategory;
+import org.osate.aadl2.Property;
 import org.osate.aadl2.PropertyExpression;
 import org.osate.aadl2.Subcomponent;
 import org.osate.ui.dialogs.Dialog;
+import org.osate.xtext.aadl2.properties.util.GetProperties;
 import org.osate.xtext.aadl2.properties.util.ThreadProperties;
 
 import com.collins.trustedsystems.briefcase.staircase.handlers.AddFilterHandler;
@@ -188,8 +190,11 @@ public class AddFilterDialog extends TitleAreaDialog {
 		btnSporadic.setSelection(false);
 
 		if (compoundFilter != null) {
-			List<PropertyExpression> protocol = compoundFilter.getPropertyValues(ThreadProperties._NAME,
+//			List<PropertyExpression> protocol = compoundFilter.getPropertyValues(ThreadProperties._NAME,
+//					ThreadProperties.DISPATCH_PROTOCOL);
+			Property prop = GetProperties.lookupPropertyDefinition(compoundFilter, ThreadProperties._NAME,
 					ThreadProperties.DISPATCH_PROTOCOL);
+			List<? extends PropertyExpression> protocol = compoundFilter.getPropertyValueList(prop);
 			if (!protocol.isEmpty()) {
 				NamedValue nv = (NamedValue) protocol.get(0);
 				EnumerationLiteral el = (EnumerationLiteral) nv.getNamedValue();

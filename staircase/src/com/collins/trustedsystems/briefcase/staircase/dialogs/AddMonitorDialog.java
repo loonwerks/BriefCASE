@@ -18,6 +18,7 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.osate.aadl2.PortCategory;
 import org.osate.ui.dialogs.Dialog;
 
 import com.collins.trustedsystems.briefcase.staircase.handlers.AddMonitorHandler;
@@ -28,9 +29,15 @@ public class AddMonitorDialog extends TitleAreaDialog {
 	private Label lblResetConnectionField;
 	private Button btnReset;
 	private Combo cboResetPort;
+	private Label lblLatchedField;
 	private Button btnLatched;
 	private Combo cboExpectedPort;
 	private Combo cboAlertPort;
+	private Label lblAlertPortTypeField = null;
+	private Group grpAlertPortType = null;
+	private List<Button> btnAlertPortType = new ArrayList<>();
+	private Label lblAlertPortDataTypeField = null;
+	private Text txtAlertPortDataType;
 	private List<Button> btnDispatchProtocol = new ArrayList<>();
 	private Combo cboMonitorRequirement;
 	private Text txtAgreeProperty;
@@ -40,6 +47,9 @@ public class AddMonitorDialog extends TitleAreaDialog {
 	private boolean latched = false;
 	private String expectedPort = "";
 	private String alertPort = "";
+	private boolean createSwitch = false;
+	private PortCategory alertPortType = null;
+	private String alertPortDataType = "";
 	private String dispatchProtocol = "";
 	private String monitorRequirement = "";
 	private String agreeProperty = "";
@@ -49,6 +59,7 @@ public class AddMonitorDialog extends TitleAreaDialog {
 	private List<String> requirements = new ArrayList<>();
 
 	private static final String NO_PORT_SELECTED = "<No port selected>";
+	public static final String CREATE_SWITCH = "<Create Switch>";
 	private static final String NO_REQUIREMENT_SELECTED = "<No requirement selected>";
 
 	public AddMonitorDialog(Shell parentShell) {
@@ -86,6 +97,8 @@ public class AddMonitorDialog extends TitleAreaDialog {
 		createLatchedField(container);
 		createExpectedPortField(container);
 		createAlertPortField(container);
+		createAlertPortTypeField(container);
+		createAlertPortDataTypeField(container);
 		createDispatchProtocolField(container);
 		createRequirementField(container);
 		createAgreeField(container);
@@ -106,7 +119,7 @@ public class AddMonitorDialog extends TitleAreaDialog {
 		dataInfoField.horizontalAlignment = GridData.FILL;
 		txtMonitorImplementationName = new Text(container, SWT.BORDER);
 		txtMonitorImplementationName.setLayoutData(dataInfoField);
-		txtMonitorImplementationName.setText(AddMonitorHandler.MONITOR_IMPL_NAME);
+		txtMonitorImplementationName.setText(AddMonitorHandler.MONITOR_COMP_IMPL_NAME);
 	}
 
 	/**
@@ -154,7 +167,7 @@ public class AddMonitorDialog extends TitleAreaDialog {
 	 */
 	private void createLatchedField(Composite container) {
 
-		Label lblLatchedField = new Label(container, SWT.NONE);
+		lblLatchedField = new Label(container, SWT.NONE);
 		lblLatchedField.setText("Latched");
 
 		GridData dataInfoField = new GridData();
@@ -200,8 +213,149 @@ public class AddMonitorDialog extends TitleAreaDialog {
 		cboAlertPort = new Combo(container, SWT.BORDER);
 		cboAlertPort.setLayoutData(dataInfoField);
 		cboAlertPort.add(NO_PORT_SELECTED);
+		cboAlertPort.add(CREATE_SWITCH);
 		inports.forEach(p -> cboAlertPort.add(p));
 		cboAlertPort.setText(NO_PORT_SELECTED);
+		cboAlertPort.addListener(SWT.Selection, e -> {
+			if (e.type == SWT.Selection) {
+//				if (cboAlertPort.getText().equals(CREATE_SWITCH)) {
+//					lblAlertPortTypeField.setEnabled(true);
+//					grpAlertPortType.setEnabled(true);
+//					for (Button btn : btnAlertPortType) {
+//						btn.setSelection(false);
+//						btn.setEnabled(true);
+//					}
+//					lblAlertPortDataTypeField.setEnabled(true);
+//					txtAlertPortDataType.setEnabled(true);
+//				} else {
+//					lblAlertPortTypeField.setEnabled(false);
+//					grpAlertPortType.setEnabled(false);
+//					for (Button btn : btnAlertPortType) {
+//						btn.setSelection(false);
+//						btn.setEnabled(false);
+//					}
+//					lblAlertPortDataTypeField.setEnabled(false);
+//					txtAlertPortDataType.setText("");
+//					txtAlertPortDataType.setEnabled(false);
+//				}
+				updateAlertPortFields();
+			}
+		});
+
+	}
+
+
+	/**
+	 * Creates the input field for specifying the alert port type
+	 * (Data, Event Data, Event)
+	 * @param container
+	 */
+	private void createAlertPortTypeField(Composite container) {
+		lblAlertPortTypeField = new Label(container, SWT.NONE);
+		lblAlertPortTypeField.setText("  Alert port type");
+		lblAlertPortTypeField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true));
+		lblAlertPortTypeField.setEnabled(false);
+
+		// Create a group to contain the log port options
+		grpAlertPortType = new Group(container, SWT.NONE);
+		grpAlertPortType.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		grpAlertPortType.setLayout(new RowLayout(SWT.HORIZONTAL));
+		grpAlertPortType.setEnabled(false);
+
+		btnAlertPortType.clear();
+
+		Button btnEventAlertPort = new Button(grpAlertPortType, SWT.RADIO);
+		btnEventAlertPort.setText("Event");
+		btnEventAlertPort.setSelection(false);
+		btnEventAlertPort.setEnabled(false);
+		btnEventAlertPort.addListener(SWT.Selection, e -> {
+			if (e.type == SWT.Selection) {
+				updateAlertPortFields();
+			}
+		});
+
+		Button btnDataAlertPort = new Button(grpAlertPortType, SWT.RADIO);
+		btnDataAlertPort.setText("Data");
+		btnDataAlertPort.setSelection(false);
+		btnDataAlertPort.setEnabled(false);
+		btnDataAlertPort.addListener(SWT.Selection, e -> {
+			if (e.type == SWT.Selection) {
+				updateAlertPortFields();
+			}
+		});
+
+		Button btnEventDataAlertPort = new Button(grpAlertPortType, SWT.RADIO);
+		btnEventDataAlertPort.setText("Event Data");
+		btnEventDataAlertPort.setSelection(false);
+		btnEventDataAlertPort.setEnabled(false);
+		btnEventDataAlertPort.addListener(SWT.Selection, e -> {
+			if (e.type == SWT.Selection) {
+				updateAlertPortFields();
+			}
+		});
+
+		btnAlertPortType.add(btnDataAlertPort);
+		btnAlertPortType.add(btnEventAlertPort);
+		btnAlertPortType.add(btnEventDataAlertPort);
+
+	}
+
+	private void updateAlertPortFields() {
+		if (cboAlertPort.getText().equals(CREATE_SWITCH)) {
+			lblLatchedField.setEnabled(false);
+			btnLatched.setSelection(false);
+			btnLatched.setEnabled(false);
+			lblAlertPortTypeField.setEnabled(true);
+			grpAlertPortType.setEnabled(true);
+			lblAlertPortDataTypeField.setEnabled(false);
+			txtAlertPortDataType.setEnabled(false);
+			for (Button btn : btnAlertPortType) {
+				btn.setEnabled(true);
+				if (btn.getText().equalsIgnoreCase("Data") || btn.getText().equalsIgnoreCase("Event Data")) {
+					if (btn.getSelection()) {
+						lblAlertPortDataTypeField.setEnabled(true);
+						txtAlertPortDataType.setEnabled(true);
+					}
+				} else if (btn.getText().equalsIgnoreCase("Event")) {
+					if (btn.getSelection()) {
+						lblAlertPortDataTypeField.setEnabled(false);
+						txtAlertPortDataType.setText("");
+						txtAlertPortDataType.setEnabled(false);
+					}
+				}
+			}
+		} else {
+			lblLatchedField.setEnabled(true);
+			btnLatched.setEnabled(true);
+			lblAlertPortTypeField.setEnabled(false);
+			grpAlertPortType.setEnabled(false);
+			for (Button btn : btnAlertPortType) {
+				btn.setSelection(false);
+				btn.setEnabled(false);
+			}
+			lblAlertPortDataTypeField.setEnabled(false);
+			txtAlertPortDataType.setText("");
+			txtAlertPortDataType.setEnabled(false);
+		}
+	}
+
+	/**
+	 * Creates the input field for specifying the alert port data type
+	 * @param container
+	 */
+	private void createAlertPortDataTypeField(Composite container) {
+		lblAlertPortDataTypeField = new Label(container, SWT.NONE);
+		lblAlertPortDataTypeField.setText("  Alert port data type");
+		lblAlertPortDataTypeField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true));
+		lblAlertPortDataTypeField.setEnabled(false);
+
+		GridData dataInfoField = new GridData();
+		dataInfoField.grabExcessHorizontalSpace = true;
+		dataInfoField.horizontalAlignment = GridData.FILL;
+		txtAlertPortDataType = new Text(container, SWT.BORDER);
+		txtAlertPortDataType.setLayoutData(dataInfoField);
+		txtAlertPortDataType.setEnabled(false);
+
 	}
 
 	/**
@@ -305,6 +459,17 @@ public class AddMonitorDialog extends TitleAreaDialog {
 		alertPort = cboAlertPort.getText();
 		if (alertPort.equals(NO_PORT_SELECTED)) {
 			alertPort = "";
+		} else if (alertPort.equals(CREATE_SWITCH)) {
+			alertPort = "";
+			createSwitch = true;
+			alertPortType = null;
+			for (int i = 0; i < btnAlertPortType.size(); i++) {
+				if (btnAlertPortType.get(i).getSelection()) {
+					alertPortType = PortCategory.get(i);
+					break;
+				}
+			}
+			alertPortDataType = txtAlertPortDataType.getText();
 		} else if (!inports.contains(alertPort)) {
 			Dialog.showError("Add Monitor", "Port " + alertPort
 					+ " does not exist in the model.  Select a port from the list to connect the monitor's 'alert' port to, or choose "
@@ -358,6 +523,18 @@ public class AddMonitorDialog extends TitleAreaDialog {
 
 	public String getAlertPort() {
 		return alertPort;
+	}
+
+	public boolean getCreateSwitch() {
+		return createSwitch;
+	}
+
+	public PortCategory getAlertControlPortType() {
+		return alertPortType;
+	}
+
+	public String getAlertControlPortDataType() {
+		return alertPortDataType;
 	}
 
 	public String getDispatchProtocol() {
