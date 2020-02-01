@@ -1,9 +1,7 @@
 package com.collins.trustedsystems.briefcase.staircase.handlers;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import org.eclipse.emf.common.util.URI;
@@ -14,7 +12,6 @@ import org.osate.aadl2.Aadl2Package;
 import org.osate.aadl2.Access;
 import org.osate.aadl2.AccessConnection;
 import org.osate.aadl2.Classifier;
-import org.osate.aadl2.ComponentImplementation;
 import org.osate.aadl2.ComponentType;
 import org.osate.aadl2.ConnectedElement;
 import org.osate.aadl2.Connection;
@@ -41,6 +38,7 @@ import org.osate.aadl2.ThreadGroupImplementation;
 import org.osate.aadl2.ThreadGroupSubcomponent;
 import org.osate.aadl2.ThreadImplementation;
 import org.osate.aadl2.ThreadSubcomponent;
+import org.osate.aadl2.modelsupport.util.AadlUtil;
 import org.osate.ui.dialogs.Dialog;
 
 import com.collins.trustedsystems.briefcase.staircase.utils.ModifyUtils;
@@ -65,15 +63,6 @@ public class Sel4TransformHandler extends AadlHandler {
 
 		final SystemImplementation selectedSystem = (SystemImplementation) eObj;
 
-		// Search for nested process subcomponents
-		List<ProcessSubcomponent> procSubs = new ArrayList<>();
-		getProcessDescendants(selectedSystem, procSubs);
-		if (procSubs.isEmpty()) {
-			Dialog.showError("seL4 Transform",
-					"A system implementation containing at least one process must be selected to perform the seL4 transform.");
-			return;
-		}
-
 		// Each process subcomponent containing a thread group and/or multiple thread subcomponents
 		// becomes a system subcomponent
 		// Each process thread becomes a process containing the thread
@@ -82,36 +71,123 @@ public class Sel4TransformHandler extends AadlHandler {
 		// Change processor bindings
 		// Set processor OS property to seL4
 
-		// TODO: Transform systems that contain process descendants
+		transformSystem(selectedSystem);
+
+//		// Transform contained systems
+//		// This will ensure that any process or thread group descendants will get transformed
+//		for (SystemSubcomponent ss : selectedSystem.getOwnedSystemSubcomponents()) {
+//			transformSystem(ss);
+//		}
+//
+//		// Transform contained processes
+//		final Map<String, URI> sysUris = new HashMap<>();
+//		for (ProcessSubcomponent ps : selectedSystem.getOwnedProcessSubcomponents()) {
+//			URI sysUri = transformProcess(ps);
+//			if (sysUri != null) {
+//				sysUris.put(ps.getName(), sysUri);
+//			}
+//		}
+//
+//		XtextEditor editor = ModifyUtils.getEditor(Filesystem.getFile(selectedSystem.eResource().getURI()));
+//		if (editor == null) {
+//			throw new RuntimeException(
+//					"Could not transform process " + selectedSystem.getQualifiedName() + " for seL4.");
+//		}
+//
+//		editor.getDocument().modify(resource -> {
+//
+//			// Retrieve the model object to modify
+//			SystemImplementation sysImpl = (SystemImplementation) resource
+//					.getEObject(EcoreUtil.getURI(selectedSystem).fragment());
+//			PackageSection pkgSection = AadlUtil.getContainingPackageSection(sysImpl);
+//
+//			// Add transformed processes
+//
+//
+//			return null;
+//		});
+
+	}
+
+	public void transformSystem(SystemImplementation systemImpl) {
+//	public void transformSystem(SystemSubcomponent system) {
+
+//		final SystemImplementation systemImpl = (SystemImplementation) system.getComponentImplementation();
+
+		// Transform contained systems
+		// This will ensure that any process or thread group descendants will get transformed
+		for (SystemSubcomponent ss : systemImpl.getOwnedSystemSubcomponents()) {
+			transformSystem((SystemImplementation) ss.getComponentImplementation());
+		}
 
 		// Transform contained processes
-		procSubs.forEach(p -> transformProcess(p));
 		final Map<String, URI> sysUris = new HashMap<>();
-		for (ProcessSubcomponent ps : procSubs) {
+		for (ProcessSubcomponent ps : systemImpl.getOwnedProcessSubcomponents()) {
 			URI sysUri = transformProcess(ps);
 			if (sysUri != null) {
 				sysUris.put(ps.getName(), sysUri);
 			}
 		}
 
-		XtextEditor editor = ModifyUtils.getEditor(Filesystem.getFile(selectedSystem.eResource().getURI()));
+		XtextEditor editor = ModifyUtils.getEditor(Filesystem.getFile(systemImpl.eResource().getURI()));
 		if (editor == null) {
-			throw new RuntimeException(
-					"Could not transform process " + selectedSystem.getQualifiedName() + " for seL4.");
+			throw new RuntimeException("Could not transform system " + systemImpl.getQualifiedName() + " for seL4.");
 		}
 
 		editor.getDocument().modify(resource -> {
 
 			// Retrieve the model object to modify
 			SystemImplementation sysImpl = (SystemImplementation) resource
-					.getEObject(EcoreUtil.getURI(selectedSystem).fragment());
-			PackageSection pkgSection = (PackageSection) sysImpl.eContainer();
+					.getEObject(EcoreUtil.getURI(systemImpl).fragment());
+//			PackageSection pkgSection = AadlUtil.getContainingPackageSection(sysImpl);
 
-			// Add transformed processes
+			// Add transformed process subcomponent(s),
+			// which will be a seL4 system containing 1 or more seL4 processes
+			Iterator<Map.Entry<String, URI>> iterator = sysUris.entrySet().iterator();
+			while (iterator.hasNext()) {
+				Map.Entry<String, URI> uri = iterator.next();
+				SystemImplementation sImpl = (SystemImplementation) resource.getEObject(uri.getValue().fragment());
+				SystemSubcomponent sSub = sysImpl.createOwnedSystemSubcomponent();
+				// Give it the same name as the original process subcomponent
+				sSub.setName(uri.getKey());
+				sSub.setSystemSubcomponentType(sImpl.getType());
+				// Replace connections of transformed processes with system counterparts
+				for (Connection c : sysImpl.getOwnedConnections()) {
+					if (uri.getKey().contentEquals(c.getSource().getContext().getName())) {
+						c.getSource().setContext(sSub);
+						for (Feature f : sImpl.getType().getOwnedFeatures()) {
+							if (f.getName().equalsIgnoreCase(c.getSource().getConnectionEnd().getName())) {
+								c.getSource().setConnectionEnd(f);
+								break;
+							}
+						}
+					} else if (uri.getKey().contentEquals(c.getDestination().getContext().getName())) {
+						c.getDestination().setContext(sSub);
+						for (Feature f : sImpl.getType().getOwnedFeatures()) {
+							if (f.getName().equalsIgnoreCase(c.getDestination().getConnectionEnd().getName())) {
+								c.getDestination().setConnectionEnd(f);
+								break;
+							}
+						}
+					}
+				}
+			}
+
+			// Delete process subcomponents that have been transformed
+			Iterator<ProcessSubcomponent> subIterator = sysImpl.getOwnedProcessSubcomponents().iterator();
+			while (subIterator.hasNext()) {
+				ProcessSubcomponent ps = subIterator.next();
+				if (sysUris.containsKey(ps.getName())) {
+					subIterator.remove();
+				}
+			}
 
 			return null;
 		});
 
+		ModifyUtils.closeEditor(editor, true);
+
+		return;
 	}
 
 	public URI transformProcess(ProcessSubcomponent process) {
@@ -121,17 +197,18 @@ public class Sel4TransformHandler extends AadlHandler {
 		// Instead check for SEL4 property?
 		if (processImpl.getOwnedThreadSubcomponents().size() <= 1
 				&& processImpl.getOwnedThreadGroupSubcomponents().isEmpty()) {
-			return EcoreUtil.getURI(processImpl.getType());
+//			return EcoreUtil.getURI(processImpl);
+			return null;
 		}
 
-		// Make sure this process hasn't already been transformed
-		PackageSection ps = (PackageSection) processImpl.eContainer();
-		for (Classifier c : ps.getOwnedClassifiers()) {
-			// Instead check for SEL4 property?
-			if (c.getName().equalsIgnoreCase(processImpl.getType().getName() + "_Sys")) {
-				return EcoreUtil.getURI(c);
-			}
-		}
+//		// Make sure this process hasn't already been transformed
+//		PackageSection ps = AadlUtil.getContainingPackageSection(processImpl);
+//		for (Classifier c : ps.getOwnedClassifiers()) {
+//			// Instead check for SEL4 property?
+//			if (c instanceof SystemImplementation && c.getName().equalsIgnoreCase(processImpl.getName() + "_seL4")) {
+//				return EcoreUtil.getURI(c);
+//			}
+//		}
 
 		// Transform thread subcomponents
 		final Map<String, URI> procUris = new HashMap<>();
@@ -161,12 +238,28 @@ public class Sel4TransformHandler extends AadlHandler {
 			// Retrieve the model object to modify
 			ProcessImplementation procImpl = (ProcessImplementation) resource
 					.getEObject(EcoreUtil.getURI(processImpl).fragment());
-			PackageSection pkgSection = (PackageSection) procImpl.eContainer();
+			PackageSection pkgSection = AadlUtil.getContainingPackageSection(procImpl);
 
-			// Create corresponding system type
+			// Make sure this process hasn't already been transformed before
+			// It's possible someone manually added another thread subcomponent to this process
+			// after a previous seL4 transformation
+			// If that's the case, delete the existing transformed process (system) and create a new one
+			Iterator<Classifier> i = pkgSection.getOwnedClassifiers().iterator();
+			while (i.hasNext()) {
+				Classifier c = i.next();
+				// Instead check for SEL4 property?
+				if (c instanceof SystemType && c.getName().equalsIgnoreCase(procImpl.getType().getName() + "_seL4")) {
+					i.remove();
+				} else if (c instanceof SystemImplementation
+						&& c.getName().equalsIgnoreCase(procImpl.getName() + "_seL4")) {
+					i.remove();
+				}
+			}
+
+			// Create corresponding system type, if it doesn't exist
 			SystemType sysType = (SystemType) pkgSection.createOwnedClassifier(Aadl2Package.eINSTANCE.getSystemType());
 			// Give it a name
-			sysType.setName(procImpl.getTypeName() + "_Sys");
+			sysType.setName(procImpl.getTypeName() + "_seL4");
 			// Give it the same features
 			Map<Feature, Feature> features = new HashMap<>();
 			for (Feature f : procImpl.getType().getOwnedFeatures()) {
@@ -302,11 +395,11 @@ public class Sel4TransformHandler extends AadlHandler {
 			for (PropertyAssociation pa : procImpl.getOwnedPropertyAssociations()) {
 				PropertyAssociation prop = sysImpl.createOwnedPropertyAssociation();
 				prop = EcoreUtil.copy(pa);
-//							prop.setProperty(pa.getProperty());
-//							for (ModalPropertyValue mpv : pa.getOwnedValues()) {
-//								ModalPropertyValue val = prop.createOwnedValue();
-//								val.setOwnedValue(mpv.getOwnedValue());
-//							}
+//				prop.setProperty(pa.getProperty());
+//				for (ModalPropertyValue mpv : pa.getOwnedValues()) {
+//					ModalPropertyValue val = prop.createOwnedValue();
+//					val.setOwnedValue(mpv.getOwnedValue());
+//				}
 			}
 
 			return EcoreUtil.getURI(sysImpl);
@@ -329,10 +422,10 @@ public class Sel4TransformHandler extends AadlHandler {
 		final ThreadGroupImplementation tgImpl = (ThreadGroupImplementation) threadGroup.getComponentImplementation();
 
 		// Make sure this thread group hasn't already been transformed
-		PackageSection ps = (PackageSection) tgImpl.eContainer();
+		PackageSection ps = AadlUtil.getContainingPackageSection(tgImpl);
 		for (Classifier c : ps.getOwnedClassifiers()) {
 			// Instead check for SEL4 property?
-			if (c.getName().equalsIgnoreCase(tgImpl.getType().getName() + "_Sys")) {
+			if (c instanceof SystemType && c.getName().equalsIgnoreCase(tgImpl.getType().getName() + "_seL4")) {
 				return EcoreUtil.getURI(c);
 			}
 		}
@@ -366,12 +459,13 @@ public class Sel4TransformHandler extends AadlHandler {
 			// Retrieve the model object to modify
 			ThreadGroupImplementation thrGrpImpl = (ThreadGroupImplementation) resource
 					.getEObject(EcoreUtil.getURI(tgImpl).fragment());
-			PackageSection pkgSection = (PackageSection) thrGrpImpl.eContainer();
+			PackageSection pkgSection = AadlUtil.getContainingPackageSection(thrGrpImpl);
 
 			// Create corresponding system type
 			SystemType sysType = (SystemType) pkgSection.createOwnedClassifier(Aadl2Package.eINSTANCE.getSystemType());
 			// Give it a name
-			sysType.setName(thrGrpImpl.getTypeName() + "_Sys");
+//			sysType.setName(thrGrpImpl.getTypeName() + "_Sys");
+			sysType.setName(thrGrpImpl.getTypeName() + "_seL4");
 			// Give it the same features
 			Map<Feature, Feature> features = new HashMap<>();
 			for (Feature f : thrGrpImpl.getType().getOwnedFeatures()) {
@@ -538,10 +632,11 @@ public class Sel4TransformHandler extends AadlHandler {
 		final ThreadImplementation thrImpl = (ThreadImplementation) thread.getComponentImplementation();
 
 		// Make sure this thread hasn't already been transformed
-		PackageSection ps = (PackageSection) thrImpl.eContainer();
+		PackageSection ps = AadlUtil.getContainingPackageSection(thrImpl);
 		for (Classifier c : ps.getOwnedClassifiers()) {
 			// Instead check for SEL4 property?
-			if (c.getName().equalsIgnoreCase(thread.getComponentType().getName() + "_Proc")) {
+			if (c instanceof ProcessType
+					&& c.getName().equalsIgnoreCase(thread.getComponentType().getName() + "_seL4")) {
 				return EcoreUtil.getURI(c);
 			}
 		}
@@ -556,13 +651,14 @@ public class Sel4TransformHandler extends AadlHandler {
 			// Retrieve the model object to modify
 			ThreadImplementation threadImpl = (ThreadImplementation) resource
 					.getEObject(EcoreUtil.getURI(thrImpl).fragment());
-			PackageSection pkgSection = (PackageSection) threadImpl.eContainer();
+			PackageSection pkgSection = AadlUtil.getContainingPackageSection(threadImpl);
 
 			// Create corresponding process type
 			ProcessType procType = (ProcessType) pkgSection
 					.createOwnedClassifier(Aadl2Package.eINSTANCE.getProcessType());
 			// Give it a name
-			procType.setName(threadImpl.getTypeName() + "_Proc");
+//			procType.setName(threadImpl.getTypeName() + "_Proc");
+			procType.setName(threadImpl.getTypeName() + "_seL4");
 			// Give it the same features
 			Map<Feature, Feature> features = new HashMap<>();
 			for (Feature f : threadImpl.getType().getOwnedFeatures()) {
@@ -707,15 +803,15 @@ public class Sel4TransformHandler extends AadlHandler {
 
 	}
 
-	private void getProcessDescendants(ComponentImplementation compImpl, List<ProcessSubcomponent> procSubs) {
-
-		for (Subcomponent sub : compImpl.getOwnedSubcomponents()) {
-			if (sub instanceof ProcessSubcomponent) {
-				procSubs.add((ProcessSubcomponent) sub);
-				continue;
-			}
-			getProcessDescendants(sub.getComponentImplementation(), procSubs);
-		}
-	}
+//	private void getProcessDescendants(ComponentImplementation compImpl, List<ProcessSubcomponent> procSubs) {
+//
+//		for (Subcomponent sub : compImpl.getOwnedSubcomponents()) {
+//			if (sub instanceof ProcessSubcomponent) {
+//				procSubs.add((ProcessSubcomponent) sub);
+//				continue;
+//			}
+//			getProcessDescendants(sub.getComponentImplementation(), procSubs);
+//		}
+//	}
 
 }
