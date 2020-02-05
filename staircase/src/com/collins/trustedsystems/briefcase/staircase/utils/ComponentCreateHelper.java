@@ -8,17 +8,22 @@ import org.osate.aadl2.AbstractType;
 import org.osate.aadl2.ComponentCategory;
 import org.osate.aadl2.ComponentImplementation;
 import org.osate.aadl2.ComponentType;
+import org.osate.aadl2.DataAccess;
+import org.osate.aadl2.DataPort;
 import org.osate.aadl2.DefaultAnnexSubclause;
-import org.osate.aadl2.Port;
+import org.osate.aadl2.EventDataPort;
+import org.osate.aadl2.EventPort;
 import org.osate.aadl2.ProcessImplementation;
 import org.osate.aadl2.ProcessSubcomponent;
 import org.osate.aadl2.ProcessType;
 import org.osate.aadl2.ProcessorImplementation;
 import org.osate.aadl2.ProcessorSubcomponent;
 import org.osate.aadl2.Subcomponent;
+import org.osate.aadl2.SubprogramAccess;
 import org.osate.aadl2.SystemImplementation;
 import org.osate.aadl2.SystemSubcomponent;
 import org.osate.aadl2.SystemType;
+import org.osate.aadl2.ThreadGroupType;
 import org.osate.aadl2.ThreadImplementation;
 import org.osate.aadl2.ThreadSubcomponent;
 import org.osate.aadl2.ThreadType;
@@ -100,7 +105,7 @@ public class ComponentCreateHelper {
 	}
 
 	// Ports
-	public static Port createOwnedEventDataPort(ComponentType compType) {
+	public static EventDataPort createOwnedEventDataPort(ComponentType compType) {
 		if (compType instanceof SystemType) {
 			return ((SystemType) compType).createOwnedEventDataPort();
 		} else if (compType instanceof AbstractType) {
@@ -109,12 +114,30 @@ public class ComponentCreateHelper {
 			return ((ProcessType) compType).createOwnedEventDataPort();
 		} else if (compType instanceof ThreadType) {
 			return ((ThreadType) compType).createOwnedEventDataPort();
+		} else if (compType instanceof ThreadGroupType) {
+			return ((ThreadGroupType) compType).createOwnedEventDataPort();
 		} else {
 			return null;
 		}
 	}
 
-	public static Port createOwnedDataPort(ComponentType compType) {
+	public static void createOwnedEventDataPort(ComponentType compType, EventDataPort port) {
+		if (compType instanceof SystemType) {
+			((SystemType) compType).getOwnedEventDataPorts().add(port);
+		} else if (compType instanceof AbstractType) {
+			((AbstractType) compType).getOwnedEventDataPorts().add(port);
+		} else if (compType instanceof ProcessType) {
+			((ProcessType) compType).getOwnedEventDataPorts().add(port);
+		} else if (compType instanceof ThreadType) {
+			((ThreadType) compType).getOwnedEventDataPorts().add(port);
+		} else if (compType instanceof ThreadGroupType) {
+			((ThreadGroupType) compType).getOwnedEventDataPorts().add(port);
+		} else {
+			return;
+		}
+	}
+
+	public static DataPort createOwnedDataPort(ComponentType compType) {
 		if (compType instanceof SystemType) {
 			return ((SystemType) compType).createOwnedDataPort();
 		} else if (compType instanceof AbstractType) {
@@ -123,12 +146,30 @@ public class ComponentCreateHelper {
 			return ((ProcessType) compType).createOwnedDataPort();
 		} else if (compType instanceof ThreadType) {
 			return ((ThreadType) compType).createOwnedDataPort();
+		} else if (compType instanceof ThreadGroupType) {
+			return ((ThreadGroupType) compType).createOwnedDataPort();
 		} else {
 			return null;
 		}
 	}
 
-	public static Port createOwnedEventPort(ComponentType compType) {
+	public static void createOwnedDataPort(ComponentType compType, DataPort port) {
+		if (compType instanceof SystemType) {
+			((SystemType) compType).getOwnedDataPorts().add(port);
+		} else if (compType instanceof AbstractType) {
+			((AbstractType) compType).getOwnedDataPorts().add(port);
+		} else if (compType instanceof ProcessType) {
+			((ProcessType) compType).getOwnedDataPorts().add(port);
+		} else if (compType instanceof ThreadType) {
+			((ThreadType) compType).getOwnedDataPorts().add(port);
+		} else if (compType instanceof ThreadGroupType) {
+			((ThreadGroupType) compType).getOwnedDataPorts().add(port);
+		} else {
+			return;
+		}
+	}
+
+	public static EventPort createOwnedEventPort(ComponentType compType) {
 		if (compType instanceof SystemType) {
 			return ((SystemType) compType).createOwnedEventPort();
 		} else if (compType instanceof AbstractType) {
@@ -137,8 +178,74 @@ public class ComponentCreateHelper {
 			return ((ProcessType) compType).createOwnedEventPort();
 		} else if (compType instanceof ThreadType) {
 			return ((ThreadType) compType).createOwnedEventPort();
+		} else if (compType instanceof ThreadGroupType) {
+			return ((ThreadGroupType) compType).createOwnedEventPort();
 		} else {
 			return null;
+		}
+	}
+
+	public static void createOwnedEventPort(ComponentType compType, EventPort port) {
+		if (compType instanceof SystemType) {
+			((SystemType) compType).getOwnedEventPorts().add(port);
+		} else if (compType instanceof AbstractType) {
+			((AbstractType) compType).getOwnedEventPorts().add(port);
+		} else if (compType instanceof ProcessType) {
+			((ProcessType) compType).getOwnedEventPorts().add(port);
+		} else if (compType instanceof ThreadType) {
+			((ThreadType) compType).getOwnedEventPorts().add(port);
+		} else if (compType instanceof ThreadGroupType) {
+			((ThreadGroupType) compType).getOwnedEventPorts().add(port);
+		} else {
+			return;
+		}
+	}
+
+	public static DataAccess createOwnedDataAccess(ComponentType compType) {
+		if (compType instanceof SystemType) {
+			return ((SystemType) compType).createOwnedDataAccess();
+		} else if (compType instanceof AbstractType) {
+			return ((AbstractType) compType).createOwnedDataAccess();
+		} else if (compType instanceof ProcessType) {
+			return ((ProcessType) compType).createOwnedDataAccess();
+		} else if (compType instanceof ThreadType) {
+			return ((ThreadType) compType).createOwnedDataAccess();
+		} else if (compType instanceof ThreadGroupType) {
+			return ((ThreadGroupType) compType).createOwnedDataAccess();
+		} else {
+			return null;
+		}
+	}
+
+	public static void createOwnedDataAccess(ComponentType compType, DataAccess access) {
+		if (compType instanceof SystemType) {
+			((SystemType) compType).getOwnedDataAccesses().add(access);
+		} else if (compType instanceof AbstractType) {
+			((AbstractType) compType).getOwnedDataAccesses().add(access);
+		} else if (compType instanceof ProcessType) {
+			((ProcessType) compType).getOwnedDataAccesses().add(access);
+		} else if (compType instanceof ThreadType) {
+			((ThreadType) compType).getOwnedDataAccesses().add(access);
+		} else if (compType instanceof ThreadGroupType) {
+			((ThreadGroupType) compType).getOwnedDataAccesses().add(access);
+		} else {
+			return;
+		}
+	}
+
+	public static void createOwnedSubprogramAccess(ComponentType compType, SubprogramAccess access) {
+		if (compType instanceof SystemType) {
+			((SystemType) compType).getOwnedSubprogramAccesses().add(access);
+		} else if (compType instanceof AbstractType) {
+			((AbstractType) compType).getOwnedSubprogramAccesses().add(access);
+		} else if (compType instanceof ProcessType) {
+			((ProcessType) compType).getOwnedSubprogramAccesses().add(access);
+		} else if (compType instanceof ThreadType) {
+			((ThreadType) compType).getOwnedSubprogramAccesses().add(access);
+		} else if (compType instanceof ThreadGroupType) {
+			((ThreadGroupType) compType).getOwnedSubprogramAccesses().add(access);
+		} else {
+			return;
 		}
 	}
 

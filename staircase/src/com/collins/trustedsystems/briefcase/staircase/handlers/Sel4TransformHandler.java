@@ -1,32 +1,46 @@
 package com.collins.trustedsystems.briefcase.staircase.handlers;
 
+import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
+import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.util.EcoreUtil;
-import org.eclipse.xtext.ui.editor.XtextEditor;
+import org.eclipse.emf.transaction.RecordingCommand;
+import org.eclipse.emf.transaction.RollbackException;
+import org.eclipse.emf.transaction.TransactionalCommandStack;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.osate.aadl2.Aadl2Package;
 import org.osate.aadl2.Access;
 import org.osate.aadl2.AccessConnection;
 import org.osate.aadl2.Classifier;
+import org.osate.aadl2.ComponentImplementation;
 import org.osate.aadl2.ComponentType;
 import org.osate.aadl2.ConnectedElement;
 import org.osate.aadl2.Connection;
+import org.osate.aadl2.ConnectionEnd;
+import org.osate.aadl2.ContainedNamedElement;
+import org.osate.aadl2.Context;
 import org.osate.aadl2.DataAccess;
 import org.osate.aadl2.DataPort;
 import org.osate.aadl2.DirectionType;
 import org.osate.aadl2.EventDataPort;
 import org.osate.aadl2.EventPort;
 import org.osate.aadl2.Feature;
+import org.osate.aadl2.NamedElement;
 import org.osate.aadl2.PackageSection;
 import org.osate.aadl2.Port;
 import org.osate.aadl2.PortConnection;
 import org.osate.aadl2.ProcessImplementation;
 import org.osate.aadl2.ProcessSubcomponent;
 import org.osate.aadl2.ProcessType;
+import org.osate.aadl2.Property;
 import org.osate.aadl2.PropertyAssociation;
 import org.osate.aadl2.Realization;
 import org.osate.aadl2.Subcomponent;
@@ -41,8 +55,7 @@ import org.osate.aadl2.ThreadSubcomponent;
 import org.osate.aadl2.modelsupport.util.AadlUtil;
 import org.osate.ui.dialogs.Dialog;
 
-import com.collins.trustedsystems.briefcase.staircase.utils.ModifyUtils;
-import com.collins.trustedsystems.briefcase.util.Filesystem;
+import com.collins.trustedsystems.briefcase.staircase.utils.ComponentCreateHelper;
 
 public class Sel4TransformHandler extends AadlHandler {
 
@@ -73,46 +86,13 @@ public class Sel4TransformHandler extends AadlHandler {
 
 		transformSystem(selectedSystem);
 
-//		// Transform contained systems
-//		// This will ensure that any process or thread group descendants will get transformed
-//		for (SystemSubcomponent ss : selectedSystem.getOwnedSystemSubcomponents()) {
-//			transformSystem(ss);
-//		}
-//
-//		// Transform contained processes
-//		final Map<String, URI> sysUris = new HashMap<>();
-//		for (ProcessSubcomponent ps : selectedSystem.getOwnedProcessSubcomponents()) {
-//			URI sysUri = transformProcess(ps);
-//			if (sysUri != null) {
-//				sysUris.put(ps.getName(), sysUri);
-//			}
-//		}
-//
-//		XtextEditor editor = ModifyUtils.getEditor(Filesystem.getFile(selectedSystem.eResource().getURI()));
-//		if (editor == null) {
-//			throw new RuntimeException(
-//					"Could not transform process " + selectedSystem.getQualifiedName() + " for seL4.");
-//		}
-//
-//		editor.getDocument().modify(resource -> {
-//
-//			// Retrieve the model object to modify
-//			SystemImplementation sysImpl = (SystemImplementation) resource
-//					.getEObject(EcoreUtil.getURI(selectedSystem).fragment());
-//			PackageSection pkgSection = AadlUtil.getContainingPackageSection(sysImpl);
-//
-//			// Add transformed processes
-//
-//
-//			return null;
-//		});
-
 	}
 
+	/**
+	 * Transforms a System into a System containing transformed subcomponents
+	 * @param systemImpl - System implementation to be transformed
+	 */
 	public void transformSystem(SystemImplementation systemImpl) {
-//	public void transformSystem(SystemSubcomponent system) {
-
-//		final SystemImplementation systemImpl = (SystemImplementation) system.getComponentImplementation();
 
 		// Transform contained systems
 		// This will ensure that any process or thread group descendants will get transformed
@@ -121,303 +101,188 @@ public class Sel4TransformHandler extends AadlHandler {
 		}
 
 		// Transform contained processes
-		final Map<String, URI> sysUris = new HashMap<>();
+		final Map<String, SystemImplementation> transformedSubs = new HashMap<>();
 		for (ProcessSubcomponent ps : systemImpl.getOwnedProcessSubcomponents()) {
-			URI sysUri = transformProcess(ps);
-			if (sysUri != null) {
-				sysUris.put(ps.getName(), sysUri);
+			SystemImplementation sysImpl = transformProcess(ps);
+			if (sysImpl != null) {
+				transformedSubs.put(ps.getName(), sysImpl);
 			}
 		}
 
-		XtextEditor editor = ModifyUtils.getEditor(Filesystem.getFile(systemImpl.eResource().getURI()));
-		if (editor == null) {
-			throw new RuntimeException("Could not transform system " + systemImpl.getQualifiedName() + " for seL4.");
-		}
+		Resource aadlResource = systemImpl.eResource();
+		final TransactionalEditingDomain domain = TransactionalEditingDomain.Registry.INSTANCE
+				.getEditingDomain("org.osate.aadl2.ModelEditingDomain");
+		// We execute this command on the command stack because otherwise, we will not
+		// have write permissions on the editing domain.
+		Command cmd = new RecordingCommand(domain) {
 
-		editor.getDocument().modify(resource -> {
+			@Override
+			protected void doExecute() {
+				// Unlike other component types, we will just replace the original process subcomponent
+				// with the transformed system component
+				// We won't create a new system implementation
+				Iterator<ProcessSubcomponent> subIterator = systemImpl.getOwnedProcessSubcomponents().iterator();
+				while (subIterator.hasNext()) {
+					ProcessSubcomponent pSub = subIterator.next();
+					SystemImplementation transformedImpl = transformedSubs.get(pSub.getName());
+					if (transformedImpl != null) {
+						// Create transformed subcomponent
+						SystemSubcomponent sSub = systemImpl.createOwnedSystemSubcomponent();
+						sSub.setName(pSub.getName());
+						sSub.setSystemSubcomponentType(transformedImpl);
+						// Copy subcomponent properties
+						copyPropertyAssociations(pSub, sSub);
 
-			// Retrieve the model object to modify
-			SystemImplementation sysImpl = (SystemImplementation) resource
-					.getEObject(EcoreUtil.getURI(systemImpl).fragment());
-//			PackageSection pkgSection = AadlUtil.getContainingPackageSection(sysImpl);
+						// TODO: Modify property associations that reference or apply to process subcomponent
+						// TODO: make sure property is supported
+						for (PropertyAssociation pa : systemImpl.getOwnedPropertyAssociations()) {
+							for (ContainedNamedElement cne : pa.getAppliesTos()) {
 
-			// Add transformed process subcomponent(s),
-			// which will be a seL4 system containing 1 or more seL4 processes
-			Iterator<Map.Entry<String, URI>> iterator = sysUris.entrySet().iterator();
-			while (iterator.hasNext()) {
-				Map.Entry<String, URI> uri = iterator.next();
-				SystemImplementation sImpl = (SystemImplementation) resource.getEObject(uri.getValue().fragment());
-				SystemSubcomponent sSub = sysImpl.createOwnedSystemSubcomponent();
-				// Give it the same name as the original process subcomponent
-				sSub.setName(uri.getKey());
-				sSub.setSystemSubcomponentType(sImpl.getType());
-				// Replace connections of transformed processes with system counterparts
-				for (Connection c : sysImpl.getOwnedConnections()) {
-					if (uri.getKey().contentEquals(c.getSource().getContext().getName())) {
-						c.getSource().setContext(sSub);
-						for (Feature f : sImpl.getType().getOwnedFeatures()) {
-							if (f.getName().equalsIgnoreCase(c.getSource().getConnectionEnd().getName())) {
-								c.getSource().setConnectionEnd(f);
-								break;
 							}
 						}
-					} else if (uri.getKey().contentEquals(c.getDestination().getContext().getName())) {
-						c.getDestination().setContext(sSub);
-						for (Feature f : sImpl.getType().getOwnedFeatures()) {
-							if (f.getName().equalsIgnoreCase(c.getDestination().getConnectionEnd().getName())) {
-								c.getDestination().setConnectionEnd(f);
-								break;
+
+						// Update connections
+						Iterator<Connection> connIterator = systemImpl.getOwnedConnections().iterator();
+						while (connIterator.hasNext()) {
+							Connection conn = connIterator.next();
+							if (conn.getSource().getContext() == pSub) {
+								for (Feature f : sSub.getComponentType().getOwnedFeatures()) {
+									if (conn.getSource().getConnectionEnd().getName().equalsIgnoreCase(f.getName())) {
+										conn.getSource().setConnectionEnd(f);
+										break;
+									}
+								}
+								conn.getSource().setContext(sSub);
+							}
+							if (conn.getDestination().getContext() == pSub) {
+								for (Feature f : sSub.getComponentType().getOwnedFeatures()) {
+									if (conn.getDestination().getConnectionEnd().getName()
+											.equalsIgnoreCase(f.getName())) {
+										conn.getDestination().setConnectionEnd(f);
+										break;
+									}
+								}
+								conn.getDestination().setContext(sSub);
 							}
 						}
+
+						// Delete process subcomponent
+						subIterator.remove();
 					}
 				}
 			}
 
-			// Delete process subcomponents that have been transformed
-			Iterator<ProcessSubcomponent> subIterator = sysImpl.getOwnedProcessSubcomponents().iterator();
-			while (subIterator.hasNext()) {
-				ProcessSubcomponent ps = subIterator.next();
-				if (sysUris.containsKey(ps.getName())) {
-					subIterator.remove();
-				}
-			}
+		};
 
-			return null;
-		});
+		try {
+			((TransactionalCommandStack) domain.getCommandStack()).execute(cmd, null);
 
-		ModifyUtils.closeEditor(editor, true);
+			// We're done: Save the model
+			aadlResource.save(null);
+		} catch (IOException e) {
+			e.printStackTrace();
+//			setErrorMessage(e.getMessage());
+			return;
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+//			setErrorMessage(e.getMessage());
+		} catch (RollbackException e) {
+			e.printStackTrace();
+//			setErrorMessage(e.getMessage());
+		}
 
 		return;
 	}
 
-	public URI transformProcess(ProcessSubcomponent process) {
+	/**
+	 * Transforms a Process into a System containing transformed Threads
+	 * @param process - Process subcomponent to be transformed
+	 * @return Resulting transformed System Implementation
+	 */
+	@SuppressWarnings("unchecked")
+	public SystemImplementation transformProcess(ProcessSubcomponent process) {
+
+		final ProcessImplementation processImpl = (ProcessImplementation) process.getComponentImplementation();
 
 		// If the process only contains a single thread, no transform is necessary
-		final ProcessImplementation processImpl = (ProcessImplementation) process.getComponentImplementation();
 		// Instead check for SEL4 property?
 		if (processImpl.getOwnedThreadSubcomponents().size() <= 1
 				&& processImpl.getOwnedThreadGroupSubcomponents().isEmpty()) {
-//			return EcoreUtil.getURI(processImpl);
 			return null;
 		}
 
-//		// Make sure this process hasn't already been transformed
-//		PackageSection ps = AadlUtil.getContainingPackageSection(processImpl);
-//		for (Classifier c : ps.getOwnedClassifiers()) {
-//			// Instead check for SEL4 property?
-//			if (c instanceof SystemImplementation && c.getName().equalsIgnoreCase(processImpl.getName() + "_seL4")) {
-//				return EcoreUtil.getURI(c);
-//			}
-//		}
-
 		// Transform thread subcomponents
-		final Map<String, URI> procUris = new HashMap<>();
+		final Map<String, ComponentImplementation> transformedSubs = new HashMap<>();
 		for (ThreadSubcomponent ts : processImpl.getOwnedThreadSubcomponents()) {
-			URI uri = transformThread(ts);
-			if (uri != null) {
-				procUris.put(ts.getName(), uri);
+			ProcessImplementation procImpl = transformThread(ts);
+			if (procImpl != null) {
+				transformedSubs.put(ts.getName(), procImpl);
 			}
 		}
 
 		// Transform thread group subcomponents
-		final Map<String, URI> sysUris = new HashMap<>();
 		for (ThreadGroupSubcomponent tgs : processImpl.getOwnedThreadGroupSubcomponents()) {
-			URI uri = transformThreadGroup(tgs);
-			if (uri != null) {
-				sysUris.put(tgs.getName(), uri);
+			SystemImplementation sysImpl = transformThreadGroup(tgs);
+			if (sysImpl != null) {
+				transformedSubs.put(tgs.getName(), sysImpl);
 			}
 		}
 
-		XtextEditor editor = ModifyUtils.getEditor(Filesystem.getFile(processImpl.eResource().getURI()));
-		if (editor == null) {
-			throw new RuntimeException("Could not transform process " + process.getQualifiedName() + " for seL4.");
+//		System.out.println(
+//				"Transforming Process " + process.getName() + " : " + process.getComponentImplementation().getName());
+		Resource aadlResource = processImpl.eResource();
+		final TransactionalEditingDomain domain = TransactionalEditingDomain.Registry.INSTANCE
+				.getEditingDomain("org.osate.aadl2.ModelEditingDomain");
+		// We execute this command on the command stack because otherwise, we will not
+		// have write permissions on the editing domain.
+		Command cmd = new RecordingCommand(domain) {
+
+			public ComponentImplementation implementation;
+
+			@Override
+			protected void doExecute() {
+				implementation = transform(processImpl, transformedSubs);
+			}
+
+			@Override
+			public List<ComponentImplementation> getResult() {
+				return Collections.singletonList(implementation);
+			}
+		};
+
+		try {
+			((TransactionalCommandStack) domain.getCommandStack()).execute(cmd, null);
+
+			// We're done: Save the model
+			aadlResource.save(null);
+		} catch (IOException e) {
+			e.printStackTrace();
+//			setErrorMessage(e.getMessage());
+			return null;
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+//			setErrorMessage(e.getMessage());
+		} catch (RollbackException e) {
+			e.printStackTrace();
+//			setErrorMessage(e.getMessage());
 		}
 
-		URI sysUri = editor.getDocument().modify(resource -> {
-
-			// Retrieve the model object to modify
-			ProcessImplementation procImpl = (ProcessImplementation) resource
-					.getEObject(EcoreUtil.getURI(processImpl).fragment());
-			PackageSection pkgSection = AadlUtil.getContainingPackageSection(procImpl);
-
-			// Make sure this process hasn't already been transformed before
-			// It's possible someone manually added another thread subcomponent to this process
-			// after a previous seL4 transformation
-			// If that's the case, delete the existing transformed process (system) and create a new one
-			Iterator<Classifier> i = pkgSection.getOwnedClassifiers().iterator();
-			while (i.hasNext()) {
-				Classifier c = i.next();
-				// Instead check for SEL4 property?
-				if (c instanceof SystemType && c.getName().equalsIgnoreCase(procImpl.getType().getName() + "_seL4")) {
-					i.remove();
-				} else if (c instanceof SystemImplementation
-						&& c.getName().equalsIgnoreCase(procImpl.getName() + "_seL4")) {
-					i.remove();
-				}
-			}
-
-			// Create corresponding system type, if it doesn't exist
-			SystemType sysType = (SystemType) pkgSection.createOwnedClassifier(Aadl2Package.eINSTANCE.getSystemType());
-			// Give it a name
-			sysType.setName(procImpl.getTypeName() + "_seL4");
-			// Give it the same features
-			Map<Feature, Feature> features = new HashMap<>();
-			for (Feature f : procImpl.getType().getOwnedFeatures()) {
-				if (f instanceof DataPort) {
-					DataPort p = sysType.createOwnedDataPort();
-					p = EcoreUtil.copy((DataPort) f);
-					features.put(f, p);
-				} else if (f instanceof EventDataPort) {
-					EventDataPort p = sysType.createOwnedEventDataPort();
-					p = EcoreUtil.copy((EventDataPort) f);
-					features.put(f, p);
-				} else if (f instanceof EventPort) {
-					EventPort p = sysType.createOwnedEventPort();
-					p = EcoreUtil.copy((EventPort) f);
-					features.put(f, p);
-				} else if (f instanceof DataAccess) {
-					DataAccess a = sysType.createOwnedDataAccess();
-					a = EcoreUtil.copy((DataAccess) f);
-					features.put(f, a);
-				} else if (f instanceof SubprogramAccess) {
-					SubprogramAccess a = sysType.createOwnedSubprogramAccess();
-					a = EcoreUtil.copy((SubprogramAccess) f);
-					features.put(f, a);
-				}
-			}
-			// Give it the same property associations
-			for (PropertyAssociation pa : procImpl.getType().getOwnedPropertyAssociations()) {
-				PropertyAssociation prop = sysType.createOwnedPropertyAssociation();
-				prop = EcoreUtil.copy(pa);
-			}
-			// TODO: Add SEL4 property association?
-
-			// Create corresponding system implementation
-			SystemImplementation sysImpl = (SystemImplementation) pkgSection
-					.createOwnedClassifier(Aadl2Package.eINSTANCE.getSystemImplementation());
-			// Give it a name
-			sysImpl.setName(sysType.getName() + ".Impl");
-			// Give it a realization
-			final Realization r = sysImpl.createOwnedRealization();
-			r.setImplemented(sysType);
-			// Add transformed thread subcomponent(s),
-			// which will be a seL4 process containing a single thread
-			Iterator<Map.Entry<String, URI>> iterator = procUris.entrySet().iterator();
-			while (iterator.hasNext()) {
-				Map.Entry<String, URI> uri = iterator.next();
-				ProcessImplementation pImpl = (ProcessImplementation) resource.getEObject(uri.getValue().fragment());
-				ProcessSubcomponent pSub = sysImpl.createOwnedProcessSubcomponent();
-				// Give it the same name as the original thread subcomponent
-				pSub.setName(uri.getKey());
-				pSub.setProcessSubcomponentType(pImpl.getType());
-			}
-			// Add transformed thread group subcomponent(s),
-			// which will be a seL4 system containing 1 or more seL4 processes
-			iterator = sysUris.entrySet().iterator();
-			while (iterator.hasNext()) {
-				Map.Entry<String, URI> uri = iterator.next();
-				SystemImplementation sImpl = (SystemImplementation) resource.getEObject(uri.getValue().fragment());
-				SystemSubcomponent sSub = sysImpl.createOwnedSystemSubcomponent();
-				// Give it the same name as the original thread group subcomponent
-				sSub.setName(uri.getKey());
-				sSub.setSystemSubcomponentType(sImpl.getType());
-			}
-
-			// Add connections
-			for (Connection c : procImpl.getOwnedConnections()) {
-				Feature sysFeature = null;
-				Feature subsysFeature = null;
-				Subcomponent sub = null;
-				if (c.getSource().getContext() == null) {
-					sysFeature = features.get(c.getSource().getConnectionEnd());
-					String subsysFeatureName = c.getDestination().getConnectionEnd().getName();
-					Subcomponent procSub = (Subcomponent) c.getDestination().getContext();
-					if (procSub instanceof ThreadSubcomponent) {
-						sub = (Subcomponent) resource.getEObject(procUris.get(procSub.getName()).fragment());
-					} else {
-						sub = (Subcomponent) resource.getEObject(sysUris.get(procSub.getName()).fragment());
-					}
-					ComponentType subsysType = sub.getComponentType();
-					for (Feature compFeature : subsysType.getOwnedFeatures()) {
-						if (compFeature.getName().equalsIgnoreCase(subsysFeatureName)) {
-							subsysFeature = compFeature;
-							break;
-						}
-					}
-				} else {
-					sysFeature = features.get(c.getDestination().getConnectionEnd());
-					String subsysFeatureName = c.getSource().getConnectionEnd().getName();
-					Subcomponent procSub = (Subcomponent) c.getSource().getContext();
-					if (procSub instanceof ThreadSubcomponent) {
-						sub = (Subcomponent) resource.getEObject(procUris.get(procSub.getName()).fragment());
-					} else {
-						sub = (Subcomponent) resource.getEObject(sysUris.get(procSub.getName()).fragment());
-					}
-					ComponentType subsysType = sub.getComponentType();
-					for (Feature compFeature : subsysType.getOwnedFeatures()) {
-						if (compFeature.getName().equalsIgnoreCase(subsysFeatureName)) {
-							subsysFeature = compFeature;
-							break;
-						}
-					}
-				}
-
-				if (c instanceof PortConnection) {
-					PortConnection pc = sysImpl.createOwnedPortConnection();
-					pc.setName(getUniqueName(PORT_CONNECTION_IMPL_NAME, false, sysImpl.getOwnedPortConnections()));
-					pc.setBidirectional(c.isBidirectional());
-					ConnectedElement src = pc.createSource();
-					ConnectedElement dst = pc.createDestination();
-					if (c.getSource().getContext() == null) {
-						src.setContext(null);
-						src.setConnectionEnd(sysFeature);
-						dst.setContext(sub);
-						dst.setConnectionEnd(subsysFeature);
-					} else {
-						src.setContext(sub);
-						src.setConnectionEnd(subsysFeature);
-						dst.setContext(null);
-						dst.setConnectionEnd(sysFeature);
-					}
-				} else if (c instanceof AccessConnection) {
-					AccessConnection ac = sysImpl.createOwnedAccessConnection();
-					ac.setName(getUniqueName(ACCESS_CONNECTION_IMPL_NAME, false, sysImpl.getOwnedAccessConnections()));
-					ConnectedElement src = ac.createSource();
-					src.setContext(null);
-					src.setConnectionEnd(sysFeature);
-					ConnectedElement dst = ac.createDestination();
-					dst.setContext(sub);
-					dst.setConnectionEnd(subsysFeature);
-				}
-			}
-
-			// Give it the same property associations
-			for (PropertyAssociation pa : procImpl.getOwnedPropertyAssociations()) {
-				PropertyAssociation prop = sysImpl.createOwnedPropertyAssociation();
-				prop = EcoreUtil.copy(pa);
-//				prop.setProperty(pa.getProperty());
-//				for (ModalPropertyValue mpv : pa.getOwnedValues()) {
-//					ModalPropertyValue val = prop.createOwnedValue();
-//					val.setOwnedValue(mpv.getOwnedValue());
-//				}
-			}
-
-			return EcoreUtil.getURI(sysImpl);
-
-		});
-
-		ModifyUtils.closeEditor(editor, true);
-
-		return sysUri;
+		List<ComponentImplementation> transformImplList = (List<ComponentImplementation>) cmd.getResult();
+		if (transformImplList.get(0) instanceof SystemImplementation) {
+			return (SystemImplementation) transformImplList.get(0);
+		} else {
+			return null;
+		}
 
 	}
 
 	/**
 	 * Transforms a Thread Group into a System containing transformed Threads
 	 * @param threadGroup - Thread Group subcomponent to be transformed
-	 * @return URI of the resulting System Type
+	 * @return Resulting transformed System Implementation
 	 */
-	public URI transformThreadGroup(ThreadGroupSubcomponent threadGroup) {
+	@SuppressWarnings("unchecked")
+	public SystemImplementation transformThreadGroup(ThreadGroupSubcomponent threadGroup) {
 
 		final ThreadGroupImplementation tgImpl = (ThreadGroupImplementation) threadGroup.getComponentImplementation();
 
@@ -425,393 +290,369 @@ public class Sel4TransformHandler extends AadlHandler {
 		PackageSection ps = AadlUtil.getContainingPackageSection(tgImpl);
 		for (Classifier c : ps.getOwnedClassifiers()) {
 			// Instead check for SEL4 property?
-			if (c instanceof SystemType && c.getName().equalsIgnoreCase(tgImpl.getType().getName() + "_seL4")) {
-				return EcoreUtil.getURI(c);
+			if (c instanceof SystemImplementation && c.getName().equalsIgnoreCase(tgImpl.getName() + "_seL4")) {
+				return (SystemImplementation) c;
 			}
 		}
 
 		// Transform thread subcomponents
-		final Map<String, URI> procUris = new HashMap<>();
+		final Map<String, ComponentImplementation> transformedSubs = new HashMap<>();
 		for (ThreadSubcomponent ts : tgImpl.getOwnedThreadSubcomponents()) {
-			URI uri = transformThread(ts);
-			if (uri != null) {
-				procUris.put(ts.getName(), uri);
+			ComponentImplementation procImpl = transformThread(ts);
+			if (procImpl != null) {
+				transformedSubs.put(ts.getName(), procImpl);
 			}
 		}
 
 		// Transform thread group subcomponents
-		final Map<String, URI> sysUris = new HashMap<>();
 		for (ThreadGroupSubcomponent tgs : tgImpl.getOwnedThreadGroupSubcomponents()) {
-			URI uri = transformThreadGroup(tgs);
-			if (uri != null) {
-				sysUris.put(tgs.getName(), uri);
+			ComponentImplementation sysImpl = transformThreadGroup(tgs);
+			if (sysImpl != null) {
+				transformedSubs.put(tgs.getName(), sysImpl);
 			}
 		}
 
-		XtextEditor editor = ModifyUtils.getEditor(Filesystem.getFile(tgImpl.eResource().getURI()));
-		if (editor == null) {
-			throw new RuntimeException(
-					"Could not transform thread group " + threadGroup.getQualifiedName() + " for seL4.");
+//		System.out.println("Transforming Thread Group " + threadGroup.getName() + " : "
+//				+ threadGroup.getComponentImplementation().getName());
+		Resource aadlResource = tgImpl.eResource();
+		final TransactionalEditingDomain domain = TransactionalEditingDomain.Registry.INSTANCE
+				.getEditingDomain("org.osate.aadl2.ModelEditingDomain");
+		// We execute this command on the command stack because otherwise, we will not
+		// have write permissions on the editing domain.
+		Command cmd = new RecordingCommand(domain) {
+
+			public ComponentImplementation implementation;
+
+			@Override
+			protected void doExecute() {
+				implementation = transform(tgImpl, transformedSubs);
+			}
+
+			@Override
+			public List<ComponentImplementation> getResult() {
+				return Collections.singletonList(implementation);
+			}
+		};
+
+		try {
+			((TransactionalCommandStack) domain.getCommandStack()).execute(cmd, null);
+
+			// We're done: Save the model
+			aadlResource.save(null);
+		} catch (IOException e) {
+			e.printStackTrace();
+//			setErrorMessage(e.getMessage());
+			return null;
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+//			setErrorMessage(e.getMessage());
+		} catch (RollbackException e) {
+			e.printStackTrace();
+//			setErrorMessage(e.getMessage());
 		}
 
-		URI sysUri = editor.getDocument().modify(resource -> {
+		List<ComponentImplementation> transformImplList = (List<ComponentImplementation>) cmd.getResult();
+		if (transformImplList.get(0) instanceof SystemImplementation) {
+			return (SystemImplementation) transformImplList.get(0);
+		} else {
+			return null;
+		}
+	}
 
-			// Retrieve the model object to modify
-			ThreadGroupImplementation thrGrpImpl = (ThreadGroupImplementation) resource
-					.getEObject(EcoreUtil.getURI(tgImpl).fragment());
-			PackageSection pkgSection = AadlUtil.getContainingPackageSection(thrGrpImpl);
+	/**
+	 * Transforms a Thread into a Process containing a Thread
+	 * @param thread - Thread subcomponent to be transformed
+	 * @return Resulting transformed Process implementation
+	 */
+	@SuppressWarnings("unchecked")
+	public ProcessImplementation transformThread(ThreadSubcomponent thread) {
 
-			// Create corresponding system type
-			SystemType sysType = (SystemType) pkgSection.createOwnedClassifier(Aadl2Package.eINSTANCE.getSystemType());
-			// Give it a name
-//			sysType.setName(thrGrpImpl.getTypeName() + "_Sys");
-			sysType.setName(thrGrpImpl.getTypeName() + "_seL4");
-			// Give it the same features
-			Map<Feature, Feature> features = new HashMap<>();
-			for (Feature f : thrGrpImpl.getType().getOwnedFeatures()) {
-				if (f instanceof DataPort) {
-					DataPort p = sysType.createOwnedDataPort();
-					p = EcoreUtil.copy((DataPort) f);
-					features.put(f, p);
-				} else if (f instanceof EventDataPort) {
-					EventDataPort p = sysType.createOwnedEventDataPort();
-					p = EcoreUtil.copy((EventDataPort) f);
-					features.put(f, p);
-				} else if (f instanceof EventPort) {
-					EventPort p = sysType.createOwnedEventPort();
-					p = EcoreUtil.copy((EventPort) f);
-					features.put(f, p);
-				} else if (f instanceof DataAccess) {
-					DataAccess a = sysType.createOwnedDataAccess();
-					a = EcoreUtil.copy((DataAccess) f);
-					features.put(f, a);
-				} else if (f instanceof SubprogramAccess) {
-					SubprogramAccess a = sysType.createOwnedSubprogramAccess();
-					a = EcoreUtil.copy((SubprogramAccess) f);
-					features.put(f, a);
-				}
+		final ThreadImplementation threadImpl = (ThreadImplementation) thread.getComponentImplementation();
+
+		// Make sure this thread hasn't already been transformed
+		PackageSection ps = AadlUtil.getContainingPackageSection(threadImpl);
+		for (Classifier c : ps.getOwnedClassifiers()) {
+			// Instead check for SEL4 property?
+			if (c instanceof ProcessImplementation && c.getName().equalsIgnoreCase(threadImpl.getName() + "_seL4")) {
+				return (ProcessImplementation) c;
 			}
-			// Give it the same property associations
-			for (PropertyAssociation pa : thrGrpImpl.getType().getOwnedPropertyAssociations()) {
-				PropertyAssociation prop = sysType.createOwnedPropertyAssociation();
-				prop = EcoreUtil.copy(pa);
-//				prop.setProperty(pa.getProperty());
-//				for (ModalPropertyValue mpv : pa.getOwnedValues()) {
-//					ModalPropertyValue val = prop.createOwnedValue();
-//					val.setOwnedValue(mpv.getOwnedValue());
-//				}
-			}
-			// TODO: Add SEL4 property association?
+		}
 
-			// Create corresponding system implementation
-			SystemImplementation sysImpl = (SystemImplementation) pkgSection
+//		System.out.println(
+//				"Transforming Thread " + thread.getName() + " : " + thread.getComponentImplementation().getName());
+		Resource aadlResource = threadImpl.eResource();
+		final TransactionalEditingDomain domain = TransactionalEditingDomain.Registry.INSTANCE
+				.getEditingDomain("org.osate.aadl2.ModelEditingDomain");
+		// We execute this command on the command stack because otherwise, we will not
+		// have write permissions on the editing domain.
+		Command cmd = new RecordingCommand(domain) {
+
+			public ComponentImplementation implementation;
+
+			@Override
+			protected void doExecute() {
+				implementation = transform(threadImpl, null);
+			}
+
+			@Override
+			public List<ComponentImplementation> getResult() {
+				return Collections.singletonList(implementation);
+			}
+		};
+
+		try {
+			((TransactionalCommandStack) domain.getCommandStack()).execute(cmd, null);
+
+			// We're done: Save the model
+			aadlResource.save(null);
+		} catch (IOException e) {
+			e.printStackTrace();
+//			setErrorMessage(e.getMessage());
+			return null;
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+//			setErrorMessage(e.getMessage());
+		} catch (RollbackException e) {
+			e.printStackTrace();
+//			setErrorMessage(e.getMessage());
+		}
+
+		List<ComponentImplementation> transformImplList = (List<ComponentImplementation>) cmd.getResult();
+		if (transformImplList.get(0) instanceof ProcessImplementation) {
+			return (ProcessImplementation) transformImplList.get(0);
+		} else {
+			return null;
+		}
+
+	}
+
+	/**
+	 * Transforms a Component for seL4:
+	 * Thread -> Process,
+	 * Thread Group -> System,
+	 * Process -> System
+	 * @param compImpl - Component implementation to be transformed
+	 * @param transformedSub - Map of compImpl's subcomponent names to transformed component implementation
+	 * @return Resulting transformed component implementation
+	 */
+	public ComponentImplementation transform(ComponentImplementation compImpl,
+			Map<String, ComponentImplementation> transformedSubs) {
+
+		PackageSection pkgSection = AadlUtil.getContainingPackageSection(compImpl);
+
+		// Create component type for transform
+		ComponentType transformType = null;
+		if (compImpl instanceof ThreadImplementation) {
+			transformType = (ProcessType) pkgSection.createOwnedClassifier(Aadl2Package.eINSTANCE.getProcessType());
+		} else if (compImpl instanceof ThreadGroupImplementation) {
+			transformType = (SystemType) pkgSection.createOwnedClassifier(Aadl2Package.eINSTANCE.getSystemType());
+		} else if (compImpl instanceof ProcessImplementation) {
+			transformType = (SystemType) pkgSection.createOwnedClassifier(Aadl2Package.eINSTANCE.getSystemType());
+		} else if (compImpl instanceof SystemImplementation) {
+			transformType = (SystemType) pkgSection.createOwnedClassifier(Aadl2Package.eINSTANCE.getSystemType());
+		}
+
+		// Give it a name
+		transformType.setName(compImpl.getTypeName() + "_seL4");
+
+		// Give it the same features
+		Map<Feature, Feature> features = new HashMap<>();
+		for (Feature compFeature : compImpl.getType().getOwnedFeatures()) {
+			if (compFeature instanceof DataPort) {
+				DataPort transformFeature = EcoreUtil.copy((DataPort) compFeature);
+				ComponentCreateHelper.createOwnedDataPort(transformType, transformFeature);
+				features.put(compFeature, transformFeature);
+			} else if (compFeature instanceof EventDataPort) {
+				EventDataPort transformFeature = EcoreUtil.copy((EventDataPort) compFeature);
+				ComponentCreateHelper.createOwnedEventDataPort(transformType, transformFeature);
+				features.put(compFeature, transformFeature);
+			} else if (compFeature instanceof EventPort) {
+				EventPort transformFeature = EcoreUtil.copy((EventPort) compFeature);
+				ComponentCreateHelper.createOwnedEventPort(transformType, transformFeature);
+				features.put(compFeature, transformFeature);
+			} else if (compFeature instanceof DataAccess) {
+				DataAccess transformFeature = EcoreUtil.copy((DataAccess) compFeature);
+				ComponentCreateHelper.createOwnedDataAccess(transformType, transformFeature);
+				features.put(compFeature, transformFeature);
+			} else if (compFeature instanceof SubprogramAccess) {
+				SubprogramAccess transformFeature = EcoreUtil.copy((SubprogramAccess) compFeature);
+				ComponentCreateHelper.createOwnedSubprogramAccess(transformType, transformFeature);
+				features.put(compFeature, transformFeature);
+			}
+		}
+		// Give it the same property associations
+		copyPropertyAssociations(compImpl.getType(), transformType);
+		// TODO: Add SEL4 property association?
+
+		// Create corresponding implementation
+		ComponentImplementation transformImpl = null;
+		if (compImpl instanceof ThreadImplementation) {
+			transformImpl = (ProcessImplementation) pkgSection
+					.createOwnedClassifier(Aadl2Package.eINSTANCE.getProcessImplementation());
+		} else if (compImpl instanceof ThreadGroupImplementation) {
+			transformImpl = (SystemImplementation) pkgSection
 					.createOwnedClassifier(Aadl2Package.eINSTANCE.getSystemImplementation());
-			// Give it a name
-			sysImpl.setName(sysType.getName() + ".Impl");
-			// Give it a realization
-			final Realization r = sysImpl.createOwnedRealization();
-			r.setImplemented(sysType);
-			// Add transformed thread subcomponent(s),
-			// which will be a seL4 process containing a single thread
-			Iterator<Map.Entry<String, URI>> iterator = procUris.entrySet().iterator();
+		} else if (compImpl instanceof ProcessImplementation) {
+			transformImpl = (SystemImplementation) pkgSection
+					.createOwnedClassifier(Aadl2Package.eINSTANCE.getSystemImplementation());
+		} else if (compImpl instanceof SystemImplementation) {
+			transformImpl = (SystemImplementation) pkgSection
+					.createOwnedClassifier(Aadl2Package.eINSTANCE.getSystemImplementation());
+		}
+
+		// Give it a name
+		transformImpl.setName(transformType.getName() + ".Impl");
+		// Give it a realization
+		final Realization r = transformImpl.createOwnedRealization();
+		r.setImplemented(transformType);
+
+		// Add subcomponent(s) and connections
+		if (transformedSubs == null) {
+
+			Subcomponent sub = ComponentCreateHelper.createOwnedSubcomponent(transformImpl, compImpl.getCategory());
+			sub.setName(compImpl.getTypeName());
+			ComponentCreateHelper.setSubcomponentType(sub, compImpl);
+
+			// Add connections
+			Iterator<Map.Entry<Feature, Feature>> iterator = features.entrySet().iterator();
 			while (iterator.hasNext()) {
-				Map.Entry<String, URI> uri = iterator.next();
-				ProcessImplementation procImpl = (ProcessImplementation) resource.getEObject(uri.getValue().fragment());
-				ProcessSubcomponent pSub = sysImpl.createOwnedProcessSubcomponent();
-				// Give it the same name as the original thread subcomponent
-				pSub.setName(uri.getKey());
-				pSub.setProcessSubcomponentType(procImpl.getType());
+				Map.Entry<Feature, Feature> f = iterator.next();
+				Feature compFeature = f.getKey();
+				Feature transformFeature = f.getValue();
+				if (transformFeature instanceof Port) {
+					PortConnection pc = transformImpl.createOwnedPortConnection();
+					pc.setName(
+							getUniqueName(PORT_CONNECTION_IMPL_NAME, false, transformImpl.getOwnedPortConnections()));
+					pc.setBidirectional(((Port) transformFeature).getDirection() == DirectionType.IN_OUT);
+					ConnectedElement src = pc.createSource();
+					ConnectedElement dst = pc.createDestination();
+					if (((Port) compFeature).isIn()) {
+						src.setContext(null);
+						src.setConnectionEnd(transformFeature);
+						dst.setContext(sub);
+						dst.setConnectionEnd(compFeature);
+					} else {
+						src.setContext(sub);
+						src.setConnectionEnd(compFeature);
+						dst.setContext(null);
+						dst.setConnectionEnd(transformFeature);
+					}
+				} else if (transformFeature instanceof Access) {
+					AccessConnection ac = transformImpl.createOwnedAccessConnection();
+					ac.setName(getUniqueName(ACCESS_CONNECTION_IMPL_NAME, false,
+							transformImpl.getOwnedAccessConnections()));
+					ConnectedElement src = ac.createSource();
+					ConnectedElement dst = ac.createDestination();
+					src.setContext(null);
+					src.setConnectionEnd(transformFeature);
+					dst.setContext(sub);
+					dst.setConnectionEnd(compFeature);
+				}
+
 			}
-			// Add transformed thread group subcomponent(s),
-			// which will be a seL4 system containing 1 or more seL4 processes
-			iterator = sysUris.entrySet().iterator();
-			while (iterator.hasNext()) {
-				Map.Entry<String, URI> uri = iterator.next();
-				SystemImplementation sImpl = (SystemImplementation) resource.getEObject(uri.getValue().fragment());
-				SystemSubcomponent sSub = sysImpl.createOwnedSystemSubcomponent();
-				// Give it the same name as the original thread group subcomponent
-				sSub.setName(uri.getKey());
-				sSub.setSystemSubcomponentType(sImpl.getType());
+
+		} else {
+
+			Iterator<Map.Entry<String, ComponentImplementation>> subIterator = transformedSubs.entrySet().iterator();
+			while (subIterator.hasNext()) {
+				Map.Entry<String, ComponentImplementation> mapElement = subIterator.next();
+				Subcomponent sub = ComponentCreateHelper.createOwnedSubcomponent(transformImpl,
+						mapElement.getValue().getCategory());
+				// Give it the same name as the original subcomponent
+				sub.setName(mapElement.getKey());
+				ComponentCreateHelper.setSubcomponentType(sub, mapElement.getValue());
+				// TODO: Copy property associations of original subcomponent
+
 			}
 
 			// Add connections
-			for (Connection c : thrGrpImpl.getOwnedConnections()) {
-				Feature sysFeature = null;
-				Feature subsysFeature = null;
-				Subcomponent sub = null;
-				if (c.getSource().getContext() == null) {
-					sysFeature = features.get(c.getSource().getConnectionEnd());
-					String subsysFeatureName = c.getDestination().getConnectionEnd().getName();
-					Subcomponent thrGrpSub = (Subcomponent) c.getDestination().getContext();
-					if (thrGrpSub instanceof ThreadSubcomponent) {
-						sub = (Subcomponent) resource.getEObject(procUris.get(thrGrpSub.getName()).fragment());
-					} else {
-						sub = (Subcomponent) resource.getEObject(sysUris.get(thrGrpSub.getName()).fragment());
+			for (Connection c : compImpl.getOwnedConnections()) {
+				Context srcContext = null;
+				Context dstContext = null;
+				ConnectionEnd srcConnEnd = null;
+				ConnectionEnd dstConnEnd = null;
+
+				// Get the source and destination subcomponents
+				for (Subcomponent tSub : transformImpl.getOwnedSubcomponents()) {
+					Context cSrcContext = c.getSource().getContext();
+					Context cDstContext = c.getDestination().getContext();
+					if (cSrcContext != null && tSub.getName().equalsIgnoreCase(cSrcContext.getName())) {
+						srcContext = tSub;
+					} else if (cDstContext != null && tSub.getName().equalsIgnoreCase(cDstContext.getName())) {
+						dstContext = tSub;
 					}
-					ComponentType subsysType = sub.getComponentType();
-					for (Feature compFeature : subsysType.getOwnedFeatures()) {
-						if (compFeature.getName().equalsIgnoreCase(subsysFeatureName)) {
-							subsysFeature = compFeature;
+				}
+
+				// Get the source and destination features
+				if (srcContext == null) {
+					srcConnEnd = features.get(c.getSource().getConnectionEnd());
+				} else {
+					for (Feature compFeature : ((Subcomponent) srcContext).getComponentType().getOwnedFeatures()) {
+						if (compFeature.getName().equalsIgnoreCase(c.getSource().getConnectionEnd().getName())) {
+							srcConnEnd = compFeature;
 							break;
 						}
 					}
+				}
+				if (dstContext == null) {
+					dstConnEnd = features.get(c.getDestination().getConnectionEnd());
 				} else {
-					sysFeature = features.get(c.getDestination().getConnectionEnd());
-					String subsysFeatureName = c.getSource().getConnectionEnd().getName();
-					Subcomponent thrGrpSub = (Subcomponent) c.getSource().getContext();
-					if (thrGrpSub instanceof ThreadSubcomponent) {
-						sub = (Subcomponent) resource.getEObject(procUris.get(thrGrpSub.getName()).fragment());
-					} else {
-						sub = (Subcomponent) resource.getEObject(sysUris.get(thrGrpSub.getName()).fragment());
-					}
-					ComponentType subsysType = sub.getComponentType();
-					for (Feature compFeature : subsysType.getOwnedFeatures()) {
-						if (compFeature.getName().equalsIgnoreCase(subsysFeatureName)) {
-							subsysFeature = compFeature;
+					for (Feature compFeature : ((Subcomponent) dstContext).getComponentType().getOwnedFeatures()) {
+						if (compFeature.getName().equalsIgnoreCase(c.getDestination().getConnectionEnd().getName())) {
+							dstConnEnd = compFeature;
 							break;
 						}
 					}
 				}
 
 				if (c instanceof PortConnection) {
-					PortConnection pc = sysImpl.createOwnedPortConnection();
-					pc.setName(getUniqueName(PORT_CONNECTION_IMPL_NAME, false, sysImpl.getOwnedPortConnections()));
+					PortConnection pc = transformImpl.createOwnedPortConnection();
+					pc.setName(
+							getUniqueName(PORT_CONNECTION_IMPL_NAME, false, transformImpl.getOwnedPortConnections()));
 					pc.setBidirectional(c.isBidirectional());
 					ConnectedElement src = pc.createSource();
 					ConnectedElement dst = pc.createDestination();
-					if (c.getSource().getContext() == null) {
-						src.setContext(null);
-						src.setConnectionEnd(sysFeature);
-						dst.setContext(sub);
-						dst.setConnectionEnd(subsysFeature);
-					} else {
-						src.setContext(sub);
-						src.setConnectionEnd(subsysFeature);
-						dst.setContext(null);
-						dst.setConnectionEnd(sysFeature);
-					}
+					src.setContext(srcContext);
+					src.setConnectionEnd(srcConnEnd);
+					dst.setContext(dstContext);
+					dst.setConnectionEnd(dstConnEnd);
+					// Give the connection the same property associations
+					copyPropertyAssociations(c, pc);
 				} else if (c instanceof AccessConnection) {
-					AccessConnection ac = sysImpl.createOwnedAccessConnection();
-					ac.setName(getUniqueName(ACCESS_CONNECTION_IMPL_NAME, false, sysImpl.getOwnedAccessConnections()));
+					AccessConnection ac = transformImpl.createOwnedAccessConnection();
+					ac.setName(getUniqueName(ACCESS_CONNECTION_IMPL_NAME, false,
+							transformImpl.getOwnedAccessConnections()));
 					ConnectedElement src = ac.createSource();
-					src.setContext(null);
-					src.setConnectionEnd(sysFeature);
 					ConnectedElement dst = ac.createDestination();
-					dst.setContext(sub);
-					dst.setConnectionEnd(subsysFeature);
+					src.setContext(srcContext);
+					src.setConnectionEnd(srcConnEnd);
+					dst.setContext(dstContext);
+					dst.setConnectionEnd(dstConnEnd);
+					// Give the connection the same property associations
+					copyPropertyAssociations(c, ac);
 				}
+
 			}
 
-			// Give it the same property associations
-			for (PropertyAssociation pa : thrGrpImpl.getOwnedPropertyAssociations()) {
-				PropertyAssociation prop = sysImpl.createOwnedPropertyAssociation();
-				prop = EcoreUtil.copy(pa);
-//				prop.setProperty(pa.getProperty());
-//				for (ModalPropertyValue mpv : pa.getOwnedValues()) {
-//					ModalPropertyValue val = prop.createOwnedValue();
-//					val.setOwnedValue(mpv.getOwnedValue());
-//				}
-			}
+		}
 
-			return EcoreUtil.getURI(sysImpl);
-		});
+		// Give it the same property associations
+		copyPropertyAssociations(compImpl, transformImpl);
 
-		ModifyUtils.closeEditor(editor, true);
-
-		return sysUri;
+		return transformImpl;
 
 	}
 
-	/**
-	 * Transforms a Thread into a Process containing a Thread
-	 * @param thread - Thread subcomponent to be transformed
-	 * @return URI of the resulting Process
-	 */
-	public URI transformThread(ThreadSubcomponent thread) {
-
-		final ThreadImplementation thrImpl = (ThreadImplementation) thread.getComponentImplementation();
-
-		// Make sure this thread hasn't already been transformed
-		PackageSection ps = AadlUtil.getContainingPackageSection(thrImpl);
-		for (Classifier c : ps.getOwnedClassifiers()) {
-			// Instead check for SEL4 property?
-			if (c instanceof ProcessType
-					&& c.getName().equalsIgnoreCase(thread.getComponentType().getName() + "_seL4")) {
-				return EcoreUtil.getURI(c);
+	private void copyPropertyAssociations(NamedElement from, NamedElement to) {
+		for (PropertyAssociation pa : from.getOwnedPropertyAssociations()) {
+			PropertyAssociation propAssoc = EcoreUtil.copy(pa);
+			Property prop = propAssoc.getProperty();
+			if (to.acceptsProperty(prop)) {
+				to.getOwnedPropertyAssociations().add(propAssoc);
+			} else {
+				// TODO: log exception
 			}
 		}
-
-		XtextEditor editor = ModifyUtils.getEditor(Filesystem.getFile(thrImpl.eResource().getURI()));
-		if (editor == null) {
-			throw new RuntimeException("Could not transform thread " + thread.getQualifiedName() + " for seL4.");
-		}
-
-		URI procUri = editor.getDocument().modify(resource -> {
-
-			// Retrieve the model object to modify
-			ThreadImplementation threadImpl = (ThreadImplementation) resource
-					.getEObject(EcoreUtil.getURI(thrImpl).fragment());
-			PackageSection pkgSection = AadlUtil.getContainingPackageSection(threadImpl);
-
-			// Create corresponding process type
-			ProcessType procType = (ProcessType) pkgSection
-					.createOwnedClassifier(Aadl2Package.eINSTANCE.getProcessType());
-			// Give it a name
-//			procType.setName(threadImpl.getTypeName() + "_Proc");
-			procType.setName(threadImpl.getTypeName() + "_seL4");
-			// Give it the same features
-			Map<Feature, Feature> features = new HashMap<>();
-			for (Feature f : threadImpl.getType().getOwnedFeatures()) {
-				if (f instanceof DataPort) {
-					DataPort p = procType.createOwnedDataPort();
-					p = EcoreUtil.copy((DataPort) f);
-//					p.setDataFeatureClassifier(((DataPort) f).getDataFeatureClassifier());
-//					p.setName(f.getName());
-//					p.setDirection(((DataPort) f).getDirection());
-//					p.setRefined(f.getRefined());
-//					for (PropertyAssociation pa : f.getOwnedPropertyAssociations()) {
-//						PropertyAssociation prop = p.createOwnedPropertyAssociation();
-//						prop = EcoreUtil.copy(pa);
-//					}
-					features.put(p, f);
-				} else if (f instanceof EventDataPort) {
-					EventDataPort p = procType.createOwnedEventDataPort();
-					p = EcoreUtil.copy((EventDataPort) f);
-//					p.setDataFeatureClassifier(((EventDataPort) f).getDataFeatureClassifier());
-//					p.setName(f.getName());
-//					p.setDirection(((EventDataPort) f).getDirection());
-//					p.setRefined(f.getRefined());
-//					for (PropertyAssociation pa : f.getOwnedPropertyAssociations()) {
-//						PropertyAssociation prop = p.createOwnedPropertyAssociation();
-//						prop = EcoreUtil.copy(pa);
-//					}
-					features.put(p, f);
-				} else if (f instanceof EventPort) {
-					EventPort p = procType.createOwnedEventPort();
-					p = EcoreUtil.copy((EventPort) f);
-//					p.setName(f.getName());
-//					p.setDirection(((EventPort) f).getDirection());
-//					p.setRefined(f.getRefined());
-//					for (PropertyAssociation pa : f.getOwnedPropertyAssociations()) {
-//						PropertyAssociation prop = p.createOwnedPropertyAssociation();
-//						prop = EcoreUtil.copy(pa);
-//					}
-					features.put(p, f);
-				} else if (f instanceof DataAccess) {
-					DataAccess a = procType.createOwnedDataAccess();
-					a = EcoreUtil.copy((DataAccess) f);
-//					a.setDataFeatureClassifier(((DataAccess) f).getDataFeatureClassifier());
-//					a.setKind(((DataAccess) f).getKind());
-//					a.setName(f.getName());
-//					a.setRefined(f.getRefined());
-//					for (PropertyAssociation pa : f.getOwnedPropertyAssociations()) {
-//						PropertyAssociation prop = a.createOwnedPropertyAssociation();
-//						prop = EcoreUtil.copy(pa);
-//					}
-					features.put(a, f);
-				} else if (f instanceof SubprogramAccess) {
-					SubprogramAccess a = procType.createOwnedSubprogramAccess();
-					a = EcoreUtil.copy((SubprogramAccess) f);
-//					a.setSubprogramFeatureClassifier(((SubprogramAccess) f).getSubprogramFeatureClassifier());
-//					a.setKind(((SubprogramAccess) f).getKind());
-//					a.setName(f.getName());
-//					a.setRefined(f.getRefined());
-//					for (PropertyAssociation pa : f.getOwnedPropertyAssociations()) {
-//						PropertyAssociation prop = a.createOwnedPropertyAssociation();
-//						prop = EcoreUtil.copy(pa);
-//					}
-					features.put(a, f);
-				}
-			}
-			// Give it the same property associations
-			for (PropertyAssociation pa : threadImpl.getType().getOwnedPropertyAssociations()) {
-				PropertyAssociation prop = procType.createOwnedPropertyAssociation();
-				prop = EcoreUtil.copy(pa);
-//				prop.setProperty(pa.getProperty());
-//				for (ModalPropertyValue mpv : pa.getOwnedValues()) {
-//					ModalPropertyValue val = prop.createOwnedValue();
-//					val.setOwnedValue(mpv.getOwnedValue());
-//				}
-			}
-			// TODO: Add SEL4 property association?
-
-			// Create corresponding process implementation
-			ProcessImplementation procImpl = (ProcessImplementation) pkgSection
-					.createOwnedClassifier(Aadl2Package.eINSTANCE.getProcessImplementation());
-			// Give it a name
-			procImpl.setName(procType.getName() + ".Impl");
-			// Give it a realization
-			final Realization r = procImpl.createOwnedRealization();
-			r.setImplemented(procType);
-			// Add thread subcomponent
-			ThreadSubcomponent tSub = procImpl.createOwnedThreadSubcomponent();
-			tSub.setName(threadImpl.getTypeName());
-			tSub.setThreadSubcomponentType(threadImpl.getType());
-
-			// Add connections
-			Iterator<Map.Entry<Feature, Feature>> iterator = features.entrySet().iterator();
-			while (iterator.hasNext()) {
-				Map.Entry<Feature, Feature> f = iterator.next();
-				Feature procFeature = f.getKey();
-				Feature thrFeature = f.getValue();
-				if (procFeature instanceof Port) {
-					PortConnection pc = procImpl.createOwnedPortConnection();
-					pc.setName(getUniqueName(PORT_CONNECTION_IMPL_NAME, false, procImpl.getOwnedPortConnections()));
-					pc.setBidirectional(((Port) procFeature).getDirection() == DirectionType.IN_OUT);
-					ConnectedElement src = pc.createSource();
-					ConnectedElement dst = pc.createDestination();
-					if (((Port) thrFeature).isIn()) {
-						src.setContext(null);
-						src.setConnectionEnd(procFeature);
-						dst.setContext(tSub);
-						dst.setConnectionEnd(thrFeature);
-					} else {
-						src.setContext(tSub);
-						src.setConnectionEnd(thrFeature);
-						dst.setContext(null);
-						dst.setConnectionEnd(procFeature);
-					}
-				} else if (procFeature instanceof Access) {
-					AccessConnection ac = procImpl.createOwnedAccessConnection();
-					ac.setName(getUniqueName(ACCESS_CONNECTION_IMPL_NAME, false, procImpl.getOwnedAccessConnections()));
-					ConnectedElement src = ac.createSource();
-					ConnectedElement dst = ac.createDestination();
-					src.setContext(null);
-					src.setConnectionEnd(procFeature);
-					dst.setContext(tSub);
-					dst.setConnectionEnd(thrFeature);
-				}
-			}
-
-			// Give it the same property associations
-			for (PropertyAssociation pa : threadImpl.getOwnedPropertyAssociations()) {
-				PropertyAssociation prop = procImpl.createOwnedPropertyAssociation();
-				prop = EcoreUtil.copy(pa);
-//				prop.setProperty(pa.getProperty());
-//				for (ModalPropertyValue mpv : pa.getOwnedValues()) {
-//					ModalPropertyValue val = prop.createOwnedValue();
-//					val.setOwnedValue(mpv.getOwnedValue());
-//				}
-			}
-
-			return EcoreUtil.getURI(procImpl);
-		});
-
-		ModifyUtils.closeEditor(editor, true);
-
-		return procUri;
-
 	}
-
-//	private void getProcessDescendants(ComponentImplementation compImpl, List<ProcessSubcomponent> procSubs) {
-//
-//		for (Subcomponent sub : compImpl.getOwnedSubcomponents()) {
-//			if (sub instanceof ProcessSubcomponent) {
-//				procSubs.add((ProcessSubcomponent) sub);
-//				continue;
-//			}
-//			getProcessDescendants(sub.getComponentImplementation(), procSubs);
-//		}
-//	}
 
 }
