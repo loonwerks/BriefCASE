@@ -79,9 +79,9 @@
                         style="push">
                   </command>
                   <command
-                        commandId="om.collins.trustedsystems.briefcase.staircase.commands.AddSimplex"
-                        id="com.collins.trustedsystems.briefcase.menus.outline.resiliency.transformations.AddSimplex"
-                        label="Add Simplex Architecture"
+                        commandId="om.collins.trustedsystems.briefcase.staircase.commands.AddSwitch"
+                        id="com.collins.trustedsystems.briefcase.menus.outline.resiliency.transformations.AddSwitich"
+                        label="Add Switch..."
                         style="push">
                   </command>
                   <command
@@ -195,9 +195,9 @@
                         style="push">
                   </command>
                   <command
-                        commandId="om.collins.trustedsystems.briefcase.staircase.commands.AddSimplex"
-                        id="com.collins.trustedsystems.briefcase.menus.menubar.resiliency.transformations.AddSimplex"
-                        label="Add Simplex Architecture"
+                        commandId="om.collins.trustedsystems.briefcase.staircase.commands.AddSwitch"
+                        id="com.collins.trustedsystems.briefcase.menus.menubar.resiliency.transformations.AddSwitch"
+                        label="Add Switch..."
                         style="push">
                   </command>
                   <command
@@ -331,9 +331,9 @@
                         style="push">
                   </command>
                   <command
-                        commandId="om.collins.trustedsystems.briefcase.staircase.commands.AddSimplex"
-                        id="com.collins.trustedsystems.briefcase.menus.editor.resiliency.transformations.AddSimplex"
-                        label="Add Simplex Architecture"
+                        commandId="om.collins.trustedsystems.briefcase.staircase.commands.AddSwitch"
+                        id="com.collins.trustedsystems.briefcase.menus.editor.resiliency.transformations.AddSwitch"
+                        label="Add Switch..."
                         style="push">
                   </command>
                   <command
@@ -419,8 +419,8 @@
             name="Add Virtualization">
       </command>
       <command
-            id="om.collins.trustedsystems.briefcase.staircase.commands.AddSimplex"
-            name="Add Simplex Architecture">
+            id="om.collins.trustedsystems.briefcase.staircase.commands.AddSwitch"
+            name="Add Switch">
       </command>
       <command
             id="com.collins.trustedsystems.briefcase.staircase.commands.Sel4Transform"
@@ -466,8 +466,8 @@
             commandId="com.collins.trustedsystems.briefcase.staircase.commands.AddMonitor">
       </handler>
       <handler
-            class="com.collins.trustedsystems.briefcase.staircase.handlers.AddSimplexHandler"
-            commandId="om.collins.trustedsystems.briefcase.staircase.commands.AddSimplex">
+            class="com.collins.trustedsystems.briefcase.staircase.handlers.AddSwitchHandler"
+            commandId="om.collins.trustedsystems.briefcase.staircase.commands.AddSwitch">
       </handler>
       <handler
             class="com.collins.trustedsystems.briefcase.staircase.handlers.ModelAnnotationsHandler"
