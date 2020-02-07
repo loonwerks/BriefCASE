@@ -1,4 +1,4 @@
-package com.collins.fmw.cyres.splat.plugin;
+package com.collins.trustedsystems.briefcase.splat.plugin;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -42,26 +42,28 @@ import org.eclipse.xtext.EcoreUtil2;
 import org.eclipse.xtext.ui.editor.XtextEditor;
 import org.eclipse.xtext.ui.editor.utils.EditorUtils;
 import org.osate.aadl2.Aadl2Factory;
+import org.osate.aadl2.Aadl2Package;
 import org.osate.aadl2.AadlPackage;
 import org.osate.aadl2.ComponentImplementation;
 import org.osate.aadl2.Property;
 import org.osate.aadl2.PropertyExpression;
 import org.osate.aadl2.StringLiteral;
+import org.osate.aadl2.modelsupport.scoping.Aadl2GlobalScopeUtil;
 import org.osate.ui.dialogs.Dialog;
 import org.osate.xtext.aadl2.properties.util.GetProperties;
 import org.osate.xtext.aadl2.properties.util.ProgrammingProperties;
 import org.osgi.framework.Bundle;
 
-import com.collins.fmw.cyres.architecture.utils.CaseUtils;
-import com.collins.fmw.cyres.json.plugin.Aadl2Json;
-import com.collins.fmw.cyres.splat.Activator;
-import com.collins.fmw.cyres.splat.preferences.SplatPreferenceConstants;
-import com.collins.fmw.cyres.util.plugin.Filesystem;
-import com.collins.fmw.cyres.util.plugin.TraverseProject;
+import com.collins.trustedsystems.briefcase.json.Aadl2Json;
+import com.collins.trustedsystems.briefcase.splat.Activator;
+import com.collins.trustedsystems.briefcase.splat.preferences.SplatPreferenceConstants;
+import com.collins.trustedsystems.briefcase.staircase.utils.CaseUtils;
+import com.collins.trustedsystems.briefcase.util.Filesystem;
+import com.collins.trustedsystems.briefcase.util.TraverseProject;
 
 public class SplatHandler extends AbstractHandler {
 
-	static final String bundleId = "com.collins.fmw.cyres.splat.plugin";
+	static final String bundleId = "com.collins.trustedsystems.briefcase.splat";
 	private final static String FOLDER_PACKAGE_DELIMITER = "_";
 
 	private MessageConsole findConsole(String name) {
@@ -216,14 +218,7 @@ public class SplatHandler extends AbstractHandler {
 
 				// Prepare the volume mounting format for docker
 				boolean imageExists = false;
-//				String jsonDir = ResourcesPlugin.getWorkspace().getRoot()
-//						.getFile(new Path(jsonURI.trimSegments(1).toPlatformString(true))).getRawLocation().toOSString()
-//						.replace("\\", "/");
 				String jsonFileName = jsonURI.lastSegment();
-//				String[] jsonPathArrayTemp = jsonPath.split(Pattern.quote(File.separator));
-//				String[] jsonPathArrayNew = Arrays.copyOf(jsonPathArrayTemp, jsonPathArrayTemp.length - 1);
-//				String dockerMountPath = jsonDir + ":/user ";
-//				dockerMountPath += ":/user ";
 
 				java.net.URI splatImageURI = (FileLocator
 						.toFileURL(FileLocator.find(bundle, new Path("resources/splat_image.tar"), null))).toURI();
@@ -248,7 +243,6 @@ public class SplatHandler extends AbstractHandler {
 				while ((s1 = stdInp.readLine()) != null) {
 					List<String> tempList = new ArrayList<String>(Arrays.asList(s1.split(" ")));
 					tempList.removeAll(Arrays.asList(""));
-//					System.out.println(tempList.get(0));
 					if (tempList.get(0).equals(dockerImage)) {
 						imageExists = true;
 						break;
@@ -281,13 +275,11 @@ public class SplatHandler extends AbstractHandler {
 
 				// build the docker run command
 				commands += "docker run --rm -v ";
-//				commands += dockerMountPath;
 				commands += Activator.getDefault().getPreferenceStore()
 						.getString(SplatPreferenceConstants.OUTPUT_DIRECTORY) + ":/user ";
 				commands += dockerImage;
 				commands += " ";
 				commands += subCommands;
-//				commands += jsonPathArrayTemp[jsonPathArrayTemp.length - 1];
 				commands += jsonFileName;
 				System.out.println(commands);
 				ClientProcess = Runtime.getRuntime().exec(commands);
@@ -432,14 +424,17 @@ public class SplatHandler extends AbstractHandler {
 									ProgrammingProperties._NAME, ProgrammingProperties.SOURCE_TEXT);
 
 							// Get any existing source text already in model
-							List<PropertyExpression> currentSource = ci.getPropertyValues(ProgrammingProperties._NAME,
-									ProgrammingProperties.SOURCE_TEXT);
+							Property prop = Aadl2GlobalScopeUtil.get(ci, Aadl2Package.eINSTANCE.getProperty(),
+									ProgrammingProperties._NAME + "::" + ProgrammingProperties.SOURCE_TEXT);
+							List<? extends PropertyExpression> currentSource = ci.getPropertyValueList(prop);
 							List<StringLiteral> listVal = new ArrayList<>();
-							for (PropertyExpression pe : currentSource) {
-								if (pe instanceof StringLiteral) {
-									StringLiteral source = (StringLiteral) pe;
-									if (!source.getValue().equalsIgnoreCase(sourceText)) {
-										listVal.add(source);
+							if (currentSource != null) {
+								for (PropertyExpression pe : currentSource) {
+									if (pe instanceof StringLiteral) {
+										StringLiteral source = (StringLiteral) pe;
+										if (!source.getValue().equalsIgnoreCase(sourceText)) {
+											listVal.add(source);
+										}
 									}
 								}
 							}

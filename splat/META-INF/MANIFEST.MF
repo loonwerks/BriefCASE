@@ -15,6 +15,7 @@ Import-Package: com.collins.trustedsystems.briefcase.json,
  org.eclipse.ui,
  org.eclipse.ui.console,
  org.eclipse.ui.part,
+ org.osate.aadl2.modelsupport.scoping,
  org.osate.ui.dialogs,
  org.osate.xtext.aadl2.properties.util
 Bundle-ClassPath: .
