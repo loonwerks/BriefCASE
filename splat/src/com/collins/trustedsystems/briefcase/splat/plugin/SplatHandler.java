@@ -1,11 +1,14 @@
-package com.collins.trustedsystems.briefcase.splat.plugin;
+package com.collins.fmw.cyres.splat.plugin;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.URL;
+import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -49,16 +52,16 @@ import org.osate.xtext.aadl2.properties.util.GetProperties;
 import org.osate.xtext.aadl2.properties.util.ProgrammingProperties;
 import org.osgi.framework.Bundle;
 
-import com.collins.trustedsystems.briefcase.json.Aadl2Json;
-import com.collins.trustedsystems.briefcase.splat.Activator;
-import com.collins.trustedsystems.briefcase.splat.preferences.SplatPreferenceConstants;
-import com.collins.trustedsystems.briefcase.staircase.utils.CaseUtils;
-import com.collins.trustedsystems.briefcase.util.Filesystem;
-import com.collins.trustedsystems.briefcase.util.TraverseProject;
+import com.collins.fmw.cyres.architecture.utils.CaseUtils;
+import com.collins.fmw.cyres.json.plugin.Aadl2Json;
+import com.collins.fmw.cyres.splat.Activator;
+import com.collins.fmw.cyres.splat.preferences.SplatPreferenceConstants;
+import com.collins.fmw.cyres.util.plugin.Filesystem;
+import com.collins.fmw.cyres.util.plugin.TraverseProject;
 
 public class SplatHandler extends AbstractHandler {
 
-	static final String bundleId = "com.collins.trustedsystems.briefcase.splat.plugin";
+	static final String bundleId = "com.collins.fmw.cyres.splat.plugin";
 	private final static String FOLDER_PACKAGE_DELIMITER = "_";
 
 	private MessageConsole findConsole(String name) {
@@ -89,101 +92,252 @@ public class SplatHandler extends AbstractHandler {
 
 			URI jsonURI = Aadl2Json.createJson();
 			IFile file = ResourcesPlugin.getWorkspace().getRoot().getFile(new Path(jsonURI.toPlatformString(true)));
-
 			String jsonPath = file.getRawLocation().toOSString();
 
+//			// Replace bounded numbers with unbounded equivalents
+//			try {
+//				String contents = Filesystem.readFile(file);
+//				contents = contents.replaceAll("Base_Types::(Integer_|Unsigned_|Natural)\\d*", "Base_Types::Integer");
+//				contents = contents.replaceAll("Base_Types::Float_\\d+", "Base_Types::Float");
+//				Filesystem.writeFile(file, contents);
+//			} catch (Exception e) {
+//				Dialog.showWarning("SPLAT",
+//						"Attempt to replace bounded numbers with their unbounded equivalents failed.  Check json file to ensure it does not contain bounded numbers.");
+//			}
+
 			Bundle bundle = Platform.getBundle(bundleId);
-
 			String splatDir = (FileLocator.toFileURL(FileLocator.find(bundle, new Path("resources"), null))).getFile();
-			String splatPath = (FileLocator.toFileURL(FileLocator.find(bundle, new Path("resources/splat"), null)))
-					.getFile();
+			String splatPath = (FileLocator
+					.toFileURL(FileLocator.find(bundle, new Path("resources/splat"), null))).getFile();
 
-			Runtime rt = Runtime.getRuntime();
-			rt.exec("chmod a+x " + splatPath);
+			// Initialize process and other objects
+			Process ClientProcess = null;
+
+			MessageConsole console = findConsole("SPLAT");
+			MessageConsoleStream out = console.newMessageStream();
+			IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindow(event);
+			IWorkbenchPage page = window.getActivePage();
+			String id = IConsoleConstants.ID_CONSOLE_VIEW;
+			IConsoleView view = (IConsoleView) page.showView(id);
+			String s = null;
 
 			// command line parameters
 			List<String> cmds = new ArrayList<>();
+			String commands = "";
+			String subCommands = "";
 
+			// acquiring user preferences and setting them up accordingly for the exec command
 			cmds.add(splatPath);
-
 			String assuranceLevel = Activator.getDefault().getPreferenceStore()
 					.getString(SplatPreferenceConstants.ASSURANCE_LEVEL);
 			if (assuranceLevel.equals(SplatPreferenceConstants.ASSURANCE_LEVEL_CAKE)) {
 				cmds.add("cake");
+				subCommands += "cake ";
 			} else if (assuranceLevel.equals(SplatPreferenceConstants.ASSURANCE_LEVEL_HOL)) {
 				cmds.add("hol");
+				subCommands += "hol ";
 			} else if (assuranceLevel.equals(SplatPreferenceConstants.ASSURANCE_LEVEL_FULL)) {
 				cmds.add("full");
+				subCommands += "full ";
 			} else {
 				cmds.add("basic");
+				subCommands += "basic ";
 			}
 
 			if (Activator.getDefault().getPreferenceStore().getBoolean(SplatPreferenceConstants.CHECK_PROPERTIES)) {
 				cmds.add("-checkprops");
+				subCommands += "-checkprops ";
 			}
 
 			cmds.add("-outdir");
 			cmds.add(Activator.getDefault().getPreferenceStore().getString(SplatPreferenceConstants.OUTPUT_DIRECTORY));
 
 			cmds.add("-intwidth");
+			subCommands += "-intwidth ";
 			cmds.add(Integer.toString(
 					Activator.getDefault().getPreferenceStore().getInt(SplatPreferenceConstants.INTEGER_WIDTH)));
+			subCommands += Integer.toString(
+					Activator.getDefault().getPreferenceStore().getInt(SplatPreferenceConstants.INTEGER_WIDTH));
+			subCommands += " ";
+
 			if (Activator.getDefault().getPreferenceStore().getBoolean(SplatPreferenceConstants.OPTIMIZE)) {
 				cmds.add("optimize");
+				subCommands += "optimize ";
 			}
 
-			cmds.add("-endian");
+			cmds.add("-endian ");
+			subCommands += "-endian ";
 			if (Activator.getDefault().getPreferenceStore().getBoolean(SplatPreferenceConstants.ENDIAN_BIG)) {
 				cmds.add("MSB");
+				subCommands += "MSB ";
 			} else {
 				cmds.add("LSB");
+				subCommands += "LSB ";
 			}
 
 			cmds.add("-encoding");
+			subCommands += "-encoding ";
 			String encoding = Activator.getDefault().getPreferenceStore().getString(SplatPreferenceConstants.ENCODING);
 			if (encoding.equals(SplatPreferenceConstants.ENCODING_UNSIGNED)) {
 				cmds.add("Unsigned");
+				subCommands += "Unsigned ";
 			} else if (encoding.equals(SplatPreferenceConstants.ENCODING_SIGN_MAG)) {
 				cmds.add("Sign_mag");
+				subCommands += "Sign_mag ";
 			} else if (encoding.equals(SplatPreferenceConstants.ENCODING_ZIGZAG)) {
 				cmds.add("Zigzag");
+				subCommands += "Zigzag ";
 			} else {
 				cmds.add("Twos_comp");
+				subCommands += "Twos_comp ";
 			}
 
 			if (Activator.getDefault().getPreferenceStore().getBoolean(SplatPreferenceConstants.PRESERVE_MODEL_NUMS)) {
 				cmds.add("-preserve_model_nums");
+				subCommands += "-preserve_model_nums ";
 			}
 
-			cmds.add(jsonPath);
+			// Check if docker image tar file exists
+			URL tarFileExists = FileLocator.find(bundle, new Path("resources/splat_image.tar"), null);
 
-			String[] commands = cmds.toArray(new String[cmds.size()]);
-			String[] environmentVars = { "LD_LIBRARY_PATH=" + splatDir };
+			// Run SPLAT inside docker container
+			if (tarFileExists != null) {
 
-			Process proc = rt.exec(commands, environmentVars);
+				Process dockerLoadImage = null;
+				Process dockerListImages = null;
 
-			BufferedReader stdErr = new BufferedReader(new InputStreamReader(proc.getErrorStream()));
+				// name of the splat image
+				String dockerImage = "splatimgupdated";
+				System.out.println(
+						"_________________________________________________________________________________________________________________");
+				System.out.println("Running SPLAT inside docker container");
+				System.out.println(
+						"_________________________________________________________________________________________________________________");
 
-			MessageConsole console = findConsole("SPLAT");
-			MessageConsoleStream out = console.newMessageStream();
-			String cmdLine = "";
-			for (String s : cmds) {
-				cmdLine += s + " ";
+				// Prepare the volume mounting format for docker
+				boolean imageExists = false;
+//				String jsonDir = ResourcesPlugin.getWorkspace().getRoot()
+//						.getFile(new Path(jsonURI.trimSegments(1).toPlatformString(true))).getRawLocation().toOSString()
+//						.replace("\\", "/");
+				String jsonFileName = jsonURI.lastSegment();
+//				String[] jsonPathArrayTemp = jsonPath.split(Pattern.quote(File.separator));
+//				String[] jsonPathArrayNew = Arrays.copyOf(jsonPathArrayTemp, jsonPathArrayTemp.length - 1);
+//				String dockerMountPath = jsonDir + ":/user ";
+//				dockerMountPath += ":/user ";
+
+				java.net.URI splatImageURI = (FileLocator
+						.toFileURL(FileLocator.find(bundle, new Path("resources/splat_image.tar"), null))).toURI();
+				String splatTarFilePath = splatImageURI.normalize().getPath();
+				String splatImagePath = splatTarFilePath.substring(1, splatTarFilePath.length());
+				System.out.println("Location of docker image: " + splatImagePath);
+
+				// Copy json file to user specified directory
+				File sourceFile = new File(jsonPath);
+				File destFile = new File(Activator.getDefault().getPreferenceStore()
+						.getString(SplatPreferenceConstants.OUTPUT_DIRECTORY) + "/" + jsonFileName);
+				if (!destFile.exists()) {
+					Files.copy(sourceFile.toPath(), destFile.toPath());
+				}
+
+				// List the available docker images in the local machine and check if the required image exists
+				String listDockerImage = "docker image ls";
+				dockerListImages = Runtime.getRuntime().exec(listDockerImage);
+				BufferedReader stdInp = new BufferedReader(new InputStreamReader(dockerListImages.getInputStream()));
+				String s1 = null;
+
+				while ((s1 = stdInp.readLine()) != null) {
+					List<String> tempList = new ArrayList<String>(Arrays.asList(s1.split(" ")));
+					tempList.removeAll(Arrays.asList(""));
+//					System.out.println(tempList.get(0));
+					if (tempList.get(0).equals(dockerImage)) {
+						imageExists = true;
+						break;
+					}
+				}
+
+				// If the required image does not exist in the local machine then load the image
+				if (!imageExists) {
+					System.out.println("Loading docker image ''" + dockerImage + "'' for SPLAT");
+					String loadDockerImage = "docker load -i " + splatImagePath;
+					dockerLoadImage = Runtime.getRuntime().exec(loadDockerImage);
+					BufferedReader stdErr1 = new BufferedReader(
+							new InputStreamReader(dockerLoadImage.getErrorStream()));
+
+					console = findConsole("SPLAT");
+					out = console.newMessageStream();
+					window = HandlerUtil.getActiveWorkbenchWindow(event);
+					page = window.getActivePage();
+					id = IConsoleConstants.ID_CONSOLE_VIEW;
+					view = (IConsoleView) page.showView(id);
+					view.display(console);
+
+					s = null;
+					while ((s = stdErr1.readLine()) != null) {
+						out.println(s);
+					}
+				} else {
+					System.out.println("SPLAT image ''" + dockerImage + "'' is already loaded");
+				}
+
+				// build the docker run command
+				commands += "docker run --rm -v ";
+//				commands += dockerMountPath;
+				commands += Activator.getDefault().getPreferenceStore()
+						.getString(SplatPreferenceConstants.OUTPUT_DIRECTORY) + ":/user ";
+				commands += dockerImage;
+				commands += " ";
+				commands += subCommands;
+//				commands += jsonPathArrayTemp[jsonPathArrayTemp.length - 1];
+				commands += jsonFileName;
+				System.out.println(commands);
+				ClientProcess = Runtime.getRuntime().exec(commands);
+				ClientProcess.waitFor();
+				destFile.delete();
 			}
-			cmdLine += "LD_LIBRARY_PATH=" + splatDir;
-			out.println(cmdLine);
-			IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindow(event);
-			IWorkbenchPage page = window.getActivePage();
-			String id = IConsoleConstants.ID_CONSOLE_VIEW;
-			IConsoleView view = (IConsoleView) page.showView(id);
+
+			// Run SPLAT in LINUX environment
+			else {
+
+				System.out.println("Running SPLAT in LINUX environment");
+				Runtime rt = Runtime.getRuntime();
+				rt.exec("chmod a+x " + splatPath);
+
+				cmds.add(jsonPath);
+				String[] subCmds = cmds.toArray(new String[cmds.size()]);
+				String[] environmentVars = { "LD_LIBRARY_PATH=" + splatDir };
+				ClientProcess = Runtime.getRuntime().exec(subCmds, environmentVars);
+			}
+
+			BufferedReader stdErr = new BufferedReader(new InputStreamReader(ClientProcess.getErrorStream()));
+
+			console = findConsole("SPLAT");
+			out = console.newMessageStream();
+
+			if (tarFileExists == null) {
+				String cmdLine = "";
+				for (String st : cmds) {
+					cmdLine += st + " ";
+				}
+				cmdLine += "LD_LIBRARY_PATH=" + splatDir;
+				out.println(cmdLine);
+				System.out.println("SPLAT binary exists");
+			}
+			else {
+				out.println(commands);
+			}
+
+			window = HandlerUtil.getActiveWorkbenchWindow(event);
+			page = window.getActivePage();
+			id = IConsoleConstants.ID_CONSOLE_VIEW;
+			view = (IConsoleView) page.showView(id);
 			view.display(console);
 
-			String s = null;
+			s = null;
 			while ((s = stdErr.readLine()) != null) {
 				out.println(s);
 			}
 
-			int exitVal = proc.waitFor();
+			int exitVal = ClientProcess.waitFor();
 			if (exitVal == 0) {
 
 				// Insert the location of the source code into the filter component implementations in the model
@@ -194,7 +348,7 @@ public class SplatHandler extends AbstractHandler {
 					updateLog();
 				}
 
-				out.println("SPLAT completed successfully.");
+				out.println("SPLAT completed successfully, GENIUS!.");
 			} else {
 				out.println("SPLAT has encountered an error and was unable to complete.");
 			}
@@ -204,9 +358,10 @@ public class SplatHandler extends AbstractHandler {
 			e.printStackTrace();
 			return null;
 		}
-
 		return null;
 	}
+
+
 
 	private void insertSourceCodeLocation(XtextEditor currentEditor) {
 
