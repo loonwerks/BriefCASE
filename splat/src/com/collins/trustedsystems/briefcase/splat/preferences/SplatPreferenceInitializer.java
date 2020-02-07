@@ -1,7 +1,5 @@
 package com.collins.trustedsystems.briefcase.splat.preferences;
 
-import java.io.File;
-
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -33,6 +31,6 @@ public class SplatPreferenceInitializer extends AbstractPreferenceInitializer {
 				ResourcesPlugin.getWorkspace().getRoot().getLocation().toString());
 		store.setDefault(SplatPreferenceConstants.GENERATE_LOG, true);
 		store.setDefault(SplatPreferenceConstants.LOG_FILENAME,
-				ResourcesPlugin.getWorkspace().getRoot().getLocation().toString() + File.separator + "splat.log");
+				ResourcesPlugin.getWorkspace().getRoot().getLocation().toString() + "/splat.log");
 	}
 }

@@ -123,69 +123,75 @@ public class SplatHandler extends AbstractHandler {
 			IWorkbenchPage page = window.getActivePage();
 			String id = IConsoleConstants.ID_CONSOLE_VIEW;
 			IConsoleView view = (IConsoleView) page.showView(id);
-			String s = null;
 
 			// command line parameters
-			List<String> cmds = new ArrayList<>();
+			List<String> cmdLineArgs = new ArrayList<>();
 			String commands = "";
 
 			// acquiring user preferences and setting them up accordingly for the exec command
 			if (!dockerTarballExists) {
-				cmds.add(splatPath);
+				cmdLineArgs.add(splatPath);
 			}
 			String assuranceLevel = Activator.getDefault().getPreferenceStore()
 					.getString(SplatPreferenceConstants.ASSURANCE_LEVEL);
 			if (assuranceLevel.equals(SplatPreferenceConstants.ASSURANCE_LEVEL_CAKE)) {
-				cmds.add("cake");
+				cmdLineArgs.add("cake");
 			} else if (assuranceLevel.equals(SplatPreferenceConstants.ASSURANCE_LEVEL_HOL)) {
-				cmds.add("hol");
+				cmdLineArgs.add("hol");
 			} else if (assuranceLevel.equals(SplatPreferenceConstants.ASSURANCE_LEVEL_FULL)) {
-				cmds.add("full");
+				cmdLineArgs.add("full");
 			} else {
-				cmds.add("basic");
+				cmdLineArgs.add("basic");
 			}
 
 			if (Activator.getDefault().getPreferenceStore().getBoolean(SplatPreferenceConstants.CHECK_PROPERTIES)) {
-				cmds.add("-checkprops");
+				cmdLineArgs.add("-checkprops");
 			}
 
-			cmds.add("-outdir");
+			cmdLineArgs.add("-outdir");
 			if (dockerTarballExists) {
-				cmds.add("./");
+				cmdLineArgs.add("./");
 			} else {
-				cmds.add(Activator.getDefault().getPreferenceStore()
+				cmdLineArgs.add(Activator.getDefault().getPreferenceStore()
 						.getString(SplatPreferenceConstants.OUTPUT_DIRECTORY));
 			}
 
-			cmds.add("-intwidth");
-			cmds.add(Integer.toString(
+			cmdLineArgs.add("-intwidth");
+			cmdLineArgs.add(Integer.toString(
 					Activator.getDefault().getPreferenceStore().getInt(SplatPreferenceConstants.INTEGER_WIDTH)));
 
 			if (Activator.getDefault().getPreferenceStore().getBoolean(SplatPreferenceConstants.OPTIMIZE)) {
-				cmds.add("optimize");
+				cmdLineArgs.add("optimize");
 			}
 
-			cmds.add("-endian ");
+			cmdLineArgs.add("-endian ");
 			if (Activator.getDefault().getPreferenceStore().getBoolean(SplatPreferenceConstants.ENDIAN_BIG)) {
-				cmds.add("MSB");
+				cmdLineArgs.add("MSB");
 			} else {
-				cmds.add("LSB");
+				cmdLineArgs.add("LSB");
 			}
 
-			cmds.add("-encoding");
+			cmdLineArgs.add("-encoding");
 			String encoding = Activator.getDefault().getPreferenceStore().getString(SplatPreferenceConstants.ENCODING);
 			if (encoding.equals(SplatPreferenceConstants.ENCODING_UNSIGNED)) {
-				cmds.add("Unsigned");
+				cmdLineArgs.add("Unsigned");
 			} else if (encoding.equals(SplatPreferenceConstants.ENCODING_SIGN_MAG)) {
-				cmds.add("Sign_mag");
+				cmdLineArgs.add("Sign_mag");
 			} else if (encoding.equals(SplatPreferenceConstants.ENCODING_ZIGZAG)) {
-				cmds.add("Zigzag");
+				cmdLineArgs.add("Zigzag");
 			} else {
-				cmds.add("Twos_comp");
+				cmdLineArgs.add("Twos_comp");
 			}
 
 			if (Activator.getDefault().getPreferenceStore().getBoolean(SplatPreferenceConstants.PRESERVE_MODEL_NUMS)) {
-				cmds.add("-preserve_model_nums");
+				cmdLineArgs.add("-preserve_model_nums");
+			}
+
+			// input file
+			if (dockerTarballExists) {
+				cmdLineArgs.add(jsonURI.lastSegment());
+			} else {
+				cmdLineArgs.add(jsonPath);
 			}
 
 			// Run SPLAT inside docker container
@@ -224,10 +230,10 @@ public class SplatHandler extends AbstractHandler {
 				String listDockerImage = "docker image ls";
 				dockerListImages = Runtime.getRuntime().exec(listDockerImage);
 				BufferedReader stdInp = new BufferedReader(new InputStreamReader(dockerListImages.getInputStream()));
-				String s1 = null;
+				String s = null;
 
-				while ((s1 = stdInp.readLine()) != null) {
-					List<String> tempList = new ArrayList<String>(Arrays.asList(s1.split(" ")));
+				while ((s = stdInp.readLine()) != null) {
+					List<String> tempList = new ArrayList<String>(Arrays.asList(s.split(" ")));
 					tempList.removeAll(Arrays.asList(""));
 					if (tempList.get(0).equals(dockerImage)) {
 						imageExists = true;
@@ -240,7 +246,7 @@ public class SplatHandler extends AbstractHandler {
 					System.out.println("Loading docker image ''" + dockerImage + "'' for SPLAT");
 					String loadDockerImage = "docker load -i " + splatImagePath;
 					dockerLoadImage = Runtime.getRuntime().exec(loadDockerImage);
-					BufferedReader stdErr1 = new BufferedReader(
+					BufferedReader stdErr = new BufferedReader(
 							new InputStreamReader(dockerLoadImage.getErrorStream()));
 
 					console = findConsole("SPLAT");
@@ -252,7 +258,7 @@ public class SplatHandler extends AbstractHandler {
 					view.display(console);
 
 					s = null;
-					while ((s = stdErr1.readLine()) != null) {
+					while ((s = stdErr.readLine()) != null) {
 						out.println(s);
 					}
 				} else {
@@ -264,10 +270,9 @@ public class SplatHandler extends AbstractHandler {
 				commands += Activator.getDefault().getPreferenceStore()
 						.getString(SplatPreferenceConstants.OUTPUT_DIRECTORY) + ":/user ";
 				commands += dockerImage + " ";
-				for (String c : cmds) {
+				for (String c : cmdLineArgs) {
 					commands += c + " ";
 				}
-				commands += jsonFileName;
 				System.out.println(commands);
 				ClientProcess = Runtime.getRuntime().exec(commands);
 				ClientProcess.waitFor();
@@ -280,9 +285,7 @@ public class SplatHandler extends AbstractHandler {
 				System.out.println("Running SPLAT in LINUX environment");
 				Runtime rt = Runtime.getRuntime();
 				rt.exec("chmod a+x " + splatPath);
-
-				cmds.add(jsonPath);
-				String[] subCmds = cmds.toArray(new String[cmds.size()]);
+				String[] subCmds = cmdLineArgs.toArray(new String[cmdLineArgs.size()]);
 				String[] environmentVars = { "LD_LIBRARY_PATH=" + splatDir };
 				ClientProcess = Runtime.getRuntime().exec(subCmds, environmentVars);
 			}
@@ -294,7 +297,7 @@ public class SplatHandler extends AbstractHandler {
 
 			if (!dockerTarballExists) {
 				String cmdLine = "";
-				for (String st : cmds) {
+				for (String st : cmdLineArgs) {
 					cmdLine += st + " ";
 				}
 				cmdLine += "LD_LIBRARY_PATH=" + splatDir;
@@ -311,7 +314,7 @@ public class SplatHandler extends AbstractHandler {
 			view = (IConsoleView) page.showView(id);
 			view.display(console);
 
-			s = null;
+			String s = null;
 			while ((s = stdErr.readLine()) != null) {
 				out.println(s);
 			}
