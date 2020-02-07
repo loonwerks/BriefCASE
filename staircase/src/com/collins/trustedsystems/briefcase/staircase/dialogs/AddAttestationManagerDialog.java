@@ -3,7 +3,6 @@ package com.collins.trustedsystems.briefcase.staircase.dialogs;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.eclipse.emf.common.util.EList;
 import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.swt.SWT;
@@ -19,6 +18,7 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.osate.aadl2.Aadl2Package;
 import org.osate.aadl2.ComponentImplementation;
 import org.osate.aadl2.ComponentType;
 import org.osate.aadl2.DataPort;
@@ -27,8 +27,10 @@ import org.osate.aadl2.EventPort;
 import org.osate.aadl2.Feature;
 import org.osate.aadl2.IntegerLiteral;
 import org.osate.aadl2.PortCategory;
+import org.osate.aadl2.Property;
 import org.osate.aadl2.PropertyExpression;
 import org.osate.aadl2.Subcomponent;
+import org.osate.aadl2.modelsupport.scoping.Aadl2GlobalScopeUtil;
 import org.osate.ui.dialogs.Dialog;
 
 import com.collins.trustedsystems.briefcase.staircase.handlers.AddAttestationManagerHandler;
@@ -177,8 +179,11 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 
 		if (attestationManager != null) {
 			ComponentImplementation ci = attestationManager.getComponentImplementation();
-			EList<PropertyExpression> propVals = ci.getPropertyValues(CaseUtils.CASE_PROPSET_NAME, "CACHE_TIMEOUT");
-			if (!propVals.isEmpty()) {
+			Property prop = Aadl2GlobalScopeUtil.get(ci, Aadl2Package.eINSTANCE.getProperty(),
+					CaseUtils.CASE_PROPSET_NAME + "::CACHE_TIMEOUT");
+			List<? extends PropertyExpression> propVals = ci.getPropertyValueList(prop);
+
+			if (propVals != null) {
 				// There should be only one property value
 				PropertyExpression expr = propVals.get(0);
 				if (expr instanceof IntegerLiteral) {
@@ -207,8 +212,10 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 			cboCacheSize.setText(Integer.toString(DEFAULT_CACHE_SIZE));
 		} else {
 			ComponentImplementation ci = attestationManager.getComponentImplementation();
-			EList<PropertyExpression> propVals = ci.getPropertyValues(CaseUtils.CASE_PROPSET_NAME, "CACHE_SIZE");
-			if (!propVals.isEmpty()) {
+			Property prop = Aadl2GlobalScopeUtil.get(ci, Aadl2Package.eINSTANCE.getProperty(),
+					CaseUtils.CASE_PROPSET_NAME + "::CACHE_SIZE");
+			List<? extends PropertyExpression> propVals = ci.getPropertyValueList(prop);
+			if (propVals != null) {
 				// There should be only one property value
 				PropertyExpression expr = propVals.get(0);
 				if (expr instanceof IntegerLiteral) {

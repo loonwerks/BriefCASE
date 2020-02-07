@@ -40,6 +40,7 @@ import org.osate.aadl2.PublicPackageSection;
 import org.osate.aadl2.Realization;
 import org.osate.aadl2.StringLiteral;
 import org.osate.aadl2.Subcomponent;
+import org.osate.aadl2.modelsupport.scoping.Aadl2GlobalScopeUtil;
 import org.osate.ui.dialogs.Dialog;
 import org.osate.xtext.aadl2.properties.util.GetProperties;
 import org.osate.xtext.aadl2.properties.util.ThreadProperties;
@@ -552,96 +553,97 @@ public class AddFilterHandler extends AadlHandler {
 
 		AddFilterClaim claim = xtextEditor.getDocument().modify(resource -> {
 
-				Subcomponent subcomponent = (Subcomponent) resource.getEObject(subURI.fragment());
-				ComponentType filter = subcomponent.getComponentType();
+			Subcomponent subcomponent = (Subcomponent) resource.getEObject(subURI.fragment());
+			ComponentType filter = subcomponent.getComponentType();
 
-				PortConnection connection = (PortConnection) resource.getEObject(connURI.fragment());
-				Port port = (Port) connection.getDestination().getConnectionEnd();
-				DataSubcomponentType dataFeatureClassifier = null;
-				if (port instanceof EventDataPort) {
-					dataFeatureClassifier = ((EventDataPort) port).getDataFeatureClassifier();
-				} else if (port instanceof DataPort) {
-					dataFeatureClassifier = ((DataPort) port).getDataFeatureClassifier();
-				} else {
-					Dialog.showError("Add Filter", "Could not determine the port type of the filter.");
+			PortConnection connection = (PortConnection) resource.getEObject(connURI.fragment());
+			Port port = (Port) connection.getDestination().getConnectionEnd();
+			DataSubcomponentType dataFeatureClassifier = null;
+			if (port instanceof EventDataPort) {
+				dataFeatureClassifier = ((EventDataPort) port).getDataFeatureClassifier();
+			} else if (port instanceof DataPort) {
+				dataFeatureClassifier = ((DataPort) port).getDataFeatureClassifier();
+			} else {
+				Dialog.showError("Add Filter", "Could not determine the port type of the filter.");
 				return null;
-				}
+			}
 
-				String filterPropId = "";
-				try {
-					filterPropId = filterAgreeProperty
-							.substring(filterAgreeProperty.toLowerCase().indexOf("guarantee ") + "guarantee ".length(),
-									filterAgreeProperty.indexOf("\""))
-							.trim();
+			String filterPropId = "";
+			try {
+				filterPropId = filterAgreeProperty
+						.substring(filterAgreeProperty.toLowerCase().indexOf("guarantee ") + "guarantee ".length(),
+								filterAgreeProperty.indexOf("\""))
+						.trim();
 
-				} catch (IndexOutOfBoundsException e) {
-					// agree property is malformed
-					Dialog.showError("Add Filter", "AGREE statement is malformed.");
+			} catch (IndexOutOfBoundsException e) {
+				// agree property is malformed
+				Dialog.showError("Add Filter", "AGREE statement is malformed.");
 				return null;
-				}
+			}
 
-				if (filterPropId.isEmpty()) {
-					// agree property id is missing
-					Dialog.showError("Add Filter", "AGREE statements on CASE components require a unique ID.");
+			if (filterPropId.isEmpty()) {
+				// agree property id is missing
+				Dialog.showError("Add Filter", "AGREE statements on CASE components require a unique ID.");
 				return null;
-				}
+			}
 
-				// Add AGREE spec
-				DefaultAnnexSubclause subclause = null;
-				String agreeClauses = "{** **}";
-				for (AnnexSubclause sc : filter.getOwnedAnnexSubclauses()) {
-					if (sc instanceof DefaultAnnexSubclause && sc.getName().equalsIgnoreCase("agree")) {
-						subclause = (DefaultAnnexSubclause) sc;
-						break;
+			// Add AGREE spec
+			DefaultAnnexSubclause subclause = null;
+			String agreeClauses = "{** **}";
+			for (AnnexSubclause sc : filter.getOwnedAnnexSubclauses()) {
+				if (sc instanceof DefaultAnnexSubclause && sc.getName().equalsIgnoreCase("agree")) {
+					subclause = (DefaultAnnexSubclause) sc;
+					break;
+				}
+			}
+
+			if (subclause != null) {
+				agreeClauses = subclause.getSourceText();
+			}
+
+			// Remove current agree annex. The modified one will be added below.
+			Iterator<AnnexSubclause> i = filter.getOwnedAnnexSubclauses().iterator();
+			while (i.hasNext()) {
+				subclause = (DefaultAnnexSubclause) i.next();
+				if (subclause.getName().equalsIgnoreCase("agree")) {
+					i.remove();
+					break;
+				}
+			}
+			agreeClauses = agreeClauses.replace("**}", filterAgreeProperty + System.lineSeparator() + "**}");
+			DefaultAnnexSubclause newSubclause = (DefaultAnnexSubclause) filter
+					.createOwnedAnnexSubclause(Aadl2Package.eINSTANCE.getDefaultAnnexSubclause());
+			newSubclause.setName("agree");
+			newSubclause.setSourceText(agreeClauses);
+
+			// Add AGREE spec ID to COMP_SPEC property
+			// Get current property value
+			String propVal = "";
+			Property prop = Aadl2GlobalScopeUtil.get(filter, Aadl2Package.eINSTANCE.getProperty(),
+					CaseUtils.CASE_PROPSET_NAME + "::COMP_SPEC");
+			List<? extends PropertyExpression> propVals = filter.getPropertyValueList(prop);
+			if (propVals != null) {
+				for (PropertyExpression expr : propVals) {
+					if (expr instanceof StringLiteral) {
+						propVal += ((StringLiteral) expr).getValue() + ",";
 					}
 				}
+			}
 
-				if (subclause != null) {
-					agreeClauses = subclause.getSourceText();
-				}
+			// Append new spec ID
+			propVal += filterPropId;
 
-				// Remove current agree annex. The modified one will be added below.
-				Iterator<AnnexSubclause> i = filter.getOwnedAnnexSubclauses().iterator();
-				while (i.hasNext()) {
-					subclause = (DefaultAnnexSubclause) i.next();
-					if (subclause.getName().equalsIgnoreCase("agree")) {
-						i.remove();
-						break;
-					}
-				}
-				agreeClauses = agreeClauses.replace("**}", filterAgreeProperty + System.lineSeparator() + "**}");
-				DefaultAnnexSubclause newSubclause = (DefaultAnnexSubclause) filter
-						.createOwnedAnnexSubclause(Aadl2Package.eINSTANCE.getDefaultAnnexSubclause());
-				newSubclause.setName("agree");
-				newSubclause.setSourceText(agreeClauses);
+			// Write property to filter component
+			if (!CaseUtils.addCasePropertyAssociation("COMP_SPEC", propVal, filter)) {
+//				return;
+			}
 
-				// Add AGREE spec ID to COMP_SPEC property
-				// Get current property value
-				String propVal = "";
-				EList<PropertyExpression> propVals = filter.getPropertyValues(CaseUtils.CASE_PROPSET_NAME, "COMP_SPEC");
-				if (!propVals.isEmpty()) {
-					for (PropertyExpression expr : propVals) {
-						if (expr instanceof StringLiteral) {
-							propVal += ((StringLiteral) expr).getValue() + ",";
-						}
-					}
-				}
-
-				// Append new spec ID
-				propVal += filterPropId;
-
-				// Write property to filter component
-				if (!CaseUtils.addCasePropertyAssociation("COMP_SPEC", propVal, filter)) {
-//						return;
-				}
-
-				// Add add_filter claims to resolute prove statement, if applicable
-				if (!filterRequirement.isEmpty()) {
-					CyberRequirement req = RequirementsManager.getInstance().getRequirement(filterRequirement);
-					return new AddFilterClaim(
-							req.getContext(), subcomponent, connection, dataFeatureClassifier);
-				}
-				 return null;
+			// Add add_filter claims to resolute prove statement, if applicable
+			if (!filterRequirement.isEmpty()) {
+				CyberRequirement req = RequirementsManager.getInstance().getRequirement(filterRequirement);
+				return new AddFilterClaim(req.getContext(), subcomponent, connection, dataFeatureClassifier);
+			}
+			return null;
 		});
 
 		if (claim != null) {

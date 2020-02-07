@@ -23,7 +23,7 @@ public class SplatPreferencePage extends FieldEditorPreferencePage implements IW
 
 	private EnabledRadioGroupFieldEditor splatAssuranceLevelFieldEditor = null;
 	private BooleanFieldEditor splatCheckPropertiesFieldEditor = null;
-	private BooleanFieldEditor splatPreserveModelNums = null;
+//	private BooleanFieldEditor splatPreserveModelNums = null;
 	private BooleanFieldEditor splatLogFieldEditor = null;
 	private FileFieldEditor splatLogFileFieldEditor = null;
 
