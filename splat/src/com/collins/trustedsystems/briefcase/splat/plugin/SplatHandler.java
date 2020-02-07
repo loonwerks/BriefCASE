@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.URL;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -111,6 +110,9 @@ public class SplatHandler extends AbstractHandler {
 			String splatDir = (FileLocator.toFileURL(FileLocator.find(bundle, new Path("resources"), null))).getFile();
 			String splatPath = (FileLocator
 					.toFileURL(FileLocator.find(bundle, new Path("resources/splat"), null))).getFile();
+			// Check if docker image tar file exists
+			boolean dockerTarballExists = (FileLocator.find(bundle, new Path("resources/splat_image.tar"),
+					null) != null);
 
 			// Initialize process and other objects
 			Process ClientProcess = null;
@@ -126,84 +128,68 @@ public class SplatHandler extends AbstractHandler {
 			// command line parameters
 			List<String> cmds = new ArrayList<>();
 			String commands = "";
-			String subCommands = "";
 
 			// acquiring user preferences and setting them up accordingly for the exec command
-			cmds.add(splatPath);
+			if (!dockerTarballExists) {
+				cmds.add(splatPath);
+			}
 			String assuranceLevel = Activator.getDefault().getPreferenceStore()
 					.getString(SplatPreferenceConstants.ASSURANCE_LEVEL);
 			if (assuranceLevel.equals(SplatPreferenceConstants.ASSURANCE_LEVEL_CAKE)) {
 				cmds.add("cake");
-				subCommands += "cake ";
 			} else if (assuranceLevel.equals(SplatPreferenceConstants.ASSURANCE_LEVEL_HOL)) {
 				cmds.add("hol");
-				subCommands += "hol ";
 			} else if (assuranceLevel.equals(SplatPreferenceConstants.ASSURANCE_LEVEL_FULL)) {
 				cmds.add("full");
-				subCommands += "full ";
 			} else {
 				cmds.add("basic");
-				subCommands += "basic ";
 			}
 
 			if (Activator.getDefault().getPreferenceStore().getBoolean(SplatPreferenceConstants.CHECK_PROPERTIES)) {
 				cmds.add("-checkprops");
-				subCommands += "-checkprops ";
 			}
 
 			cmds.add("-outdir");
-			cmds.add(Activator.getDefault().getPreferenceStore().getString(SplatPreferenceConstants.OUTPUT_DIRECTORY));
+			if (dockerTarballExists) {
+				cmds.add("./");
+			} else {
+				cmds.add(Activator.getDefault().getPreferenceStore()
+						.getString(SplatPreferenceConstants.OUTPUT_DIRECTORY));
+			}
 
 			cmds.add("-intwidth");
-			subCommands += "-intwidth ";
 			cmds.add(Integer.toString(
 					Activator.getDefault().getPreferenceStore().getInt(SplatPreferenceConstants.INTEGER_WIDTH)));
-			subCommands += Integer.toString(
-					Activator.getDefault().getPreferenceStore().getInt(SplatPreferenceConstants.INTEGER_WIDTH));
-			subCommands += " ";
 
 			if (Activator.getDefault().getPreferenceStore().getBoolean(SplatPreferenceConstants.OPTIMIZE)) {
 				cmds.add("optimize");
-				subCommands += "optimize ";
 			}
 
 			cmds.add("-endian ");
-			subCommands += "-endian ";
 			if (Activator.getDefault().getPreferenceStore().getBoolean(SplatPreferenceConstants.ENDIAN_BIG)) {
 				cmds.add("MSB");
-				subCommands += "MSB ";
 			} else {
 				cmds.add("LSB");
-				subCommands += "LSB ";
 			}
 
 			cmds.add("-encoding");
-			subCommands += "-encoding ";
 			String encoding = Activator.getDefault().getPreferenceStore().getString(SplatPreferenceConstants.ENCODING);
 			if (encoding.equals(SplatPreferenceConstants.ENCODING_UNSIGNED)) {
 				cmds.add("Unsigned");
-				subCommands += "Unsigned ";
 			} else if (encoding.equals(SplatPreferenceConstants.ENCODING_SIGN_MAG)) {
 				cmds.add("Sign_mag");
-				subCommands += "Sign_mag ";
 			} else if (encoding.equals(SplatPreferenceConstants.ENCODING_ZIGZAG)) {
 				cmds.add("Zigzag");
-				subCommands += "Zigzag ";
 			} else {
 				cmds.add("Twos_comp");
-				subCommands += "Twos_comp ";
 			}
 
 			if (Activator.getDefault().getPreferenceStore().getBoolean(SplatPreferenceConstants.PRESERVE_MODEL_NUMS)) {
 				cmds.add("-preserve_model_nums");
-				subCommands += "-preserve_model_nums ";
 			}
 
-			// Check if docker image tar file exists
-			URL tarFileExists = FileLocator.find(bundle, new Path("resources/splat_image.tar"), null);
-
 			// Run SPLAT inside docker container
-			if (tarFileExists != null) {
+			if (dockerTarballExists) {
 
 				Process dockerLoadImage = null;
 				Process dockerListImages = null;
@@ -277,9 +263,10 @@ public class SplatHandler extends AbstractHandler {
 				commands += "docker run --rm -v ";
 				commands += Activator.getDefault().getPreferenceStore()
 						.getString(SplatPreferenceConstants.OUTPUT_DIRECTORY) + ":/user ";
-				commands += dockerImage;
-				commands += " ";
-				commands += subCommands;
+				commands += dockerImage + " ";
+				for (String c : cmds) {
+					commands += c + " ";
+				}
 				commands += jsonFileName;
 				System.out.println(commands);
 				ClientProcess = Runtime.getRuntime().exec(commands);
@@ -305,7 +292,7 @@ public class SplatHandler extends AbstractHandler {
 			console = findConsole("SPLAT");
 			out = console.newMessageStream();
 
-			if (tarFileExists == null) {
+			if (!dockerTarballExists) {
 				String cmdLine = "";
 				for (String st : cmds) {
 					cmdLine += st + " ";
@@ -340,7 +327,7 @@ public class SplatHandler extends AbstractHandler {
 					updateLog();
 				}
 
-				out.println("SPLAT completed successfully, GENIUS!.");
+				out.println("SPLAT completed successfully.");
 			} else {
 				out.println("SPLAT has encountered an error and was unable to complete.");
 			}
