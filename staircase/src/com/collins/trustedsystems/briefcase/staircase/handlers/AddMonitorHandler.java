@@ -22,7 +22,6 @@ import org.osate.aadl2.DefaultAnnexSubclause;
 import org.osate.aadl2.EnumerationLiteral;
 import org.osate.aadl2.EventDataPort;
 import org.osate.aadl2.EventPort;
-import org.osate.aadl2.Feature;
 import org.osate.aadl2.NamedValue;
 import org.osate.aadl2.PackageSection;
 import org.osate.aadl2.Port;
@@ -44,6 +43,7 @@ import com.collins.trustedsystems.briefcase.staircase.requirements.CyberRequirem
 import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsManager;
 import com.collins.trustedsystems.briefcase.staircase.utils.CaseUtils;
 import com.collins.trustedsystems.briefcase.staircase.utils.ComponentCreateHelper;
+import com.collins.trustedsystems.briefcase.staircase.utils.ModelTransformUtils;
 
 public class AddMonitorHandler extends AadlHandler {
 
@@ -86,10 +86,10 @@ public class AddMonitorHandler extends AadlHandler {
 		ComponentImplementation ci = selectedConnection.getContainingComponentImpl();
 
 		// Provide list of outports that can be connected to monitor's expected in port
-		List<String> outports = getOutports(ci);
+		List<String> outports = ModelTransformUtils.getOutports(ci);
 
 		// Provide list of inports that monitor's alert out port can be connected to
-		List<String> inports = getInports(ci);
+		List<String> inports = ModelTransformUtils.getInports(ci);
 
 		// Provide list of requirements so the user can choose which requirement is driving this
 		// model transformation.
@@ -228,7 +228,7 @@ public class AddMonitorHandler extends AadlHandler {
 
 			// Create expected port
 			Port monExpectedPort = null;
-			Port srcExpectedPort = getPort(containingImpl, expectedPort);
+			Port srcExpectedPort = ModelTransformUtils.getPort(containingImpl, expectedPort);
 			// If user didn't specify an expected outport, use the same type as the observed port
 			if (srcExpectedPort == null) {
 				srcExpectedPort = portObserved;
@@ -249,7 +249,7 @@ public class AddMonitorHandler extends AadlHandler {
 
 			// Create monitor alert port
 			Port monAlertPort = null;
-			final Port dstAlertPort = getPort(containingImpl, alertPort);
+			final Port dstAlertPort = ModelTransformUtils.getPort(containingImpl, alertPort);
 			// If user didn't specify an alert inport, make it an event data port
 			if (dstAlertPort == null) {
 				monAlertPort = ComponentCreateHelper.createOwnedEventDataPort(monitorType);
@@ -271,7 +271,7 @@ public class AddMonitorHandler extends AadlHandler {
 			Port monResetPort = null;
 			Port srcResetPort = null;
 			if (resetPort != null) {
-				srcResetPort = getPort(containingImpl, resetPort);
+				srcResetPort = ModelTransformUtils.getPort(containingImpl, resetPort);
 				// If user didn't specify a reset outport, make it an event data port
 				if (srcResetPort == null) {
 					monResetPort = ComponentCreateHelper.createOwnedEventDataPort(monitorType);
@@ -398,7 +398,7 @@ public class AddMonitorHandler extends AadlHandler {
 						.setName(getUniqueName(CONNECTION_IMPL_NAME, false, containingImpl.getOwnedPortConnections()));
 				portConnExpected.setBidirectional(false);
 				final ConnectedElement monitorExpectedSrc = portConnExpected.createSource();
-				monitorExpectedSrc.setContext(getSubcomponent(containingImpl, expectedPort));
+				monitorExpectedSrc.setContext(ModelTransformUtils.getSubcomponent(containingImpl, expectedPort));
 				monitorExpectedSrc.setConnectionEnd(srcExpectedPort);
 				final ConnectedElement monitorExpectedDst = portConnExpected.createDestination();
 				monitorExpectedDst.setContext(monitorSubcomp);
@@ -421,7 +421,7 @@ public class AddMonitorHandler extends AadlHandler {
 				monitorAlertSrc.setContext(monitorSubcomp);
 				monitorAlertSrc.setConnectionEnd(monAlertPort);
 				final ConnectedElement monitorAlertDst = portConnAlert.createDestination();
-				monitorAlertDst.setContext(getSubcomponent(containingImpl, alertPort));
+				monitorAlertDst.setContext(ModelTransformUtils.getSubcomponent(containingImpl, alertPort));
 				monitorAlertDst.setConnectionEnd(dstAlertPort);
 				// Put portConnAlert in right place (after portConnObserved)
 				destName = portConnObserved.getName();
@@ -437,7 +437,7 @@ public class AddMonitorHandler extends AadlHandler {
 						.setName(getUniqueName(CONNECTION_IMPL_NAME, false, containingImpl.getOwnedPortConnections()));
 				portConnReset.setBidirectional(false);
 				final ConnectedElement monitorResetSrc = portConnReset.createSource();
-				monitorResetSrc.setContext(getSubcomponent(containingImpl, resetPort));
+				monitorResetSrc.setContext(ModelTransformUtils.getSubcomponent(containingImpl, resetPort));
 				monitorResetSrc.setConnectionEnd(srcResetPort);
 				final ConnectedElement monitorResetDst = portConnReset.createDestination();
 				monitorResetDst.setContext(monitorSubcomp);
@@ -486,104 +486,104 @@ public class AddMonitorHandler extends AadlHandler {
 		}
 	}
 
-	/**
-	 * Returns all the in data ports in the specified component implementation
-	 * @param ci - component implementation
-	 * @return list of in port names
-	 */
-	private List<String> getInports(ComponentImplementation ci) {
-		List<String> inports = new ArrayList<>();
-		// Get component implementation out ports
-		for (Feature f : ci.getAllFeatures()) {
-			if (f instanceof Port && ((Port) f).isOut()) {
-				inports.add(f.getName());
-			}
-		}
-
-		// Get subcomponent in ports
-		for (Subcomponent s : ci.getOwnedSubcomponents()) {
-			for (Feature f : s.getAllFeatures()) {
-				if (f instanceof Port && ((Port) f).isIn()) {
-					inports.add(s.getName() + "." + f.getName());
-				}
-			}
-		}
-		return inports;
-	}
-
-	/**
-	 * Returns all the out data ports in the specified component implementation
-	 * @param ci - component implementation
-	 * @return list of out port names
-	 */
-	private List<String> getOutports(ComponentImplementation ci) {
-		List<String> outports = new ArrayList<>();
-		// Get component implementation in ports
-		for (Feature f : ci.getAllFeatures()) {
-			if (f instanceof Port && ((Port) f).isIn()) {
-				outports.add(f.getName());
-			}
-		}
-
-		// Get subcomponent out ports
-		for (Subcomponent s : ci.getOwnedSubcomponents()) {
-			for (Feature f : s.getAllFeatures()) {
-				if (f instanceof Port && ((Port) f).isOut()) {
-					outports.add(s.getName() + "." + f.getName());
-				}
-			}
-		}
-		return outports;
-	}
-
-	/**
-	 * Returns the port of the specified subcomponent port name
-	 * in the specified component implementation
-	 * @param ci - component implementation
-	 * @param portName - <subcomponent> . <feature name>
-	 * @return
-	 */
-	private Port getPort(ComponentImplementation ci, String portName) {
-		String[] parts = portName.split("\\.");
-		if (parts.length == 1) {
-			for (Feature f : ci.getAllFeatures()) {
-				if (f.getName().equalsIgnoreCase(portName)) {
-					if (f instanceof Port) {
-						return (Port) f;
-					} else {
-						return null;
-					}
-				}
-			}
-		} else if (parts.length > 1) {
-			for (Subcomponent s : ci.getOwnedSubcomponents()) {
-				if (s.getName().equalsIgnoreCase(parts[0])) {
-					for (Feature f : s.getAllFeatures()) {
-						if (f.getName().equalsIgnoreCase(parts[1])) {
-							if (f instanceof Port) {
-								return (Port) f;
-							} else {
-								return null;
-							}
-						}
-					}
-				}
-			}
-		}
-		return null;
-	}
-
-	private Subcomponent getSubcomponent(ComponentImplementation ci, String portName) {
-		String[] parts = portName.split("\\.");
-		if (parts.length == 2) {
-			for (Subcomponent s : ci.getOwnedSubcomponents()) {
-				if (s.getName().equalsIgnoreCase(parts[0])) {
-					return s;
-				}
-			}
-		}
-		return null;
-	}
+//	/**
+//	 * Returns all the in data ports in the specified component implementation
+//	 * @param ci - component implementation
+//	 * @return list of in port names
+//	 */
+//	private List<String> getInports(ComponentImplementation ci) {
+//		List<String> inports = new ArrayList<>();
+//		// Get component implementation out ports
+//		for (Feature f : ci.getAllFeatures()) {
+//			if (f instanceof Port && ((Port) f).isOut()) {
+//				inports.add(f.getName());
+//			}
+//		}
+//
+//		// Get subcomponent in ports
+//		for (Subcomponent s : ci.getOwnedSubcomponents()) {
+//			for (Feature f : s.getAllFeatures()) {
+//				if (f instanceof Port && ((Port) f).isIn()) {
+//					inports.add(s.getName() + "." + f.getName());
+//				}
+//			}
+//		}
+//		return inports;
+//	}
+//
+//	/**
+//	 * Returns all the out data ports in the specified component implementation
+//	 * @param ci - component implementation
+//	 * @return list of out port names
+//	 */
+//	private List<String> getOutports(ComponentImplementation ci) {
+//		List<String> outports = new ArrayList<>();
+//		// Get component implementation in ports
+//		for (Feature f : ci.getAllFeatures()) {
+//			if (f instanceof Port && ((Port) f).isIn()) {
+//				outports.add(f.getName());
+//			}
+//		}
+//
+//		// Get subcomponent out ports
+//		for (Subcomponent s : ci.getOwnedSubcomponents()) {
+//			for (Feature f : s.getAllFeatures()) {
+//				if (f instanceof Port && ((Port) f).isOut()) {
+//					outports.add(s.getName() + "." + f.getName());
+//				}
+//			}
+//		}
+//		return outports;
+//	}
+//
+//	/**
+//	 * Returns the port of the specified subcomponent port name
+//	 * in the specified component implementation
+//	 * @param ci - component implementation
+//	 * @param portName - <subcomponent> . <feature name>
+//	 * @return
+//	 */
+//	private Port getPort(ComponentImplementation ci, String portName) {
+//		String[] parts = portName.split("\\.");
+//		if (parts.length == 1) {
+//			for (Feature f : ci.getAllFeatures()) {
+//				if (f.getName().equalsIgnoreCase(portName)) {
+//					if (f instanceof Port) {
+//						return (Port) f;
+//					} else {
+//						return null;
+//					}
+//				}
+//			}
+//		} else if (parts.length > 1) {
+//			for (Subcomponent s : ci.getOwnedSubcomponents()) {
+//				if (s.getName().equalsIgnoreCase(parts[0])) {
+//					for (Feature f : s.getAllFeatures()) {
+//						if (f.getName().equalsIgnoreCase(parts[1])) {
+//							if (f instanceof Port) {
+//								return (Port) f;
+//							} else {
+//								return null;
+//							}
+//						}
+//					}
+//				}
+//			}
+//		}
+//		return null;
+//	}
+//
+//	private Subcomponent getSubcomponent(ComponentImplementation ci, String portName) {
+//		String[] parts = portName.split("\\.");
+//		if (parts.length == 2) {
+//			for (Subcomponent s : ci.getOwnedSubcomponents()) {
+//				if (s.getName().equalsIgnoreCase(parts[0])) {
+//					return s;
+//				}
+//			}
+//		}
+//		return null;
+//	}
 
 
 	/**

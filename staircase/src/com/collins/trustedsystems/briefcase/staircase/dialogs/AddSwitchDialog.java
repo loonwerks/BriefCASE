@@ -28,7 +28,7 @@ public class AddSwitchDialog extends TitleAreaDialog {
 
 	private Text txtSwitchImplementationName;
 	private MultiPortSelector mpsInputPorts;
-	private Combo cboOutputPort;
+//	private Combo cboOutputPort;
 	private Combo cboControlPort;
 	private List<Button> btnDispatchProtocol = new ArrayList<>();
 	private Combo cboSwitchRequirement;
@@ -36,7 +36,7 @@ public class AddSwitchDialog extends TitleAreaDialog {
 
 	private String switchImplementationName;
 	private Map<String, String> inputPorts = new HashMap<>();
-	private String outputPort = "";
+//	private String outputPort = "";
 	private String controlPort = "";
 	private String dispatchProtocol = "";
 	private String switchRequirement = "";
@@ -44,6 +44,8 @@ public class AddSwitchDialog extends TitleAreaDialog {
 
 	private List<String> inports = new ArrayList<>();
 	private List<String> outports = new ArrayList<>();
+	private String inConnEnd = "";
+//	private String outConnEnd = "";
 	private List<String> requirements = new ArrayList<>();
 
 	private static final String NO_PORT_SELECTED = "<No port selected>";
@@ -81,7 +83,7 @@ public class AddSwitchDialog extends TitleAreaDialog {
 		// Add switch information fields
 		createImplementationNameField(container);
 		createInputPortField(container);
-		createOutputPortField(container);
+//		createOutputPortField(container);
 		createControlPortField(container);
 		createDispatchProtocolField(container);
 		createRequirementField(container);
@@ -119,29 +121,33 @@ public class AddSwitchDialog extends TitleAreaDialog {
 		List<String> connectionEnds = new ArrayList<>();
 		connectionEnds.add(NO_PORT_SELECTED);
 		connectionEnds.addAll(inports);
-		mpsInputPorts = new MultiPortSelector(container, connectionEnds, "input");
+		mpsInputPorts = new MultiPortSelector(container, connectionEnds, inConnEnd, "input");
 
 	}
 
 
-	/**
-	 * Creates the input field for specifying what to connect the 'output' port to
-	 * @param container
-	 */
-	private void createOutputPortField(Composite container) {
-		Label lblOutputField = new Label(container, SWT.NONE);
-		lblOutputField.setText("Output port connection");
-		lblOutputField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true));
-
-		GridData dataInfoField = new GridData();
-		dataInfoField.grabExcessHorizontalSpace = true;
-		dataInfoField.horizontalAlignment = GridData.FILL;
-		cboOutputPort = new Combo(container, SWT.BORDER);
-		cboOutputPort.setLayoutData(dataInfoField);
-		cboOutputPort.add(NO_PORT_SELECTED);
-		inports.forEach(p -> cboOutputPort.add(p));
-		cboOutputPort.setText(NO_PORT_SELECTED);
-	}
+//	/**
+//	 * Creates the input field for specifying what to connect the 'output' port to
+//	 * @param container
+//	 */
+//	private void createOutputPortField(Composite container) {
+//		Label lblOutputField = new Label(container, SWT.NONE);
+//		lblOutputField.setText("Output port connection");
+//		lblOutputField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true));
+//
+//		GridData dataInfoField = new GridData();
+//		dataInfoField.grabExcessHorizontalSpace = true;
+//		dataInfoField.horizontalAlignment = GridData.FILL;
+//		cboOutputPort = new Combo(container, SWT.BORDER);
+//		cboOutputPort.setLayoutData(dataInfoField);
+//		cboOutputPort.add(NO_PORT_SELECTED);
+//		inports.forEach(p -> cboOutputPort.add(p));
+//		String oPort = outConnEnd;
+//		if (oPort == null || oPort.isEmpty()) {
+//			oPort = NO_PORT_SELECTED;
+//		}
+//		cboOutputPort.setText(oPort);
+//	}
 
 	/**
 	 * Creates the input field for specifying what to connect the 'control' port to
@@ -248,15 +254,15 @@ public class AddSwitchDialog extends TitleAreaDialog {
 //			return false;
 //		}
 		inputPorts = mpsInputPorts.getContents();
-		outputPort = cboOutputPort.getText();
-		if (outputPort.equals(NO_PORT_SELECTED)) {
-			outputPort = "";
-		} else if (!inports.contains(outputPort)) {
-			Dialog.showError("Add Switch", "Port " + outputPort
-					+ " does not exist in the model.  Select a port from the list to connect the switch's 'output' port to, or choose "
-					+ NO_PORT_SELECTED + ".");
-			return false;
-		}
+//		outputPort = cboOutputPort.getText();
+//		if (outputPort.equals(NO_PORT_SELECTED)) {
+//			outputPort = "";
+//		} else if (!inports.contains(outputPort)) {
+//			Dialog.showError("Add Switch", "Port " + outputPort
+//					+ " does not exist in the model.  Select a port from the list to connect the switch's 'output' port to, or choose "
+//					+ NO_PORT_SELECTED + ".");
+//			return false;
+//		}
 		controlPort = cboControlPort.getText();
 		if (controlPort.equals(NO_PORT_SELECTED)) {
 			controlPort = "";
@@ -303,9 +309,9 @@ public class AddSwitchDialog extends TitleAreaDialog {
 		return inputPorts;
 	}
 
-	public String getOutputPort() {
-		return outputPort;
-	}
+//	public String getOutputPort() {
+//		return outputPort;
+//	}
 
 	public String getControlPort() {
 		return controlPort;
@@ -328,44 +334,17 @@ public class AddSwitchDialog extends TitleAreaDialog {
 		this.outports = outports;
 	}
 
+//	public void setConnectionEnds(String inConnEnd, String outConnEnd) {
+//		this.inConnEnd = inConnEnd;
+//		this.outConnEnd = outConnEnd;
+//	}
+
+	public void setInportConnectionEnd(String inConnEnd) {
+		this.inConnEnd = inConnEnd;
+	}
+
 	public void setRequirements(List<String> requirements) {
 		this.requirements = requirements;
 	}
-
-//	private static class Row {
-//
-//		final Composite baseComposite;
-//
-//		public Row(final Composite parent, List<String> portNames) {
-//			baseComposite = new Composite(parent, SWT.NONE);
-//			baseComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
-////			baseComposite.setLayout(new GridLayout(3, false));
-//			baseComposite.setLayout(new GridLayout(2, false));
-//
-////			final Label lblInput = new Label(baseComposite, SWT.NONE);
-////			lblInput.setText(AddSwitchHandler.SWITCH_INPUT_PORT_NAME + "_" + parent.getChildren().length);
-////			lblInput.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true));
-//
-//			final Combo cboInputPorts = new Combo(baseComposite, SWT.BORDER);
-//			cboInputPorts.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-//			cboInputPorts.add(NO_PORT_SELECTED);
-//			portNames.forEach(p -> cboInputPorts.add(p));
-//			cboInputPorts.setText(NO_PORT_SELECTED);
-//
-//			final Button deleteButton = new Button(baseComposite, SWT.PUSH);
-//			deleteButton.setText("X");
-//			deleteButton.addSelectionListener(new SelectionAdapter() {
-//
-//				@Override
-//				public void widgetSelected(final SelectionEvent e) {
-//					baseComposite.dispose();
-//					parent.layout();
-//					parent.getParent().layout();
-//				}
-//
-//			});
-//		}
-//
-//	}
 
 }

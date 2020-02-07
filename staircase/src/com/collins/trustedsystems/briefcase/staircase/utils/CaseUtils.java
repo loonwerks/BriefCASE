@@ -7,6 +7,7 @@ import java.io.InputStream;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
@@ -19,6 +20,7 @@ import org.osate.aadl2.AadlBoolean;
 import org.osate.aadl2.AadlInteger;
 import org.osate.aadl2.AadlPackage;
 import org.osate.aadl2.AadlString;
+import org.osate.aadl2.AbstractNamedValue;
 import org.osate.aadl2.BooleanLiteral;
 import org.osate.aadl2.Classifier;
 import org.osate.aadl2.EnumerationLiteral;
@@ -32,9 +34,12 @@ import org.osate.aadl2.NamedValue;
 import org.osate.aadl2.PackageSection;
 import org.osate.aadl2.Property;
 import org.osate.aadl2.PropertyAssociation;
+import org.osate.aadl2.PropertyExpression;
 import org.osate.aadl2.PropertySet;
 import org.osate.aadl2.PropertyType;
 import org.osate.aadl2.StringLiteral;
+import org.osate.aadl2.Subcomponent;
+import org.osate.aadl2.properties.PropertyDoesNotApplyToHolderException;
 import org.osate.ui.dialogs.Dialog;
 
 import com.collins.trustedsystems.briefcase.staircase.Activator;
@@ -400,6 +405,32 @@ public class CaseUtils {
 			initCaseRequirementsPackage();
 		}
 		return caseReqFile;
+	}
+
+	public static boolean isCompType(Subcomponent comp, String compType) {
+
+		try {
+
+			EList<PropertyExpression> propVal = comp.getPropertyValues(CaseUtils.CASE_PROPSET_NAME, "COMP_TYPE");
+
+			if (propVal != null) {
+				for (PropertyExpression expr : propVal) {
+					if (expr instanceof NamedValue) {
+						NamedValue namedVal = (NamedValue) expr;
+						AbstractNamedValue absVal = namedVal.getNamedValue();
+						if (absVal instanceof EnumerationLiteral) {
+							EnumerationLiteral enVal = (EnumerationLiteral) absVal;
+							if (enVal.getName().equalsIgnoreCase(compType)) {
+								return true;
+							}
+						}
+					}
+				}
+			}
+		} catch (PropertyDoesNotApplyToHolderException e) {
+			return false;
+		}
+		return false;
 	}
 
 }

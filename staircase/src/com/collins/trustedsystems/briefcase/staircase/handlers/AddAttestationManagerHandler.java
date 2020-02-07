@@ -3,7 +3,6 @@ package com.collins.trustedsystems.briefcase.staircase.handlers;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.util.EcoreUtil;
@@ -13,7 +12,6 @@ import org.eclipse.xtext.ui.editor.XtextEditor;
 import org.eclipse.xtext.ui.editor.utils.EditorUtils;
 import org.osate.aadl2.Aadl2Factory;
 import org.osate.aadl2.AadlPackage;
-import org.osate.aadl2.AbstractNamedValue;
 import org.osate.aadl2.AnnexSubclause;
 import org.osate.aadl2.Classifier;
 import org.osate.aadl2.ComponentCategory;
@@ -37,11 +35,9 @@ import org.osate.aadl2.PortCategory;
 import org.osate.aadl2.PortConnection;
 import org.osate.aadl2.PrivatePackageSection;
 import org.osate.aadl2.Property;
-import org.osate.aadl2.PropertyExpression;
 import org.osate.aadl2.PublicPackageSection;
 import org.osate.aadl2.Realization;
 import org.osate.aadl2.Subcomponent;
-import org.osate.aadl2.properties.PropertyDoesNotApplyToHolderException;
 import org.osate.ui.dialogs.Dialog;
 import org.osate.xtext.aadl2.properties.util.GetProperties;
 import org.osate.xtext.aadl2.properties.util.ThreadProperties;
@@ -95,7 +91,7 @@ public class AddAttestationManagerHandler extends AadlHandler {
 		}
 
 		// Check if selected subcomponent is a comm driver
-		if (!isCompType(selectedSubcomponent, "COMM_DRIVER")) {
+		if (!CaseUtils.isCompType(selectedSubcomponent, "COMM_DRIVER")) {
 			Dialog.showError("Add Attestation Manager",
 					"A communication driver subcomponent must be selected to add an attestation manager.");
 			return;
@@ -253,9 +249,9 @@ public class AddAttestationManagerHandler extends AadlHandler {
 			}
 
 			// Create attestation request and response ports for communicating with the attestation manager
-			final EventDataPort commReq = (EventDataPort) ComponentCreateHelper
+			final EventDataPort commReq = ComponentCreateHelper
 					.createOwnedEventDataPort(commDriverType);
-			final EventDataPort commRes = (EventDataPort) ComponentCreateHelper
+			final EventDataPort commRes = ComponentCreateHelper
 					.createOwnedEventDataPort(commDriverType);
 			commReq.setDataFeatureClassifier(requestMsgImpl);
 			commRes.setDataFeatureClassifier(responseMsgImpl);
@@ -265,9 +261,9 @@ public class AddAttestationManagerHandler extends AadlHandler {
 			commRes.setOut(true);
 
 			// Create attestation request and response ports for communicating with the message sender
-			final EventDataPort commReqEx = (EventDataPort) ComponentCreateHelper
+			final EventDataPort commReqEx = ComponentCreateHelper
 					.createOwnedEventDataPort(commDriverType);
-			final EventDataPort commResEx = (EventDataPort) ComponentCreateHelper
+			final EventDataPort commResEx = ComponentCreateHelper
 					.createOwnedEventDataPort(commDriverType);
 			commReqEx.setDataFeatureClassifier(requestMsgImpl);
 			commResEx.setDataFeatureClassifier(responseMsgImpl);
@@ -347,9 +343,9 @@ public class AddAttestationManagerHandler extends AadlHandler {
 			}
 
 			// Add the ports for communicating attestation requests/responses with the Comm Driver
-			final EventDataPort amReq = (EventDataPort) ComponentCreateHelper
+			final EventDataPort amReq = ComponentCreateHelper
 					.createOwnedEventDataPort(attestationManagerType);
-			final EventDataPort amRes = (EventDataPort) ComponentCreateHelper
+			final EventDataPort amRes = ComponentCreateHelper
 					.createOwnedEventDataPort(attestationManagerType);
 			// Set data feature classifier
 			amReq.setDataFeatureClassifier(requestMsgImpl);
@@ -649,31 +645,6 @@ public class AddAttestationManagerHandler extends AadlHandler {
 
 	}
 
-	private boolean isCompType(Subcomponent comp, String compType) {
-
-		try {
-
-			EList<PropertyExpression> propVal = comp.getPropertyValues(CaseUtils.CASE_PROPSET_NAME, "COMP_TYPE");
-
-			if (propVal != null) {
-				for (PropertyExpression expr : propVal) {
-					if (expr instanceof NamedValue) {
-						NamedValue namedVal = (NamedValue) expr;
-						AbstractNamedValue absVal = namedVal.getNamedValue();
-						if (absVal instanceof EnumerationLiteral) {
-							EnumerationLiteral enVal = (EnumerationLiteral) absVal;
-							if (enVal.getName().equalsIgnoreCase(compType)) {
-								return true;
-							}
-						}
-					}
-				}
-			}
-		} catch (PropertyDoesNotApplyToHolderException e) {
-			return false;
-		}
-		return false;
-	}
 
 	private Subcomponent getAttestationManager(Subcomponent comp) {
 
@@ -691,7 +662,7 @@ public class AddAttestationManagerHandler extends AadlHandler {
 				if (ne instanceof Subcomponent) {
 					dst = (Subcomponent) ne;
 					// Check if it's an attestation manager
-					if (isCompType(dst, "ATTESTATION")) {
+					if (CaseUtils.isCompType(dst, "ATTESTATION")) {
 						return dst;
 					}
 				}

@@ -16,7 +16,6 @@ import org.eclipse.xtext.ui.editor.utils.EditorUtils;
 import org.osate.aadl2.Aadl2Factory;
 import org.osate.aadl2.Aadl2Package;
 import org.osate.aadl2.AadlPackage;
-import org.osate.aadl2.AbstractNamedValue;
 import org.osate.aadl2.AnnexSubclause;
 import org.osate.aadl2.ComponentCategory;
 import org.osate.aadl2.ComponentImplementation;
@@ -106,9 +105,10 @@ public class AddFilterHandler extends AadlHandler {
 		}
 
 		boolean createCompoundFilter = false;
-		ComponentType comp = subcomponent.getComponentType();
+//		ComponentType comp = subcomponent.getComponentType();
 		PortConnection filterOutConn = null;
-		if (isFilter(comp)) {
+		if (CaseUtils.isCompType(subcomponent, "FILTER")) {
+//		if (isFilter(comp)) {
 			if (Dialog.askQuestion("Add Filter",
 					"A CASE Filter cannot be inserted next to another CASE Filter.  Would you like to add a new filter specification to the existing filter instead?")) {
 
@@ -136,8 +136,9 @@ public class AddFilterHandler extends AadlHandler {
 
 			subcomponent = (Subcomponent) selectedConnection.getSource().getContext();
 			if (subcomponent != null) {
-				comp = subcomponent.getComponentType();
-				if (isFilter(comp)) {
+//				comp = subcomponent.getComponentType();
+				if (CaseUtils.isCompType(subcomponent, "FILTER")) {
+//				if (isFilter(comp)) {
 					if (Dialog.askQuestion("Add Filter",
 							"A CASE Filter cannot be inserted next to another CASE Filter.  Would you like to add a new filter specification to the existing filter instead?")) {
 						createCompoundFilter = true;
@@ -514,32 +515,32 @@ public class AddFilterHandler extends AadlHandler {
 
 	}
 
-	/**
-	 * Determines if the specified component is a CASE filter
-	 * @param comp
-	 */
-	private boolean isFilter(ComponentType comp) {
-		try {
-			EList<PropertyExpression> propVal = comp.getPropertyValues(CaseUtils.CASE_PROPSET_NAME, "COMP_TYPE");
-			if (propVal != null) {
-				for (PropertyExpression expr : propVal) {
-					if (expr instanceof NamedValue) {
-						NamedValue namedVal = (NamedValue) expr;
-						AbstractNamedValue absVal = namedVal.getNamedValue();
-						if (absVal instanceof EnumerationLiteral) {
-							EnumerationLiteral enVal = (EnumerationLiteral) absVal;
-							if (enVal.getName().equalsIgnoreCase("FILTER")) {
-								return true;
-							}
-						}
-					}
-				}
-			}
-		} catch (Exception e) {
-			return false;
-		}
-		return false;
-	}
+//	/**
+//	 * Determines if the specified component is a CASE filter
+//	 * @param comp
+//	 */
+//	private boolean isFilter(ComponentType comp) {
+//		try {
+//			EList<PropertyExpression> propVal = comp.getPropertyValues(CaseUtils.CASE_PROPSET_NAME, "COMP_TYPE");
+//			if (propVal != null) {
+//				for (PropertyExpression expr : propVal) {
+//					if (expr instanceof NamedValue) {
+//						NamedValue namedVal = (NamedValue) expr;
+//						AbstractNamedValue absVal = namedVal.getNamedValue();
+//						if (absVal instanceof EnumerationLiteral) {
+//							EnumerationLiteral enVal = (EnumerationLiteral) absVal;
+//							if (enVal.getName().equalsIgnoreCase("FILTER")) {
+//								return true;
+//							}
+//						}
+//					}
+//				}
+//			}
+//		} catch (Exception e) {
+//			return false;
+//		}
+//		return false;
+//	}
 
 	/**
 	 * Adds a new spec to the specified filter

@@ -51,7 +51,7 @@ public class MultiPortSelector {
 
 	}
 
-	public MultiPortSelector(Composite parent, List<String> ports, String basePortName) {
+	public MultiPortSelector(Composite parent, List<String> ports, String initPort, String basePortName) {
 
 		this.connectionEnds = ports;
 		if (basePortName != null && !basePortName.isEmpty()) {
@@ -109,7 +109,11 @@ public class MultiPortSelector {
 
 		// Initialize
 		PortConnectionItems.INSTANCE.getPorts().clear();
-		PortConnectionItems.INSTANCE.getPorts().add(new PortConnectionItem(this.basePortName + "_1", NO_PORT_SELECTED));
+		String iPort = initPort;
+		if (iPort == null || iPort.isEmpty()) {
+			iPort = NO_PORT_SELECTED;
+		}
+		PortConnectionItems.INSTANCE.getPorts().add(new PortConnectionItem(this.basePortName + "_1", iPort));
 		tblPorts.setInput(PortConnectionItems.INSTANCE.getPorts());
 
 		// Layout the viewer

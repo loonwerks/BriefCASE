@@ -25,7 +25,6 @@ import org.osate.aadl2.ComponentType;
 import org.osate.aadl2.ConnectedElement;
 import org.osate.aadl2.Connection;
 import org.osate.aadl2.ConnectionEnd;
-import org.osate.aadl2.ContainedNamedElement;
 import org.osate.aadl2.Context;
 import org.osate.aadl2.DataAccess;
 import org.osate.aadl2.DataPort;
@@ -133,13 +132,13 @@ public class Sel4TransformHandler extends AadlHandler {
 						// Copy subcomponent properties
 						copyPropertyAssociations(pSub, sSub);
 
-						// TODO: Modify property associations that reference or apply to process subcomponent
-						// TODO: make sure property is supported
-						for (PropertyAssociation pa : systemImpl.getOwnedPropertyAssociations()) {
-							for (ContainedNamedElement cne : pa.getAppliesTos()) {
-
-							}
-						}
+//						// TODO: Modify property associations that reference or apply to process subcomponent
+//						// TODO: make sure property is supported
+//						for (PropertyAssociation pa : systemImpl.getOwnedPropertyAssociations()) {
+//							for (ContainedNamedElement cne : pa.getAppliesTos()) {
+//
+//							}
+//						}
 
 						// Update connections
 						Iterator<Connection> connIterator = systemImpl.getOwnedConnections().iterator();
