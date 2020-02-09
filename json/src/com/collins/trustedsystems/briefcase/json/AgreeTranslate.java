@@ -59,7 +59,7 @@ import com.rockwellcollins.atc.agree.agree.UnaryExpr;
 
 public class AgreeTranslate {
 
-	private JsonElement genBinaryExpr(BinaryExpr expr) {
+	private static JsonElement genBinaryExpr(BinaryExpr expr) {
 
 		JsonObject result = new JsonObject();
 		result.add("kind", new JsonPrimitive("BinaryExpr"));
@@ -69,7 +69,7 @@ public class AgreeTranslate {
 		return result;
 	}
 
-	private JsonElement genUnaryExpr(UnaryExpr expr) {
+	private static JsonElement genUnaryExpr(UnaryExpr expr) {
 		JsonObject result = new JsonObject();
 		result.add("kind", new JsonPrimitive("UnaryExpr"));
 		result.add("operand", genExpr(expr.getExpr()));
@@ -77,7 +77,7 @@ public class AgreeTranslate {
 		return result;
 	}
 
-	private JsonElement genIntLitExpr(IntLitExpr expr) {
+	private static JsonElement genIntLitExpr(IntLitExpr expr) {
 		JsonObject result = new JsonObject();
 		result.add("kind", new JsonPrimitive("IntLitExpr"));
 		result.add("value", new JsonPrimitive(expr.getVal()));
@@ -85,7 +85,7 @@ public class AgreeTranslate {
 		return result;
 	}
 
-	private JsonElement genRealLitExpr(RealLitExpr expr) {
+	private static JsonElement genRealLitExpr(RealLitExpr expr) {
 
 		JsonObject result = new JsonObject();
 		result.add("kind", new JsonPrimitive("RealLitExpr"));
@@ -93,7 +93,7 @@ public class AgreeTranslate {
 		return result;
 	}
 
-	private JsonElement genBoolLitExpr(BoolLitExpr expr) {
+	private static JsonElement genBoolLitExpr(BoolLitExpr expr) {
 
 		JsonObject result = new JsonObject();
 		result.add("kind", new JsonPrimitive("BoolLitExpr"));
@@ -101,7 +101,7 @@ public class AgreeTranslate {
 		return result;
 	}
 
-	private JsonElement genSelectionExpr(SelectionExpr expr) {
+	private static JsonElement genSelectionExpr(SelectionExpr expr) {
 
 		JsonObject result = new JsonObject();
 		result.add("kind", new JsonPrimitive("Selection"));
@@ -112,7 +112,7 @@ public class AgreeTranslate {
 		return result;
 	}
 
-	private JsonElement genNamedElmExpr(NamedElmExpr expr) {
+	private static JsonElement genNamedElmExpr(NamedElmExpr expr) {
 
 		JsonObject result = new JsonObject();
 		result.add("kind", new JsonPrimitive("NamedElmExpr"));
@@ -120,7 +120,7 @@ public class AgreeTranslate {
 		return result;
 	}
 
-	private JsonElement genCallExpr(CallExpr expr) {
+	private static JsonElement genCallExpr(CallExpr expr) {
 
 		JsonObject result = new JsonObject();
 		result.add("kind", new JsonPrimitive("CallExpr"));
@@ -133,7 +133,7 @@ public class AgreeTranslate {
 		return result;
 	}
 
-	private JsonElement genIfThenElseExpr(IfThenElseExpr expr) {
+	private static JsonElement genIfThenElseExpr(IfThenElseExpr expr) {
 
 		JsonObject result = new JsonObject();
 		result.add("kind", new JsonPrimitive("IfThenElseExpr"));
@@ -143,7 +143,7 @@ public class AgreeTranslate {
 		return result;
 	}
 
-	private JsonElement genRecordLitExpr(RecordLitExpr expr) {
+	private static JsonElement genRecordLitExpr(RecordLitExpr expr) {
 
 		JsonObject result = new JsonObject();
 
@@ -161,14 +161,14 @@ public class AgreeTranslate {
 		return result;
 	}
 
-	private JsonElement genEventExpr(EventExpr expr) {
+	private static JsonElement genEventExpr(EventExpr expr) {
 		JsonObject result = new JsonObject();
 		result.add("kind", new JsonPrimitive("EventExpr"));
 		result.add("id", genExpr(expr.getPort()));
 		return result;
 	}
 
-	private JsonElement genPreExpr(PreExpr expr) {
+	private static JsonElement genPreExpr(PreExpr expr) {
 
 		JsonObject result = new JsonObject();
 		result.add("kind", new JsonPrimitive("PreExpr"));
@@ -176,7 +176,7 @@ public class AgreeTranslate {
 		return result;
 	}
 
-	private JsonElement genForallExpr(ForallExpr expr) {
+	private static JsonElement genForallExpr(ForallExpr expr) {
 
 		JsonObject result = new JsonObject();
 		result.add("kind", new JsonPrimitive("ForallExpr"));
@@ -186,7 +186,7 @@ public class AgreeTranslate {
 		return result;
 	}
 
-	private JsonElement genExistsExpr(ExistsExpr expr) {
+	private static JsonElement genExistsExpr(ExistsExpr expr) {
 
 		JsonObject result = new JsonObject();
 		result.add("kind", new JsonPrimitive("ExistsExpr"));
@@ -196,7 +196,7 @@ public class AgreeTranslate {
 		return result;
 	}
 
-	private JsonElement genExpr(Expr expr) {
+	private static JsonElement genExpr(Expr expr) {
 
 		if (expr instanceof IntLitExpr) {
 			return genIntLitExpr((IntLitExpr) expr);
@@ -233,7 +233,7 @@ public class AgreeTranslate {
 		}
 	}
 
-	private JsonElement genEnumLitExpr(EnumLitExpr expr) {
+	private static JsonElement genEnumLitExpr(EnumLitExpr expr) {
 
 		JsonObject result = new JsonObject();
 		result.add("kind", new JsonPrimitive("AadlEnumerator"));
@@ -242,7 +242,7 @@ public class AgreeTranslate {
 		return result;
 	}
 
-	private JsonElement genAssertStatement(AssertStatement stmt) {
+	private static JsonElement genAssertStatement(AssertStatement stmt) {
 
 		JsonObject result = new JsonObject();
 		result.add("kind", new JsonPrimitive("AssertStatement"));
@@ -256,7 +256,7 @@ public class AgreeTranslate {
 		return result;
 	}
 
-	private JsonElement genAssumeStatement(AssumeStatement stmt) {
+	private static JsonElement genAssumeStatement(AssumeStatement stmt) {
 
 		JsonObject result = new JsonObject();
 		result.add("kind", new JsonPrimitive("AssumeStatement"));
@@ -268,7 +268,7 @@ public class AgreeTranslate {
 		return result;
 	}
 
-	private JsonElement genEqStatement(EqStatement stmt) {
+	private static JsonElement genEqStatement(EqStatement stmt) {
 
 		JsonObject result = new JsonObject();
 		result.add("kind", new JsonPrimitive("EqStatement"));
@@ -281,7 +281,7 @@ public class AgreeTranslate {
 		return result;
 	}
 
-	private JsonElement genGuaranteeStatement(GuaranteeStatement stmt) {
+	private static JsonElement genGuaranteeStatement(GuaranteeStatement stmt) {
 
 		JsonObject result = new JsonObject();
 		result.add("kind", new JsonPrimitive("GuaranteeStatement"));
@@ -293,14 +293,14 @@ public class AgreeTranslate {
 		return result;
 	}
 
-	private JsonElement genAssignStatement(AssignStatement stmt) {
+	private static JsonElement genAssignStatement(AssignStatement stmt) {
 		JsonObject result = new JsonObject();
 		result.add("kind", new JsonPrimitive("AssignStatement"));
 		result.add("expr", genExpr(stmt.getExpr()));
 		return result;
 	}
 
-	private JsonElement genPropertyStatement(PropertyStatement stmt) {
+	private static JsonElement genPropertyStatement(PropertyStatement stmt) {
 		JsonObject result = new JsonObject();
 		result.add("kind", new JsonPrimitive("PropertyStatement"));
 		result.add("name", new JsonPrimitive(stmt.getName()));
@@ -308,7 +308,7 @@ public class AgreeTranslate {
 		return result;
 	}
 
-	private JsonElement genDoubleDotRef(DoubleDotRef ref) {
+	private static JsonElement genDoubleDotRef(DoubleDotRef ref) {
 		JsonObject result = new JsonObject();
 		result.add("kind", new JsonPrimitive("DoubleDotRef"));
 		NamedElement ne = ref.getElm();
@@ -320,7 +320,7 @@ public class AgreeTranslate {
 		return result;
 	}
 
-	private JsonElement genPrimType(PrimType type) {
+	private static JsonElement genPrimType(PrimType type) {
 
 		JsonObject result = new JsonObject();
 		result.add("kind", new JsonPrimitive("PrimType"));
@@ -329,7 +329,7 @@ public class AgreeTranslate {
 		return result;
 	}
 
-	private JsonElement genType(Type type) {
+	private static JsonElement genType(Type type) {
 		JsonElement result = null;
 		if (type instanceof DoubleDotRef) {
 			result = genDoubleDotRef((DoubleDotRef) type);
@@ -341,7 +341,7 @@ public class AgreeTranslate {
 		return result;
 	}
 
-	private JsonElement genArg(Arg arg) {
+	private static JsonElement genArg(Arg arg) {
 
 		JsonObject result = new JsonObject();
 		result.add("name", new JsonPrimitive(arg.getName()));
@@ -349,7 +349,7 @@ public class AgreeTranslate {
 		return result;
 	}
 
-	private JsonElement genFnDef(FnDef stmt) {
+	private static JsonElement genFnDef(FnDef stmt) {
 
 		JsonObject result = new JsonObject();
 		result.add("kind", new JsonPrimitive("FnDef"));
@@ -370,7 +370,7 @@ public class AgreeTranslate {
 		return result;
 	}
 
-	private JsonElement genConstStatement(ConstStatement stmt) {
+	private static JsonElement genConstStatement(ConstStatement stmt) {
 		JsonObject result = new JsonObject();
 
 		result.add("kind", new JsonPrimitive("ConstStatement"));
@@ -380,7 +380,7 @@ public class AgreeTranslate {
 		return result;
 	}
 
-	private JsonElement genNodeStatement(NodeStmt stmt) {
+	private static JsonElement genNodeStatement(NodeStmt stmt) {
 		JsonObject result = new JsonObject();
 		if (stmt instanceof NodeEq) {
 			result.add("kind", new JsonPrimitive("NodeEq"));
@@ -399,7 +399,7 @@ public class AgreeTranslate {
 		return result;
 	}
 
-	private JsonElement genNodeDef(NodeDef stmt) {
+	private static JsonElement genNodeDef(NodeDef stmt) {
 		JsonObject result = new JsonObject();
 
 		result.add("kind", new JsonPrimitive("NodeDef"));
@@ -422,7 +422,7 @@ public class AgreeTranslate {
 		return result;
 	}
 
-	public JsonElement genSpecStatement(SpecStatement stmt) {
+	private static JsonElement genSpecStatement(SpecStatement stmt) {
 		if (stmt instanceof AssertStatement) {
 			return genAssertStatement((AssertStatement) stmt);
 		} else if (stmt instanceof AssumeStatement) {
@@ -447,7 +447,7 @@ public class AgreeTranslate {
 
 	}
 
-	public JsonObject genContract(Contract contr) {
+	private static JsonObject genContract(Contract contr) {
 		JsonObject result = new JsonObject();
 
 		if (contr instanceof AgreeContract) {
@@ -468,7 +468,7 @@ public class AgreeTranslate {
 		return result;
 	}
 
-	public JsonArray genComponentClassifier(ComponentClassifier cc) {
+	private static JsonArray genComponentClassifier(ComponentClassifier cc) {
 
 		JsonArray components = new JsonArray();
 
@@ -485,7 +485,7 @@ public class AgreeTranslate {
 		return components;
 	}
 
-	public JsonArray genAadlPackage(AadlPackage pkg) {
+	private static JsonArray genAadlPackage(AadlPackage pkg) {
 
 		JsonArray components = new JsonArray();
 
@@ -502,7 +502,7 @@ public class AgreeTranslate {
 		return components;
 	}
 
-	public JsonObject genAadlPackageSection(PackageSection pkgSection) {
+	private static JsonObject genAadlPackageSection(PackageSection pkgSection) {
 
 		JsonObject agreeLib = new JsonObject();
 
@@ -519,14 +519,14 @@ public class AgreeTranslate {
 		return agreeLib;
 	}
 
-	public JsonObject genAnnexLibrary(AnnexLibrary annexLib) {
+	public static JsonObject genAnnexLibrary(AnnexLibrary annexLib) {
 		DefaultAnnexLibrary defaultAnnexLib = (DefaultAnnexLibrary) annexLib;
 		AgreeContract contr = (AgreeContract) ((AgreeContractLibrary) defaultAnnexLib.getParsedAnnexLibrary())
 				.getContract();
 		return genContract(contr);
 	}
 
-	public JsonObject genAnnexSubclause(AnnexSubclause annexSub) {
+	public static JsonObject genAnnexSubclause(AnnexSubclause annexSub) {
 		DefaultAnnexSubclause defaultAnnexSub = (DefaultAnnexSubclause) annexSub;
 		AgreeContract contr = (AgreeContract) ((AgreeContractSubclause) defaultAnnexSub.getParsedAnnexSubclause())
 				.getContract();

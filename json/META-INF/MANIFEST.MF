@@ -12,6 +12,8 @@ Require-Bundle: org.eclipse.jface,
  org.eclipse.ui.console,
  org.osate.ui
 Import-Package: com.collins.trustedsystems.briefcase.util,
+ com.collins.trustedsystems.json.json,
+ com.collins.trustedsystems.json.json.impl,
  com.rockwellcollins.atc.agree.agree,
  com.rockwellcollins.atc.agree.analysis.handlers,
  org.eclipse.ui,

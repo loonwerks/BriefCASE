@@ -70,8 +70,6 @@ import com.google.gson.JsonPrimitive;
 
 public class AadlTranslate extends Aadl2Switch<JsonElement> {
 
-	AgreeTranslate agreeTranslate = new AgreeTranslate();
-
 	public enum AgreePrintOption {
 		PARSE, UNPARSE, BOTH
 	};
@@ -315,12 +313,14 @@ public class AadlTranslate extends Aadl2Switch<JsonElement> {
 		if (al.getName().equalsIgnoreCase("agree")) {
 			if (this.agreePrintOption == AgreePrintOption.PARSE || this.agreePrintOption == AgreePrintOption.BOTH) {
 				// AGREE annex will be parsed
-				result.add("parsedAnnexLibrary", agreeTranslate.genAnnexLibrary(al));
+				result.add("parsedAnnexLibrary", AgreeTranslate.genAnnexLibrary(al));
 			}
 			if (this.agreePrintOption == AgreePrintOption.UNPARSE || this.agreePrintOption == AgreePrintOption.BOTH) {
 				DefaultAnnexLibrary defaultAnnexLib = (DefaultAnnexLibrary) al;
 				result.add("sourceText", new JsonPrimitive(defaultAnnexLib.getSourceText().replace("\"", "\\\"")));
 			}
+		} else if (al.getName().equalsIgnoreCase("json")) {
+			result.add("parsedAnnexLibrary", JsonTranslate.genAnnexLibrary(al));
 		} else {
 			DefaultAnnexLibrary defaultAnnexLib = (DefaultAnnexLibrary) al;
 			result.add("sourceText", new JsonPrimitive(defaultAnnexLib.getSourceText().replace("\"", "\\\"")));
@@ -339,13 +339,15 @@ public class AadlTranslate extends Aadl2Switch<JsonElement> {
 		if (as.getName().equalsIgnoreCase("agree")) {
 			if (this.agreePrintOption == AgreePrintOption.PARSE || this.agreePrintOption == AgreePrintOption.BOTH) {
 				// AGREE annex will be parsed
-				result.add("parsedAnnexSubclause", agreeTranslate.genAnnexSubclause(as));
+				result.add("parsedAnnexSubclause", AgreeTranslate.genAnnexSubclause(as));
 			}
 			if (this.agreePrintOption == AgreePrintOption.UNPARSE || this.agreePrintOption == AgreePrintOption.BOTH) {
 				DefaultAnnexSubclause defaultAnnexSubclause = (DefaultAnnexSubclause) as;
 				result.add("sourceText",
 						new JsonPrimitive(defaultAnnexSubclause.getSourceText().replace("\"", "\\\"")));
 			}
+		} else if (as.getName().equalsIgnoreCase("json")) {
+			result.add("parsedAnnexSubclause", JsonTranslate.genAnnexSubclause(as));
 		} else {
 			DefaultAnnexSubclause defaultAnnexSubclause = (DefaultAnnexSubclause) as;
 			result.add("sourceText", new JsonPrimitive(defaultAnnexSubclause.getSourceText().replace("\"", "\\\"")));
