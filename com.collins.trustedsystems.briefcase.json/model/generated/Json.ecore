@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" name="json" nsURI="http://www.collins.com/trustedsystems/briefcase/json/Json"
+    nsPrefix="json">
+  <eClassifiers xsi:type="ecore:EClass" name="JsonAnnexLibrary" eSuperTypes="platform:/resource/org.osate.aadl2/model/aadl2.ecore#//AnnexLibrary">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="jsonAnnexElement" eType="#//JsonAnnexElement"
+        containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="JsonAnnexSubclause" eSuperTypes="platform:/resource/org.osate.aadl2/model/aadl2.ecore#//AnnexSubclause">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="jsonAnnexElement" eType="#//JsonAnnexElement"
+        containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="JsonAnnexElement"/>
+  <eClassifiers xsi:type="ecore:EClass" name="JsonAnnexObject" eSuperTypes="#//JsonAnnexElement">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="jsonAnnexMembers" upperBound="-1"
+        eType="#//JsonAnnexMember" containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="JsonAnnexArray" eSuperTypes="#//JsonAnnexElement">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="jsonAnnexElements" upperBound="-1"
+        eType="#//JsonAnnexElement" containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="JsonAnnexMember">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="key" eType="#//JsonAnnexString"
+        containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="jsonAnnexElement" eType="#//JsonAnnexElement"
+        containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="JsonAnnexString" eSuperTypes="#//JsonAnnexElement">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="value" eType="ecore:EDataType platform:/plugin/org.eclipse.emf.ecore/model/Ecore.ecore#//EString"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="JsonAnnexNumber" eSuperTypes="#//JsonAnnexElement"/>
+  <eClassifiers xsi:type="ecore:EClass" name="JsonAnnexBoolean" eSuperTypes="#//JsonAnnexElement"/>
+  <eClassifiers xsi:type="ecore:EClass" name="JsonAnnexNull" eSuperTypes="#//JsonAnnexElement"/>
+  <eClassifiers xsi:type="ecore:EClass" name="JsonAnnexInteger" eSuperTypes="#//JsonAnnexNumber">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="value" eType="ecore:EDataType platform:/resource/org.osate.aadl2/model/aadl2.ecore#//Integer"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="JsonAnnexReal" eSuperTypes="#//JsonAnnexNumber">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="value" eType="ecore:EDataType platform:/resource/org.osate.aadl2/model/aadl2.ecore#//Real"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="JsonAnnexTrue" eSuperTypes="#//JsonAnnexBoolean"/>
+  <eClassifiers xsi:type="ecore:EClass" name="JsonAnnexFalse" eSuperTypes="#//JsonAnnexBoolean"/>
+</ecore:EPackage>

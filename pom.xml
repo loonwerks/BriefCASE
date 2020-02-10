@@ -9,7 +9,9 @@
 
 	<modules>
 		<module>briefcase</module>
-		<module>json</module>
+		<module>com.collins.trustedsystems.briefcase.json</module>
+		<module>com.collins.trustedsystems.briefcase.json.ui</module>
+		<module>com.collins.trustedsystems.briefcase.json.export</module>
 		<module>splat</module>
 		<module>staircase</module>
 		<module>toolcheck</module>

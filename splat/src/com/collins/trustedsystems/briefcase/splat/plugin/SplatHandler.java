@@ -53,7 +53,7 @@ import org.osate.xtext.aadl2.properties.util.GetProperties;
 import org.osate.xtext.aadl2.properties.util.ProgrammingProperties;
 import org.osgi.framework.Bundle;
 
-import com.collins.trustedsystems.briefcase.json.Aadl2Json;
+import com.collins.trustedsystems.briefcase.json.export.Aadl2Json;
 import com.collins.trustedsystems.briefcase.splat.Activator;
 import com.collins.trustedsystems.briefcase.splat.preferences.SplatPreferenceConstants;
 import com.collins.trustedsystems.briefcase.staircase.utils.CaseUtils;

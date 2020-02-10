@@ -9,8 +9,8 @@ import org.eclipse.ui.handlers.IHandlerService;
 import org.osate.aadl2.ComponentImplementation;
 import org.osate.ui.dialogs.Dialog;
 
-import com.collins.trustedsystems.briefcase.json.Aadl2Json;
-import com.collins.trustedsystems.briefcase.json.AadlTranslate.AgreePrintOption;
+import com.collins.trustedsystems.briefcase.json.export.Aadl2Json;
+import com.collins.trustedsystems.briefcase.json.export.AadlTranslate.AgreePrintOption;
 import com.collins.trustedsystems.briefcase.util.ModelHashcode;
 import com.collins.trustedsystems.briefcase.util.TraverseProject;
 import com.google.gson.JsonObject;

@@ -1,0 +1,74 @@
+grammar com.collins.trustedsystems.briefcase.json.Json with org.osate.xtext.aadl2.properties.Properties
+
+generate json "http://www.collins.com/trustedsystems/briefcase/json/Json"
+
+import "http://aadl.info/AADL/2.0" as aadl2
+
+AnnexLibrary returns aadl2::AnnexLibrary:
+	JsonAnnexLibrary
+;
+
+AnnexSubclause returns aadl2::AnnexSubclause:
+	JsonAnnexSubclause
+;
+
+JsonAnnexLibrary:
+	{JsonAnnexLibrary} jsonAnnexElement=JsonAnnexElement?
+;
+
+JsonAnnexSubclause:
+	{JsonAnnexSubclause} jsonAnnexElement=JsonAnnexElement?
+;
+
+JsonAnnexElement returns JsonAnnexElement:
+	JsonAnnexObject |
+    JsonAnnexArray |
+    JsonAnnexString |
+    JsonAnnexNumber |
+    JsonAnnexBoolean |
+    JsonAnnexNull
+;
+
+JsonAnnexObject:
+	{JsonAnnexObject} '{' ((jsonAnnexMembers+=JsonAnnexMember) (',' jsonAnnexMembers+=JsonAnnexMember)*)? '}'
+;
+
+JsonAnnexArray:
+	{JsonAnnexArray} '[' (jsonAnnexElements+=JsonAnnexElement)? (',' jsonAnnexElements+=JsonAnnexElement)* ']'
+;
+	
+JsonAnnexMember returns JsonAnnexMember:
+	key=JsonAnnexString ':' jsonAnnexElement=JsonAnnexElement
+;
+
+JsonAnnexString:
+    {JsonAnnexString} value=STRING;
+
+JsonAnnexNumber:
+	{JsonAnnexInteger} value=SignedInteger
+|	{JsonAnnexReal} value=SignedReal
+;
+
+SignedInteger returns aadl2::Integer:
+	INT_NUMBER
+;
+    
+@Override 
+SignedReal returns aadl2::Real:
+	REAL_NUMBER
+;
+
+JsonAnnexBoolean:
+    {JsonAnnexTrue} 'true'
+|	{JsonAnnexFalse} 'false'
+;
+
+JsonAnnexNull:
+    {JsonAnnexNull} 'null';
+    
+terminal INT_NUMBER:
+	('-')? ('0'|('1'.. '9')) ('0'..'9')*;
+    
+terminal REAL_NUMBER:
+    ('-')? ('0'|('1'.. '9')) ('0'..'9')*  ('.' ('0'..'9')+ ) (('e'|'E') ('-'|'+')? ('0'..'9')+ )?;
+

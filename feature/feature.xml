@@ -18,7 +18,6 @@
    </license>
 
    <requires>
-      <import feature="org.osate.core.feature" version="2.5.0" match="equivalent"/>
       <import plugin="org.eclipse.jface"/>
       <import plugin="org.osate.aadl2"/>
       <import plugin="org.eclipse.xtext.ui"/>
@@ -44,11 +43,30 @@
       <import plugin="com.rockwellcollins.atc.agree"/>
       <import plugin="com.rockwellcollins.atc.resolute.ui"/>
       <import plugin="com.rockwellcollins.atc.resolute"/>
+      <import plugin="org.eclipse.emf.transaction"/>
       <import plugin="org.osate.ge"/>
       <import plugin="org.osate.ge.diagram"/>
       <import plugin="org.eclipse.ui"/>
       <import plugin="org.eclipse.core.runtime"/>
       <import plugin="org.eclipse.core.resources"/>
+      <import plugin="org.eclipse.xtext"/>
+      <import plugin="org.eclipse.xtext.xbase"/>
+      <import plugin="org.eclipse.equinox.common" version="3.5.0" match="greaterOrEqual"/>
+      <import plugin="org.osate.xtext.aadl2" version="1.0.0" match="greaterOrEqual"/>
+      <import plugin="org.osate.xtext.aadl2.properties" version="1.0.0" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.xtext.generator" version="2.20.0" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.xtext.util"/>
+      <import plugin="org.antlr.runtime"/>
+      <import plugin="org.apache.log4j"/>
+      <import feature="org.osate.core.feature" version="2.5.0" match="equivalent"/>
+      <import plugin="org.eclipse.xtext.ui.shared"/>
+      <import plugin="org.eclipse.xtext.ui.codetemplates.ui"/>
+      <import plugin="org.eclipse.ui.editors" version="3.5.0" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.ui.ide" version="3.5.0" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.xtext.builder"/>
+      <import plugin="org.osate.xtext.aadl2.properties.ui" version="1.0.0" match="greaterOrEqual"/>
+      <import plugin="org.osate.annexsupport" version="1.0.0" match="greaterOrEqual"/>
+      <import plugin="org.osate.aadl2.modelsupport" version="1.0.0" match="greaterOrEqual"/>
       <import plugin="com.rockwellcollins.atc.agree.analysis"/>
    </requires>
 
@@ -82,6 +100,20 @@
 
    <plugin
          id="com.collins.trustedsystems.briefcase.json"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="com.collins.trustedsystems.briefcase.json.ui"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="com.collins.trustedsystems.briefcase.json.export"
          download-size="0"
          install-size="0"
          version="0.0.0"
