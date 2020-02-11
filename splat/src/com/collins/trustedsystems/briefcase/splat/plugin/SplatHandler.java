@@ -111,8 +111,17 @@ public class SplatHandler extends AbstractHandler {
 			String splatPath = (FileLocator
 					.toFileURL(FileLocator.find(bundle, new Path("resources/splat"), null))).getFile();
 			// Check if docker image tar file exists
+			// If it exists, we'll assume we want to run SPLAT in docker, even if other options are available
 			boolean dockerTarballExists = (FileLocator.find(bundle, new Path("resources/splat_image.tar"),
 					null) != null);
+
+			if (dockerTarballExists) {
+				if (!checkDockerInstall()) {
+					Dialog.showError("SPLAT",
+							"Docker is not installed.  A Docker installation is required in order to run SPLAT.");
+					return null;
+				}
+			}
 
 			// Initialize process and other objects
 			Process ClientProcess = null;
@@ -493,6 +502,16 @@ public class SplatHandler extends AbstractHandler {
 			Dialog.showWarning("SPLAT", "Unable to write to log file.");
 		}
 
+	}
+
+	private boolean checkDockerInstall() {
+		boolean installed = true;
+		try {
+			Runtime.getRuntime().exec("docker --version");
+		} catch (IOException e) {
+			installed = false;
+		}
+		return installed;
 	}
 
 }
