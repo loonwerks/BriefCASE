@@ -11,15 +11,15 @@
    <extension
          point="org.eclipse.ui.preferencePages">
       <page
-            class="com.collins.trustedsystems.briefcase.preferences.CasePreferencePage"
-            id="com.collins.trustedsystems.briefcase.preferences.CasePreferencePage"
-            name="CASE">
+            class="com.collins.trustedsystems.briefcase.preferences.BriefcasePreferencePage"
+            id="com.collins.trustedsystems.briefcase.preferences.BriefcasePreferencePage"
+            name="BriefCASE">
       </page>
    </extension>
    <extension
          point="org.eclipse.core.runtime.preferences">
       <initializer
-            class="com.collins.trustedsystems.briefcase.preferences.CasePreferenceInitializer">
+            class="com.collins.trustedsystems.briefcase.preferences.BriefcasePreferenceInitializer">
       </initializer>
    </extension>
 

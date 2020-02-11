@@ -77,7 +77,7 @@
    <extension
          point="org.eclipse.ui.preferencePages">
       <page
-            category="com.collins.trustedsystems.briefcase.preferences.CasePreferencePage"
+            category="com.collins.trustedsystems.briefcase.preferences.BriefcasePreferencePage"
             class="com.collins.trustedsystems.briefcase.splat.preferences.SplatPreferencePage"
             id="com.collins.trustedsystems.briefcase.splat.preferences.SplatPreferencePage"
             name="SPLAT">

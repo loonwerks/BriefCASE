@@ -6,11 +6,11 @@ import org.eclipse.ui.IWorkbenchPreferencePage;
 
 import com.collins.trustedsystems.briefcase.Activator;
 
-public class CasePreferencePage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
+public class BriefcasePreferencePage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
 
 //	private FileFieldEditor splatOutputFileFieldEditor;
 
-	public CasePreferencePage() {
+	public BriefcasePreferencePage() {
 		super(GRID);
 	}
 
@@ -56,7 +56,7 @@ public class CasePreferencePage extends FieldEditorPreferencePage implements IWo
 	@Override
 	public void init(IWorkbench workbench) {
 		setPreferenceStore(Activator.getDefault().getPreferenceStore());
-		setDescription("CASE Settings");
+		setDescription("BriefCASE Settings");
 	}
 
 }
