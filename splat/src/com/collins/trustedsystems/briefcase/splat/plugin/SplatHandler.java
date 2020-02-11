@@ -505,13 +505,12 @@ public class SplatHandler extends AbstractHandler {
 	}
 
 	private boolean checkDockerInstall() {
-		boolean installed = true;
 		try {
 			Runtime.getRuntime().exec("docker --version");
 		} catch (IOException e) {
-			installed = false;
+			return false;
 		}
-		return installed;
+		return true;
 	}
 
 }
