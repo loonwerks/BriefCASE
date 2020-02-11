@@ -182,7 +182,9 @@ public class AddSwitchHandler extends AadlHandler {
 			}
 
 			// Add switch
-//			insertSwitch(containingImpl, inputPorts, selectedConnection, compCategory, );
+			Port ctlPort = ModelTransformUtils.getPort(containingImpl, controlPort);
+			insertSwitch(containingImpl, inputPorts, selectedConnection, compCategory, controlPort,
+					ctlPort.getCategory(), null);
 
 			return null;
 		});
@@ -196,16 +198,19 @@ public class AddSwitchHandler extends AadlHandler {
 	 * @param compImpl - The component implementation to add the switch to
 	 * @param inPortNames - The names for switch input ports
 	 * @param inConnEnds - External connection ends to connect with switch in ports (specified by <subcomponent>.<feature>)
-	 * @param conn - The output connection of the switch
+	 * @param inPortMap - Map of switch input port names to the message source connection ends (specified by <subcomponent>.<feature>)
+	 * @param conn - The output connection of the switch (this is the connection the switch is placed on)
 	 * @param compCategory - The component category of the switch
 	 * @param controlConnEnd - External connection end to connect with control port
 	 * @param controlPortType - The port type (event, event data, data) of the control port
 	 * @param controlPortDataType - Data type of control port
 	 * @return The newly created switch subcomponent
 	 */
-	public Subcomponent insertSwitch(ComponentImplementation compImpl, List<String> inPortNames,
-			List<String> inConnEnds, PortConnection outConn,
-			ComponentCategory compCategory, Port controlConnEnd, PortCategory controlPortType,
+	public Subcomponent insertSwitch(ComponentImplementation compImpl,
+//			List<String> inPortNames,
+//			List<String> inConnEnds,
+			Map<String, String> inPortMap, PortConnection outConn,
+			ComponentCategory compCategory, String controlSrcPort, PortCategory controlPortType,
 			String controlPortDataType) {
 
 		PackageSection pkgSection = (PackageSection) compImpl.eContainer();
@@ -218,21 +223,24 @@ public class AddSwitchHandler extends AadlHandler {
 
 		// Create switch input port(s)
 		List<Port> inPorts = new ArrayList<>();
-		for (int i = 0; i < inConnEnds.size(); i++) {
+		int portIdx = 1;
+		for (Map.Entry<String, String> inPort : inPortMap.entrySet()) {
+//		for (int i = 0; i < inConnEnds.size(); i++) {
 //		for (String sConnEnd : inConnEnds) {
-			Port port = ModelTransformUtils.getPort(compImpl, inConnEnds.get(i));
+			Port srcPort = ModelTransformUtils.getPort(compImpl, inPort.getValue());
+//			Port port = ModelTransformUtils.getPort(compImpl, inConnEnds.get(i));
 //			Port port = (Port) outConn.getSource().getConnectionEnd();
 			Port portIn = null;
 			DataSubcomponentType dataFeatureClassifier = null;
-			if (port instanceof EventDataPort) {
-				dataFeatureClassifier = ((EventDataPort) port).getDataFeatureClassifier();
+			if (srcPort instanceof EventDataPort) {
+				dataFeatureClassifier = ((EventDataPort) srcPort).getDataFeatureClassifier();
 				portIn = ComponentCreateHelper.createOwnedEventDataPort(switchType);
 				((EventDataPort) portIn).setDataFeatureClassifier(dataFeatureClassifier);
-			} else if (port instanceof DataPort) {
-				dataFeatureClassifier = ((DataPort) port).getDataFeatureClassifier();
+			} else if (srcPort instanceof DataPort) {
+				dataFeatureClassifier = ((DataPort) srcPort).getDataFeatureClassifier();
 				portIn = ComponentCreateHelper.createOwnedDataPort(switchType);
 				((DataPort) portIn).setDataFeatureClassifier(dataFeatureClassifier);
-			} else if (port instanceof EventPort) {
+			} else if (srcPort instanceof EventPort) {
 				portIn = ComponentCreateHelper.createOwnedEventPort(switchType);
 				return null;
 			} else {
@@ -241,9 +249,12 @@ public class AddSwitchHandler extends AadlHandler {
 			}
 
 			portIn.setIn(true);
-			String name = SWITCH_INPUT_PORT_NAME + "_" + (i + 1);
-			if (inPortNames.size() > i) {
-				name = inPortNames.get(i);
+//			String name = SWITCH_INPUT_PORT_NAME + "_" + (i + 1);
+			String name = inPort.getKey();
+			if (!inPort.getKey().isEmpty()) {
+//			if (inPortNames.size() > i) {
+//				name = inPortNames.get(i);
+				name = SWITCH_INPUT_PORT_NAME + "_" + (portIdx++);
 			}
 			portIn.setName(name);
 			inPorts.add(portIn);
@@ -377,19 +388,23 @@ public class AddSwitchHandler extends AadlHandler {
 //				compImpl.getOwnedPortConnections().size() - 1);
 
 		// Create input connections
-		for (String s : inConnEnds) {
+		for (Map.Entry<String, String> inPort : inPortMap.entrySet()) {
+//		for (String s : inConnEnds) {
 //		for (Port p : inConnEnds) {
-			Port p = ModelTransformUtils.getPort(compImpl, s);
+//			Port p = ModelTransformUtils.getPort(compImpl, s);
+			Port p = ModelTransformUtils.getPort(compImpl, inPort.getValue());
 			final PortConnection portConnInput = compImpl.createOwnedPortConnection();
 			// Give it a unique name
 			portConnInput.setName(getUniqueName(CONNECTION_IMPL_NAME, false, compImpl.getOwnedPortConnections()));
 			portConnInput.setBidirectional(false);
 			final ConnectedElement switchInputSrc = portConnInput.createSource();
-			switchInputSrc.setContext(ModelTransformUtils.getSubcomponent(compImpl, s));
+//			switchInputSrc.setContext(ModelTransformUtils.getSubcomponent(compImpl, s));
+			switchInputSrc.setContext(ModelTransformUtils.getSubcomponent(compImpl, inPort.getValue()));
 			switchInputSrc.setConnectionEnd(p);
 			final ConnectedElement switchInputDst = portConnInput.createDestination();
 			switchInputDst.setContext(switchSubcomp);
-			switchInputDst.setConnectionEnd(ModelTransformUtils.getPort(compImpl, s));
+//			switchInputDst.setConnectionEnd(ModelTransformUtils.getPort(compImpl, s));
+			switchInputDst.setConnectionEnd(ModelTransformUtils.getPort(compImpl, inPort.getValue()));
 		}
 
 		// Rewire selected connection to initiate at the switch
