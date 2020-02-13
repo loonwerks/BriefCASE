@@ -120,34 +120,11 @@ public class AddSwitchDialog extends TitleAreaDialog {
 		// Port selector
 		List<String> connectionEnds = new ArrayList<>();
 		connectionEnds.add(NO_PORT_SELECTED);
-		connectionEnds.addAll(inports);
+		connectionEnds.addAll(outports);
 		mpsInputPorts = new MultiPortSelector(container, connectionEnds, inConnEnd, "input");
 
 	}
 
-
-//	/**
-//	 * Creates the input field for specifying what to connect the 'output' port to
-//	 * @param container
-//	 */
-//	private void createOutputPortField(Composite container) {
-//		Label lblOutputField = new Label(container, SWT.NONE);
-//		lblOutputField.setText("Output port connection");
-//		lblOutputField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true));
-//
-//		GridData dataInfoField = new GridData();
-//		dataInfoField.grabExcessHorizontalSpace = true;
-//		dataInfoField.horizontalAlignment = GridData.FILL;
-//		cboOutputPort = new Combo(container, SWT.BORDER);
-//		cboOutputPort.setLayoutData(dataInfoField);
-//		cboOutputPort.add(NO_PORT_SELECTED);
-//		inports.forEach(p -> cboOutputPort.add(p));
-//		String oPort = outConnEnd;
-//		if (oPort == null || oPort.isEmpty()) {
-//			oPort = NO_PORT_SELECTED;
-//		}
-//		cboOutputPort.setText(oPort);
-//	}
 
 	/**
 	 * Creates the input field for specifying what to connect the 'control' port to
@@ -254,6 +231,14 @@ public class AddSwitchDialog extends TitleAreaDialog {
 //			return false;
 //		}
 		inputPorts = mpsInputPorts.getContents();
+		for (Map.Entry<String, String> inPort : inputPorts.entrySet()) {
+			if (inPort.getKey().isEmpty()) {
+				Dialog.showError("Add Switch",
+						"A switch input port name must be specified to establish a connection with " + inPort.getValue()
+								+ ".");
+				return false;
+			}
+		}
 //		outputPort = cboOutputPort.getText();
 //		if (outputPort.equals(NO_PORT_SELECTED)) {
 //			outputPort = "";

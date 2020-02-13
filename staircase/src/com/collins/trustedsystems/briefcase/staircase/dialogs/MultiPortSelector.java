@@ -21,10 +21,12 @@ import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.TextCellEditor;
 import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 
@@ -76,18 +78,8 @@ public class MultiPortSelector {
 
 		tblPorts = new TableViewer(tableComposite, SWT.NO_SCROLL | SWT.V_SCROLL | SWT.FULL_SELECTION | SWT.BORDER);
 
-		// add port name column
-		TableViewerColumn colPortName = createTableViewerColumn("Port Name", 100, 0);
-		colPortName.setLabelProvider(new ColumnLabelProvider() {
-			@Override
-			public void update(ViewerCell cell) {
-				cell.setText(((PortConnectionItem) cell.getElement()).getPortName());
-			}
-		});
-		colPortName.setEditingSupport(new PortNameEditingSupport(tblPorts));
-
 		// Add the connection end column
-		TableViewerColumn colConnectionEnd = createTableViewerColumn("Connection End", 100, 1);
+		TableViewerColumn colConnectionEnd = createTableViewerColumn("Source Port", 100, 0);
 		colConnectionEnd.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
@@ -97,13 +89,30 @@ public class MultiPortSelector {
 		});
 		colConnectionEnd.setEditingSupport(new ConnectionEndEditingSupport(tblPorts));
 
+		// add arrow column
+		TableViewerColumn colArrow = createTableViewerColumn("", 10, 1);
+		colArrow.setLabelProvider(new ColumnLabelProvider() {
+			@Override
+			public String getText(Object element) {
+				return "-->";
+			}
+		});
+
+		// add switch port name column
+		TableViewerColumn colPortName = createTableViewerColumn("Switch Port", 100, 2);
+		colPortName.setLabelProvider(new ColumnLabelProvider() {
+			@Override
+			public void update(ViewerCell cell) {
+				cell.setText(((PortConnectionItem) cell.getElement()).getPortName());
+			}
+		});
+		colPortName.setEditingSupport(new PortNameEditingSupport(tblPorts));
+
 		// make lines visible and header invisible
 		final Table table = tblPorts.getTable();
-		table.setHeaderVisible(false);
+		table.setHeaderVisible(true);
+		table.setHeaderBackground(new Color(Display.getDefault(), 220, 220, 220));
 		table.setLinesVisible(true);
-//		GridData gd_table = new GridData(SWT.FILL, SWT.FILL, true, true);
-//		gd_table.heightHint = 60;
-//		table.setLayoutData(gd_table);
 
 		tblPorts.setContentProvider(new ArrayContentProvider());
 
@@ -117,8 +126,9 @@ public class MultiPortSelector {
 		tblPorts.setInput(PortConnectionItems.INSTANCE.getPorts());
 
 		// Layout the viewer
-		tableColumnLayout.setColumnData(colPortName.getColumn(), new ColumnWeightData(30, 100, true));
-		tableColumnLayout.setColumnData(colConnectionEnd.getColumn(), new ColumnWeightData(70, 100, true));
+		tableColumnLayout.setColumnData(colPortName.getColumn(), new ColumnWeightData(25, 100, true));
+		tableColumnLayout.setColumnData(colArrow.getColumn(), new ColumnWeightData(15, 20, false));
+		tableColumnLayout.setColumnData(colConnectionEnd.getColumn(), new ColumnWeightData(55, 100, true));
 
 		// Add / Remove buttons
 		Composite btnComposite = new Composite(baseComposite, SWT.NONE);

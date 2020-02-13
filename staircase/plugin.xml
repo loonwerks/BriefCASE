@@ -79,7 +79,7 @@
                         style="push">
                   </command>
                   <command
-                        commandId="om.collins.trustedsystems.briefcase.staircase.commands.AddSwitch"
+                        commandId="com.collins.trustedsystems.briefcase.staircase.commands.AddSwitch"
                         id="com.collins.trustedsystems.briefcase.menus.outline.resiliency.transformations.AddSwitich"
                         label="Add Switch..."
                         style="push">
@@ -195,7 +195,7 @@
                         style="push">
                   </command>
                   <command
-                        commandId="om.collins.trustedsystems.briefcase.staircase.commands.AddSwitch"
+                        commandId="com.collins.trustedsystems.briefcase.staircase.commands.AddSwitch"
                         id="com.collins.trustedsystems.briefcase.menus.menubar.resiliency.transformations.AddSwitch"
                         label="Add Switch..."
                         style="push">
@@ -331,7 +331,7 @@
                         style="push">
                   </command>
                   <command
-                        commandId="om.collins.trustedsystems.briefcase.staircase.commands.AddSwitch"
+                        commandId="com.collins.trustedsystems.briefcase.staircase.commands.AddSwitch"
                         id="com.collins.trustedsystems.briefcase.menus.editor.resiliency.transformations.AddSwitch"
                         label="Add Switch..."
                         style="push">
@@ -419,7 +419,7 @@
             name="Add Virtualization">
       </command>
       <command
-            id="om.collins.trustedsystems.briefcase.staircase.commands.AddSwitch"
+            id="com.collins.trustedsystems.briefcase.staircase.commands.AddSwitch"
             name="Add Switch">
       </command>
       <command
@@ -467,7 +467,7 @@
       </handler>
       <handler
             class="com.collins.trustedsystems.briefcase.staircase.handlers.AddSwitchHandler"
-            commandId="om.collins.trustedsystems.briefcase.staircase.commands.AddSwitch">
+            commandId="com.collins.trustedsystems.briefcase.staircase.commands.AddSwitch">
       </handler>
       <handler
             class="com.collins.trustedsystems.briefcase.staircase.handlers.ModelAnnotationsHandler"

@@ -1,6 +1,8 @@
 package com.collins.trustedsystems.briefcase.staircase.handlers;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -49,14 +51,13 @@ public class AddSwitchHandler extends AadlHandler {
 	static final String SWITCH_COMP_TYPE_NAME = "CASE_Switch";
 	public static final String SWITCH_COMP_IMPL_NAME = "SWITCH";
 	public static final String SWITCH_INPUT_PORT_NAME = "input";
-	static final String SWITCH_OUTPUT_PORT_NAME = "output";
-	static final String SWITCH_CONTROL_PORT_NAME = "control";
+	public static final String SWITCH_OUTPUT_PORT_NAME = "output";
+	public static final String SWITCH_CONTROL_PORT_NAME = "control";
 	static final String CONNECTION_IMPL_NAME = "c";
 
 	private String switchImplementationName;
 	private String dispatchProtocol;
 	private Map<String, String> inputPorts;
-	private String outputPort;
 	private String controlPort;
 	private String switchRequirement;
 	private String switchAgreeProperty;
@@ -73,17 +74,12 @@ public class AddSwitchHandler extends AadlHandler {
 		final PortConnection selectedConnection = (PortConnection) eObj;
 		ComponentImplementation ci = selectedConnection.getContainingComponentImpl();
 
-		// Provide list of outports that can be connected to switch's in port
+		// Provide list of source outports that can be connected to switch's in port
 		List<String> outports = ModelTransformUtils.getOutports(ci);
-
-		// Provide list of inports that switch's out port can be connected to
-		List<String> inports = ModelTransformUtils.getInports(ci);
 
 		// Get selected connection ends
 		String inConnEnd = selectedConnection.getSource().getContext().getName() + "."
 				+ selectedConnection.getSource().getConnectionEnd().getName();
-//		String outConnEnd = selectedConnection.getDestination().getContext().getName() + "."
-//				+ selectedConnection.getDestination().getConnectionEnd().getName();
 
 		// Provide list of requirements so the user can choose which requirement is driving this
 		// model transformation.
@@ -93,8 +89,7 @@ public class AddSwitchHandler extends AadlHandler {
 		// Open wizard to enter switch info
 		AddSwitchDialog wizard = new AddSwitchDialog(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell());
 
-		wizard.setPorts(inports, outports);
-//		wizard.setConnectionEnds(inConnEnd, outConnEnd);
+		wizard.setPorts(Collections.emptyList(), outports);
 		wizard.setInportConnectionEnd(inConnEnd);
 		wizard.setRequirements(requirements);
 		wizard.create();
@@ -105,7 +100,6 @@ public class AddSwitchHandler extends AadlHandler {
 			}
 			dispatchProtocol = wizard.getDispatchProtocol();
 			inputPorts = wizard.getInputPorts();
-//			outputPort = wizard.getOutputPort();
 			controlPort = wizard.getControlPort();
 			switchRequirement = wizard.getRequirement();
 			switchAgreeProperty = wizard.getAgreeProperty();
@@ -183,8 +177,22 @@ public class AddSwitchHandler extends AadlHandler {
 
 			// Add switch
 			Port ctlPort = ModelTransformUtils.getPort(containingImpl, controlPort);
-			insertSwitch(containingImpl, inputPorts, selectedConnection, compCategory, controlPort,
-					ctlPort.getCategory(), null);
+			DataSubcomponentType ctlPortDataType = null;
+			String ctlPortDataTypeName = null;
+			PortCategory ctlPortCategory = null;
+			if (ctlPort instanceof DataPort) {
+				ctlPortDataType = ((DataPort) ctlPort).getDataFeatureClassifier();
+			} else if (ctlPort instanceof EventDataPort) {
+				ctlPortDataType = ((EventDataPort) ctlPort).getDataFeatureClassifier();
+			}
+			if (ctlPortDataType != null) {
+				ctlPortDataTypeName = ctlPortDataType.getQualifiedName();
+			}
+			if (ctlPort != null) {
+				ctlPortCategory = ctlPort.getCategory();
+			}
+			insertSwitch(containingImpl, inputPorts, selectedConnection, compCategory, dispatchProtocol, controlPort,
+					ctlPortCategory, ctlPortDataTypeName, switchRequirement, switchAgreeProperty);
 
 			return null;
 		});
@@ -196,22 +204,22 @@ public class AddSwitchHandler extends AadlHandler {
 	 * and implementation (including correct wiring).
 	 * The switch is inserted at the location of the selected connection
 	 * @param compImpl - The component implementation to add the switch to
-	 * @param inPortNames - The names for switch input ports
-	 * @param inConnEnds - External connection ends to connect with switch in ports (specified by <subcomponent>.<feature>)
 	 * @param inPortMap - Map of switch input port names to the message source connection ends (specified by <subcomponent>.<feature>)
 	 * @param conn - The output connection of the switch (this is the connection the switch is placed on)
 	 * @param compCategory - The component category of the switch
-	 * @param controlConnEnd - External connection end to connect with control port
+	 * @param dispatchProtocol - The dispatch protocol (sporadic, periodic) for thread components
+	 * @param controlSrcPort - External connection end to connect with control port (can be null)
 	 * @param controlPortType - The port type (event, event data, data) of the control port
 	 * @param controlPortDataType - Data type of control port
+	 * @param switchRequirement - The requirement that drives this transform
+	 * @param switchAgreeProperty - The spec that defines the behavior of this switch
 	 * @return The newly created switch subcomponent
 	 */
-	public Subcomponent insertSwitch(ComponentImplementation compImpl,
-//			List<String> inPortNames,
-//			List<String> inConnEnds,
+	public static Subcomponent insertSwitch(ComponentImplementation compImpl,
 			Map<String, String> inPortMap, PortConnection outConn,
-			ComponentCategory compCategory, String controlSrcPort, PortCategory controlPortType,
-			String controlPortDataType) {
+			ComponentCategory compCategory, String dispatchProtocol, String controlSrcPort,
+			PortCategory controlPortType,
+			String controlPortDataType, String switchRequirement, String switchAgreeProperty) {
 
 		PackageSection pkgSection = (PackageSection) compImpl.eContainer();
 
@@ -222,14 +230,14 @@ public class AddSwitchHandler extends AadlHandler {
 		switchType.setName(getUniqueName(SWITCH_COMP_TYPE_NAME, true, pkgSection.getOwnedClassifiers()));
 
 		// Create switch input port(s)
-		List<Port> inPorts = new ArrayList<>();
-		int portIdx = 1;
+		Map<String, Port> inPorts = new HashMap<>();
 		for (Map.Entry<String, String> inPort : inPortMap.entrySet()) {
-//		for (int i = 0; i < inConnEnds.size(); i++) {
-//		for (String sConnEnd : inConnEnds) {
+
+			if (inPort.getKey().isEmpty()) {
+				continue;
+			}
+
 			Port srcPort = ModelTransformUtils.getPort(compImpl, inPort.getValue());
-//			Port port = ModelTransformUtils.getPort(compImpl, inConnEnds.get(i));
-//			Port port = (Port) outConn.getSource().getConnectionEnd();
 			Port portIn = null;
 			DataSubcomponentType dataFeatureClassifier = null;
 			if (srcPort instanceof EventDataPort) {
@@ -249,15 +257,8 @@ public class AddSwitchHandler extends AadlHandler {
 			}
 
 			portIn.setIn(true);
-//			String name = SWITCH_INPUT_PORT_NAME + "_" + (i + 1);
-			String name = inPort.getKey();
-			if (!inPort.getKey().isEmpty()) {
-//			if (inPortNames.size() > i) {
-//				name = inPortNames.get(i);
-				name = SWITCH_INPUT_PORT_NAME + "_" + (portIdx++);
-			}
-			portIn.setName(name);
-			inPorts.add(portIn);
+			portIn.setName(inPort.getKey());
+			inPorts.put(inPort.getKey(), portIn);
 		}
 
 		// Create switch output port
@@ -311,7 +312,7 @@ public class AddSwitchHandler extends AadlHandler {
 		}
 
 		// CASE::COMP_SPEC property
-		String switchPropId = switchType.getQualifiedName().replace("::", "_") + "_switch_policy";
+		String switchPropId = "switch_policy";
 
 		if (!switchPropId.isEmpty()) {
 			if (!CaseUtils.addCasePropertyAssociation("COMP_SPEC", switchPropId, switchType)) {
@@ -321,17 +322,17 @@ public class AddSwitchHandler extends AadlHandler {
 
 		// Move switch to proper location
 		// (just before component it connects to on communication pathway)
-//		final Subcomponent subcomponent = (Subcomponent) selectedConnection.getDestination().getContext();
-//		String destName = "";
-//		if (subcomponent.getSubcomponentType() instanceof ComponentImplementation) {
-//			// Get the component type name
-//			destName = subcomponent.getComponentImplementation().getType().getName();
-//		} else {
-//			destName = subcomponent.getName();
-//		}
-//
-//		pkgSection.getOwnedClassifiers().move(getIndex(destName, pkgSection.getOwnedClassifiers()),
-//				pkgSection.getOwnedClassifiers().size() - 1);
+		final Subcomponent subcomponent = (Subcomponent) outConn.getDestination().getContext();
+		String destName = "";
+		if (subcomponent.getSubcomponentType() instanceof ComponentImplementation) {
+			// Get the component type name
+			destName = subcomponent.getComponentImplementation().getType().getName();
+		} else {
+			destName = subcomponent.getName();
+		}
+
+		pkgSection.getOwnedClassifiers().move(getIndex(destName, pkgSection.getOwnedClassifiers()),
+				pkgSection.getOwnedClassifiers().size() - 1);
 
 		// Create switch implementation
 		final ComponentImplementation switchImpl = (ComponentImplementation) pkgSection
@@ -341,8 +342,8 @@ public class AddSwitchHandler extends AadlHandler {
 		r.setImplemented(switchType);
 
 		// Add it to proper place
-//		pkgSection.getOwnedClassifiers().move(getIndex(destName, pkgSection.getOwnedClassifiers()),
-//				pkgSection.getOwnedClassifiers().size() - 1);
+		pkgSection.getOwnedClassifiers().move(getIndex(destName, pkgSection.getOwnedClassifiers()),
+				pkgSection.getOwnedClassifiers().size() - 1);
 
 //		// CASE::COMP_IMPL property
 //		if (!switchImplementationLanguage.isEmpty()) {
@@ -370,41 +371,38 @@ public class AddSwitchHandler extends AadlHandler {
 
 		ComponentCreateHelper.setSubcomponentType(switchSubcomp, switchImpl);
 
-//		// Create a connection from switch output to selected connection destination
-//		final PortConnection portConnOutput = compImpl.createOwnedPortConnection();
-//		// Give it a unique name
-//		portConnOutput.setName(getUniqueName(CONNECTION_IMPL_NAME, false, compImpl.getOwnedPortConnections()));
-//		portConnOutput.setBidirectional(false);
-//		final ConnectedElement switchOutputSrc = portConnOutput.createSource();
-//		switchOutputSrc.setContext(switchSubcomp);
-//		switchOutputSrc.setConnectionEnd(portOut);
-//		final ConnectedElement switchOutputDst = portConnOutput.createDestination();
-//		switchOutputDst.setContext(outConn.getDestination().getContext());
-//		switchOutputDst.setConnectionEnd(outConn.getDestination().getConnectionEnd());
-//
-//		// Put portOutput in right place (after selected connection)
-//		String destName = outConn.getName();
-//		compImpl.getOwnedPortConnections().move(getIndex(destName, compImpl.getOwnedPortConnections()) + 1,
-//				compImpl.getOwnedPortConnections().size() - 1);
-
 		// Create input connections
 		for (Map.Entry<String, String> inPort : inPortMap.entrySet()) {
-//		for (String s : inConnEnds) {
-//		for (Port p : inConnEnds) {
-//			Port p = ModelTransformUtils.getPort(compImpl, s);
+
+			if (inPort.getKey().isEmpty()) {
+				continue;
+			}
+
 			Port p = ModelTransformUtils.getPort(compImpl, inPort.getValue());
 			final PortConnection portConnInput = compImpl.createOwnedPortConnection();
 			// Give it a unique name
 			portConnInput.setName(getUniqueName(CONNECTION_IMPL_NAME, false, compImpl.getOwnedPortConnections()));
 			portConnInput.setBidirectional(false);
 			final ConnectedElement switchInputSrc = portConnInput.createSource();
-//			switchInputSrc.setContext(ModelTransformUtils.getSubcomponent(compImpl, s));
 			switchInputSrc.setContext(ModelTransformUtils.getSubcomponent(compImpl, inPort.getValue()));
 			switchInputSrc.setConnectionEnd(p);
 			final ConnectedElement switchInputDst = portConnInput.createDestination();
 			switchInputDst.setContext(switchSubcomp);
-//			switchInputDst.setConnectionEnd(ModelTransformUtils.getPort(compImpl, s));
-			switchInputDst.setConnectionEnd(ModelTransformUtils.getPort(compImpl, inPort.getValue()));
+			switchInputDst.setConnectionEnd(inPorts.get(inPort.getKey()));
+		}
+
+		// Create control connection
+		if (controlSrcPort != null && !controlSrcPort.isEmpty()) {
+			final PortConnection portConnControl = compImpl.createOwnedPortConnection();
+			// Give it a unique name
+			portConnControl.setName(getUniqueName(CONNECTION_IMPL_NAME, false, compImpl.getOwnedPortConnections()));
+			portConnControl.setBidirectional(false);
+			final ConnectedElement switchControlSrc = portConnControl.createSource();
+			switchControlSrc.setContext(ModelTransformUtils.getSubcomponent(compImpl, controlSrcPort));
+			switchControlSrc.setConnectionEnd(ModelTransformUtils.getPort(compImpl, controlSrcPort));
+			final ConnectedElement switchControlDst = portConnControl.createDestination();
+			switchControlDst.setContext(switchSubcomp);
+			switchControlDst.setConnectionEnd(controlPort);
 		}
 
 		// Rewire selected connection to initiate at the switch
@@ -414,8 +412,8 @@ public class AddSwitchHandler extends AadlHandler {
 		// AGREE
 		String agreeClauses = "{**" + System.lineSeparator();
 
-//		agreeClauses += "guarantee " + switchPropId + "\"...\" : if";
-		agreeClauses += "**}";
+		agreeClauses += switchAgreeProperty;
+		agreeClauses += System.lineSeparator() + "**}";
 
 		final DefaultAnnexSubclause annexSubclauseImpl = ComponentCreateHelper.createOwnedAnnexSubclause(switchType);
 		annexSubclauseImpl.setName("agree");

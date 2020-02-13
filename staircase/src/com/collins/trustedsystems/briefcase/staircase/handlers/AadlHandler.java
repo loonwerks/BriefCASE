@@ -149,7 +149,7 @@ public abstract class AadlHandler extends AbstractHandler {
 	 * @param elements - Collection of elements
 	 * @return An identifier that is unique in the specified list
 	 */
-	protected int getIndex(String compName, final Collection<? extends NamedElement> elements) {
+	protected static int getIndex(String compName, final Collection<? extends NamedElement> elements) {
 		int idx = 0;
 
 		for (NamedElement e : elements) {
@@ -170,7 +170,7 @@ public abstract class AadlHandler extends AbstractHandler {
 	 * @param elements - Collection of names which cannot match base name
 	 * @return An identifier that is unique in the specified list
 	 */
-	protected String getUniqueName(String baseIdentifier, boolean startWithBase,
+	protected static String getUniqueName(String baseIdentifier, boolean startWithBase,
 			final Collection<? extends NamedElement> elements) {
 
 		// Sort names list alphabetically
@@ -237,7 +237,7 @@ public abstract class AadlHandler extends AbstractHandler {
 	 * @param name - String
 	 * @return An integer
 	 */
-	private int getLastInt(String name) {
+	private static int getLastInt(String name) {
 
 		int offset = name.length();
 		for (int i = name.length() - 1; i >= 0; i--) {

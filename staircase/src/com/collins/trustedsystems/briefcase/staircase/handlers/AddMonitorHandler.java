@@ -1,16 +1,18 @@
 package com.collins.trustedsystems.briefcase.staircase.handlers;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.jface.window.Window;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.xtext.ui.editor.XtextEditor;
 import org.eclipse.xtext.ui.editor.utils.EditorUtils;
 import org.osate.aadl2.Aadl2Factory;
-import org.osate.aadl2.Aadl2Package;
 import org.osate.aadl2.AadlPackage;
 import org.osate.aadl2.ComponentCategory;
 import org.osate.aadl2.ComponentImplementation;
@@ -32,7 +34,6 @@ import org.osate.aadl2.Property;
 import org.osate.aadl2.PublicPackageSection;
 import org.osate.aadl2.Realization;
 import org.osate.aadl2.Subcomponent;
-import org.osate.aadl2.modelsupport.scoping.Aadl2GlobalScopeUtil;
 import org.osate.ui.dialogs.Dialog;
 import org.osate.xtext.aadl2.properties.util.GetProperties;
 import org.osate.xtext.aadl2.properties.util.ThreadProperties;
@@ -51,13 +52,9 @@ public class AddMonitorHandler extends AadlHandler {
 	static final String MONITOR_EXPECTED_PORT_NAME = "expected";
 	static final String MONITOR_OBSERVED_PORT_NAME = "observed";
 	static final String MONITOR_ALERT_PORT_NAME = "alert";
+	static final String MONITOR_ALERT_PORT_DATA_TYPE = "Base_Types::Boolean";
 	static final String MONITOR_RESET_PORT_NAME = "reset";
 	public static final String MONITOR_COMP_IMPL_NAME = "MON";
-	static final String SWITCH_COMP_TYPE_NAME = "CASE_Switch";
-	static final String SWITCH_COMP_IMPL_NAME = "SWITCH";
-	static final String SWITCH_INPUT_PORT_NAME = "input";
-	static final String SWITCH_OUTPUT_PORT_NAME = "output";
-	static final String SWITCH_CONTROL_PORT_NAME = "control";
 	static final String CONNECTION_IMPL_NAME = "c";
 
 	private String monitorImplementationName;
@@ -67,8 +64,7 @@ public class AddMonitorHandler extends AadlHandler {
 	private String expectedPort;
 	private String alertPort;
 	private boolean createSwitch;
-	private PortCategory alertControlPortType;
-	private String alertPortDataType;
+	private PortCategory alertPortType;
 	private String monitorRequirement;
 	private String monitorAgreeProperty;
 
@@ -113,8 +109,7 @@ public class AddMonitorHandler extends AadlHandler {
 			expectedPort = wizard.getExpectedPort();
 			alertPort = wizard.getAlertPort();
 			createSwitch = wizard.getCreateSwitch();
-			alertControlPortType = wizard.getAlertControlPortType();
-			alertPortDataType = wizard.getAlertControlPortDataType();
+			alertPortType = wizard.getAlertControlPortType();
 			monitorRequirement = wizard.getRequirement();
 			monitorAgreeProperty = wizard.getAgreeProperty();
 		} else {
@@ -190,11 +185,36 @@ public class AddMonitorHandler extends AadlHandler {
 				compCategory = ComponentCategory.THREAD;
 			}
 
+			// Get the source port of the selected connection
+			// This needs to be done before creating the switch because the switch will
+			// reroute the connection to go from the switch outport to the selected connection destination
+			ConnectedElement selectedConnSrc = EcoreUtil.copy(selectedConnection.getSource());
+
 			// Create Switch, if needed
 			Subcomponent switchSub = null;
 			if (createSwitch) {
-				switchSub = insertSwitch(containingImpl, selectedConnection, compCategory);
-				alertPort = switchSub.getName() + "." + SWITCH_CONTROL_PORT_NAME;
+				Map<String, String> inPortMap = new HashMap<>();
+				String srcPortName = "";
+				if (selectedConnection.getSource().getContext() != null) {
+					srcPortName = selectedConnection.getSource().getContext().getName() + ".";
+				}
+				srcPortName += selectedConnection.getSource().getConnectionEnd().getName();
+				inPortMap.put(AddSwitchHandler.SWITCH_INPUT_PORT_NAME, srcPortName);
+				String switchAgreeProperty = "guarantee switch_policy \"The switch shall forward messages when the control signal is received\" : ";
+				if (alertPortType == PortCategory.DATA) {
+					switchAgreeProperty += "if " + AddSwitchHandler.SWITCH_CONTROL_PORT_NAME + " then "
+							+ AddSwitchHandler.SWITCH_OUTPUT_PORT_NAME + " = " + AddSwitchHandler.SWITCH_INPUT_PORT_NAME
+							+ " else FALSE;";
+				} else {
+					switchAgreeProperty += "if event(" + AddSwitchHandler.SWITCH_CONTROL_PORT_NAME + ") then event("
+							+ AddSwitchHandler.SWITCH_OUTPUT_PORT_NAME + ") and "
+							+ AddSwitchHandler.SWITCH_OUTPUT_PORT_NAME + " = " + AddSwitchHandler.SWITCH_INPUT_PORT_NAME
+							+ " else not event(" + AddSwitchHandler.SWITCH_OUTPUT_PORT_NAME + ");";
+				}
+				switchSub = AddSwitchHandler.insertSwitch(containingImpl, inPortMap, selectedConnection, compCategory,
+						dispatchProtocol, null, alertPortType, MONITOR_ALERT_PORT_DATA_TYPE, monitorRequirement,
+						switchAgreeProperty);
+				alertPort = switchSub.getName() + "." + AddSwitchHandler.SWITCH_CONTROL_PORT_NAME;
 			}
 
 			final ComponentType monitorType = (ComponentType) pkgSection
@@ -204,18 +224,18 @@ public class AddMonitorHandler extends AadlHandler {
 			monitorType.setName(getUniqueName(MONITOR_COMP_TYPE_NAME, true, pkgSection.getOwnedClassifiers()));
 
 			// Create monitor observed port
-			Port port = (Port) selectedConnection.getDestination().getConnectionEnd();
+			Port portSrc = (Port) selectedConnSrc.getConnectionEnd();
 			Port portObserved = null;
 			DataSubcomponentType dataFeatureClassifier = null;
-			if (port instanceof EventDataPort) {
-				dataFeatureClassifier = ((EventDataPort) port).getDataFeatureClassifier();
+			if (portSrc instanceof EventDataPort) {
+				dataFeatureClassifier = ((EventDataPort) portSrc).getDataFeatureClassifier();
 				portObserved = ComponentCreateHelper.createOwnedEventDataPort(monitorType);
 				((EventDataPort) portObserved).setDataFeatureClassifier(dataFeatureClassifier);
-			} else if (port instanceof DataPort) {
-				dataFeatureClassifier = ((DataPort) port).getDataFeatureClassifier();
+			} else if (portSrc instanceof DataPort) {
+				dataFeatureClassifier = ((DataPort) portSrc).getDataFeatureClassifier();
 				portObserved = ComponentCreateHelper.createOwnedDataPort(monitorType);
 				((DataPort) portObserved).setDataFeatureClassifier(dataFeatureClassifier);
-			} else if (port instanceof EventPort) {
+			} else if (portSrc instanceof EventPort) {
 				portObserved = ComponentCreateHelper.createOwnedEventPort(monitorType);
 				return null;
 			} else {
@@ -379,8 +399,8 @@ public class AddMonitorHandler extends AadlHandler {
 					.setName(getUniqueName(CONNECTION_IMPL_NAME, false, containingImpl.getOwnedPortConnections()));
 			portConnObserved.setBidirectional(false);
 			final ConnectedElement monitorObservedSrc = portConnObserved.createSource();
-			monitorObservedSrc.setContext(selectedConnection.getSource().getContext());
-			monitorObservedSrc.setConnectionEnd(selectedConnection.getSource().getConnectionEnd());
+			monitorObservedSrc.setContext(selectedConnSrc.getContext());
+			monitorObservedSrc.setConnectionEnd(selectedConnSrc.getConnectionEnd());
 			final ConnectedElement monitorObservedDst = portConnObserved.createDestination();
 			monitorObservedDst.setContext(monitorSubcomp);
 			monitorObservedDst.setConnectionEnd(portObserved);
@@ -455,7 +475,6 @@ public class AddMonitorHandler extends AadlHandler {
 
 				agreeClauses += "const latched : bool = " + latched + System.lineSeparator();
 				agreeClauses += "property monitor_policy = " + monitorAgreeProperty + System.lineSeparator();
-//				agreeClauses += "guarantee \"...\" : if";
 				agreeClauses = agreeClauses + "**}";
 
 				final DefaultAnnexSubclause annexSubclauseImpl = ComponentCreateHelper
@@ -484,300 +503,6 @@ public class AddMonitorHandler extends AadlHandler {
 		if (claim != null) {
 			RequirementsManager.getInstance().modifyRequirement(monitorRequirement, claim);
 		}
-	}
-
-//	/**
-//	 * Returns all the in data ports in the specified component implementation
-//	 * @param ci - component implementation
-//	 * @return list of in port names
-//	 */
-//	private List<String> getInports(ComponentImplementation ci) {
-//		List<String> inports = new ArrayList<>();
-//		// Get component implementation out ports
-//		for (Feature f : ci.getAllFeatures()) {
-//			if (f instanceof Port && ((Port) f).isOut()) {
-//				inports.add(f.getName());
-//			}
-//		}
-//
-//		// Get subcomponent in ports
-//		for (Subcomponent s : ci.getOwnedSubcomponents()) {
-//			for (Feature f : s.getAllFeatures()) {
-//				if (f instanceof Port && ((Port) f).isIn()) {
-//					inports.add(s.getName() + "." + f.getName());
-//				}
-//			}
-//		}
-//		return inports;
-//	}
-//
-//	/**
-//	 * Returns all the out data ports in the specified component implementation
-//	 * @param ci - component implementation
-//	 * @return list of out port names
-//	 */
-//	private List<String> getOutports(ComponentImplementation ci) {
-//		List<String> outports = new ArrayList<>();
-//		// Get component implementation in ports
-//		for (Feature f : ci.getAllFeatures()) {
-//			if (f instanceof Port && ((Port) f).isIn()) {
-//				outports.add(f.getName());
-//			}
-//		}
-//
-//		// Get subcomponent out ports
-//		for (Subcomponent s : ci.getOwnedSubcomponents()) {
-//			for (Feature f : s.getAllFeatures()) {
-//				if (f instanceof Port && ((Port) f).isOut()) {
-//					outports.add(s.getName() + "." + f.getName());
-//				}
-//			}
-//		}
-//		return outports;
-//	}
-//
-//	/**
-//	 * Returns the port of the specified subcomponent port name
-//	 * in the specified component implementation
-//	 * @param ci - component implementation
-//	 * @param portName - <subcomponent> . <feature name>
-//	 * @return
-//	 */
-//	private Port getPort(ComponentImplementation ci, String portName) {
-//		String[] parts = portName.split("\\.");
-//		if (parts.length == 1) {
-//			for (Feature f : ci.getAllFeatures()) {
-//				if (f.getName().equalsIgnoreCase(portName)) {
-//					if (f instanceof Port) {
-//						return (Port) f;
-//					} else {
-//						return null;
-//					}
-//				}
-//			}
-//		} else if (parts.length > 1) {
-//			for (Subcomponent s : ci.getOwnedSubcomponents()) {
-//				if (s.getName().equalsIgnoreCase(parts[0])) {
-//					for (Feature f : s.getAllFeatures()) {
-//						if (f.getName().equalsIgnoreCase(parts[1])) {
-//							if (f instanceof Port) {
-//								return (Port) f;
-//							} else {
-//								return null;
-//							}
-//						}
-//					}
-//				}
-//			}
-//		}
-//		return null;
-//	}
-//
-//	private Subcomponent getSubcomponent(ComponentImplementation ci, String portName) {
-//		String[] parts = portName.split("\\.");
-//		if (parts.length == 2) {
-//			for (Subcomponent s : ci.getOwnedSubcomponents()) {
-//				if (s.getName().equalsIgnoreCase(parts[0])) {
-//					return s;
-//				}
-//			}
-//		}
-//		return null;
-//	}
-
-
-	/**
-	 * Inserts a switch component into the model, including switch type definition
-	 * and implementation (including correct wiring).
-	 * The switch is inserted at the location of the selected connection
-	 * @param compImpl - The component implementation to add the switch to
-	 * @param conn - The connection to pass through the switch
-	 * @param compCategory - The component category of the switch
-	 * @return The newly created switch subcomponent
-	 */
-	private Subcomponent insertSwitch(ComponentImplementation compImpl, PortConnection conn,
-			ComponentCategory compCategory) {
-
-		PackageSection pkgSection = (PackageSection) compImpl.eContainer();
-
-		final ComponentType switchType = (ComponentType) pkgSection
-				.createOwnedClassifier(ComponentCreateHelper.getTypeClass(compCategory));
-
-		// Give it a unique name
-		switchType.setName(getUniqueName(SWITCH_COMP_TYPE_NAME, true, pkgSection.getOwnedClassifiers()));
-
-		// Create switch input port
-		Port port = (Port) conn.getSource().getConnectionEnd();
-		Port portIn = null;
-		DataSubcomponentType dataFeatureClassifier = null;
-		if (port instanceof EventDataPort) {
-			dataFeatureClassifier = ((EventDataPort) port).getDataFeatureClassifier();
-			portIn = ComponentCreateHelper.createOwnedEventDataPort(switchType);
-			((EventDataPort) portIn).setDataFeatureClassifier(dataFeatureClassifier);
-		} else if (port instanceof DataPort) {
-			dataFeatureClassifier = ((DataPort) port).getDataFeatureClassifier();
-			portIn = ComponentCreateHelper.createOwnedDataPort(switchType);
-			((DataPort) portIn).setDataFeatureClassifier(dataFeatureClassifier);
-		} else if (port instanceof EventPort) {
-			portIn = ComponentCreateHelper.createOwnedEventPort(switchType);
-			return null;
-		} else {
-			Dialog.showError("Add Switch", "Could not determine the port type of the destination component.");
-			return null;
-		}
-
-		portIn.setIn(true);
-		portIn.setName(SWITCH_INPUT_PORT_NAME);
-
-		// Create switch output port
-		port = (Port) conn.getDestination().getConnectionEnd();
-		Port portOut = null;
-		dataFeatureClassifier = null;
-		if (port instanceof EventDataPort) {
-			dataFeatureClassifier = ((EventDataPort) port).getDataFeatureClassifier();
-			portOut = ComponentCreateHelper.createOwnedEventDataPort(switchType);
-			((EventDataPort) portOut).setDataFeatureClassifier(dataFeatureClassifier);
-		} else if (port instanceof DataPort) {
-			dataFeatureClassifier = ((DataPort) port).getDataFeatureClassifier();
-			portOut = ComponentCreateHelper.createOwnedDataPort(switchType);
-			((DataPort) portOut).setDataFeatureClassifier(dataFeatureClassifier);
-		} else if (port instanceof EventPort) {
-			portOut = ComponentCreateHelper.createOwnedEventPort(switchType);
-			return null;
-		} else {
-			Dialog.showError("Add Switch", "Could not determine the port type of the destination component.");
-			return null;
-		}
-
-		portOut.setOut(true);
-		portOut.setName(SWITCH_OUTPUT_PORT_NAME);
-
-		// Create switch control port
-		Port controlPort = null;
-		// If user didn't specify a control port type, make it an event data port
-		if (alertControlPortType == null) {
-			controlPort = ComponentCreateHelper.createOwnedEventDataPort(switchType);
-		} else if (alertControlPortType == PortCategory.EVENT_DATA) {
-			controlPort = ComponentCreateHelper.createOwnedEventDataPort(switchType);
-			dataFeatureClassifier = Aadl2GlobalScopeUtil.get(pkgSection, Aadl2Package.eINSTANCE.getDataClassifier(),
-					alertPortDataType);
-			((EventDataPort) controlPort).setDataFeatureClassifier(dataFeatureClassifier);
-		} else if (alertControlPortType == PortCategory.DATA) {
-			controlPort = ComponentCreateHelper.createOwnedDataPort(switchType);
-			dataFeatureClassifier = Aadl2GlobalScopeUtil.get(pkgSection, Aadl2Package.eINSTANCE.getDataClassifier(),
-					alertPortDataType);
-			((DataPort) controlPort).setDataFeatureClassifier(dataFeatureClassifier);
-		} else if (alertControlPortType == PortCategory.EVENT) {
-			controlPort = ComponentCreateHelper.createOwnedEventPort(switchType);
-		}
-		controlPort.setIn(true);
-		controlPort.setName(SWITCH_CONTROL_PORT_NAME);
-
-		// Add monitor properties
-		// CASE::COMP_TYPE Property
-		if (!CaseUtils.addCasePropertyAssociation("COMP_TYPE", "SWITCH", switchType)) {
-//				return;
-		}
-
-		// CASE::COMP_SPEC property
-		String switchPropId = switchType.getQualifiedName().replace("::", "_") + "_switch_policy";
-
-		if (!switchPropId.isEmpty()) {
-			if (!CaseUtils.addCasePropertyAssociation("COMP_SPEC", switchPropId, switchType)) {
-//					return;
-			}
-		}
-
-		// Move switch to proper location
-		// (just before component it connects to on communication pathway)
-//		final Subcomponent subcomponent = (Subcomponent) selectedConnection.getDestination().getContext();
-//		String destName = "";
-//		if (subcomponent.getSubcomponentType() instanceof ComponentImplementation) {
-//			// Get the component type name
-//			destName = subcomponent.getComponentImplementation().getType().getName();
-//		} else {
-//			destName = subcomponent.getName();
-//		}
-//
-//		pkgSection.getOwnedClassifiers().move(getIndex(destName, pkgSection.getOwnedClassifiers()),
-//				pkgSection.getOwnedClassifiers().size() - 1);
-
-		// Create switch implementation
-		final ComponentImplementation switchImpl = (ComponentImplementation) pkgSection
-				.createOwnedClassifier(ComponentCreateHelper.getImplClass(compCategory));
-		switchImpl.setName(switchType.getName() + ".Impl");
-		final Realization r = switchImpl.createOwnedRealization();
-		r.setImplemented(switchType);
-
-		// Add it to proper place
-//		pkgSection.getOwnedClassifiers().move(getIndex(destName, pkgSection.getOwnedClassifiers()),
-//				pkgSection.getOwnedClassifiers().size() - 1);
-
-//		// CASE::COMP_IMPL property
-//		if (!switchImplementationLanguage.isEmpty()) {
-//			if (!CaseUtils.addCasePropertyAssociation("COMP_IMPL", switchImplementationLanguage, switchImpl)) {
-////					return;
-//			}
-//		}
-
-		// Dispatch protocol property
-		if (!dispatchProtocol.isEmpty() && compCategory == ComponentCategory.THREAD) {
-			Property dispatchProtocolProp = GetProperties.lookupPropertyDefinition(switchImpl, ThreadProperties._NAME,
-					ThreadProperties.DISPATCH_PROTOCOL);
-			EnumerationLiteral dispatchProtocolLit = Aadl2Factory.eINSTANCE.createEnumerationLiteral();
-			dispatchProtocolLit.setName(dispatchProtocol);
-			NamedValue nv = Aadl2Factory.eINSTANCE.createNamedValue();
-			nv.setNamedValue(dispatchProtocolLit);
-			switchImpl.setPropertyValue(dispatchProtocolProp, nv);
-		}
-
-		// Insert switch subcomponent in containing component implementation
-		final Subcomponent switchSubcomp = ComponentCreateHelper.createOwnedSubcomponent(compImpl, compCategory);
-
-		// Give it a unique name
-		switchSubcomp.setName(getUniqueName(SWITCH_COMP_IMPL_NAME, true, compImpl.getOwnedSubcomponents()));
-
-		ComponentCreateHelper.setSubcomponentType(switchSubcomp, switchImpl);
-
-		// Create a connection from switch output to selected connection destination
-		final PortConnection portConnOutput = compImpl.createOwnedPortConnection();
-		// Give it a unique name
-		portConnOutput.setName(getUniqueName(CONNECTION_IMPL_NAME, false, compImpl.getOwnedPortConnections()));
-		portConnOutput.setBidirectional(false);
-		final ConnectedElement switchOutputSrc = portConnOutput.createSource();
-		switchOutputSrc.setContext(switchSubcomp);
-		switchOutputSrc.setConnectionEnd(portOut);
-		final ConnectedElement switchOutputDst = portConnOutput.createDestination();
-		switchOutputDst.setContext(conn.getDestination().getContext());
-		switchOutputDst.setConnectionEnd(conn.getDestination().getConnectionEnd());
-
-		// Put portOutput in right place (after selected connection)
-		String destName = conn.getName();
-		compImpl.getOwnedPortConnections().move(getIndex(destName, compImpl.getOwnedPortConnections()) + 1,
-				compImpl.getOwnedPortConnections().size() - 1);
-
-		// Rewire selected connection to terminate at the switch
-		conn.getDestination().setContext(switchSubcomp);
-		conn.getDestination().setConnectionEnd(portIn);
-
-		// AGREE
-		String agreeClauses = "{**" + System.lineSeparator();
-
-//		agreeClauses += "guarantee " + switchPropId + "\"...\" : if";
-		agreeClauses += "**}";
-
-		final DefaultAnnexSubclause annexSubclauseImpl = ComponentCreateHelper.createOwnedAnnexSubclause(switchType);
-		annexSubclauseImpl.setName("agree");
-		annexSubclauseImpl.setSourceText(agreeClauses);
-
-//		if (isProcess) {
-//
-//			// TODO: Wrap thread component in a process
-//
-//			// TODO: Bind process to processor
-//		}
-
-		return switchSubcomp;
 	}
 
 }
