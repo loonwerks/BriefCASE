@@ -53,7 +53,20 @@ public class MultiPortSelector {
 
 	}
 
-	public MultiPortSelector(Composite parent, List<String> ports, String initPort, String basePortName) {
+	public enum PortDirection {
+		INPUT, OUTPUT;
+	}
+
+	/**
+	 *
+	 * @param parent - Parent container for port selector
+	 * @param portDirection - Direction of connections
+	 * @param ports - List of ports (<subcomponent>.<port>) to populate combo box
+	 * @param initPort - Initial port to display in combo box
+	 * @param basePortName - Base default name for port (eg "input", "output")
+	 */
+	public MultiPortSelector(Composite parent, PortDirection portDirection, List<String> ports, String initPort,
+			String basePortName) {
 
 		this.connectionEnds = ports;
 		if (basePortName != null && !basePortName.isEmpty()) {
@@ -78,8 +91,27 @@ public class MultiPortSelector {
 
 		tblPorts = new TableViewer(tableComposite, SWT.NO_SCROLL | SWT.V_SCROLL | SWT.FULL_SELECTION | SWT.BORDER);
 
+//		String portLabel = "Source Port";
+//		if (portDirection == PortDirection.OUTPUT) {
+//			portLabel = "Destination Port";
+//		}
+
+		TableViewerColumn colConnectionEnd = null;
+		TableViewerColumn colArrow = null;
+		TableViewerColumn colPortName = null;
+
+		if (portDirection == PortDirection.INPUT) {
+			colConnectionEnd = createTableViewerColumn("Source Port", 100);
+			colArrow = createTableViewerColumn("", 10);
+			colPortName = createTableViewerColumn("Switch Port", 100);
+		} else {
+			colPortName = createTableViewerColumn("Switch Port", 100);
+			colArrow = createTableViewerColumn("", 10);
+			colConnectionEnd = createTableViewerColumn("Destination Port", 100);
+		}
+
 		// Add the connection end column
-		TableViewerColumn colConnectionEnd = createTableViewerColumn("Source Port", 100, 0);
+//		colConnectionEnd = createTableViewerColumn(portLabel, 100);
 		colConnectionEnd.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
@@ -90,7 +122,7 @@ public class MultiPortSelector {
 		colConnectionEnd.setEditingSupport(new ConnectionEndEditingSupport(tblPorts));
 
 		// add arrow column
-		TableViewerColumn colArrow = createTableViewerColumn("", 10, 1);
+//		colArrow = createTableViewerColumn("", 10);
 		colArrow.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
@@ -99,7 +131,7 @@ public class MultiPortSelector {
 		});
 
 		// add switch port name column
-		TableViewerColumn colPortName = createTableViewerColumn("Switch Port", 100, 2);
+//		colPortName = createTableViewerColumn("Switch Port", 100);
 		colPortName.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public void update(ViewerCell cell) {
@@ -165,7 +197,7 @@ public class MultiPortSelector {
 
 	}
 
-	private TableViewerColumn createTableViewerColumn(String title, int bound, final int colNumber) {
+	private TableViewerColumn createTableViewerColumn(String title, int bound) {
 		final TableViewerColumn viewerColumn = new TableViewerColumn(tblPorts, SWT.NONE);
 		final TableColumn column = viewerColumn.getColumn();
 		column.setText(title);

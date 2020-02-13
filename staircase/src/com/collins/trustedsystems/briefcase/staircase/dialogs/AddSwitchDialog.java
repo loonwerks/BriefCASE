@@ -22,6 +22,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.osate.ui.dialogs.Dialog;
 
+import com.collins.trustedsystems.briefcase.staircase.dialogs.MultiPortSelector.PortDirection;
 import com.collins.trustedsystems.briefcase.staircase.handlers.AddSwitchHandler;
 
 public class AddSwitchDialog extends TitleAreaDialog {
@@ -121,7 +122,7 @@ public class AddSwitchDialog extends TitleAreaDialog {
 		List<String> connectionEnds = new ArrayList<>();
 		connectionEnds.add(NO_PORT_SELECTED);
 		connectionEnds.addAll(outports);
-		mpsInputPorts = new MultiPortSelector(container, connectionEnds, inConnEnd, "input");
+		mpsInputPorts = new MultiPortSelector(container, PortDirection.INPUT, connectionEnds, inConnEnd, "input");
 
 	}
 
