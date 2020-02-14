@@ -9,16 +9,13 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.osate.aadl2.ComponentCategory;
-import org.osate.aadl2.ComponentImplementation;
 import org.osate.aadl2.Subcomponent;
 import org.osate.ui.dialogs.Dialog;
 
@@ -28,16 +25,15 @@ public class AddVirtualizationDialog extends TitleAreaDialog {
 
 	private Text txtVirtualProcessorName;
 	private Text txtVirtualMachineOS;
-	private List<Button> btnCompSelectionType = new ArrayList<>();
-	private List<Button> btnComponents = new ArrayList<>();
+	private SubcomponentSelector subcomponentSelector = null;
 	private Combo cboVirtualizationRequirement;
 
 	private String virtualProcessorName = "";
 	private String virtualMachineOS = "";
-	private List<String> components = new ArrayList<>();
+	private List<String> subcomponents = new ArrayList<>();
 	private String virtualizationRequirement = "";
 
-	private Subcomponent component = null;
+	private Subcomponent subcomponent = null;
 	private List<String> requirements = new ArrayList<>();
 
 	private static final String DEFAULT_OS = "Linux";
@@ -60,7 +56,7 @@ public class AddVirtualizationDialog extends TitleAreaDialog {
 	@Override
 	protected Point getInitialSize() {
 		final Point size = super.getInitialSize();
-		size.y += convertHeightInCharsToPixels(1);
+		size.y += convertHeightInCharsToPixels(2);
 		return size;
 	}
 
@@ -114,81 +110,25 @@ public class AddVirtualizationDialog extends TitleAreaDialog {
 		txtVirtualMachineOS.setText(DEFAULT_OS);
 	}
 
+
 	/**
 	 * Creates the field for specifying the components to virtualize
 	 * @param container
 	 */
 	private void createComponentSelectionField(Composite container) {
-
-		btnCompSelectionType.clear();
-		btnComponents.clear();
-
 		// Don't display this field if
-		// Component is contains one or no subcomponents OR component is a thread
-		if (this.component.getComponentImplementation().getOwnedSubcomponents() == null
-				|| this.component.getComponentImplementation().getOwnedSubcomponents().size() <= 1
-				|| this.component.getComponentType().getCategory() == ComponentCategory.THREAD) {
+		// Component contains one or no subcomponents OR component is a thread
+		if (this.subcomponent.getComponentImplementation().getOwnedSubcomponents() == null
+				|| this.subcomponent.getComponentImplementation().getOwnedSubcomponents().size() <= 1
+				|| this.subcomponent.getComponentType().getCategory() == ComponentCategory.THREAD) {
 			return;
 		}
 
 		Label lblComponentSelectionField = new Label(container, SWT.NONE);
 		lblComponentSelectionField.setText("Components in VM");
-		lblComponentSelectionField.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+		lblComponentSelectionField.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, true));
 
-		// Create a container to hold options and checkboxes
-		GridData selectionFieldLayoutData = new GridData(SWT.FILL, SWT.FILL, true, false);
-		Composite selectionField = new Composite(container, SWT.BORDER);
-		GridLayout layout = new GridLayout(1, true);
-		selectionField.setLayout(layout);
-		selectionField.setLayoutData(selectionFieldLayoutData);
-
-		// Create a group to contain selection options
-		Composite selectionGroup = new Composite(selectionField, SWT.NONE);
-		selectionGroup.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
-		selectionGroup.setLayout(new GridLayout(1, true));
-
-		Button option = new Button(selectionGroup, SWT.RADIO);
-		option.setText(this.component.getName() + " and its subcomponents");
-		option.setSelection(true);
-		option.addListener(SWT.Selection, e -> {
-			if (e.type == SWT.Selection) {
-				enableComponentSelectionFields(false);
-			}
-		});
-		btnCompSelectionType.add(option);
-
-		option = new Button(selectionGroup, SWT.RADIO);
-		option.setText("Selected subcomponents of " + this.component.getName());
-		option.setSelection(false);
-		option.addListener(SWT.Selection, e -> {
-			if (e.type == SWT.Selection) {
-				enableComponentSelectionFields(true);
-			}
-		});
-		btnCompSelectionType.add(option);
-
-		Group compSelectionField = new Group(selectionField, SWT.NO_RADIO_GROUP);
-		compSelectionField.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
-		compSelectionField.setLayout(new GridLayout(3, true));
-		for (Subcomponent sub : this.component.getComponentImplementation().getOwnedSubcomponents()) {
-			if (sub.getCategory() == ComponentCategory.THREAD_GROUP) {
-				ComponentImplementation ci = sub.getComponentImplementation();
-				for (Subcomponent tgSub : ci.getOwnedSubcomponents()) {
-					Button comp = new Button(compSelectionField, SWT.CHECK);
-					comp.setText(sub.getName() + "." + tgSub.getName());
-					comp.setSelection(false);
-					btnComponents.add(comp);
-				}
-			} else {
-				Button comp = new Button(compSelectionField, SWT.CHECK);
-				comp.setText(sub.getName());
-				comp.setSelection(false);
-				btnComponents.add(comp);
-			}
-		}
-
-		// Initialize check boxes
-		enableComponentSelectionFields(false);
+		subcomponentSelector = new SubcomponentSelector(container, this.subcomponent);
 
 	}
 
@@ -219,16 +159,6 @@ public class AddVirtualizationDialog extends TitleAreaDialog {
 		super.okPressed();
 	}
 
-	private void enableComponentSelectionFields(boolean enable) {
-
-		for (Button btn : btnComponents) {
-			btn.setEnabled(enable);
-			if (!enable) {
-				btn.setSelection(true);
-			}
-		}
-
-	}
 
 	/**
 	 * Saves information entered into the text fields.  This is needed because the
@@ -240,17 +170,10 @@ public class AddVirtualizationDialog extends TitleAreaDialog {
 		virtualProcessorName = txtVirtualProcessorName.getText();
 		virtualMachineOS = txtVirtualMachineOS.getText();
 
-		components.clear();
-		if (btnCompSelectionType.isEmpty()) {
-			components.add(component.getQualifiedName());
-		} else if (btnCompSelectionType.get(0).getSelection()) {
-			components.add(component.getQualifiedName());
-		} else {
-			for (Button btn : btnComponents) {
-				if (btn.getSelection()) {
-					components.add(component.getQualifiedName() + "." + btn.getText());
-				}
-			}
+		subcomponents = subcomponentSelector.getContents();
+		if (subcomponents.isEmpty()) {
+			Dialog.showError("Add Virtualization", "No subcomponents have been selected to virtualize.");
+			return false;
 		}
 
 		virtualizationRequirement = cboVirtualizationRequirement.getText();
@@ -274,16 +197,16 @@ public class AddVirtualizationDialog extends TitleAreaDialog {
 		return virtualMachineOS;
 	}
 
-	public List<String> getBoundComponents() {
-		return components;
+	public List<String> getVirtualizationComponents() {
+		return subcomponents;
 	}
 
 	public String getRequirement() {
 		return virtualizationRequirement;
 	}
 
-	public void setSelectedComponent(Subcomponent component) {
-		this.component = component;
+	public void setSelectedSubcomponent(Subcomponent subcomponent) {
+		this.subcomponent = subcomponent;
 	}
 
 	public void setRequirements(List<String> requirements) {

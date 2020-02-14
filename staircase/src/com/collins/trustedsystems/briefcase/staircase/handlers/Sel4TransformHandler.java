@@ -1,6 +1,7 @@
 package com.collins.trustedsystems.briefcase.staircase.handlers;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -19,6 +20,7 @@ import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.osate.aadl2.Aadl2Package;
 import org.osate.aadl2.Access;
 import org.osate.aadl2.AccessConnection;
+import org.osate.aadl2.AnnexSubclause;
 import org.osate.aadl2.Classifier;
 import org.osate.aadl2.ComponentImplementation;
 import org.osate.aadl2.ComponentType;
@@ -28,6 +30,7 @@ import org.osate.aadl2.ConnectionEnd;
 import org.osate.aadl2.Context;
 import org.osate.aadl2.DataAccess;
 import org.osate.aadl2.DataPort;
+import org.osate.aadl2.DefaultAnnexSubclause;
 import org.osate.aadl2.DirectionType;
 import org.osate.aadl2.EventDataPort;
 import org.osate.aadl2.EventPort;
@@ -64,16 +67,28 @@ public class Sel4TransformHandler extends AadlHandler {
 	@Override
 	protected void runCommand(URI uri) {
 
-		// Selection should be a system implementation
-		// containing at least one process
+		// Selection must be a system implementation
 		final EObject eObj = getEObject(uri);
 		if (!(eObj instanceof SystemImplementation)) {
 			Dialog.showError("seL4 Transform",
-					"A system implementation containing at least one process must be selected to perform the seL4 transform.");
+					"A system implementation containing at least one processor-bound process must be selected to perform the seL4 transform.");
 			return;
 		}
 
 		final SystemImplementation selectedSystem = (SystemImplementation) eObj;
+
+		// Selected system implementation should contain at least one processor-bound process
+		// Neither the processor or the process need to be immediate subcomponents of the selected system (they can be nested descendants)
+//		SystemInstance si = null;
+//		try {
+//			si = InstantiateModel.buildInstanceModelFile(selectedSystem);
+//		} catch (Exception e) {
+//			Dialog.showError("Model Instantiate", "Error while re-instantiating the model: " + e.getMessage());
+//
+//		}
+		for (Subcomponent sub : selectedSystem.getOwnedSubcomponents()) {
+
+		}
 
 		// Each process subcomponent containing a thread group and/or multiple thread subcomponents
 		// becomes a system subcomponent
@@ -82,6 +97,10 @@ public class Sel4TransformHandler extends AadlHandler {
 		// Re-wire everything appropriately
 		// Change processor bindings
 		// Set processor OS property to seL4
+
+
+		// Construct a processor binding map
+		Map<String, String> processorBindingMap = new HashMap<>();
 
 		transformSystem(selectedSystem);
 
@@ -203,6 +222,8 @@ public class Sel4TransformHandler extends AadlHandler {
 
 		final ProcessImplementation processImpl = (ProcessImplementation) process.getComponentImplementation();
 
+		// TODO: If the process is bound to a virtual processor NOT running seL4, no transform is necessary
+
 		// If the process only contains a single thread, no transform is necessary
 		// Instead check for SEL4 property?
 		if (processImpl.getOwnedThreadSubcomponents().size() <= 1
@@ -211,11 +232,13 @@ public class Sel4TransformHandler extends AadlHandler {
 		}
 
 		// Transform thread subcomponents
-		final Map<String, ComponentImplementation> transformedSubs = new HashMap<>();
+		final Map<Subcomponent, ComponentImplementation> transformedSubs = new HashMap<>();
+//		final Map<String, ComponentImplementation> transformedSubs = new HashMap<>();
 		for (ThreadSubcomponent ts : processImpl.getOwnedThreadSubcomponents()) {
 			ProcessImplementation procImpl = transformThread(ts);
 			if (procImpl != null) {
-				transformedSubs.put(ts.getName(), procImpl);
+				transformedSubs.put(ts, procImpl);
+//				transformedSubs.put(ts.getName(), procImpl);
 			}
 		}
 
@@ -223,7 +246,8 @@ public class Sel4TransformHandler extends AadlHandler {
 		for (ThreadGroupSubcomponent tgs : processImpl.getOwnedThreadGroupSubcomponents()) {
 			SystemImplementation sysImpl = transformThreadGroup(tgs);
 			if (sysImpl != null) {
-				transformedSubs.put(tgs.getName(), sysImpl);
+				transformedSubs.put(tgs, sysImpl);
+//				transformedSubs.put(tgs.getName(), sysImpl);
 			}
 		}
 
@@ -295,11 +319,13 @@ public class Sel4TransformHandler extends AadlHandler {
 		}
 
 		// Transform thread subcomponents
-		final Map<String, ComponentImplementation> transformedSubs = new HashMap<>();
+		final Map<Subcomponent, ComponentImplementation> transformedSubs = new HashMap<>();
+//		final Map<String, ComponentImplementation> transformedSubs = new HashMap<>();
 		for (ThreadSubcomponent ts : tgImpl.getOwnedThreadSubcomponents()) {
 			ComponentImplementation procImpl = transformThread(ts);
 			if (procImpl != null) {
-				transformedSubs.put(ts.getName(), procImpl);
+				transformedSubs.put(ts, procImpl);
+//				transformedSubs.put(ts.getName(), procImpl);
 			}
 		}
 
@@ -307,7 +333,8 @@ public class Sel4TransformHandler extends AadlHandler {
 		for (ThreadGroupSubcomponent tgs : tgImpl.getOwnedThreadGroupSubcomponents()) {
 			ComponentImplementation sysImpl = transformThreadGroup(tgs);
 			if (sysImpl != null) {
-				transformedSubs.put(tgs.getName(), sysImpl);
+				transformedSubs.put(tgs, sysImpl);
+//				transformedSubs.put(tgs.getName(), sysImpl);
 			}
 		}
 
@@ -418,7 +445,10 @@ public class Sel4TransformHandler extends AadlHandler {
 
 		List<ComponentImplementation> transformImplList = (List<ComponentImplementation>) cmd.getResult();
 		if (transformImplList.get(0) instanceof ProcessImplementation) {
-			return (ProcessImplementation) transformImplList.get(0);
+			ProcessImplementation processImpl = (ProcessImplementation) transformImplList.get(0);
+			// Copy property associations of original subcomponent (if they are accepted by new subcomponent type)
+			copyPropertyAssociations(thread, processImpl.getOwnedThreadSubcomponents().get(0));
+			return processImpl;
 		} else {
 			return null;
 		}
@@ -431,11 +461,13 @@ public class Sel4TransformHandler extends AadlHandler {
 	 * Thread Group -> System,
 	 * Process -> System
 	 * @param compImpl - Component implementation to be transformed
-	 * @param transformedSub - Map of compImpl's subcomponent names to transformed component implementation
+	 * @param transformedSubs - Map of compImpl's subcomponent names to transformed component implementation
 	 * @return Resulting transformed component implementation
 	 */
 	public ComponentImplementation transform(ComponentImplementation compImpl,
-			Map<String, ComponentImplementation> transformedSubs) {
+			Map<Subcomponent, ComponentImplementation> transformedSubs) {
+//	public ComponentImplementation transform(ComponentImplementation compImpl,
+//			Map<String, ComponentImplementation> transformedSubs) {
 
 		PackageSection pkgSection = AadlUtil.getContainingPackageSection(compImpl);
 
@@ -483,6 +515,28 @@ public class Sel4TransformHandler extends AadlHandler {
 		copyPropertyAssociations(compImpl.getType(), transformType);
 		// TODO: Add SEL4 property association?
 
+		// Give it the same AGREE clauses (for systems, processes, threadgroups) or lift AGREE clauses (for threads)
+		// if an AGREE annex is present.
+		for (AnnexSubclause annexSubclause : compImpl.getType().getOwnedAnnexSubclauses()) {
+			if (annexSubclause instanceof DefaultAnnexSubclause && annexSubclause.getName().equalsIgnoreCase("agree")) {
+				if (transformType instanceof ProcessType) {
+					// Add lift contract
+					String agreeClause = "{**" + System.lineSeparator() + "lift contract;" + System.lineSeparator()
+							+ "**}";
+					final DefaultAnnexSubclause defaultAnnexSubclause = ComponentCreateHelper
+							.createOwnedAnnexSubclause(transformType);
+					defaultAnnexSubclause.setName("agree");
+					defaultAnnexSubclause.setSourceText(agreeClause);
+				} else {
+					// Copy AGREE annex
+					DefaultAnnexSubclause defaultAnnexSubclause = (DefaultAnnexSubclause) EcoreUtil
+							.copy(annexSubclause);
+					transformType.getOwnedAnnexSubclauses().add(defaultAnnexSubclause);
+				}
+			}
+		}
+
+
 		// Create corresponding implementation
 		ComponentImplementation transformImpl = null;
 		if (compImpl instanceof ThreadImplementation) {
@@ -508,9 +562,12 @@ public class Sel4TransformHandler extends AadlHandler {
 		// Add subcomponent(s) and connections
 		if (transformedSubs == null) {
 
+			// For transformed threads
+
 			Subcomponent sub = ComponentCreateHelper.createOwnedSubcomponent(transformImpl, compImpl.getCategory());
 			sub.setName(compImpl.getTypeName());
 			ComponentCreateHelper.setSubcomponentType(sub, compImpl);
+			// Thread subcomponent property associations get set by caller
 
 			// Add connections
 			Iterator<Map.Entry<Feature, Feature>> iterator = features.entrySet().iterator();
@@ -552,16 +609,22 @@ public class Sel4TransformHandler extends AadlHandler {
 
 		} else {
 
-			Iterator<Map.Entry<String, ComponentImplementation>> subIterator = transformedSubs.entrySet().iterator();
+			// For transformed components other than threads
+
+			Iterator<Map.Entry<Subcomponent, ComponentImplementation>> subIterator = transformedSubs.entrySet()
+					.iterator();
+//			Iterator<Map.Entry<String, ComponentImplementation>> subIterator = transformedSubs.entrySet().iterator();
 			while (subIterator.hasNext()) {
-				Map.Entry<String, ComponentImplementation> mapElement = subIterator.next();
+				Map.Entry<Subcomponent, ComponentImplementation> mapElement = subIterator.next();
+//				Map.Entry<String, ComponentImplementation> mapElement = subIterator.next();
 				Subcomponent sub = ComponentCreateHelper.createOwnedSubcomponent(transformImpl,
 						mapElement.getValue().getCategory());
 				// Give it the same name as the original subcomponent
-				sub.setName(mapElement.getKey());
+				sub.setName(mapElement.getKey().getName());
+//				sub.setName(mapElement.getKey());
 				ComponentCreateHelper.setSubcomponentType(sub, mapElement.getValue());
-				// TODO: Copy property associations of original subcomponent
-
+				// Copy property associations of original subcomponent (if they are accepted by new subcomponent type)
+				copyPropertyAssociations(mapElement.getKey(), sub);
 			}
 
 			// Add connections
@@ -642,7 +705,16 @@ public class Sel4TransformHandler extends AadlHandler {
 
 	}
 
+	/**
+	 * Copies property associations from one AADL named element to another.
+	 * Only valid property associations accepted by the 'to' element will be copied
+	 * @param from
+	 * @param to
+	 */
 	private void copyPropertyAssociations(NamedElement from, NamedElement to) {
+		if (to == null || from == null) {
+			return;
+		}
 		for (PropertyAssociation pa : from.getOwnedPropertyAssociations()) {
 			PropertyAssociation propAssoc = EcoreUtil.copy(pa);
 			Property prop = propAssoc.getProperty();
@@ -652,6 +724,14 @@ public class Sel4TransformHandler extends AadlHandler {
 				// TODO: log exception
 			}
 		}
+	}
+
+	private List<ComponentImplementation> getBoundProcessors(Subcomponent sub) {
+		List<ComponentImplementation> boundProcessors = new ArrayList<>();
+
+		// TODO
+
+		return boundProcessors;
 	}
 
 }

@@ -26,7 +26,6 @@ import org.osate.aadl2.ListValue;
 import org.osate.aadl2.ModalPropertyValue;
 import org.osate.aadl2.PackageSection;
 import org.osate.aadl2.PrivatePackageSection;
-import org.osate.aadl2.ProcessImplementation;
 import org.osate.aadl2.ProcessSubcomponent;
 import org.osate.aadl2.ProcessorSubcomponent;
 import org.osate.aadl2.Property;
@@ -59,7 +58,7 @@ public class AddVirtualizationHandler extends AadlHandler {
 
 	private String virtualProcessorName;
 	private String virtualMachineOS;
-	private List<String> boundComponents;
+	private List<String> virtualizationComponents;
 	private String virtualizationRequirement;
 
 	@Override
@@ -68,14 +67,16 @@ public class AddVirtualizationHandler extends AadlHandler {
 		// ASSUMPTIONS:
 		// Selected subcomponent or it's subcomponents are bound to a processor
 		// Selected subcomponent is in same component implementation as processor it is bound to
+		// The selected component or subcomponents are bound to the same processors
+		// (in other words, processor bindings are the same for all selected components)
 
 		// Get the current selection
 		EObject eObj = getEObject(uri);
-		Subcomponent sub = null;
+		Subcomponent selectedSub = null;
 		// TODO: handle system, device, abstract subcomponents
 		if (eObj instanceof ProcessSubcomponent || eObj instanceof ThreadSubcomponent
 				|| eObj instanceof ThreadGroupSubcomponent) {
-			sub = (Subcomponent) eObj;
+			selectedSub = (Subcomponent) eObj;
 		} else {
 			Dialog.showError("Add Virtualization",
 					"A process, thread, or thread group implementation subcomponent must be selected in order to add virtualization.");
@@ -83,14 +84,14 @@ public class AddVirtualizationHandler extends AadlHandler {
 		}
 
 		// Make sure subcomponent refers to a component implementation
-		if (sub.getComponentImplementation() == null) {
+		if (selectedSub.getComponentImplementation() == null) {
 			Dialog.showError("Add Virtualization", "Selected subcomponent must be a component implementation.");
 			return;
 		}
 
 		// Check if this subcomponent is bound to a processor
 		// ASSUMPTION: processor binding will be specified for selected subcomponent, or its subcomponents
-		Map<String, Set<String>> processorBindings = getProcessorBindings(sub);
+		Map<String, Set<String>> processorBindings = getProcessorBindings(selectedSub);
 		// TODO: Remove this restriction and present user with list of processors and virtual processors to choose from
 		// TODO: May need to look at Available_Processor_Bindings property to do this
 		if (processorBindings.isEmpty()) {
@@ -105,7 +106,7 @@ public class AddVirtualizationHandler extends AadlHandler {
 
 		List<String> requirements = new ArrayList<>();
 		RequirementsManager.getInstance().getImportedRequirements().forEach(r -> requirements.add(r.getId()));
-		wizard.setSelectedComponent(sub);
+		wizard.setSelectedSubcomponent(selectedSub);
 		wizard.setRequirements(requirements);
 
 		wizard.create();
@@ -115,47 +116,25 @@ public class AddVirtualizationHandler extends AadlHandler {
 			if (virtualProcessorName == "") {
 				virtualProcessorName = VIRTUAL_PROCESSOR_IMPL_NAME;
 			}
-			boundComponents = wizard.getBoundComponents();
+			virtualizationComponents = wizard.getVirtualizationComponents();
 			virtualizationRequirement = wizard.getRequirement();
 		} else {
 			return;
 		}
 
-		// If all threads in a thread group are selected, only keep the thread group
-		// in the boundComponents list
-		if (sub instanceof ProcessSubcomponent) {
-			ProcessSubcomponent pSub = (ProcessSubcomponent) sub;
-			ProcessImplementation pi = ((ProcessImplementation) pSub.getComponentImplementation());
-			for (ThreadGroupSubcomponent tg : pi.getOwnedThreadGroupSubcomponents()) {
-				int threadCount = 0;
-				final String threadGroupName = sub.getQualifiedName() + "." + tg.getName();
-				for (Subcomponent t : tg.getComponentImplementation().getOwnedSubcomponents()) {
-					if (boundComponents.contains(threadGroupName + "." + t.getName())) {
-						threadCount++;
-					} else {
-						break;
-					}
-				}
-				if (threadCount == tg.getComponentImplementation().getOwnedSubcomponents().size()) {
-					boundComponents.removeIf(c -> c.toLowerCase().startsWith(threadGroupName.toLowerCase()));
-					boundComponents.add(threadGroupName);
-				}
-			}
-		}
-
-		// create set of bound processors
+		// create set of processors that virtualization components are currently bound to
 		Set<String> boundProcessors = new HashSet<>();
 		for (Map.Entry<String, Set<String>> entry : processorBindings.entrySet()) {
-			if (boundComponents.contains(entry.getKey())) {
+			if (virtualizationComponents.contains(entry.getKey())) {
 				boundProcessors.addAll(entry.getValue());
 			}
 		}
 		// If specific subcomponents of the selected subcomponent aren't bound to a processor,
 		// but the selected subcomponent is, then the selected subcomponent's subcomponents will use
 		// the binding of their parent
-		if (boundProcessors.isEmpty() && !boundComponents.contains(sub.getName())
-				&& processorBindings.get(sub.getName()) != null) {
-			boundProcessors.addAll(processorBindings.get(sub.getName()));
+		if (boundProcessors.isEmpty() && !virtualizationComponents.contains(selectedSub.getName())
+				&& processorBindings.get(selectedSub.getName()) != null) {
+			boundProcessors.addAll(processorBindings.get(selectedSub.getName()));
 		}
 		if (boundProcessors.isEmpty()) {
 			Dialog.showError("Add Virtualization",
@@ -166,10 +145,7 @@ public class AddVirtualizationHandler extends AadlHandler {
 		// Insert the virtual processor type and implementation components
 		// into the same package as the selected subcomponent's containing implementation.
 		// Note that this could be a different package than the bound processor(s).
-		insertVirtualProcessor(EcoreUtil.getURI(sub), boundProcessors);
-
-		// ASSUMPTION: The selected component or subcomponents are bound to the same processors
-		// (in other words, processor bindings are the same for all selected components)
+		insertVirtualProcessor(EcoreUtil.getURI(selectedSub), boundProcessors);
 
 		return;
 
@@ -272,13 +248,16 @@ public class AddVirtualizationHandler extends AadlHandler {
 				// Also remove virtualized components from this processor binding
 				boolean propertyAssociationFound = false;
 				for (PropertyAssociation pa : containingImpl.getOwnedPropertyAssociations()) {
+					if (!pa.getProperty().getName().equalsIgnoreCase(DeploymentProperties.ACTUAL_PROCESSOR_BINDING)) {
+						continue;
+					}
 					// Find bindings to processors (there could be multiple)
 					for (ModalPropertyValue val : pa.getOwnedValues()) {
 						ListValue listVal = (ListValue) val.getOwnedValue();
 						for (PropertyExpression prop : listVal.getOwnedListElements()) {
 							if (prop instanceof ReferenceValue) {
 								ReferenceValue refVal = (ReferenceValue) prop;
-								// Check if the referenced processor was bound to an virtualized component
+								// Check if the referenced processor was bound to a virtualized component
 								if (boundProcessors.contains(refVal.getPath().getNamedElement().getName())) {
 
 									// Add virtual processor subcomponent to Applies To
@@ -289,20 +268,24 @@ public class AddVirtualizationHandler extends AadlHandler {
 									// Remove virtualized components from this binding
 									Iterator<ContainedNamedElement> i = pa.getAppliesTos().iterator();
 									while (i.hasNext()) {
+
+										// If an entire subcomponent (including its descendants) is selected, remove
+										// any of its subcomponent bindings to this processor
+
 										ContainedNamedElement containedNamedElement = i.next();
 										ContainmentPathElement containmentPathElement = containedNamedElement.getPath();
-										String appliesTo = containmentPathElement.getNamedElement().getQualifiedName();
-										// If an entire subcomponent (including its subcomponents) is selected, remove
-										// any of its subcomponent bindings to this processor
-										if (boundComponents.contains(appliesTo)) {
-											i.remove();
-										} else if (containmentPathElement.getPath() != null) {
-											containmentPathElement = containmentPathElement.getPath();
-											appliesTo += "." + containmentPathElement.getNamedElement().getName();
-											if (boundComponents.contains(appliesTo)) {
+										String appliesTo = "";
+
+										do {
+											appliesTo += containmentPathElement.getNamedElement().getName();
+											if (virtualizationComponents.contains(appliesTo)) {
 												i.remove();
+												break;
 											}
-										}
+											containmentPathElement = containmentPathElement.getPath();
+											appliesTo += ".";
+										} while (containmentPathElement != null);
+
 									}
 
 									propertyAssociationFound = true;
@@ -347,36 +330,37 @@ public class AddVirtualizationHandler extends AadlHandler {
 						.createOwnedListElement(Aadl2Package.eINSTANCE.getReferenceValue());
 				ContainmentPathElement cpe = rv.createPath();
 				cpe.setNamedElement(vpSub);
-				for (String s : boundComponents) {
+				for (String virtualComp : virtualizationComponents) {
 					ContainedNamedElement cne = pa.createAppliesTo();
-					cpe = cne.createPath();
-					cpe.setNamedElement(selectedSub);
-					if (!s.equalsIgnoreCase(selectedSub.getQualifiedName())) {
-						for (Subcomponent sub : selectedSub.getComponentImplementation().getOwnedSubcomponents()) {
-//							if (s.equalsIgnoreCase(selectedSub.getQualifiedName() + "." + sub.getName())) {
-							if (s.toLowerCase()
-									.startsWith((selectedSub.getQualifiedName() + "." + sub.getName()).toLowerCase())) {
-								cpe = cpe.createPath();
-								cpe.setNamedElement(sub);
-								if (sub.getCategory() == ComponentCategory.THREAD_GROUP) {
-									for (Subcomponent sc : sub.getComponentImplementation().getOwnedSubcomponents()) {
-										if (s.equalsIgnoreCase(selectedSub.getQualifiedName() + "." + sub.getName()
-												+ "." + sc.getName())) {
-											cpe = cpe.createPath();
-											cpe.setNamedElement(sc);
-											break;
-										}
-									}
+
+					Subcomponent currentSub = selectedSub;
+					String[] subNames = virtualComp.split("\\.");
+
+					for (String subName : subNames) {
+
+						if (subName.equalsIgnoreCase(selectedSub.getName())) {
+							cpe = cne.createPath();
+						} else {
+
+							for (Subcomponent sub : currentSub.getComponentImplementation().getOwnedSubcomponents()) {
+								if (sub.getName().equalsIgnoreCase(subName)) {
+									currentSub = sub;
+									break;
 								}
-								break;
 							}
+							cpe = cpe.createPath();
 						}
+
+
+						cpe.setNamedElement(currentSub);
+
 					}
+
 				}
 
 				// Add add_virtualization claims to resolute prove statement, if applicable
 				if (!virtualizationRequirement.isEmpty()) {
-					return new AddVirtualizationClaim(boundComponents, vpSub);
+					return new AddVirtualizationClaim(virtualizationComponents, vpSub);
 				}
 
 				return null;
@@ -390,27 +374,10 @@ public class AddVirtualizationHandler extends AadlHandler {
 
 	}
 
-
-	// Maps a subcomponent to the processor(s) it is bound to
+	// Maps a subcomponent + descendants to the processor(s) it is bound to
 	private Map<String, Set<String>> getProcessorBindings(Subcomponent sub) {
 
 		Map<String, Set<String>> processorMap = new HashMap<>();
-
-		// Get selected subcomponent + child subcomponents
-		// If child subcomponent is a thread group, get contained threads as well
-		Set<String> subcomponents = new HashSet<>();
-		subcomponents.add(sub.getName());
-//		sub.getComponentImplementation().getOwnedSubcomponents()
-//				.forEach(s -> subcomponents.add(sub.getName() + "." + s.getName()));
-		for (Subcomponent s : sub.getComponentImplementation().getOwnedSubcomponents()) {
-			if (s.getCategory() == ComponentCategory.THREAD_GROUP) {
-				for (Subcomponent sc : s.getComponentImplementation().getOwnedSubcomponents()) {
-					subcomponents.add(sub.getName() + "." + s.getName() + "." + sc.getName());
-				}
-			} else {
-				subcomponents.add(sub.getName() + "." + s.getName());
-			}
-		}
 
 		// Get processor bindings for all components within containing component implementation of selected subcomponent
 		ComponentImplementation ci = sub.getContainingComponentImpl();
@@ -424,8 +391,10 @@ public class AddVirtualizationHandler extends AadlHandler {
 						cpe = cpe.getPath();
 						appliesTo += "." + cpe.getNamedElement().getName();
 					}
-					// Check if the property association applies to the selected subcomponent
-					if (subcomponents.contains(appliesTo)) {
+
+					// Check if the property association applies to the selected subcomponent or one of its descendants
+					// If the root element of the applies to path is the specified subcomponent, it does
+					if (cne.getPath().getNamedElement().equals(sub)) {
 						for (ModalPropertyValue val : pa.getOwnedValues()) {
 							ListValue listVal = (ListValue) val.getOwnedValue();
 							for (PropertyExpression prop : listVal.getOwnedListElements()) {
