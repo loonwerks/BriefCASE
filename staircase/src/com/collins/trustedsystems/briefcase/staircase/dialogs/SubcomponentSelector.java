@@ -5,7 +5,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.jface.viewers.CheckboxTreeViewer;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.TreeViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
@@ -13,13 +15,12 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.ui.dialogs.ContainerCheckedTreeViewer;
 import org.osate.aadl2.ComponentImplementation;
 import org.osate.aadl2.Subcomponent;
 
 public class SubcomponentSelector {
 
-	ContainerCheckedTreeViewer viewer = null;
+	CheckboxTreeViewer viewer = null;
 
 	public class SubcomponentSelectorContentProvider implements ITreeContentProvider {
 
@@ -85,12 +86,21 @@ public class SubcomponentSelector {
 		baseComposite.setLayoutData(gridData);
 		baseComposite.setLayout(new GridLayout(1, true));
 
-		viewer = new ContainerCheckedTreeViewer(baseComposite,
+		viewer = new CheckboxTreeViewer(baseComposite,
 				SWT.CHECK | SWT.H_SCROLL | SWT.V_SCROLL);
 		viewer.setContentProvider(new SubcomponentSelectorContentProvider(parentMap));
 		viewer.getTree().setHeaderVisible(false);
 		viewer.getTree().setLinesVisible(false);
 		viewer.getTree().setLayoutData(gridData);
+		viewer.addDoubleClickListener(event -> {
+			IStructuredSelection thisSelection = (IStructuredSelection) event.getSelection();
+			Object selectedNode = thisSelection.getFirstElement();
+			if (viewer.getChecked(selectedNode)) {
+				viewer.setSubtreeChecked(selectedNode, true);
+			} else {
+				viewer.setSubtreeChecked(selectedNode, false);
+			}
+		});
 
 		baseComposite.setBackground(viewer.getTree().getBackground());
 
@@ -133,12 +143,11 @@ public class SubcomponentSelector {
 		SubcomponentSelectorContentProvider contentProvider = (SubcomponentSelectorContentProvider) viewer
 				.getContentProvider();
 
-		if (viewer.getGrayed(sub)) {
-			for (Object obj : contentProvider.getChildren(sub)) {
-				getSelectedSubcomponents((Subcomponent) obj, selectedSubs);
-			}
-		} else if (viewer.getChecked(sub)) {
+		if (viewer.getChecked(sub)) {
 			selectedSubs.add(getQualifiedSubcomponentName(sub));
+		}
+		for (Object obj : contentProvider.getChildren(sub)) {
+			getSelectedSubcomponents((Subcomponent) obj, selectedSubs);
 		}
 	}
 
