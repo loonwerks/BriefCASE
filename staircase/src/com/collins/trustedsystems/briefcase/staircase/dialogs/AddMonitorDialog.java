@@ -1,7 +1,9 @@
 package com.collins.trustedsystems.briefcase.staircase.dialogs;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
@@ -21,6 +23,7 @@ import org.eclipse.swt.widgets.Text;
 import org.osate.aadl2.PortCategory;
 import org.osate.ui.dialogs.Dialog;
 
+import com.collins.trustedsystems.briefcase.staircase.dialogs.MultiPortSelector.PortDirection;
 import com.collins.trustedsystems.briefcase.staircase.handlers.AddMonitorHandler;
 
 public class AddMonitorDialog extends TitleAreaDialog {
@@ -31,7 +34,8 @@ public class AddMonitorDialog extends TitleAreaDialog {
 	private Combo cboResetPort;
 	private Label lblLatchedField;
 	private Button btnLatched;
-	private Combo cboExpectedPort;
+//	private Combo cboExpectedPort;
+	private MultiPortSelector mpsReferencePorts;
 	private Combo cboAlertPort;
 	private Label lblAlertPortTypeField = null;
 	private Group grpAlertPortType = null;
@@ -45,7 +49,8 @@ public class AddMonitorDialog extends TitleAreaDialog {
 	private String monitorImplementationName;
 	private String resetPort = "";
 	private boolean latched = false;
-	private String expectedPort = "";
+//	private String expectedPort = "";
+	private Map<String, String> referencePorts = new HashMap<>();
 	private String alertPort = "";
 	private boolean createSwitch = false;
 	private PortCategory alertPortType = null;
@@ -95,7 +100,7 @@ public class AddMonitorDialog extends TitleAreaDialog {
 		createMonitorImplementationNameField(container);
 		createResetPortField(container);
 		createLatchedField(container);
-		createExpectedPortField(container);
+		createReferencePortsField(container);
 		createAlertPortField(container);
 		createAlertPortTypeField(container);
 //		createAlertPortDataTypeField(container);
@@ -180,10 +185,10 @@ public class AddMonitorDialog extends TitleAreaDialog {
 	}
 
 	/**
-	 * Creates the input field for specifying what to connect the 'expected' port to
+	 * Creates the input field for specifying what to connect the 'reference' ports to
 	 * @param container
 	 */
-	private void createExpectedPortField(Composite container) {
+	private void createReferencePortsField(Composite container) {
 		Label lblExpectedField = new Label(container, SWT.NONE);
 		lblExpectedField.setText("Expected port connection");
 		lblExpectedField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true));
@@ -191,11 +196,18 @@ public class AddMonitorDialog extends TitleAreaDialog {
 		GridData dataInfoField = new GridData();
 		dataInfoField.grabExcessHorizontalSpace = true;
 		dataInfoField.horizontalAlignment = GridData.FILL;
-		cboExpectedPort = new Combo(container, SWT.BORDER);
-		cboExpectedPort.setLayoutData(dataInfoField);
-		cboExpectedPort.add(NO_PORT_SELECTED);
-		outports.forEach(p -> cboExpectedPort.add(p));
-		cboExpectedPort.setText(NO_PORT_SELECTED);
+//		cboExpectedPort = new Combo(container, SWT.BORDER);
+//		cboExpectedPort.setLayoutData(dataInfoField);
+//		cboExpectedPort.add(NO_PORT_SELECTED);
+//		outports.forEach(p -> cboExpectedPort.add(p));
+//		cboExpectedPort.setText(NO_PORT_SELECTED);
+
+		// Port selector
+		List<String> connectionEnds = new ArrayList<>();
+		connectionEnds.add(NO_PORT_SELECTED);
+		connectionEnds.addAll(outports);
+		mpsReferencePorts = new MultiPortSelector(container, PortDirection.INPUT, connectionEnds, NO_PORT_SELECTED,
+				"ref");
 	}
 
 	/**
@@ -447,14 +459,24 @@ public class AddMonitorDialog extends TitleAreaDialog {
 			resetPort = null;
 		}
 		latched = btnLatched.getSelection();
-		expectedPort = cboExpectedPort.getText();
-		if (expectedPort.equals(NO_PORT_SELECTED)) {
-			expectedPort = "";
-		} else if (!outports.contains(expectedPort)) {
-			Dialog.showError("Add Monitor", "Port " + expectedPort
-					+ " does not exist in the model.  Select a port from the list to connect the monitor's 'expected' port to, or choose "
-					+ NO_PORT_SELECTED + ".");
-			return false;
+//		expectedPort = cboExpectedPort.getText();
+//		if (expectedPort.equals(NO_PORT_SELECTED)) {
+//			expectedPort = "";
+//		} else if (!outports.contains(expectedPort)) {
+//			Dialog.showError("Add Monitor", "Port " + expectedPort
+//					+ " does not exist in the model.  Select a port from the list to connect the monitor's 'expected' port to, or choose "
+//					+ NO_PORT_SELECTED + ".");
+//			return false;
+//		}
+		referencePorts = mpsReferencePorts.getContents();
+		for (Map.Entry<String, String> refPort : referencePorts.entrySet()) {
+			if (refPort.getKey().isEmpty()) {
+				Dialog.showError("Add Switch",
+						"A monitor reference port name must be specified to establish a connection with "
+								+ refPort.getValue()
+								+ ".");
+				return false;
+			}
 		}
 		alertPort = cboAlertPort.getText();
 		if (alertPort.equals(NO_PORT_SELECTED)) {
@@ -517,8 +539,12 @@ public class AddMonitorDialog extends TitleAreaDialog {
 		return latched;
 	}
 
-	public String getExpectedPort() {
-		return expectedPort;
+//	public String getExpectedPort() {
+//		return expectedPort;
+//	}
+
+	public Map<String, String> getReferencePorts() {
+		return referencePorts;
 	}
 
 	public String getAlertPort() {

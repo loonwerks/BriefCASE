@@ -62,6 +62,7 @@ public class AddMonitorHandler extends AadlHandler {
 	private String resetPort;
 	private boolean latched;
 	private String expectedPort;
+	private Map<String, String> referencePorts;
 	private String alertPort;
 	private boolean createSwitch;
 	private PortCategory alertPortType;
@@ -106,7 +107,8 @@ public class AddMonitorHandler extends AadlHandler {
 			resetPort = wizard.getResetPort();
 			latched = wizard.getLatched();
 			dispatchProtocol = wizard.getDispatchProtocol();
-			expectedPort = wizard.getExpectedPort();
+//			expectedPort = wizard.getExpectedPort();
+			referencePorts = wizard.getReferencePorts();
 			alertPort = wizard.getAlertPort();
 			createSwitch = wizard.getCreateSwitch();
 			alertPortType = wizard.getAlertControlPortType();
@@ -246,7 +248,7 @@ public class AddMonitorHandler extends AadlHandler {
 			portObserved.setIn(true);
 			portObserved.setName(MONITOR_OBSERVED_PORT_NAME);
 
-			// Create expected port
+			// Create reference ports
 			Port monExpectedPort = null;
 			Port srcExpectedPort = ModelTransformUtils.getPort(containingImpl, expectedPort);
 			// If user didn't specify an expected outport, use the same type as the observed port
@@ -266,6 +268,30 @@ public class AddMonitorHandler extends AadlHandler {
 			}
 			monExpectedPort.setIn(true);
 			monExpectedPort.setName(MONITOR_EXPECTED_PORT_NAME);
+
+			Map<Port, Port> monReferencePorts = new HashMap<>();
+			for (Map.Entry<String, String> refEntry : referencePorts.entrySet()) {
+				Port monRefPort = null;
+				Port srcRefPort = ModelTransformUtils.getPort(containingImpl, expectedPort);
+				// If user didn't specify an expected outport, use the same type as the observed port
+				if (srcRefPort == null) {
+					srcRefPort = portObserved;
+				}
+				if (srcRefPort instanceof EventDataPort) {
+					monRefPort = ComponentCreateHelper.createOwnedEventDataPort(monitorType);
+					dataFeatureClassifier = ((EventDataPort) srcRefPort).getDataFeatureClassifier();
+					((EventDataPort) monRefPort).setDataFeatureClassifier(dataFeatureClassifier);
+				} else if (srcRefPort instanceof DataPort) {
+					monRefPort = ComponentCreateHelper.createOwnedDataPort(monitorType);
+					dataFeatureClassifier = ((DataPort) srcRefPort).getDataFeatureClassifier();
+					((DataPort) monRefPort).setDataFeatureClassifier(dataFeatureClassifier);
+				} else if (srcRefPort instanceof EventPort) {
+					monRefPort = ComponentCreateHelper.createOwnedEventPort(monitorType);
+				}
+				monRefPort.setIn(true);
+				monRefPort.setName(MONITOR_EXPECTED_PORT_NAME);
+				monReferencePorts.put(srcRefPort, monRefPort);
+			}
 
 			// Create monitor alert port
 			Port monAlertPort = null;
@@ -411,7 +437,7 @@ public class AddMonitorHandler extends AadlHandler {
 					getIndex(destName, containingImpl.getOwnedPortConnections()) + 1,
 					containingImpl.getOwnedPortConnections().size() - 1);
 
-			// Create Expected connection, if provided
+			// Create Reference port connections, if provided
 			if (!expectedPort.isEmpty()) {
 				final PortConnection portConnExpected = containingImpl.createOwnedPortConnection();
 				portConnExpected
