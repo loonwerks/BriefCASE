@@ -152,7 +152,15 @@ public class AddVirtualizationHandler extends AadlHandler {
 				unboundSubcomponents.add(vComp);
 			} else if (explicitProcessorBindings.containsKey(vComp)) {
 				boundProcessors.addAll(explicitProcessorBindings.get(vComp));
+			} else if (implicitProcessorBindings.containsKey(vComp)) {
+				boundProcessors.addAll(implicitProcessorBindings.get(vComp));
 			}
+		}
+
+		if (boundProcessors.size() > 1) {
+			Dialog.showError("Add Virtualization",
+					"All virtualization components must be bound to the same processor.");
+			return;
 		}
 
 		if (!unboundSubcomponents.isEmpty()) {
@@ -270,7 +278,10 @@ public class AddVirtualizationHandler extends AadlHandler {
 				// Remove virtualized components from this processor binding
 				// Add non-virtualized components to binding if their parents are virtualized
 				boolean propertyAssociationFound = false;
-				for (PropertyAssociation pa : containingImpl.getOwnedPropertyAssociations()) {
+				List<String> nonVmBoundChildren = new ArrayList<>();
+				Iterator<PropertyAssociation> paIterator = containingImpl.getOwnedPropertyAssociations().iterator();
+				while (paIterator.hasNext()) {
+					PropertyAssociation pa = paIterator.next();
 					if (!pa.getProperty().getName().equalsIgnoreCase(DeploymentProperties.ACTUAL_PROCESSOR_BINDING)) {
 						continue;
 					}
@@ -317,9 +328,11 @@ public class AddVirtualizationHandler extends AadlHandler {
 											for (Subcomponent child : parent.getComponentImplementation()
 													.getOwnedSubcomponents()) {
 												if (!virtualizationSubNameMap.containsValue(child)) {
+													String childQualName = s + "." + child.getName();
 													ContainedNamedElement ne = createContainedNamedElement(selectedSub,
-															s + "." + child.getName());
+															childQualName);
 													pa.getAppliesTos().add(ne);
+													nonVmBoundChildren.add(childQualName);
 												}
 											}
 										}
@@ -329,6 +342,11 @@ public class AddVirtualizationHandler extends AadlHandler {
 								}
 							}
 						}
+					}
+					// If the processor binding property association does not apply to any subcomponent,
+					// remove it
+					if (pa.getAppliesTos().isEmpty()) {
+						paIterator.remove();
 					}
 				}
 
@@ -374,7 +392,7 @@ public class AddVirtualizationHandler extends AadlHandler {
 
 				// Add add_virtualization claims to resolute prove statement, if applicable
 				if (!virtualizationRequirement.isEmpty()) {
-					return new AddVirtualizationClaim(virtualizationComponents, vpSub);
+					return new AddVirtualizationClaim(virtualizationComponents, nonVmBoundChildren, vpSub);
 				}
 
 				return null;

@@ -5,6 +5,7 @@ import org.osate.aadl2.Aadl2Package;
 import org.osate.aadl2.AbstractImplementation;
 import org.osate.aadl2.AbstractSubcomponent;
 import org.osate.aadl2.AbstractType;
+import org.osate.aadl2.Classifier;
 import org.osate.aadl2.ComponentCategory;
 import org.osate.aadl2.ComponentImplementation;
 import org.osate.aadl2.ComponentType;
@@ -23,6 +24,7 @@ import org.osate.aadl2.SubprogramAccess;
 import org.osate.aadl2.SystemImplementation;
 import org.osate.aadl2.SystemSubcomponent;
 import org.osate.aadl2.SystemType;
+import org.osate.aadl2.ThreadGroupImplementation;
 import org.osate.aadl2.ThreadGroupType;
 import org.osate.aadl2.ThreadImplementation;
 import org.osate.aadl2.ThreadSubcomponent;
@@ -250,15 +252,27 @@ public class ComponentCreateHelper {
 	}
 
 	// Annex subclause
-	public static DefaultAnnexSubclause createOwnedAnnexSubclause(ComponentType compType) {
-		if (compType instanceof SystemType) {
-			return ((SystemType) compType).createOwnedAnnexSubclause();
-		} else if (compType instanceof AbstractType) {
-			return ((AbstractType) compType).createOwnedAnnexSubclause();
-		} else if (compType instanceof ProcessType) {
-			return ((ProcessType) compType).createOwnedAnnexSubclause();
-		} else if (compType instanceof ThreadType) {
-			return ((ThreadType) compType).createOwnedAnnexSubclause();
+	public static DefaultAnnexSubclause createOwnedAnnexSubclause(Classifier component) {
+		if (component instanceof SystemType) {
+			return ((SystemType) component).createOwnedAnnexSubclause();
+		} else if (component instanceof AbstractType) {
+			return ((AbstractType) component).createOwnedAnnexSubclause();
+		} else if (component instanceof ProcessType) {
+			return ((ProcessType) component).createOwnedAnnexSubclause();
+		} else if (component instanceof ThreadGroupType) {
+			return ((ThreadGroupType) component).createOwnedAnnexSubclause();
+		} else if (component instanceof ThreadType) {
+			return ((ThreadType) component).createOwnedAnnexSubclause();
+		} else if (component instanceof SystemImplementation) {
+			return ((SystemImplementation) component).createOwnedAnnexSubclause();
+		} else if (component instanceof AbstractImplementation) {
+			return ((AbstractImplementation) component).createOwnedAnnexSubclause();
+		} else if (component instanceof ProcessImplementation) {
+			return ((ProcessImplementation) component).createOwnedAnnexSubclause();
+		} else if (component instanceof ThreadGroupImplementation) {
+			return ((ThreadGroupImplementation) component).createOwnedAnnexSubclause();
+		} else if (component instanceof ThreadImplementation) {
+			return ((ThreadImplementation) component).createOwnedAnnexSubclause();
 		} else {
 			return null;
 		}

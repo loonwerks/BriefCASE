@@ -1,12 +1,14 @@
 package com.collins.trustedsystems.briefcase.staircase.handlers;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.common.util.URI;
@@ -27,6 +29,8 @@ import org.osate.aadl2.ComponentType;
 import org.osate.aadl2.ConnectedElement;
 import org.osate.aadl2.Connection;
 import org.osate.aadl2.ConnectionEnd;
+import org.osate.aadl2.ContainedNamedElement;
+import org.osate.aadl2.ContainmentPathElement;
 import org.osate.aadl2.Context;
 import org.osate.aadl2.DataAccess;
 import org.osate.aadl2.DataPort;
@@ -35,6 +39,8 @@ import org.osate.aadl2.DirectionType;
 import org.osate.aadl2.EventDataPort;
 import org.osate.aadl2.EventPort;
 import org.osate.aadl2.Feature;
+import org.osate.aadl2.ListValue;
+import org.osate.aadl2.ModalPropertyValue;
 import org.osate.aadl2.NamedElement;
 import org.osate.aadl2.PackageSection;
 import org.osate.aadl2.Port;
@@ -42,9 +48,13 @@ import org.osate.aadl2.PortConnection;
 import org.osate.aadl2.ProcessImplementation;
 import org.osate.aadl2.ProcessSubcomponent;
 import org.osate.aadl2.ProcessType;
+import org.osate.aadl2.ProcessorSubcomponent;
 import org.osate.aadl2.Property;
 import org.osate.aadl2.PropertyAssociation;
+import org.osate.aadl2.PropertyExpression;
 import org.osate.aadl2.Realization;
+import org.osate.aadl2.ReferenceValue;
+import org.osate.aadl2.StringLiteral;
 import org.osate.aadl2.Subcomponent;
 import org.osate.aadl2.SubprogramAccess;
 import org.osate.aadl2.SystemImplementation;
@@ -54,15 +64,23 @@ import org.osate.aadl2.ThreadGroupImplementation;
 import org.osate.aadl2.ThreadGroupSubcomponent;
 import org.osate.aadl2.ThreadImplementation;
 import org.osate.aadl2.ThreadSubcomponent;
+import org.osate.aadl2.VirtualProcessorSubcomponent;
+import org.osate.aadl2.modelsupport.scoping.Aadl2GlobalScopeUtil;
 import org.osate.aadl2.modelsupport.util.AadlUtil;
+import org.osate.aadl2.properties.PropertyAcc;
 import org.osate.ui.dialogs.Dialog;
 
+import com.collins.trustedsystems.briefcase.staircase.utils.CaseUtils;
 import com.collins.trustedsystems.briefcase.staircase.utils.ComponentCreateHelper;
 
 public class Sel4TransformHandler extends AadlHandler {
 
 	static final String PORT_CONNECTION_IMPL_NAME = "c";
 	static final String ACCESS_CONNECTION_IMPL_NAME = "a";
+	static final String SEL4 = "seL4";
+
+	Map<String, Set<String>> processorBindings = null;
+	Set<String> sel4Processors = null;
 
 	@Override
 	protected void runCommand(URI uri) {
@@ -78,17 +96,28 @@ public class Sel4TransformHandler extends AadlHandler {
 		final SystemImplementation selectedSystem = (SystemImplementation) eObj;
 
 		// Selected system implementation should contain at least one processor-bound process
+		// Get processor bindings for all software subcomponent descendants of selected system implementation
 		// Neither the processor or the process need to be immediate subcomponents of the selected system (they can be nested descendants)
-//		SystemInstance si = null;
-//		try {
-//			si = InstantiateModel.buildInstanceModelFile(selectedSystem);
-//		} catch (Exception e) {
-//			Dialog.showError("Model Instantiate", "Error while re-instantiating the model: " + e.getMessage());
-//
-//		}
-		for (Subcomponent sub : selectedSystem.getOwnedSubcomponents()) {
+		processorBindings = getProcessorBindings(selectedSystem);
 
+		// Get the names of seL4 processors in the system
+		sel4Processors = getSel4Processors(selectedSystem);
+
+		boolean sel4Found = false;
+		for (Map.Entry<String, Set<String>> entry : processorBindings.entrySet()) {
+			for (String processor : entry.getValue()) {
+				if (sel4Processors.contains(processor)) {
+					sel4Found = true;
+					break;
+				}
+			}
 		}
+		if (!sel4Found || processorBindings.isEmpty()) {
+			Dialog.showError("seL4 Transform",
+					"Selected system implementation must contain at least one software subcomponent that is bound to an seL4 processor to perform the seL4 transform.");
+			return;
+		}
+
 
 		// Each process subcomponent containing a thread group and/or multiple thread subcomponents
 		// becomes a system subcomponent
@@ -99,31 +128,35 @@ public class Sel4TransformHandler extends AadlHandler {
 		// Set processor OS property to seL4
 
 
-		// Construct a processor binding map
-		Map<String, String> processorBindingMap = new HashMap<>();
-
-		transformSystem(selectedSystem);
+		transformSystem(selectedSystem, "");
 
 	}
 
 	/**
 	 * Transforms a System into a System containing transformed subcomponents
 	 * @param systemImpl - System implementation to be transformed
+	 * @param qualifiedName - Qualified name of subcomponent representing this system (will be empty if it's the top-level system)
 	 */
-	public void transformSystem(SystemImplementation systemImpl) {
+	public void transformSystem(SystemImplementation systemImpl, String qualifiedName) {
 
 		// Transform contained systems
 		// This will ensure that any process or thread group descendants will get transformed
 		for (SystemSubcomponent ss : systemImpl.getOwnedSystemSubcomponents()) {
-			transformSystem((SystemImplementation) ss.getComponentImplementation());
+			String qName = qualifiedName + (qualifiedName.isEmpty() ? "" : ".") + ss.getName();
+			transformSystem((SystemImplementation) ss.getComponentImplementation(), qName);
 		}
 
 		// Transform contained processes
 		final Map<String, SystemImplementation> transformedSubs = new HashMap<>();
 		for (ProcessSubcomponent ps : systemImpl.getOwnedProcessSubcomponents()) {
-			SystemImplementation sysImpl = transformProcess(ps);
-			if (sysImpl != null) {
-				transformedSubs.put(ps.getName(), sysImpl);
+			String qName = qualifiedName + (qualifiedName.isEmpty() ? "" : ".") + ps.getName();
+			if (isBoundToSel4Processor(qName)) {
+				SystemImplementation sysImpl = transformProcess(ps, qName);
+				if (sysImpl != null) {
+					transformedSubs.put(ps.getName(), sysImpl);
+				}
+			} else {
+				System.out.println("Sub " + qName + " not bound to seL4 processor");
 			}
 		}
 
@@ -215,10 +248,11 @@ public class Sel4TransformHandler extends AadlHandler {
 	/**
 	 * Transforms a Process into a System containing transformed Threads
 	 * @param process - Process subcomponent to be transformed
+	 * @param qualifiedName - Qualified name of subcomponent
 	 * @return Resulting transformed System Implementation
 	 */
 	@SuppressWarnings("unchecked")
-	public SystemImplementation transformProcess(ProcessSubcomponent process) {
+	public SystemImplementation transformProcess(ProcessSubcomponent process, String qualifiedName) {
 
 		final ProcessImplementation processImpl = (ProcessImplementation) process.getComponentImplementation();
 
@@ -235,19 +269,29 @@ public class Sel4TransformHandler extends AadlHandler {
 		final Map<Subcomponent, ComponentImplementation> transformedSubs = new HashMap<>();
 //		final Map<String, ComponentImplementation> transformedSubs = new HashMap<>();
 		for (ThreadSubcomponent ts : processImpl.getOwnedThreadSubcomponents()) {
-			ProcessImplementation procImpl = transformThread(ts);
-			if (procImpl != null) {
-				transformedSubs.put(ts, procImpl);
-//				transformedSubs.put(ts.getName(), procImpl);
+			String qName = qualifiedName + "." + ts.getName();
+			if (isBoundToSel4Processor(qName)) {
+				ProcessImplementation procImpl = transformThread(ts);
+				if (procImpl != null) {
+					transformedSubs.put(ts, procImpl);
+//					transformedSubs.put(ts.getName(), procImpl);
+				}
+			} else {
+				System.out.println("Sub " + qName + " not bound to seL4 processor");
 			}
 		}
 
 		// Transform thread group subcomponents
 		for (ThreadGroupSubcomponent tgs : processImpl.getOwnedThreadGroupSubcomponents()) {
-			SystemImplementation sysImpl = transformThreadGroup(tgs);
-			if (sysImpl != null) {
-				transformedSubs.put(tgs, sysImpl);
-//				transformedSubs.put(tgs.getName(), sysImpl);
+			String qName = qualifiedName + "." + tgs.getName();
+			if (isBoundToSel4Processor(qName)) {
+				SystemImplementation sysImpl = transformThreadGroup(tgs, qName);
+				if (sysImpl != null) {
+					transformedSubs.put(tgs, sysImpl);
+//					transformedSubs.put(tgs.getName(), sysImpl);
+				}
+			} else {
+				System.out.println("Sub " + qName + " not bound to seL4 processor");
 			}
 		}
 
@@ -302,10 +346,11 @@ public class Sel4TransformHandler extends AadlHandler {
 	/**
 	 * Transforms a Thread Group into a System containing transformed Threads
 	 * @param threadGroup - Thread Group subcomponent to be transformed
+	 * @param qualifiedName - Qualified name of subcomponent
 	 * @return Resulting transformed System Implementation
 	 */
 	@SuppressWarnings("unchecked")
-	public SystemImplementation transformThreadGroup(ThreadGroupSubcomponent threadGroup) {
+	public SystemImplementation transformThreadGroup(ThreadGroupSubcomponent threadGroup, String qualifiedName) {
 
 		final ThreadGroupImplementation tgImpl = (ThreadGroupImplementation) threadGroup.getComponentImplementation();
 
@@ -313,7 +358,8 @@ public class Sel4TransformHandler extends AadlHandler {
 		PackageSection ps = AadlUtil.getContainingPackageSection(tgImpl);
 		for (Classifier c : ps.getOwnedClassifiers()) {
 			// Instead check for SEL4 property?
-			if (c instanceof SystemImplementation && c.getName().equalsIgnoreCase(tgImpl.getName() + "_seL4")) {
+			if (c instanceof SystemImplementation
+					&& c.getName().equalsIgnoreCase(tgImpl.getTypeName() + "_" + SEL4 + ".Impl")) {
 				return (SystemImplementation) c;
 			}
 		}
@@ -331,10 +377,15 @@ public class Sel4TransformHandler extends AadlHandler {
 
 		// Transform thread group subcomponents
 		for (ThreadGroupSubcomponent tgs : tgImpl.getOwnedThreadGroupSubcomponents()) {
-			ComponentImplementation sysImpl = transformThreadGroup(tgs);
-			if (sysImpl != null) {
-				transformedSubs.put(tgs, sysImpl);
-//				transformedSubs.put(tgs.getName(), sysImpl);
+			String qName = qualifiedName + "." + tgs.getName();
+			if (isBoundToSel4Processor(qName)) {
+				ComponentImplementation sysImpl = transformThreadGroup(tgs, qName);
+				if (sysImpl != null) {
+					transformedSubs.put(tgs, sysImpl);
+//					transformedSubs.put(tgs.getName(), sysImpl);
+				}
+			} else {
+				System.out.println("Sub " + qName + " not bound to seL4 processor");
 			}
 		}
 
@@ -399,7 +450,8 @@ public class Sel4TransformHandler extends AadlHandler {
 		PackageSection ps = AadlUtil.getContainingPackageSection(threadImpl);
 		for (Classifier c : ps.getOwnedClassifiers()) {
 			// Instead check for SEL4 property?
-			if (c instanceof ProcessImplementation && c.getName().equalsIgnoreCase(threadImpl.getName() + "_seL4")) {
+			if (c instanceof ProcessImplementation
+					&& c.getName().equalsIgnoreCase(threadImpl.getTypeName() + "_" + SEL4 + ".Impl")) {
 				return (ProcessImplementation) c;
 			}
 		}
@@ -484,7 +536,7 @@ public class Sel4TransformHandler extends AadlHandler {
 		}
 
 		// Give it a name
-		transformType.setName(compImpl.getTypeName() + "_seL4");
+		transformType.setName(compImpl.getTypeName() + "_" + SEL4);
 
 		// Give it the same features
 		Map<Feature, Feature> features = new HashMap<>();
@@ -515,18 +567,14 @@ public class Sel4TransformHandler extends AadlHandler {
 		copyPropertyAssociations(compImpl.getType(), transformType);
 		// TODO: Add SEL4 property association?
 
-		// Give it the same AGREE clauses (for systems, processes, threadgroups) or lift AGREE clauses (for threads)
-		// if an AGREE annex is present.
+//		// Give it the same AGREE clauses (for systems, processes, threadgroups) or lift AGREE clauses (for threads)
+//		// if an AGREE annex is present.
+		boolean liftContract = false;
 		for (AnnexSubclause annexSubclause : compImpl.getType().getOwnedAnnexSubclauses()) {
 			if (annexSubclause instanceof DefaultAnnexSubclause && annexSubclause.getName().equalsIgnoreCase("agree")) {
 				if (transformType instanceof ProcessType) {
-					// Add lift contract
-					String agreeClause = "{**" + System.lineSeparator() + "lift contract;" + System.lineSeparator()
-							+ "**}";
-					final DefaultAnnexSubclause defaultAnnexSubclause = ComponentCreateHelper
-							.createOwnedAnnexSubclause(transformType);
-					defaultAnnexSubclause.setName("agree");
-					defaultAnnexSubclause.setSourceText(agreeClause);
+					// Add lift contract to process implementation
+					liftContract = true;
 				} else {
 					// Copy AGREE annex
 					DefaultAnnexSubclause defaultAnnexSubclause = (DefaultAnnexSubclause) EcoreUtil
@@ -535,7 +583,10 @@ public class Sel4TransformHandler extends AadlHandler {
 				}
 			}
 		}
-
+//
+//		// Put it in the correct place (after component implementation of original component)
+//		pkgSection.getOwnedClassifiers().move(getIndex(compImpl.getName(), pkgSection.getOwnedClassifiers()) + 1,
+//				pkgSection.getOwnedClassifiers().size() - 1);
 
 		// Create corresponding implementation
 		ComponentImplementation transformImpl = null;
@@ -701,6 +752,21 @@ public class Sel4TransformHandler extends AadlHandler {
 		// Give it the same property associations
 		copyPropertyAssociations(compImpl, transformImpl);
 
+//		// Give it the same AGREE clauses (for systems, processes, threadgroups) or lift AGREE clauses (for threads)
+//		// if an AGREE annex is present.
+//		if (liftContract) {
+//			// Add lift contract
+//			String agreeClause = "{**" + System.lineSeparator() + "lift contract;" + System.lineSeparator() + "**}";
+//			final DefaultAnnexSubclause defaultAnnexSubclause = ComponentCreateHelper
+//					.createOwnedAnnexSubclause(transformImpl);
+//			defaultAnnexSubclause.setName("agree");
+//			defaultAnnexSubclause.setSourceText(agreeClause);
+//		}
+//
+//		// Put it in the correct place (after transformed component type)
+//		pkgSection.getOwnedClassifiers().move(getIndex(transformType.getName(), pkgSection.getOwnedClassifiers()) + 1,
+//				pkgSection.getOwnedClassifiers().size() - 1);
+
 		return transformImpl;
 
 	}
@@ -726,12 +792,147 @@ public class Sel4TransformHandler extends AadlHandler {
 		}
 	}
 
-	private List<ComponentImplementation> getBoundProcessors(Subcomponent sub) {
-		List<ComponentImplementation> boundProcessors = new ArrayList<>();
+	private Map<String, Set<String>> getProcessorBindings(SystemImplementation selectedSystem) {
 
-		// TODO
+		Map<String, Set<String>> processorBindings = new HashMap<>();
 
-		return boundProcessors;
+		// Get explicit processor bindings
+		getExplicitProcessorBindings(selectedSystem, processorBindings);
+
+		// Get implicit processor bindings
+		for (Subcomponent sub : selectedSystem.getOwnedSubcomponents()) {
+			if (isSoftwareSubcomponent(sub)) {
+				getImplicitProcessorBindings(sub, "", processorBindings);
+			}
+		}
+
+		return processorBindings;
+	}
+
+	private void getExplicitProcessorBindings(SystemImplementation sysImpl,
+			Map<String, Set<String>> processorBindings) {
+
+		// Get processor bindings specified in nested system implementation properties
+		for (SystemSubcomponent sub : sysImpl.getOwnedSystemSubcomponents()) {
+			getExplicitProcessorBindings((SystemImplementation) sub.getComponentImplementation(), processorBindings);
+		}
+
+		for (PropertyAssociation pa : sysImpl.getOwnedPropertyAssociations()) {
+			if (pa.getProperty().getName().equalsIgnoreCase("Actual_Processor_Binding")) {
+				for (ContainedNamedElement cne : pa.getAppliesTos()) {
+					ContainmentPathElement cpe = cne.getPath();
+					String appliesTo = cpe.getNamedElement().getName();
+					Subcomponent boundSub = (Subcomponent) cpe.getNamedElement();
+					while (cpe.getPath() != null) {
+						cpe = cpe.getPath();
+						appliesTo += "." + cpe.getNamedElement().getName();
+
+						for (Subcomponent sub : boundSub.getComponentImplementation().getOwnedSubcomponents()) {
+							if (sub.getName().equalsIgnoreCase(cpe.getNamedElement().getName())) {
+								boundSub = sub;
+								break;
+							}
+						}
+
+					}
+
+					// Get the processor this subcomponent is bound to
+					for (ModalPropertyValue val : pa.getOwnedValues()) {
+						ListValue listVal = (ListValue) val.getOwnedValue();
+						for (PropertyExpression propExpr : listVal.getOwnedListElements()) {
+							if (propExpr instanceof ReferenceValue) {
+								ReferenceValue refVal = (ReferenceValue) propExpr;
+
+								// TODO: Handle case when processor is in a nested subsystem
+								if (refVal.getPath().getNamedElement() instanceof ProcessorSubcomponent
+										|| refVal.getPath().getNamedElement() instanceof VirtualProcessorSubcomponent) {
+
+									if (processorBindings.get(appliesTo) == null) {
+										processorBindings.put(appliesTo, new HashSet<String>(
+												Arrays.asList(refVal.getPath().getNamedElement().getName())));
+									} else {
+										processorBindings.get(appliesTo)
+												.add(refVal.getPath().getNamedElement().getName());
+									}
+
+								}
+							}
+						}
+					}
+
+				}
+			}
+		}
+
+	}
+
+	private void getImplicitProcessorBindings(Subcomponent rootSub, String parentName,
+			Map<String, Set<String>> processorBindings) {
+
+		String qualifiedName = (parentName.isEmpty() ? "" : parentName + ".") + rootSub.getName();
+
+		// If the specified subcomponent isn't explicitly bound to a processor,
+		// check its parents binding
+		if (processorBindings.get(qualifiedName) == null) {
+			if (processorBindings.containsKey(parentName)) {
+				processorBindings.put(qualifiedName, processorBindings.get(parentName));
+			}
+		}
+		for (Subcomponent sub : rootSub.getComponentImplementation().getOwnedSubcomponents()) {
+			if (isSoftwareSubcomponent(sub)) {
+				getImplicitProcessorBindings(sub, qualifiedName, processorBindings);
+			}
+		}
+
+	}
+
+	private Set<String> getSel4Processors(SystemImplementation sysImpl) {
+		Set<String> processors = new HashSet<>();
+		for (Subcomponent sub : sysImpl.getOwnedSubcomponents()) {
+			if (sub instanceof ProcessorSubcomponent || sub instanceof VirtualProcessorSubcomponent) {
+				Property prop = Aadl2GlobalScopeUtil.get(sysImpl, Aadl2Package.eINSTANCE.getProperty(),
+						CaseUtils.CASE_PROPSET_NAME + "::OS");
+				PropertyAcc propAcc = sub.getComponentImplementation().getPropertyValue(prop);
+				PropertyAssociation pa = propAcc.first();
+				if (pa != null) {
+					for (ModalPropertyValue propVal : pa.getOwnedValues()) {
+						PropertyExpression propExpr = propVal.getOwnedValue();
+						if (propExpr instanceof StringLiteral) {
+							StringLiteral stringLit = (StringLiteral) propExpr;
+							if (stringLit.getValue().equalsIgnoreCase(SEL4)) {
+								processors.add(sub.getName());
+							}
+						}
+					}
+				}
+			}
+		}
+		return processors;
+	}
+
+	private boolean isSoftwareSubcomponent(Subcomponent sub) {
+		if (sub instanceof SystemSubcomponent) {
+			return true;
+		} else if (sub instanceof ProcessSubcomponent) {
+			return true;
+		} else if (sub instanceof ThreadGroupSubcomponent) {
+			return true;
+		} else if (sub instanceof ThreadSubcomponent) {
+			return true;
+		}
+		return false;
+	}
+
+	private boolean isBoundToSel4Processor(String subcomponentQualifiedName) {
+		for (String processor : processorBindings.get(subcomponentQualifiedName)) {
+			if (processor == null) {
+				continue;
+			}
+			if (sel4Processors.contains(processor)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 }
