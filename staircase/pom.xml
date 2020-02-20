@@ -4,9 +4,9 @@
 	<parent>
 		<groupId>com.collins.trustedsystems.briefcase</groupId>
 		<artifactId>com.collins.trustedsystems.briefcase.parent</artifactId>
-		<version>0.2.0</version>
+		<version>0.2.1-SNAPSHOT</version>
 	</parent>
 	<artifactId>com.collins.trustedsystems.briefcase.staircase</artifactId>
 	<packaging>eclipse-plugin</packaging>
-	<version>0.2.0</version>
+	<version>0.2.1-SNAPSHOT</version>
 </project>
