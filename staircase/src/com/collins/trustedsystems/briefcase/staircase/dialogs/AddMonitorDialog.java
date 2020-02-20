@@ -66,6 +66,7 @@ public class AddMonitorDialog extends TitleAreaDialog {
 	private static final String NO_PORT_SELECTED = "<No port selected>";
 	public static final String CREATE_SWITCH = "<Create Switch>";
 	private static final String NO_REQUIREMENT_SELECTED = "<No requirement selected>";
+	static final String MONITOR_REFERENCE_PORT_NAME = "ref";
 
 	public AddMonitorDialog(Shell parentShell) {
 		super(parentShell);
@@ -84,7 +85,7 @@ public class AddMonitorDialog extends TitleAreaDialog {
 	@Override
 	protected Point getInitialSize() {
 		final Point size = super.getInitialSize();
-		size.y += convertHeightInCharsToPixels(1);
+		size.y += convertHeightInCharsToPixels(3);
 		return size;
 	}
 
@@ -191,11 +192,11 @@ public class AddMonitorDialog extends TitleAreaDialog {
 	private void createReferencePortsField(Composite container) {
 		Label lblExpectedField = new Label(container, SWT.NONE);
 		lblExpectedField.setText("Expected port connection");
-		lblExpectedField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true));
+		lblExpectedField.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, true));
 
-		GridData dataInfoField = new GridData();
-		dataInfoField.grabExcessHorizontalSpace = true;
-		dataInfoField.horizontalAlignment = GridData.FILL;
+//		GridData dataInfoField = new GridData();
+//		dataInfoField.grabExcessHorizontalSpace = true;
+//		dataInfoField.horizontalAlignment = GridData.FILL;
 //		cboExpectedPort = new Combo(container, SWT.BORDER);
 //		cboExpectedPort.setLayoutData(dataInfoField);
 //		cboExpectedPort.add(NO_PORT_SELECTED);
@@ -206,8 +207,8 @@ public class AddMonitorDialog extends TitleAreaDialog {
 		List<String> connectionEnds = new ArrayList<>();
 		connectionEnds.add(NO_PORT_SELECTED);
 		connectionEnds.addAll(outports);
-		mpsReferencePorts = new MultiPortSelector(container, PortDirection.INPUT, connectionEnds, NO_PORT_SELECTED,
-				"ref");
+		mpsReferencePorts = new MultiPortSelector(container, PortDirection.INPUT, connectionEnds, null,
+				MONITOR_REFERENCE_PORT_NAME);
 	}
 
 	/**

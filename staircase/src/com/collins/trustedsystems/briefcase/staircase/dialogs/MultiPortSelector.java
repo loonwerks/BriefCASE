@@ -150,11 +150,18 @@ public class MultiPortSelector {
 
 		// Initialize
 		PortConnectionItems.INSTANCE.getPorts().clear();
-		String iPort = initPort;
-		if (iPort == null || iPort.isEmpty()) {
-			iPort = NO_PORT_SELECTED;
+//		String iPort = initPort;
+		if (initPort != null) {
+			String iPort = initPort;
+			if (iPort.isEmpty()) {
+				iPort = NO_PORT_SELECTED;
+			}
+			PortConnectionItems.INSTANCE.getPorts().add(new PortConnectionItem(this.basePortName + "_1", iPort));
 		}
-		PortConnectionItems.INSTANCE.getPorts().add(new PortConnectionItem(this.basePortName + "_1", iPort));
+//		if (iPort == null || iPort.isEmpty()) {
+//			iPort = NO_PORT_SELECTED;
+//		}
+//		PortConnectionItems.INSTANCE.getPorts().add(new PortConnectionItem(this.basePortName + "_1", iPort));
 		tblPorts.setInput(PortConnectionItems.INSTANCE.getPorts());
 
 		// Layout the viewer
