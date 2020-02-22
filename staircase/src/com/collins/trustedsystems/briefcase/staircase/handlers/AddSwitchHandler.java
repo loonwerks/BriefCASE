@@ -312,7 +312,7 @@ public class AddSwitchHandler extends AadlHandler {
 		}
 
 		// CASE::COMP_SPEC property
-		String switchPropId = "switch_policy";
+		String switchPropId = switchType.getName() + "_policy";
 
 		if (!switchPropId.isEmpty()) {
 			if (!CaseUtils.addCasePropertyAssociation("COMP_SPEC", switchPropId, switchType)) {
@@ -320,19 +320,8 @@ public class AddSwitchHandler extends AadlHandler {
 			}
 		}
 
-		// Move switch to proper location
-		// (just before component it connects to on communication pathway)
-		final Subcomponent subcomponent = (Subcomponent) outConn.getDestination().getContext();
-		String destName = "";
-		if (subcomponent.getSubcomponentType() instanceof ComponentImplementation) {
-			// Get the component type name
-			destName = subcomponent.getComponentImplementation().getType().getName();
-		} else {
-			destName = subcomponent.getName();
-		}
-
-		pkgSection.getOwnedClassifiers().move(getIndex(destName, pkgSection.getOwnedClassifiers()),
-				pkgSection.getOwnedClassifiers().size() - 1);
+		// Move to top of file
+		pkgSection.getOwnedClassifiers().move(0, pkgSection.getOwnedClassifiers().size() - 1);
 
 		// Create switch implementation
 		final ComponentImplementation switchImpl = (ComponentImplementation) pkgSection
@@ -341,9 +330,8 @@ public class AddSwitchHandler extends AadlHandler {
 		final Realization r = switchImpl.createOwnedRealization();
 		r.setImplemented(switchType);
 
-		// Add it to proper place
-		pkgSection.getOwnedClassifiers().move(getIndex(destName, pkgSection.getOwnedClassifiers()),
-				pkgSection.getOwnedClassifiers().size() - 1);
+		// Move below component type
+		pkgSection.getOwnedClassifiers().move(1, pkgSection.getOwnedClassifiers().size() - 1);
 
 //		// CASE::COMP_IMPL property
 //		if (!switchImplementationLanguage.isEmpty()) {

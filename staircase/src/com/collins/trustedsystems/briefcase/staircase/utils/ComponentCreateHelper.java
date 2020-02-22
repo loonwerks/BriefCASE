@@ -25,6 +25,7 @@ import org.osate.aadl2.SystemImplementation;
 import org.osate.aadl2.SystemSubcomponent;
 import org.osate.aadl2.SystemType;
 import org.osate.aadl2.ThreadGroupImplementation;
+import org.osate.aadl2.ThreadGroupSubcomponent;
 import org.osate.aadl2.ThreadGroupType;
 import org.osate.aadl2.ThreadImplementation;
 import org.osate.aadl2.ThreadSubcomponent;
@@ -321,12 +322,22 @@ public class ComponentCreateHelper {
 				return ((ProcessImplementation) compImpl).createOwnedAbstractSubcomponent();
 			} else if (compCategory == ComponentCategory.THREAD) {
 				return ((ProcessImplementation) compImpl).createOwnedThreadSubcomponent();
+			} else if (compCategory == ComponentCategory.THREAD_GROUP) {
+				return ((ProcessImplementation) compImpl).createOwnedThreadGroupSubcomponent();
 			}
 		} else if (compImpl instanceof ProcessorImplementation) {
 			if (compCategory == ComponentCategory.ABSTRACT) {
 				return ((ProcessorImplementation) compImpl).createOwnedAbstractSubcomponent();
 			} else if (compCategory == ComponentCategory.VIRTUAL_PROCESSOR) {
 				return ((ProcessorImplementation) compImpl).createOwnedVirtualProcessorSubcomponent();
+			}
+		} else if (compImpl instanceof ThreadGroupImplementation) {
+			if (compCategory == ComponentCategory.ABSTRACT) {
+				return ((ThreadGroupImplementation) compImpl).createOwnedAbstractSubcomponent();
+			} else if (compCategory == ComponentCategory.THREAD) {
+				return ((ThreadGroupImplementation) compImpl).createOwnedThreadSubcomponent();
+			} else if (compCategory == ComponentCategory.THREAD_GROUP) {
+				return ((ThreadGroupImplementation) compImpl).createOwnedThreadGroupSubcomponent();
 			}
 		}
 
@@ -344,6 +355,9 @@ public class ComponentCreateHelper {
 			((ProcessSubcomponent) subcomponent).setProcessSubcomponentType((ProcessImplementation) compImpl);
 		} else if (subcomponent instanceof ThreadSubcomponent) {
 			((ThreadSubcomponent) subcomponent).setThreadSubcomponentType((ThreadImplementation) compImpl);
+		} else if (subcomponent instanceof ThreadGroupSubcomponent) {
+			((ThreadGroupSubcomponent) subcomponent)
+					.setThreadGroupSubcomponentType((ThreadGroupImplementation) compImpl);
 		} else if (subcomponent instanceof ProcessorSubcomponent) {
 			((ProcessorSubcomponent) subcomponent).setProcessorSubcomponentType((ProcessorImplementation) compImpl);
 		} else if (subcomponent instanceof VirtualProcessorSubcomponent) {

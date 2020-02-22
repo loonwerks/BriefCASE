@@ -107,6 +107,10 @@ public class RequirementsManager {
 		reqDb.importRequirements(findImportedRequirements());
 	}
 
+	public void clearRequirements() {
+		reqDb.reset();
+	}
+
 	public boolean formalizeRequirement(String reqId) {
 		CyberRequirement req = getRequirement(reqId);
 		if (req == null) {

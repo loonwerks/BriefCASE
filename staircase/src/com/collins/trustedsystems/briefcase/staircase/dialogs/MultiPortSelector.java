@@ -64,9 +64,10 @@ public class MultiPortSelector {
 	 * @param ports - List of ports (<subcomponent>.<port>) to populate combo box
 	 * @param initPort - Initial port to display in combo box
 	 * @param basePortName - Base default name for port (eg "input", "output")
+	 * @param componentTypeName - Name of component type that contains this control (Switch, Monitor, etc)
 	 */
 	public MultiPortSelector(Composite parent, PortDirection portDirection, List<String> ports, String initPort,
-			String basePortName) {
+			String basePortName, String componentTypeName) {
 
 		this.connectionEnds = ports;
 		if (basePortName != null && !basePortName.isEmpty()) {
@@ -91,11 +92,6 @@ public class MultiPortSelector {
 
 		tblPorts = new TableViewer(tableComposite, SWT.NO_SCROLL | SWT.V_SCROLL | SWT.FULL_SELECTION | SWT.BORDER);
 
-//		String portLabel = "Source Port";
-//		if (portDirection == PortDirection.OUTPUT) {
-//			portLabel = "Destination Port";
-//		}
-
 		TableViewerColumn colConnectionEnd = null;
 		TableViewerColumn colArrow = null;
 		TableViewerColumn colPortName = null;
@@ -103,15 +99,14 @@ public class MultiPortSelector {
 		if (portDirection == PortDirection.INPUT) {
 			colConnectionEnd = createTableViewerColumn("Source Port", 100);
 			colArrow = createTableViewerColumn("", 10);
-			colPortName = createTableViewerColumn("Switch Port", 100);
+			colPortName = createTableViewerColumn(componentTypeName + " Port", 100);
 		} else {
-			colPortName = createTableViewerColumn("Switch Port", 100);
+			colPortName = createTableViewerColumn(componentTypeName + " Port", 100);
 			colArrow = createTableViewerColumn("", 10);
 			colConnectionEnd = createTableViewerColumn("Destination Port", 100);
 		}
 
 		// Add the connection end column
-//		colConnectionEnd = createTableViewerColumn(portLabel, 100);
 		colConnectionEnd.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
@@ -122,7 +117,6 @@ public class MultiPortSelector {
 		colConnectionEnd.setEditingSupport(new ConnectionEndEditingSupport(tblPorts));
 
 		// add arrow column
-//		colArrow = createTableViewerColumn("", 10);
 		colArrow.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
@@ -131,7 +125,6 @@ public class MultiPortSelector {
 		});
 
 		// add switch port name column
-//		colPortName = createTableViewerColumn("Switch Port", 100);
 		colPortName.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public void update(ViewerCell cell) {
@@ -150,7 +143,6 @@ public class MultiPortSelector {
 
 		// Initialize
 		PortConnectionItems.INSTANCE.getPorts().clear();
-//		String iPort = initPort;
 		if (initPort != null) {
 			String iPort = initPort;
 			if (iPort.isEmpty()) {
@@ -158,10 +150,6 @@ public class MultiPortSelector {
 			}
 			PortConnectionItems.INSTANCE.getPorts().add(new PortConnectionItem(this.basePortName + "_1", iPort));
 		}
-//		if (iPort == null || iPort.isEmpty()) {
-//			iPort = NO_PORT_SELECTED;
-//		}
-//		PortConnectionItems.INSTANCE.getPorts().add(new PortConnectionItem(this.basePortName + "_1", iPort));
 		tblPorts.setInput(PortConnectionItems.INSTANCE.getPorts());
 
 		// Layout the viewer
@@ -189,7 +177,7 @@ public class MultiPortSelector {
 		Button btnRemove = new Button(btnComposite, SWT.PUSH);
 		btnRemove.setText("Remove port");
 		btnRemove.addListener(SWT.Selection, e -> {
-			if (e.type == SWT.Selection && PortConnectionItems.INSTANCE.getPorts().size() > 1) {
+			if (e.type == SWT.Selection) {
 				IStructuredSelection selection = tblPorts.getStructuredSelection();
 				@SuppressWarnings("unchecked")
 				Iterator<PortConnectionItem> iterator = selection.iterator();

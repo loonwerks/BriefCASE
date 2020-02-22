@@ -173,7 +173,7 @@ public class SplatHandler extends AbstractHandler {
 				cmdLineArgs.add("optimize");
 			}
 
-			cmdLineArgs.add("-endian ");
+			cmdLineArgs.add("-endian");
 			if (Activator.getDefault().getPreferenceStore().getBoolean(SplatPreferenceConstants.ENDIAN_BIG)) {
 				cmdLineArgs.add("MSB");
 			} else {
@@ -304,7 +304,9 @@ public class SplatHandler extends AbstractHandler {
 			console = findConsole("SPLAT");
 			out = console.newMessageStream();
 
-			if (!dockerTarballExists) {
+			if (dockerTarballExists) {
+				out.println(commands);
+			} else {
 				String cmdLine = "";
 				for (String st : cmdLineArgs) {
 					cmdLine += st + " ";
@@ -312,9 +314,6 @@ public class SplatHandler extends AbstractHandler {
 				cmdLine += "LD_LIBRARY_PATH=" + splatDir;
 				out.println(cmdLine);
 				System.out.println("SPLAT binary exists");
-			}
-			else {
-				out.println(commands);
 			}
 
 			window = HandlerUtil.getActiveWorkbenchWindow(event);
