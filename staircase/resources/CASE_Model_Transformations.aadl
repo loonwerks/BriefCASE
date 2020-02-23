@@ -370,7 +370,7 @@ public
 		filter_exists(filter : component, comp_context : component, conn : connection) <=
 			** "A CASE_Filter " filter " is connected to component " comp_context " by connection " conn **
 			let conns : {connection} = {c for (c : connections(comp_context)) | destination_component(c) = comp_context and source_component(c) = filter};
-			is_filter(filter) and exists(c : conns) . c = conn
+			is_of_case_type(filter, "FILTER") and exists(c : conns) . c = conn
 						
 		-- Check to see if the specified component exists
 		component_exists(comp : component, case_type : string) <=
@@ -435,7 +435,7 @@ public
 		attestation_manager_exists(comm_driver : component, attestation_manager : component) <=
 			** "An attestation manager on " comm_driver " exists" **
 			-- check that the attestation manager only has attestation request/response connections to the comm driver
-			is_of_case_type(comm_driver, "COMM_DRIVER") and is_attestation_manager(attestation_manager) and
+			is_of_case_type(comm_driver, "COMM_DRIVER") and is_of_case_type(attestation_manager, "ATTESTATION") and
 			forall (conn : connections(attestation_manager)) . 
 					(has_type(conn) and name(type(conn)) = "CASE_AttestationRequestMsg.Impl") => destination_component(conn) = comm_driver and
 					(has_type(conn) and name(type(conn)) = "CASE_AttestationResponseMsg.Impl") => source_component(conn) = comm_driver
