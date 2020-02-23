@@ -40,6 +40,8 @@ import org.osate.xtext.aadl2.properties.util.ThreadProperties;
 
 import com.collins.trustedsystems.briefcase.staircase.dialogs.AddMonitorDialog;
 import com.collins.trustedsystems.briefcase.staircase.requirements.AddMonitorClaim;
+import com.collins.trustedsystems.briefcase.staircase.requirements.AddSwitchClaim;
+import com.collins.trustedsystems.briefcase.staircase.requirements.BuiltInClaim;
 import com.collins.trustedsystems.briefcase.staircase.requirements.CyberRequirement;
 import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsManager;
 import com.collins.trustedsystems.briefcase.staircase.utils.CaseUtils;
@@ -133,7 +135,7 @@ public class AddMonitorHandler extends AadlHandler {
 		// Get the active xtext editor so we can make modifications
 		final XtextEditor xtextEditor = EditorUtils.getActiveXtextEditor();
 
-		AddMonitorClaim claim = xtextEditor.getDocument().modify(resource -> {
+		List<BuiltInClaim> claims = xtextEditor.getDocument().modify(resource -> {
 
 			// Retrieve the model object to modify
 			PortConnection selectedConnection = (PortConnection) resource.getEObject(uri.fragment());
@@ -225,15 +227,15 @@ public class AddMonitorHandler extends AadlHandler {
 			// Create monitor observed port
 			Port portSrc = (Port) selectedConnSrc.getConnectionEnd();
 			Port portObserved = null;
-			DataSubcomponentType dataFeatureClassifier = null;
+			DataSubcomponentType observedDataFeatureClassifier = null;
 			if (portSrc instanceof EventDataPort) {
-				dataFeatureClassifier = ((EventDataPort) portSrc).getDataFeatureClassifier();
+				observedDataFeatureClassifier = ((EventDataPort) portSrc).getDataFeatureClassifier();
 				portObserved = ComponentCreateHelper.createOwnedEventDataPort(monitorType);
-				((EventDataPort) portObserved).setDataFeatureClassifier(dataFeatureClassifier);
+				((EventDataPort) portObserved).setDataFeatureClassifier(observedDataFeatureClassifier);
 			} else if (portSrc instanceof DataPort) {
-				dataFeatureClassifier = ((DataPort) portSrc).getDataFeatureClassifier();
+				observedDataFeatureClassifier = ((DataPort) portSrc).getDataFeatureClassifier();
 				portObserved = ComponentCreateHelper.createOwnedDataPort(monitorType);
-				((DataPort) portObserved).setDataFeatureClassifier(dataFeatureClassifier);
+				((DataPort) portObserved).setDataFeatureClassifier(observedDataFeatureClassifier);
 			} else if (portSrc instanceof EventPort) {
 				portObserved = ComponentCreateHelper.createOwnedEventPort(monitorType);
 				return null;
@@ -247,6 +249,7 @@ public class AddMonitorHandler extends AadlHandler {
 
 			// Create reference ports
 			Map<Port, Port> monReferencePorts = new HashMap<>();
+			DataSubcomponentType dataFeatureClassifier = null;
 			for (Map.Entry<String, String> refEntry : referencePorts.entrySet()) {
 				Port monRefPort = null;
 				Port srcRefPort = ModelTransformUtils.getPort(containingImpl, refEntry.getValue());
@@ -489,15 +492,19 @@ public class AddMonitorHandler extends AadlHandler {
 
 			// Add add_monitor claims to resolute prove statement, if applicable
 			if (!monitorRequirement.isEmpty()) {
+				List<BuiltInClaim> monClaims = new ArrayList<>();
 				CyberRequirement req = RequirementsManager.getInstance().getRequirement(monitorRequirement);
-				return new AddMonitorClaim(req.getContext(), monitorSubcomp, portConnObserved);
-
+				monClaims.add(new AddMonitorClaim(req.getContext(), monitorSubcomp));
+				if (switchSub != null) {
+					monClaims.add(new AddSwitchClaim(req.getContext(), switchSub, observedDataFeatureClassifier));
+				}
+				return monClaims;
 			}
 
 			return null;
 		});
 
-		if (claim != null) {
+		for (BuiltInClaim claim : claims) {
 			RequirementsManager.getInstance().modifyRequirement(monitorRequirement, claim);
 		}
 	}

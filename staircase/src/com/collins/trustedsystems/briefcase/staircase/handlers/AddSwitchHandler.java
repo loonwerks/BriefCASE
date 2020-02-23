@@ -41,6 +41,8 @@ import org.osate.xtext.aadl2.properties.util.GetProperties;
 import org.osate.xtext.aadl2.properties.util.ThreadProperties;
 
 import com.collins.trustedsystems.briefcase.staircase.dialogs.AddSwitchDialog;
+import com.collins.trustedsystems.briefcase.staircase.requirements.AddSwitchClaim;
+import com.collins.trustedsystems.briefcase.staircase.requirements.CyberRequirement;
 import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsManager;
 import com.collins.trustedsystems.briefcase.staircase.utils.CaseUtils;
 import com.collins.trustedsystems.briefcase.staircase.utils.ComponentCreateHelper;
@@ -123,8 +125,8 @@ public class AddSwitchHandler extends AadlHandler {
 		// Get the active xtext editor so we can make modifications
 		final XtextEditor xtextEditor = EditorUtils.getActiveXtextEditor();
 
-//		AddSwitchClaim claim = xtextEditor.getDocument().modify(resource -> {
-		xtextEditor.getDocument().modify(resource -> {
+		AddSwitchClaim claim = xtextEditor.getDocument().modify(resource -> {
+//		xtextEditor.getDocument().modify(resource -> {
 
 			// Retrieve the model object to modify
 			PortConnection selectedConnection = (PortConnection) resource.getEObject(uri.fragment());
@@ -191,11 +193,31 @@ public class AddSwitchHandler extends AadlHandler {
 			if (ctlPort != null) {
 				ctlPortCategory = ctlPort.getCategory();
 			}
-			insertSwitch(containingImpl, inputPorts, selectedConnection, compCategory, dispatchProtocol, controlPort,
+
+			Subcomponent switchSub = insertSwitch(containingImpl, inputPorts, selectedConnection, compCategory,
+					dispatchProtocol, controlPort,
 					ctlPortCategory, ctlPortDataTypeName, switchRequirement, switchAgreeProperty);
+
+			// Add add_switch claim to resolute prove statement, if applicable
+			if (!switchRequirement.isEmpty()) {
+				CyberRequirement req = RequirementsManager.getInstance().getRequirement(switchRequirement);
+				DataSubcomponentType dataFeatureClassifier = null;
+				Port port = (Port) selectedConnection.getDestination().getConnectionEnd();
+				if (port instanceof EventDataPort) {
+					dataFeatureClassifier = ((EventDataPort) port).getDataFeatureClassifier();
+				} else if (port instanceof DataPort) {
+					dataFeatureClassifier = ((DataPort) port).getDataFeatureClassifier();
+				}
+				// TODO: handle case where selected connection is an event connection, in which case there is no data type
+				return new AddSwitchClaim(req.getContext(), switchSub, dataFeatureClassifier);
+			}
 
 			return null;
 		});
+
+		if (claim != null) {
+			RequirementsManager.getInstance().modifyRequirement(switchRequirement, claim);
+		}
 
 	}
 
