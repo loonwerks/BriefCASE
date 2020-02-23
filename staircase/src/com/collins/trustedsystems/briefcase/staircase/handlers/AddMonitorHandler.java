@@ -490,7 +490,7 @@ public class AddMonitorHandler extends AadlHandler {
 			// Add add_monitor claims to resolute prove statement, if applicable
 			if (!monitorRequirement.isEmpty()) {
 				CyberRequirement req = RequirementsManager.getInstance().getRequirement(monitorRequirement);
-				return new AddMonitorClaim(req.getContext(), monitorSubcomp);
+				return new AddMonitorClaim(req.getContext(), monitorSubcomp, portConnObserved);
 
 			}
 

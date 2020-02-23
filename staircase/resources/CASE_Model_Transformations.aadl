@@ -334,10 +334,10 @@ public
 			vm_bound_to_processor(virtual_machine) and components_bound_to_vm(bound_components, virtual_machine) and subcomponents_not_bound_to_other_processors(bound_components, non_vm_comps, virtual_machine)
 		
 		-- Top-level claim for proper insertion of a monitor
-		add_monitor(comp_context : component, monitor : component) <=
-			** "Monitor " monitor " inserted on " comp_context **
-			-- make sure reset can't be triggered by observed signal
-			true
+		add_monitor(comp_context : component, monitor_name : string, observed_connection : connection) <=
+			** "A monitor is properly added to " comp_context **
+			monitor_exists(monitor_name, observed_connection) and alert_connected(monitor_name) and independent_reset(monitor_name, observed_connection)
+
 		
 		-- Top-level claim for proper insertion of a switch
 		add_switch(comp_context : component) <=
@@ -518,6 +518,30 @@ public
 		
 		is_bound_to_processor(c : component, p : component) : bool =
 			is_bound_to(c, p) and (is_processor(p) or is_virtual_processor(p))
+			
+		-- Check to see if there is a monitor on the communication pathway.
+		monitor_exists(monitor_name : string, observed_connection : connection) <=
+			** "A CASE_Monitor " monitor_name " exists on connection " observed_connection **
+			let monitors : {component} = {m for (m : component) | is_monitor(m) and name(m) = monitor_name};
+			let conns : {connection} = {c for (mon : monitors) (c : connections(mon)) | destination_component(c) = mon};
+			exists(c : conns) . c = observed_connection
+			
+		alert_connected(monitor_name : string) <=
+			** "Monitor Alert port is connected" **
+			let monitors : {component} = {m for (m : component) | name(m) = monitor_name};
+			let alert_ports : {feature} = {p for (m : monitors) (p : features(m)) | name(p) = "alert"};
+			let alert_conns : {connection} = {c for (p : alert_ports) (c : connection) | source(c) = p};
+			length(alert_conns) > 0
+			
+		independent_reset(monitor_name : string, observed_connection : connection) <=
+			** "Monitor reset port cannot be triggered by source of observed signal" **
+			let monitors : {component} = {m for (m : component) | name(m) = monitor_name};
+			let reset_ancestors : {component} = {comp for (m : monitors) (conn : connections(m)) (comp : recursive_backwards_reach({source_component(conn)})) | destination_component(conn) = m and name(destination(conn)) = "reset"};
+			length(intersect(reset_ancestors, {source_component(observed_connection)})) = 0
+			
+		is_monitor(c : component) : bool =
+			has_property(c, CASE_Properties::COMP_TYPE) and property(c, CASE_Properties::COMP_TYPE) = "MONITOR"
+
 		
 	**};
 	
