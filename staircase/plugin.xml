@@ -524,7 +524,7 @@
             commandId="com.collins.trustedsystems.briefcase.staircase.commands.Sel4Transform">
       </handler>
       <handler
-            class="com.collins.trustedsystems.briefcase.staircase.handlers.ClearRequirementsCache"
+            class="com.collins.trustedsystems.briefcase.staircase.handlers.ClearRequirementsCacheHandler"
             commandId="com.collins.trustedsystems.briefcase.staircase.commands.ClearRequirementsCache">
       </handler>
    </extension>

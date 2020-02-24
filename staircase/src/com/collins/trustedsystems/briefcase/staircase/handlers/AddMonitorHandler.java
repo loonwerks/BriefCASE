@@ -201,7 +201,10 @@ public class AddMonitorHandler extends AadlHandler {
 				}
 				srcPortName += selectedConnection.getSource().getConnectionEnd().getName();
 				inPortMap.put(AddSwitchHandler.SWITCH_INPUT_PORT_NAME, srcPortName);
-				String switchAgreeProperty = "guarantee switch_policy \"The switch shall forward messages when the control signal is received\" : ";
+				String switchName = getUniqueName(AddSwitchHandler.SWITCH_COMP_TYPE_NAME, true,
+						pkgSection.getOwnedClassifiers());
+				String switchAgreeProperty = "guarantee " + switchName
+						+ "_policy \"The switch shall forward messages when the control signal is received\" : ";
 				if (alertPortType == PortCategory.DATA) {
 					switchAgreeProperty += "if " + AddSwitchHandler.SWITCH_CONTROL_PORT_NAME + " then "
 							+ AddSwitchHandler.SWITCH_OUTPUT_PORT_NAME + " = " + AddSwitchHandler.SWITCH_INPUT_PORT_NAME
@@ -469,11 +472,18 @@ public class AddMonitorHandler extends AadlHandler {
 
 			// AGREE
 			if (monitorAgreeProperty.length() > 0) {
+
+				if (!monitorAgreeProperty.trim().endsWith(";")) {
+					monitorAgreeProperty = monitorAgreeProperty.trim() + ";";
+				}
+
 				String agreeClauses = "{**" + System.lineSeparator();
 
-				agreeClauses += "const latched : bool = " + latched + System.lineSeparator();
-				agreeClauses += "property monitor_policy = " + monitorAgreeProperty + System.lineSeparator();
-				agreeClauses += "guarantee \"A violation of the monitor policy shall trigger an alert\" : alert = not monitor_policy;"
+				agreeClauses += "const monitor_latched : bool = " + latched + ";" + System.lineSeparator();
+				agreeClauses += "property " + monitorPropId + " = " + monitorAgreeProperty
+						+ System.lineSeparator();
+				agreeClauses += "guarantee \"A violation of the monitor policy shall trigger an alert\" : alert = not "
+						+ monitorPropId + ";"
 						+ System.lineSeparator();
 				agreeClauses = agreeClauses + "**}";
 
@@ -494,9 +504,11 @@ public class AddMonitorHandler extends AadlHandler {
 			if (!monitorRequirement.isEmpty()) {
 				List<BuiltInClaim> monClaims = new ArrayList<>();
 				CyberRequirement req = RequirementsManager.getInstance().getRequirement(monitorRequirement);
+				// TODO: See if any monitors have already been created to satisfy the requirement
 				monClaims.add(new AddMonitorClaim(req.getContext(), monitorSubcomp));
 				if (switchSub != null) {
-					monClaims.add(new AddSwitchClaim(req.getContext(), switchSub, observedDataFeatureClassifier));
+					String switchContext = selectedConnection.getDestination().getContext().getQualifiedName();
+					monClaims.add(new AddSwitchClaim(switchContext, switchSub, observedDataFeatureClassifier));
 				}
 				return monClaims;
 			}
