@@ -109,6 +109,7 @@ public class RequirementsManager {
 
 	public void clearRequirements() {
 		reqDb.reset();
+		reqDb.importRequirements(findImportedRequirements());
 	}
 
 	public boolean formalizeRequirement(String reqId) {

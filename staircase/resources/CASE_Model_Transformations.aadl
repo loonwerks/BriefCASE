@@ -399,9 +399,14 @@ public
 		is_of_case_type(comp : component, type_name : string) : bool =
 			has_property(comp, CASE_Properties::COMP_TYPE) and property(comp, CASE_Properties::COMP_TYPE) = type_name
 			
+--		-- Returns the set of components that are ancestors of a target component through communication pathways that don't pass through a filter
+--		get_non_filter_sources(target : component, filter : component, msg_type : data) : {component} = 
+--			let srcs : {component} = {c for (conn : connections (target)) (c : source_component(conn)) | has_type(conn) and type(conn) = msg_type and not (name(source_component(conn)) = name (filter))}; 
+--			recursive_backwards_reach(srcs)
+			
 		-- Returns the set of components that are ancestors of a target component through communication pathways that don't pass through a filter
 		get_non_filter_sources(target : component, filter : component, msg_type : data) : {component} = 
-			let srcs : {component} = {c for (conn : connections (target)) (c : source_component(conn)) | has_type(conn) and type(conn) = msg_type and not (name(source_component(conn)) = name (filter))}; 
+			let srcs : {component} = {c for (conn : connections (target)) (c : source_component(conn)) | has_type(conn) and type(conn) = msg_type and not (source_component(conn) = filter) and not (source_component(conn) = target)}; 
 			recursive_backwards_reach(srcs)
 		
 		-- Returns the set of components that are ancestors of the filter on a target component
@@ -440,13 +445,22 @@ public
 					(has_type(conn) and name(type(conn)) = "CASE_AttestationRequestMsg.Impl") => destination_component(conn) = comm_driver and
 					(has_type(conn) and name(type(conn)) = "CASE_AttestationResponseMsg.Impl") => source_component(conn) = comm_driver
 			
+--		-- Evidence that communication from the comm driver cannot bypass attestation manager
+--		attestation_manager_not_bypassed(comm_driver : component, attestation_manager : component) <=
+--			** "Attestation Manager cannot be bypassed" **
+--			-- all outgoing connections from the comm driver to components inside the 
+--			-- parent of the comm driver connect to the attestation manager
+--			let out_conns : {connection} = {conn for (conn : connections(comm_driver)) | source_component(conn) = comm_driver and not (destination_component(conn) = parent(comm_driver))};
+--			forall(conn : out_conns) . destination_component(conn) = attestation_manager		
+				
 		-- Evidence that communication from the comm driver cannot bypass attestation manager
 		attestation_manager_not_bypassed(comm_driver : component, attestation_manager : component) <=
 			** "Attestation Manager cannot be bypassed" **
 			-- all outgoing connections from the comm driver to components inside the 
 			-- parent of the comm driver connect to the attestation manager
 			let out_conns : {connection} = {conn for (conn : connections(comm_driver)) | source_component(conn) = comm_driver and not (destination_component(conn) = parent(comm_driver))};
-			forall(conn : out_conns) . destination_component(conn) = attestation_manager		
+			forall(conn : out_conns) . (not is_software_component(destination_component(conn)) or destination_component(conn) = attestation_manager)
+
 				
 		-- Checks if the specified virtual processor is a CASE Virtualization and is bound to a processor
 		vm_bound_to_processor(virtual_machine : component) <=
@@ -503,6 +517,9 @@ public
 			** "Monitor reset port cannot be triggered by source of observed signal" **
 			let reset_ancestors : {component} = {comp for (conn : connections(monitor)) (comp : recursive_backwards_reach({source_component(conn)})) | destination_component(conn) = monitor and name(destination(conn)) = "reset"};
 			length(intersect(reset_ancestors, {comp_context})) = 0
+			
+		is_software_component(comp : component) : bool =
+			is_process(comp) or is_thread_group(comp) or is_thread(comp)
 		
 	**};
 	
