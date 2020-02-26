@@ -236,7 +236,7 @@
                <command
                      commandId="com.collins.trustedsystems.briefcase.staircase.commands.VerifyImplementation"
                      id="com.collins.trustedsystems.briefcase.menus.menubar.component.RunIvaldi"
-                     label="Run Ivaldi"
+                     label="Run Ivaldi..."
                      style="push">
                </command>
             </menu>

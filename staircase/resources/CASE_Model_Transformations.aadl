@@ -336,7 +336,12 @@ public
 		-- Top-level claim for proper insertion of a monitor
 		add_monitor(comp_context : component, monitor : component) <=
 			** "Monitor " monitor " is properly added to " comp_context **
-			component_exists(monitor, "MONITOR") and alert_connected(monitor) and independent_reset(monitor, comp_context)
+			component_exists(monitor, "MONITOR") and alert_connected(monitor) and independent_reset(monitor, comp_context) and component_implemented(monitor)
+
+		-- Top-level claim for proper insertion of a monitor with a gate
+		add_monitor_gate(comp_context : component, monitor : component, gate_context : component, message_type : data) <=
+			** "Monitor " monitor " is properly added to " comp_context **
+			component_exists(monitor, "MONITOR") and alert_connected(monitor) and independent_reset(monitor, comp_context) and component_not_bypassed(monitor, gate_context, message_type) and component_implemented(monitor)
 
 		-- Top-level claim for proper insertion of a switch
 		add_switch(comp_context : component, switch : component, message_type : data) <=
