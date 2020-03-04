@@ -4,7 +4,7 @@
 
 	<groupId>com.collins.trustedsystems.briefcase</groupId>
 	<artifactId>com.collins.trustedsystems.briefcase.parent</artifactId>
-	<version>0.2.1</version>
+	<version>0.2.2-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<modules>
@@ -134,7 +134,7 @@
 						<artifact>
 							<groupId>com.collins.trustedsystems.briefcase</groupId>
 							<artifactId>com.collins.trustedsystems.briefcase.target</artifactId>
-							<version>0.2.1</version>
+							<version>0.2.2-SNAPSHOT</version>
 						</artifact>
 					</target>
 					<environments>
@@ -409,7 +409,7 @@
 	<scm>
 		<connection>scm:git:https://github.com/loonwerks/BriefCASE.git</connection>
 		<developerConnection>scm:git:https://github.com/loonwerks/BriefCASE.git</developerConnection>
-		<tag>0.2.1-RELEASE</tag>
+		<tag>HEAD</tag>
 	</scm>
 
 </project>
