@@ -19,41 +19,41 @@
 
    <requires>
       <import plugin="org.eclipse.jface"/>
-      <import plugin="org.osate.aadl2"/>
+      <import plugin="org.osate.aadl2" version="2.0.0" match="compatible"/>
       <import plugin="org.eclipse.xtext.ui"/>
       <import plugin="org.eclipse.emf.common"/>
       <import plugin="org.eclipse.ui.console"/>
-      <import plugin="org.osate.pluginsupport"/>
+      <import plugin="org.osate.pluginsupport" version="2.0.0" match="compatible"/>
+      <import plugin="org.osate.aadl2.instantiation" version="1.0.1" match="compatible"/>
+      <import plugin="org.osate.aadl2.modelsupport" version="2.0.0" match="compatible"/>
+      <import plugin="org.osate.annexsupport" version="1.0.1" match="compatible"/>
       <import plugin="org.eclipse.debug.ui"/>
       <import plugin="org.eclipse.ui.ide"/>
-      <import plugin="org.osate.aadl2.instantiation"/>
-      <import plugin="org.osate.aadl2.modelsupport"/>
-      <import plugin="org.osate.annexsupport"/>
       <import plugin="org.osate.workspace"/>
       <import plugin="org.eclipse.ui.workbench"/>
-      <import plugin="org.osate.ui"/>
-      <import plugin="org.osate.xtext.aadl2.properties"/>
-      <import plugin="org.osate.aadl2" version="1.0.0" match="greaterOrEqual"/>
+      <import plugin="org.osate.ui" version="2.0.0" match="compatible"/>
+      <import plugin="org.osate.xtext.aadl2.properties" version="1.1.0" match="compatible"/>
       <import plugin="org.eclipse.xtext.ui" version="2.12.0" match="greaterOrEqual"/>
       <import plugin="org.eclipse.ui.navigator" version="3.7.0" match="compatible"/>
       <import plugin="org.eclipse.emf.ecore"/>
-      <import plugin="com.rockwellcollins.atc.resolute.analysis"/>
-      <import plugin="com.rockwellcollins.atc.agree.ui"/>
-      <import plugin="org.osate.xtext.aadl2.ui" version="1.0.0" match="greaterOrEqual"/>
-      <import plugin="com.rockwellcollins.atc.agree"/>
-      <import plugin="com.rockwellcollins.atc.resolute.ui"/>
-      <import plugin="com.rockwellcollins.atc.resolute"/>
+      <import plugin="com.rockwellcollins.atc.resolute.analysis" version="2.4.2" match="compatible"/>
+      <import plugin="com.rockwellcollins.atc.agree.ui" version="2.4.2" match="compatible"/>
+      <import plugin="org.osate.xtext.aadl2.ui" version="2.0.0" match="compatible"/>
+      <import plugin="org.osate.ge" version="1.0.1" match="compatible"/>
+      <import plugin="org.osate.ge.diagram" version="2.0.0" match="compatible"/>
+      <import plugin="org.eclipse.ui.ide" version="3.16.100" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.ui.console" version="3.9.0" match="compatible"/>
+      <import plugin="com.rockwellcollins.atc.resolute" version="2.4.2" match="compatible"/>
+      <import plugin="com.rockwellcollins.atc.resolute.ui" version="2.4.2" match="compatible"/>
       <import plugin="org.eclipse.emf.transaction"/>
-      <import plugin="org.osate.ge"/>
-      <import plugin="org.osate.ge.diagram"/>
       <import plugin="org.eclipse.ui"/>
       <import plugin="org.eclipse.core.runtime"/>
       <import plugin="org.eclipse.core.resources"/>
       <import plugin="org.eclipse.xtext"/>
       <import plugin="org.eclipse.xtext.xbase"/>
       <import plugin="org.eclipse.equinox.common" version="3.5.0" match="greaterOrEqual"/>
-      <import plugin="org.osate.xtext.aadl2" version="1.0.0" match="greaterOrEqual"/>
-      <import plugin="org.osate.xtext.aadl2.properties" version="1.0.0" match="greaterOrEqual"/>
+      <import plugin="org.osate.xtext.aadl2" version="2.0.0" match="compatible"/>
+      <import plugin="org.eclipse.xtext.generator" version="2.17.0" match="greaterOrEqual"/>
       <import plugin="org.eclipse.xtext.util"/>
       <import plugin="org.antlr.runtime"/>
       <import plugin="org.apache.log4j"/>
@@ -62,12 +62,10 @@
       <import plugin="org.eclipse.ui.editors" version="3.5.0" match="greaterOrEqual"/>
       <import plugin="org.eclipse.ui.ide" version="3.5.0" match="greaterOrEqual"/>
       <import plugin="org.eclipse.xtext.builder"/>
-      <import plugin="org.osate.xtext.aadl2.properties.ui" version="1.0.0" match="greaterOrEqual"/>
-      <import plugin="org.osate.annexsupport" version="1.0.0" match="greaterOrEqual"/>
-      <import plugin="org.osate.aadl2.modelsupport" version="1.0.0" match="greaterOrEqual"/>
-      <import plugin="com.rockwellcollins.atc.agree.analysis"/>
-      <import feature="org.osate.core.feature" version="2.5.0" match="equivalent"/>
-      <import plugin="org.eclipse.xtext.generator" version="2.17.0" match="greaterOrEqual"/>
+      <import plugin="org.osate.xtext.aadl2.properties.ui" version="2.0.0" match="compatible"/>
+      <import plugin="org.apache.log4j" version="1.2.0" match="greaterOrEqual"/>
+      <import plugin="com.rockwellcollins.atc.agree" version="2.4.2" match="compatible"/>
+      <import feature="org.osate.core.feature" version="2.7.0" match="greaterOrEqual"/>
    </requires>
 
    <plugin

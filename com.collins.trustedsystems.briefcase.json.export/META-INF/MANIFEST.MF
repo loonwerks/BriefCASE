@@ -6,22 +6,19 @@ Bundle-Version: 0.2.1.qualifier
 Automatic-Module-Name: com.collins.trustedsystems.briefcase.json.export
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Require-Bundle: org.eclipse.jface,
- org.osate.aadl2,
+ org.osate.aadl2;bundle-version="[2.0.0,3.0.0)",
  org.eclipse.xtext.ui,
  org.eclipse.emf.common,
  org.eclipse.ui.console,
- org.osate.ui
-Import-Package: com.collins.trustedsystems.briefcase.json.json,
- com.collins.trustedsystems.briefcase.util,
- com.rockwellcollins.atc.agree.agree,
- com.rockwellcollins.atc.agree.analysis.handlers,
- org.eclipse.ui,
- org.eclipse.ui.console,
- org.osate.aadl2.instantiation,
- org.osate.aadl2.modelsupport.resources,
- org.osate.aadl2.modelsupport.util,
- org.osate.annexsupport,
- org.osate.ge
+ org.osate.ui;bundle-version="[2.0.0,3.0.0)",
+ org.osate.aadl2.instantiation;bundle-version="[1.0.1,2.0.0)",
+ org.osate.aadl2.modelsupport;bundle-version="[2.0.0,3.0.0)",
+ org.osate.annexsupport;bundle-version="[1.0.1,2.0.0)",
+ org.osate.ge;bundle-version="[1.0.1,2.0.0)",
+ com.rockwellcollins.atc.agree;bundle-version="[2.4.2,3.0.0)",
+ com.collins.trustedsystems.briefcase,
+ com.collins.trustedsystems.briefcase.json
+Import-Package: org.eclipse.ui
 Bundle-ClassPath: .,
  lib/gson-2.8.5.jar
 Export-Package: com.collins.trustedsystems.briefcase.json.export,
