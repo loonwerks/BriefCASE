@@ -38,7 +38,6 @@ import org.osate.aadl2.PropertyExpression;
 import org.osate.aadl2.PropertySet;
 import org.osate.aadl2.PropertyType;
 import org.osate.aadl2.StringLiteral;
-import org.osate.aadl2.Subcomponent;
 import org.osate.aadl2.modelsupport.scoping.Aadl2GlobalScopeUtil;
 import org.osate.aadl2.properties.PropertyDoesNotApplyToHolderException;
 import org.osate.ui.dialogs.Dialog;
@@ -408,7 +407,9 @@ public class CaseUtils {
 		return caseReqFile;
 	}
 
-	public static boolean isCompType(Subcomponent comp, String compType) {
+
+	public static boolean isCompType(Classifier comp, String compType) {
+//	public static boolean isCompType(Subcomponent comp, String compType) {
 
 		try {
 

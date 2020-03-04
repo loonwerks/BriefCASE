@@ -41,6 +41,12 @@
                      label="Open Requirements Manager..."
                      style="push">
                </command>
+               <command
+                     commandId="com.collins.trustedsystems.briefcase.staircase.commands.ClearRequirementsCache"
+                     id="com.collins.trustedsystems.briefcase.menus.outline.requirements.clear"
+                     label="Clear Requirements Cache"
+                     style="push">
+               </command>
             </menu>
             <menu
                   id="com.collins.trustedsystems.briefcase.menus.outline.resiliency"
@@ -157,6 +163,12 @@
                      label="Open Requirements Manager..."
                      style="push">
                </command>
+               <command
+                     commandId="com.collins.trustedsystems.briefcase.staircase.commands.ClearRequirementsCache"
+                     id="com.collins.trustedsystems.briefcase.menus.menubar.requirements.clear"
+                     label="Clear Requirements Cache"
+                     style="push">
+               </command>
             </menu>
             <menu
                   id="com.collins.trustedsystems.briefcase.menus.menubar.resiliency"
@@ -224,7 +236,7 @@
                <command
                      commandId="com.collins.trustedsystems.briefcase.staircase.commands.VerifyImplementation"
                      id="com.collins.trustedsystems.briefcase.menus.menubar.component.RunIvaldi"
-                     label="Run Ivaldi"
+                     label="Run Ivaldi..."
                      style="push">
                </command>
             </menu>
@@ -291,6 +303,12 @@
                      commandId="com.collins.trustedsystems.briefcase.staircase.commands.ManageRequirements"
                      id="com.collins.trustedsystems.briefcase.menus.editor.requirements.manage"
                      label="Open Requirements Manager..."
+                     style="push">
+               </command>
+               <command
+                     commandId="com.collins.trustedsystems.briefcase.staircase.commands.ClearRequirementsCache"
+                     id="com.collins.trustedsystems.briefcase.menus.editor.requirements.clear"
+                     label="Clear Requirements Cache"
                      style="push">
                </command>
             </menu>
@@ -446,6 +464,10 @@
             id="com.collins.trustedsystems.briefcase.staircase.commands.Touch"
             name="Touch">
       </command>
+      <command
+            id="com.collins.trustedsystems.briefcase.staircase.commands.ClearRequirementsCache"
+            name="Clear Requirements Cache">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.handlers">
@@ -500,6 +522,10 @@
       <handler
             class="com.collins.trustedsystems.briefcase.staircase.handlers.Sel4TransformHandler"
             commandId="com.collins.trustedsystems.briefcase.staircase.commands.Sel4Transform">
+      </handler>
+      <handler
+            class="com.collins.trustedsystems.briefcase.staircase.handlers.ClearRequirementsCacheHandler"
+            commandId="com.collins.trustedsystems.briefcase.staircase.commands.ClearRequirementsCache">
       </handler>
    </extension>
    <extension

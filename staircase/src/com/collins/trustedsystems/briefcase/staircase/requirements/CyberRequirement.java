@@ -1169,7 +1169,7 @@ public class CyberRequirement {
 	 */
 	static CyberRequirement parseClaimString(String id, String claimString, ClaimBody claimBody) {
 		if (id == null || claimBody == null || claimString == null || !claimString.matches("\\[.+\\]\\s.+")) {
-			throw new RuntimeException("Invalid arguments: (id : " + id + ") (claimString :" + claimString
+			throw new RuntimeException("Invalid arguments: (id : " + id + ") (claimString : " + claimString
 					+ ") (claimBody : " + claimBody + ")");
 		}
 

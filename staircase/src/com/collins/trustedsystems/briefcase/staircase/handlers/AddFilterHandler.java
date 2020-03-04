@@ -108,7 +108,8 @@ public class AddFilterHandler extends AadlHandler {
 		boolean createCompoundFilter = false;
 //		ComponentType comp = subcomponent.getComponentType();
 		PortConnection filterOutConn = null;
-		if (CaseUtils.isCompType(subcomponent, "FILTER")) {
+		if (CaseUtils.isCompType(subcomponent.getClassifier(), "FILTER")) {
+//		if (CaseUtils.isCompType(subcomponent, "FILTER")) {
 //		if (isFilter(comp)) {
 			if (Dialog.askQuestion("Add Filter",
 					"A CASE Filter cannot be inserted next to another CASE Filter.  Would you like to add a new filter specification to the existing filter instead?")) {
@@ -138,7 +139,8 @@ public class AddFilterHandler extends AadlHandler {
 			subcomponent = (Subcomponent) selectedConnection.getSource().getContext();
 			if (subcomponent != null) {
 //				comp = subcomponent.getComponentType();
-				if (CaseUtils.isCompType(subcomponent, "FILTER")) {
+				if (CaseUtils.isCompType(subcomponent.getClassifier(), "FILTER")) {
+//				if (CaseUtils.isCompType(subcomponent, "FILTER")) {
 //				if (isFilter(comp)) {
 					if (Dialog.askQuestion("Add Filter",
 							"A CASE Filter cannot be inserted next to another CASE Filter.  Would you like to add a new filter specification to the existing filter instead?")) {

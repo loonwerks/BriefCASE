@@ -122,7 +122,8 @@ public class AddSwitchDialog extends TitleAreaDialog {
 		List<String> connectionEnds = new ArrayList<>();
 		connectionEnds.add(NO_PORT_SELECTED);
 		connectionEnds.addAll(outports);
-		mpsInputPorts = new MultiPortSelector(container, PortDirection.INPUT, connectionEnds, inConnEnd, "input");
+		mpsInputPorts = new MultiPortSelector(container, PortDirection.INPUT, connectionEnds, inConnEnd, "input",
+				"Switch");
 
 	}
 
@@ -232,6 +233,10 @@ public class AddSwitchDialog extends TitleAreaDialog {
 //			return false;
 //		}
 		inputPorts = mpsInputPorts.getContents();
+		if (inputPorts.isEmpty()) {
+			Dialog.showError("Add Switch", "A switch must have at least one input port");
+			return false;
+		}
 		for (Map.Entry<String, String> inPort : inputPorts.entrySet()) {
 			if (inPort.getKey().isEmpty()) {
 				Dialog.showError("Add Switch",

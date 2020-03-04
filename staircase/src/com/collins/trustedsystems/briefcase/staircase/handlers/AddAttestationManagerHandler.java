@@ -91,7 +91,8 @@ public class AddAttestationManagerHandler extends AadlHandler {
 		}
 
 		// Check if selected subcomponent is a comm driver
-		if (!CaseUtils.isCompType(selectedSubcomponent, "COMM_DRIVER")) {
+		if (!CaseUtils.isCompType(selectedSubcomponent.getClassifier(), "COMM_DRIVER")) {
+//		if (!CaseUtils.isCompType(selectedSubcomponent, "COMM_DRIVER")) {
 			Dialog.showError("Add Attestation Manager",
 					"A communication driver subcomponent must be selected to add an attestation manager.");
 			return;
@@ -662,7 +663,8 @@ public class AddAttestationManagerHandler extends AadlHandler {
 				if (ne instanceof Subcomponent) {
 					dst = (Subcomponent) ne;
 					// Check if it's an attestation manager
-					if (CaseUtils.isCompType(dst, "ATTESTATION")) {
+					if (CaseUtils.isCompType(dst.getClassifier(), "ATTESTATION")) {
+//					if (CaseUtils.isCompType(dst, "ATTESTATION")) {
 						return dst;
 					}
 				}
