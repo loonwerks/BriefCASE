@@ -258,23 +258,25 @@ public class AddMonitorHandler extends AadlHandler {
 
 			// Create observation gate output port, if needed
 			Port monGatePort = null;
-			final Port dstGatePort = (Port) selectedConnection.getDestination().getConnectionEnd();
-//			// If user didn't specify a gate inport, make it an event data port
-			if (dstGatePort == null) {
-				monGatePort = ComponentCreateHelper.createOwnedEventDataPort(monitorType);
-			} else if (dstGatePort instanceof EventDataPort) {
-				monGatePort = ComponentCreateHelper.createOwnedEventDataPort(monitorType);
-				dataFeatureClassifier = ((EventDataPort) dstGatePort).getDataFeatureClassifier();
-				((EventDataPort) monGatePort).setDataFeatureClassifier(dataFeatureClassifier);
-			} else if (dstGatePort instanceof DataPort) {
-				monGatePort = ComponentCreateHelper.createOwnedDataPort(monitorType);
-				dataFeatureClassifier = ((DataPort) dstGatePort).getDataFeatureClassifier();
-				((DataPort) monGatePort).setDataFeatureClassifier(dataFeatureClassifier);
-			} else if (dstAlertPort instanceof EventPort) {
-				monGatePort = ComponentCreateHelper.createOwnedEventPort(monitorType);
+			if (observationGate) {
+				final Port dstGatePort = (Port) selectedConnection.getDestination().getConnectionEnd();
+//				// If user didn't specify a gate inport, make it an event data port
+				if (dstGatePort == null) {
+					monGatePort = ComponentCreateHelper.createOwnedEventDataPort(monitorType);
+				} else if (dstGatePort instanceof EventDataPort) {
+					monGatePort = ComponentCreateHelper.createOwnedEventDataPort(monitorType);
+					dataFeatureClassifier = ((EventDataPort) dstGatePort).getDataFeatureClassifier();
+					((EventDataPort) monGatePort).setDataFeatureClassifier(dataFeatureClassifier);
+				} else if (dstGatePort instanceof DataPort) {
+					monGatePort = ComponentCreateHelper.createOwnedDataPort(monitorType);
+					dataFeatureClassifier = ((DataPort) dstGatePort).getDataFeatureClassifier();
+					((DataPort) monGatePort).setDataFeatureClassifier(dataFeatureClassifier);
+				} else if (dstAlertPort instanceof EventPort) {
+					monGatePort = ComponentCreateHelper.createOwnedEventPort(monitorType);
+				}
+				monGatePort.setOut(true);
+				monGatePort.setName(MONITOR_GATE_PORT_NAME);
 			}
-			monGatePort.setOut(true);
-			monGatePort.setName(MONITOR_GATE_PORT_NAME);
 
 			// Create monitor reset port, if needed
 			Port monResetPort = null;
@@ -308,9 +310,12 @@ public class AddMonitorHandler extends AadlHandler {
 			// CASE::COMP_SPEC property
 			// Parse the ID from the Monitor AGREE property
 			String monitorPropId = "Req_" + monitorType.getName();
-
-			if (!monitorRequirement.isEmpty()) {
-				if (!CaseUtils.addCasePropertyAssociation("COMP_SPEC", monitorPropId, monitorType)) {
+			if (!monitorAgreeProperty.isEmpty()) {
+				String monitorSpec = monitorPropId + "_alert";
+				if (observationGate) {
+					monitorSpec += "," + monitorPropId + "_gate";
+				}
+				if (!CaseUtils.addCasePropertyAssociation("COMP_SPEC", monitorSpec, monitorType)) {
 //						return;
 				}
 			}
@@ -455,12 +460,12 @@ public class AddMonitorHandler extends AadlHandler {
 				agreeClauses += "const monitor_latched : bool = " + latched + ";" + System.lineSeparator();
 				agreeClauses += "property " + monitorPolicy + " = " + monitorAgreeProperty
 						+ System.lineSeparator();
-				agreeClauses += "guarantee " + monitorPropId
+				agreeClauses += "guarantee " + monitorPropId + "_alert"
 						+ " \"A violation of the monitor policy shall trigger an alert\" : event(alert) = not "
 						+ monitorPolicy + ";"
 						+ System.lineSeparator();
 				if (observationGate) {
-					agreeClauses += "guarantee " + monitorPropId
+					agreeClauses += "guarantee " + monitorPropId + "_gate"
 							+ " \"A violation of the monitor policy shall prevent the observed message from propagating\" : if "
 							+ monitorPolicy + " then event(" + MONITOR_GATE_PORT_NAME + ") and "
 							+ MONITOR_GATE_PORT_NAME + " = " + MONITOR_OBSERVED_PORT_NAME + " else not event("

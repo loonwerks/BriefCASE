@@ -63,7 +63,7 @@
                   <command
                         commandId="com.collins.trustedsystems.briefcase.staircase.commands.AddAttestationManager"
                         id="com.collins.trustedsystems.briefcase.menus.outline.resiliency.transformations.AddAttestationManager"
-                        label="Add Attestation Manager..."
+                        label="Add Attestation..."
                         style="push">
                   </command>
                   <command
@@ -185,7 +185,7 @@
                   <command
                         commandId="com.collins.trustedsystems.briefcase.staircase.commands.AddAttestationManager"
                         id="com.collins.trustedsystems.briefcase.menus.menubar.resiliency.transformations.AddAttestationManager"
-                        label="Add Attestation Manager..."
+                        label="Add Attestation..."
                         style="push">
                   </command>
                   <command
@@ -327,7 +327,7 @@
                   <command
                         commandId="com.collins.trustedsystems.briefcase.staircase.commands.AddAttestationManager"
                         id="com.collins.trustedsystems.briefcase.menus.editor.resiliency.transformations.AddAttestationManager"
-                        label="Add Attestation Manager..."
+                        label="Add Attestation..."
                         style="push">
                   </command>
                   <command
