@@ -29,7 +29,7 @@ import org.osate.aadl2.Subcomponent;
 import org.osate.ui.dialogs.Dialog;
 
 import com.collins.trustedsystems.briefcase.staircase.dialogs.ModelAnnotationsDialog;
-import com.collins.trustedsystems.briefcase.staircase.utils.CaseUtils;
+import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
 
 public class ModelAnnotationsHandler extends AadlHandler {
 
@@ -157,41 +157,45 @@ public class ModelAnnotationsHandler extends AadlHandler {
 					}
 
 					// Import CASE_Properties file
-					if (!CaseUtils.addCasePropertyImport(pkgSection)) {
+					if (!CasePropertyUtils.addCasePropertyImport(pkgSection)) {
 						return;
 					}
 
 					if (addConfidentiality) {
-						if (!CaseUtils.addCasePropertyAssociation("CONFIDENTIALITY", confidentiality.toString(),
+						if (!CasePropertyUtils.addCasePropertyAssociation("Confidentiality", confidentiality.toString(),
 								component)) {
 							Dialog.showError("Model Annotations",
-									"Unable to set the CONFIDENTIALITY property for " + component.getName() + ".");
+									"Unable to set the Confidentiality property for " + component.getName() + ".");
 //							return;
 						}
 					}
 					if (addIntegrity) {
-						if (!CaseUtils.addCasePropertyAssociation("INTEGRITY", integrity.toString(), component)) {
+						if (!CasePropertyUtils.addCasePropertyAssociation("Integrity", integrity.toString(),
+								component)) {
 							Dialog.showError("Model Annotations",
-									"Unable to set the INTEGRITY property for " + component.getName() + ".");
+									"Unable to set the Integrity property for " + component.getName() + ".");
 //							return;
 						}
 					}
 					if (addAvailability) {
-						if (!CaseUtils.addCasePropertyAssociation("AVAILABILITY", availability.toString(), component)) {
+						if (!CasePropertyUtils.addCasePropertyAssociation("Availability", availability.toString(),
+								component)) {
 							Dialog.showError("Model Annotations",
-									"Unable to set the AVAILABILITY property for " + component.getName() + ".");
+									"Unable to set the Availability property for " + component.getName() + ".");
 //							return;
 						}
 					}
 					if (addCompType) {
-						if (!CaseUtils.addCasePropertyAssociation("COMP_TYPE", compType.toString(), component)) {
+						if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.COMP_TYPE,
+								compType.toString(), component)) {
 							Dialog.showError("Model Annotations",
 									"Unable to set the COMP_TYPE property for " + component.getName() + ".");
 //							return;
 						}
 					}
 					if (addCommModality) {
-						if (!CaseUtils.addCasePropertyAssociation("COMM_MODALITY", commModality.toString(),
+						if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.COMM_MODALITY,
+								commModality.toString(),
 								component)) {
 							Dialog.showError("Model Annotations",
 									"Unable to set the COMM_MODALITY property for " + component.getName() + ".");
@@ -204,9 +208,9 @@ public class ModelAnnotationsHandler extends AadlHandler {
 							bString = bString + b.toString() + ",";
 						}
 						bString = bString.substring(0, bString.length() - 1);
-						if (!CaseUtils.addCasePropertyAssociation("BOUNDARY", bString, component)) {
+						if (!CasePropertyUtils.addCasePropertyAssociation("Boundary", bString, component)) {
 							Dialog.showError("Model Annotations",
-									"Unable to set the BOUNDARY property for " + component.getName() + ".");
+									"Unable to set the Boundary property for " + component.getName() + ".");
 //							return;
 						}
 					}
@@ -232,32 +236,32 @@ public class ModelAnnotationsHandler extends AadlHandler {
 
 		for (PropertyAssociation propertyAssociation : component.getOwnedPropertyAssociations()) {
 			Property property = propertyAssociation.getProperty();
-			if (property.getName().equalsIgnoreCase("CONFIDENTIALITY")) {
+			if (property.getName().equalsIgnoreCase("Confidentiality")) {
 				ModalPropertyValue val = propertyAssociation.getOwnedValues().get(0);
 				NamedValue namedVal = (NamedValue) val.getOwnedValue();
 				EnumerationLiteral enumLiteral = (EnumerationLiteral) namedVal.getNamedValue();
 				confidentiality = CIA.valueOf(enumLiteral.getName());
-			} else if (property.getName().equalsIgnoreCase("INTEGRITY")) {
+			} else if (property.getName().equalsIgnoreCase("Integrity")) {
 				ModalPropertyValue val = propertyAssociation.getOwnedValues().get(0);
 				NamedValue namedVal = (NamedValue) val.getOwnedValue();
 				EnumerationLiteral enumLiteral = (EnumerationLiteral) namedVal.getNamedValue();
 				integrity = CIA.valueOf(enumLiteral.getName());
-			} else if (property.getName().equalsIgnoreCase("AVAILABILITY")) {
+			} else if (property.getName().equalsIgnoreCase("Availability")) {
 				ModalPropertyValue val = propertyAssociation.getOwnedValues().get(0);
 				NamedValue namedVal = (NamedValue) val.getOwnedValue();
 				EnumerationLiteral enumLiteral = (EnumerationLiteral) namedVal.getNamedValue();
 				availability = CIA.valueOf(enumLiteral.getName());
-			} else if (property.getName().equalsIgnoreCase("COMP_TYPE")) {
+			} else if (property.getName().equalsIgnoreCase(CasePropertyUtils.COMP_TYPE)) {
 				ModalPropertyValue val = propertyAssociation.getOwnedValues().get(0);
 				NamedValue namedVal = (NamedValue) val.getOwnedValue();
 				EnumerationLiteral enumLiteral = (EnumerationLiteral) namedVal.getNamedValue();
 				compType = COMP_TYPE.valueOf(enumLiteral.getName());
-			} else if (property.getName().equalsIgnoreCase("COMM_MODALITY")) {
+			} else if (property.getName().equalsIgnoreCase(CasePropertyUtils.COMM_MODALITY)) {
 				ModalPropertyValue val = propertyAssociation.getOwnedValues().get(0);
 				NamedValue namedVal = (NamedValue) val.getOwnedValue();
 				EnumerationLiteral enumLiteral = (EnumerationLiteral) namedVal.getNamedValue();
 				commModality = COMM_MODALITY.valueOf(enumLiteral.getName());
-			} else if (property.getName().equalsIgnoreCase("BOUNDARY")) {
+			} else if (property.getName().equalsIgnoreCase("Boundary")) {
 				ModalPropertyValue val = propertyAssociation.getOwnedValues().get(0);
 				ListValue listVal = (ListValue) val.getOwnedValue();
 				for (PropertyExpression propertyExpression : listVal.getOwnedListElements()) {

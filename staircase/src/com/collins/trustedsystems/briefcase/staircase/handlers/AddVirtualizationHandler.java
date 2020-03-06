@@ -48,6 +48,7 @@ import org.osate.xtext.aadl2.properties.util.GetProperties;
 import com.collins.trustedsystems.briefcase.staircase.dialogs.AddVirtualizationDialog;
 import com.collins.trustedsystems.briefcase.staircase.requirements.AddVirtualizationClaim;
 import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsManager;
+import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
 import com.collins.trustedsystems.briefcase.staircase.utils.CaseUtils;
 import com.collins.trustedsystems.briefcase.staircase.utils.ComponentCreateHelper;
 
@@ -220,7 +221,7 @@ public class AddVirtualizationHandler extends AadlHandler {
 				}
 
 				// Import CASE_Properties file
-				if (!CaseUtils.addCasePropertyImport(pkgSection)) {
+				if (!CasePropertyUtils.addCasePropertyImport(pkgSection)) {
 					return null;
 				}
 				// Import CASE_Model_Transformations file
@@ -241,7 +242,8 @@ public class AddVirtualizationHandler extends AadlHandler {
 						pkgSection.getOwnedClassifiers().size() - 1);
 
 				// CASE::COMP_TYPE Property
-				if (!CaseUtils.addCasePropertyAssociation("COMP_TYPE", "VIRTUAL_MACHINE", vpType)) {
+				if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.COMP_TYPE, "VIRTUAL_MACHINE",
+						vpType)) {
 //					return;
 				}
 
@@ -257,7 +259,7 @@ public class AddVirtualizationHandler extends AadlHandler {
 
 				// CASE::OS Property
 				if (!virtualMachineOS.isEmpty()) {
-					if (!CaseUtils.addCasePropertyAssociation("OS", virtualMachineOS, vpImpl)) {
+					if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.OS, virtualMachineOS, vpImpl)) {
 //						return;
 					}
 				}
@@ -419,7 +421,7 @@ public class AddVirtualizationHandler extends AadlHandler {
 		ComponentImplementation ci = rootSub.getContainingComponentImpl();
 
 		for (PropertyAssociation pa : ci.getOwnedPropertyAssociations()) {
-			if (pa.getProperty().getName().equalsIgnoreCase("Actual_Processor_Binding")) {
+			if (pa.getProperty().getName().equalsIgnoreCase(DeploymentProperties.ACTUAL_PROCESSOR_BINDING)) {
 				for (ContainedNamedElement cne : pa.getAppliesTos()) {
 					ContainmentPathElement cpe = cne.getPath();
 					String appliesTo = cpe.getNamedElement().getName();

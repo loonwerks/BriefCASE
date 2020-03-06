@@ -34,7 +34,7 @@ import org.osate.aadl2.modelsupport.scoping.Aadl2GlobalScopeUtil;
 import org.osate.ui.dialogs.Dialog;
 
 import com.collins.trustedsystems.briefcase.staircase.handlers.AddAttestationManagerHandler;
-import com.collins.trustedsystems.briefcase.staircase.utils.CaseUtils;
+import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
 
 /**
  * This class creates the Add Attestation Manager wizard
@@ -180,7 +180,7 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 		if (attestationManager != null) {
 			ComponentImplementation ci = attestationManager.getComponentImplementation();
 			Property prop = Aadl2GlobalScopeUtil.get(ci, Aadl2Package.eINSTANCE.getProperty(),
-					CaseUtils.CASE_PROPSET_NAME + "::CACHE_TIMEOUT");
+					CasePropertyUtils.CASE_PROPSET_NAME + "::" + CasePropertyUtils.CACHE_TIMEOUT);
 			List<? extends PropertyExpression> propVals = ci.getPropertyValueList(prop);
 
 			if (propVals != null) {
@@ -213,7 +213,7 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 		} else {
 			ComponentImplementation ci = attestationManager.getComponentImplementation();
 			Property prop = Aadl2GlobalScopeUtil.get(ci, Aadl2Package.eINSTANCE.getProperty(),
-					CaseUtils.CASE_PROPSET_NAME + "::CACHE_SIZE");
+					CasePropertyUtils.CASE_PROPSET_NAME + "::" + CasePropertyUtils.CACHE_SIZE);
 			List<? extends PropertyExpression> propVals = ci.getPropertyValueList(prop);
 			if (propVals != null) {
 				// There should be only one property value

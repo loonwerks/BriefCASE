@@ -24,6 +24,7 @@ import org.osate.aadl2.ThreadSubcomponent;
 import org.osate.aadl2.ThreadType;
 import org.osate.ui.dialogs.Dialog;
 
+import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
 import com.collins.trustedsystems.briefcase.staircase.utils.CaseUtils;
 
 public class AddSimplexHandler extends AadlHandler {
@@ -69,7 +70,7 @@ public class AddSimplexHandler extends AadlHandler {
 				final PublicPackageSection pkgSection = aadlPkg.getOwnedPublicSection();
 
 				// Import CASE_Properties file
-				if (!CaseUtils.addCasePropertyImport(pkgSection)) {
+				if (!CasePropertyUtils.addCasePropertyImport(pkgSection)) {
 					return;
 				}
 				// Import CASE_Model_Transformations file
@@ -148,7 +149,8 @@ public class AddSimplexHandler extends AadlHandler {
 				monitorPortOut.setName("Alert");
 
 				// Add Monitor properties
-				if (!CaseUtils.addCasePropertyAssociation("COMP_TYPE", "MONITOR", monitorThreadType)) {
+				if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.COMP_TYPE, "MONITOR",
+						monitorThreadType)) {
 //					return;
 				}
 
@@ -199,7 +201,8 @@ public class AddSimplexHandler extends AadlHandler {
 
 				// Add Safety Controller properties
 				// AAHAA::Component_Type Property
-				if (!CaseUtils.addCasePropertyAssociation("COMP_TYPE", "SAFETY_CONTROLLER", safetyThreadType)) {
+				if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.COMP_TYPE, "SAFETY_CONTROLLER",
+						safetyThreadType)) {
 //					return;
 				}
 
@@ -267,7 +270,8 @@ public class AddSimplexHandler extends AadlHandler {
 
 				// Add Controller properties
 				// AAHAA::Component_Type Property
-				if (!CaseUtils.addCasePropertyAssociation("COMP_TYPE", "SWITCH", switchThreadType)) {
+				if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.COMP_TYPE, "SWITCH",
+						switchThreadType)) {
 //					return;
 				}
 

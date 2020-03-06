@@ -56,7 +56,7 @@ import org.osgi.framework.Bundle;
 import com.collins.trustedsystems.briefcase.json.export.Aadl2Json;
 import com.collins.trustedsystems.briefcase.splat.Activator;
 import com.collins.trustedsystems.briefcase.splat.preferences.SplatPreferenceConstants;
-import com.collins.trustedsystems.briefcase.staircase.utils.CaseUtils;
+import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
 import com.collins.trustedsystems.briefcase.util.Filesystem;
 import com.collins.trustedsystems.briefcase.util.TraverseProject;
 
@@ -406,7 +406,8 @@ public class SplatHandler extends AbstractHandler {
 							if (!assuranceLevel.equalsIgnoreCase(SplatPreferenceConstants.ASSURANCE_LEVEL_BASIC)) {
 								implLang = "CakeML";
 							}
-							if (!CaseUtils.addCasePropertyAssociation("COMP_IMPL", implLang, ci)) {
+							if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.COMP_IMPL, implLang,
+									ci)) {
 //								return;
 							}
 

@@ -44,6 +44,7 @@ import com.collins.trustedsystems.briefcase.staircase.dialogs.AddSwitchDialog;
 import com.collins.trustedsystems.briefcase.staircase.requirements.AddSwitchClaim;
 import com.collins.trustedsystems.briefcase.staircase.requirements.CyberRequirement;
 import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsManager;
+import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
 import com.collins.trustedsystems.briefcase.staircase.utils.CaseUtils;
 import com.collins.trustedsystems.briefcase.staircase.utils.ComponentCreateHelper;
 import com.collins.trustedsystems.briefcase.staircase.utils.ModelTransformUtils;
@@ -154,7 +155,7 @@ public class AddSwitchHandler extends AadlHandler {
 			}
 
 			// Import CASE_Properties file
-			if (!CaseUtils.addCasePropertyImport(pkgSection)) {
+			if (!CasePropertyUtils.addCasePropertyImport(pkgSection)) {
 				return null;
 			}
 			// Import CASE_Model_Transformations file
@@ -329,7 +330,7 @@ public class AddSwitchHandler extends AadlHandler {
 
 		// Add switch properties
 		// CASE::COMP_TYPE Property
-		if (!CaseUtils.addCasePropertyAssociation("COMP_TYPE", "SWITCH", switchType)) {
+		if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.COMP_TYPE, "SWITCH", switchType)) {
 //				return;
 		}
 
@@ -337,7 +338,7 @@ public class AddSwitchHandler extends AadlHandler {
 		String switchPropId = switchType.getName() + "_policy";
 
 		if (!switchPropId.isEmpty()) {
-			if (!CaseUtils.addCasePropertyAssociation("COMP_SPEC", switchPropId, switchType)) {
+			if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.COMP_SPEC, switchPropId, switchType)) {
 //					return;
 			}
 		}

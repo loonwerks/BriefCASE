@@ -49,6 +49,7 @@ import com.collins.trustedsystems.briefcase.staircase.dialogs.AddFilterDialog;
 import com.collins.trustedsystems.briefcase.staircase.requirements.AddFilterClaim;
 import com.collins.trustedsystems.briefcase.staircase.requirements.CyberRequirement;
 import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsManager;
+import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
 import com.collins.trustedsystems.briefcase.staircase.utils.CaseUtils;
 import com.collins.trustedsystems.briefcase.staircase.utils.ComponentCreateHelper;
 import com.rockwellcollins.atc.agree.agree.AgreeContract;
@@ -108,7 +109,7 @@ public class AddFilterHandler extends AadlHandler {
 		boolean createCompoundFilter = false;
 //		ComponentType comp = subcomponent.getComponentType();
 		PortConnection filterOutConn = null;
-		if (CaseUtils.isCompType(subcomponent.getClassifier(), "FILTER")) {
+		if (CasePropertyUtils.isCompType(subcomponent.getClassifier(), "FILTER")) {
 //		if (CaseUtils.isCompType(subcomponent, "FILTER")) {
 //		if (isFilter(comp)) {
 			if (Dialog.askQuestion("Add Filter",
@@ -139,7 +140,7 @@ public class AddFilterHandler extends AadlHandler {
 			subcomponent = (Subcomponent) selectedConnection.getSource().getContext();
 			if (subcomponent != null) {
 //				comp = subcomponent.getComponentType();
-				if (CaseUtils.isCompType(subcomponent.getClassifier(), "FILTER")) {
+				if (CasePropertyUtils.isCompType(subcomponent.getClassifier(), "FILTER")) {
 //				if (CaseUtils.isCompType(subcomponent, "FILTER")) {
 //				if (isFilter(comp)) {
 					if (Dialog.askQuestion("Add Filter",
@@ -252,7 +253,7 @@ public class AddFilterHandler extends AadlHandler {
 			}
 
 			// Import CASE_Properties file
-			if (!CaseUtils.addCasePropertyImport(pkgSection)) {
+			if (!CasePropertyUtils.addCasePropertyImport(pkgSection)) {
 				return null;
 			}
 			// Import CASE_Model_Transformations file
@@ -332,7 +333,7 @@ public class AddFilterHandler extends AadlHandler {
 
 			// Add filter properties
 			// CASE::COMP_TYPE Property
-			if (!CaseUtils.addCasePropertyAssociation("COMP_TYPE", "FILTER", filterType)) {
+			if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.COMP_TYPE, "FILTER", filterType)) {
 //				return;
 			}
 
@@ -354,7 +355,8 @@ public class AddFilterHandler extends AadlHandler {
 			}
 
 			if (!filterPropId.isEmpty()) {
-				if (!CaseUtils.addCasePropertyAssociation("COMP_SPEC", filterPropId, filterType)) {
+				if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.COMP_SPEC, filterPropId,
+						filterType)) {
 //					return;
 				}
 			}
@@ -622,7 +624,7 @@ public class AddFilterHandler extends AadlHandler {
 			// Get current property value
 			String propVal = "";
 			Property prop = Aadl2GlobalScopeUtil.get(filter, Aadl2Package.eINSTANCE.getProperty(),
-					CaseUtils.CASE_PROPSET_NAME + "::COMP_SPEC");
+					CasePropertyUtils.CASE_PROPSET_NAME + "::" + CasePropertyUtils.COMP_SPEC);
 			List<? extends PropertyExpression> propVals = filter.getPropertyValueList(prop);
 			if (propVals != null) {
 				for (PropertyExpression expr : propVals) {
@@ -636,7 +638,7 @@ public class AddFilterHandler extends AadlHandler {
 			propVal += filterPropId;
 
 			// Write property to filter component
-			if (!CaseUtils.addCasePropertyAssociation("COMP_SPEC", propVal, filter)) {
+			if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.COMP_SPEC, propVal, filter)) {
 //				return;
 			}
 

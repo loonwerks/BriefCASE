@@ -45,6 +45,7 @@ import org.osate.xtext.aadl2.properties.util.ThreadProperties;
 import com.collins.trustedsystems.briefcase.staircase.dialogs.AddAttestationManagerDialog;
 import com.collins.trustedsystems.briefcase.staircase.requirements.AddAttestationManagerClaim;
 import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsManager;
+import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
 import com.collins.trustedsystems.briefcase.staircase.utils.CaseUtils;
 import com.collins.trustedsystems.briefcase.staircase.utils.ComponentCreateHelper;
 import com.rockwellcollins.atc.agree.agree.AgreeContract;
@@ -91,7 +92,7 @@ public class AddAttestationManagerHandler extends AadlHandler {
 		}
 
 		// Check if selected subcomponent is a comm driver
-		if (!CaseUtils.isCompType(selectedSubcomponent.getClassifier(), "COMM_DRIVER")) {
+		if (!CasePropertyUtils.isCompType(selectedSubcomponent.getClassifier(), "COMM_DRIVER")) {
 //		if (!CaseUtils.isCompType(selectedSubcomponent, "COMM_DRIVER")) {
 			Dialog.showError("Add Attestation Manager",
 					"A communication driver subcomponent must be selected to add an attestation manager.");
@@ -211,7 +212,7 @@ public class AddAttestationManagerHandler extends AadlHandler {
 			}
 
 			// Import CASE_Properties file
-			if (!CaseUtils.addCasePropertyImport(pkgSection)) {
+			if (!CasePropertyUtils.addCasePropertyImport(pkgSection)) {
 				return null;
 			}
 			// Import CASE_Model_Transformations file
@@ -373,7 +374,8 @@ public class AddAttestationManagerHandler extends AadlHandler {
 
 			// Add Attestation Manager properties
 			// CASE_Properties::COMP_TYPE Property
-			if (!CaseUtils.addCasePropertyAssociation("COMP_TYPE", "ATTESTATION", attestationManagerType)) {
+			if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.COMP_TYPE, "ATTESTATION",
+					attestationManagerType)) {
 //				return;
 			}
 
@@ -392,7 +394,8 @@ public class AddAttestationManagerHandler extends AadlHandler {
 				}
 			}
 			if (!attestationPropId.isEmpty()) {
-				if (!CaseUtils.addCasePropertyAssociation("COMP_SPEC", attestationPropId, attestationManagerType)) {
+				if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.COMP_SPEC, attestationPropId,
+						attestationManagerType)) {
 //					return;
 				}
 			}
@@ -412,7 +415,7 @@ public class AddAttestationManagerHandler extends AadlHandler {
 
 			// CASE_Properties::COMP_IMPL property
 			if (!implementationLanguage.isEmpty()) {
-				if (!CaseUtils.addCasePropertyAssociation("COMP_IMPL", implementationLanguage,
+				if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.COMP_IMPL, implementationLanguage,
 						attestationManagerImpl)) {
 //					return;
 				}
@@ -420,14 +423,16 @@ public class AddAttestationManagerHandler extends AadlHandler {
 
 			// CASE_Properties::CACHE_TIMEOUT property
 			if (!cacheTimeout.isEmpty()) {
-				if (!CaseUtils.addCasePropertyAssociation("CACHE_TIMEOUT", cacheTimeout, attestationManagerImpl)) {
+				if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.CACHE_TIMEOUT, cacheTimeout,
+						attestationManagerImpl)) {
 //					return;
 				}
 			}
 
 			// CASE_Properties::CACHE_SIZE property
 			if (!cacheSize.isEmpty()) {
-				if (!CaseUtils.addCasePropertyAssociation("CACHE_SIZE", cacheSize, attestationManagerImpl)) {
+				if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.CACHE_SIZE, cacheSize,
+						attestationManagerImpl)) {
 //					return;
 				}
 			}
@@ -663,7 +668,7 @@ public class AddAttestationManagerHandler extends AadlHandler {
 				if (ne instanceof Subcomponent) {
 					dst = (Subcomponent) ne;
 					// Check if it's an attestation manager
-					if (CaseUtils.isCompType(dst.getClassifier(), "ATTESTATION")) {
+					if (CasePropertyUtils.isCompType(dst.getClassifier(), "ATTESTATION")) {
 //					if (CaseUtils.isCompType(dst, "ATTESTATION")) {
 						return dst;
 					}

@@ -14,9 +14,9 @@ import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
+import org.osate.aadl2.AadlPackage;
 import org.osate.aadl2.ModelUnit;
-import org.osate.aadl2.impl.AadlPackageImpl;
-import org.osate.aadl2.instance.impl.ComponentInstanceImpl;
+import org.osate.aadl2.instance.ComponentInstance;
 
 import com.collins.trustedsystems.briefcase.splat.preferences.SplatPreferenceConstants;
 import com.rockwellcollins.atc.resolute.analysis.execution.EvaluationContext;
@@ -47,7 +47,7 @@ public class ResoluteToolCheck implements ResoluteExternalAnalysis {
 		assert (arg.isString());
 
 		// Make sure this instance is a component
-		if (!(evalContext.getThisInstance() instanceof ComponentInstanceImpl)) {
+		if (!(evalContext.getThisInstance() instanceof ComponentInstance)) {
 			throw new ResoluteFailException("[ERROR] ToolCheck can only be called from a component.",
 					evalContext.getThisInstance());
 		}
@@ -151,12 +151,12 @@ public class ResoluteToolCheck implements ResoluteExternalAnalysis {
 		// Get the resources that are referred to (via the 'with' statement)
 		EList<EObject> resourceContents = resource.getContents();
 		for (EObject eObj : resourceContents) {
-			if (eObj instanceof AadlPackageImpl) {
-				AadlPackageImpl aadlPackageImpl = (AadlPackageImpl) eObj;
+			if (eObj instanceof AadlPackage) {
+				AadlPackage aadlPackage = (AadlPackage) eObj;
 
 				// Resources included in the public section
-				if (aadlPackageImpl.getOwnedPublicSection() != null) {
-					final EList<ModelUnit> importedUnits = aadlPackageImpl.getPublicSection().getImportedUnits();
+				if (aadlPackage.getOwnedPublicSection() != null) {
+					final EList<ModelUnit> importedUnits = aadlPackage.getPublicSection().getImportedUnits();
 					for (ModelUnit mUnit : importedUnits) {
 						String resourceName = mUnit.eResource().getURI().lastSegment();
 						if (!resourceTimestamps.containsKey(resourceName)) {
@@ -165,8 +165,8 @@ public class ResoluteToolCheck implements ResoluteExternalAnalysis {
 					}
 				}
 				// Resources included in the private section
-				if (aadlPackageImpl.getOwnedPrivateSection() != null) {
-					final EList<ModelUnit> importedUnits = aadlPackageImpl.getPrivateSection().getImportedUnits();
+				if (aadlPackage.getOwnedPrivateSection() != null) {
+					final EList<ModelUnit> importedUnits = aadlPackage.getPrivateSection().getImportedUnits();
 					for (ModelUnit mUnit : importedUnits) {
 						String resourceName = mUnit.eResource().getURI().lastSegment();
 						if (!resourceTimestamps.containsKey(resourceName)) {

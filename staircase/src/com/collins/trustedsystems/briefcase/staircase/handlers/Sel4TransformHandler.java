@@ -70,7 +70,7 @@ import org.osate.aadl2.modelsupport.util.AadlUtil;
 import org.osate.aadl2.properties.PropertyAcc;
 import org.osate.ui.dialogs.Dialog;
 
-import com.collins.trustedsystems.briefcase.staircase.utils.CaseUtils;
+import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
 import com.collins.trustedsystems.briefcase.staircase.utils.ComponentCreateHelper;
 
 public class Sel4TransformHandler extends AadlHandler {
@@ -891,7 +891,7 @@ public class Sel4TransformHandler extends AadlHandler {
 		for (Subcomponent sub : sysImpl.getOwnedSubcomponents()) {
 			if (sub instanceof ProcessorSubcomponent || sub instanceof VirtualProcessorSubcomponent) {
 				Property prop = Aadl2GlobalScopeUtil.get(sysImpl, Aadl2Package.eINSTANCE.getProperty(),
-						CaseUtils.CASE_PROPSET_NAME + "::OS");
+						CasePropertyUtils.CASE_PROPSET_NAME + "::" + CasePropertyUtils.OS);
 				PropertyAcc propAcc = sub.getComponentImplementation().getPropertyValue(prop);
 				PropertyAssociation pa = propAcc.first();
 				if (pa != null) {
