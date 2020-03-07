@@ -50,7 +50,6 @@ import com.collins.trustedsystems.briefcase.staircase.requirements.AddFilterClai
 import com.collins.trustedsystems.briefcase.staircase.requirements.CyberRequirement;
 import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsManager;
 import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
-import com.collins.trustedsystems.briefcase.staircase.utils.CaseUtils;
 import com.collins.trustedsystems.briefcase.staircase.utils.ComponentCreateHelper;
 import com.rockwellcollins.atc.agree.agree.AgreeContract;
 import com.rockwellcollins.atc.agree.agree.AgreeContractSubclause;
@@ -107,11 +106,8 @@ public class AddFilterHandler extends AadlHandler {
 		}
 
 		boolean createCompoundFilter = false;
-//		ComponentType comp = subcomponent.getComponentType();
 		PortConnection filterOutConn = null;
 		if (CasePropertyUtils.isCompType(subcomponent.getClassifier(), "FILTER")) {
-//		if (CaseUtils.isCompType(subcomponent, "FILTER")) {
-//		if (isFilter(comp)) {
 			if (Dialog.askQuestion("Add Filter",
 					"A CASE Filter cannot be inserted next to another CASE Filter.  Would you like to add a new filter specification to the existing filter instead?")) {
 
@@ -139,10 +135,7 @@ public class AddFilterHandler extends AadlHandler {
 
 			subcomponent = (Subcomponent) selectedConnection.getSource().getContext();
 			if (subcomponent != null) {
-//				comp = subcomponent.getComponentType();
 				if (CasePropertyUtils.isCompType(subcomponent.getClassifier(), "FILTER")) {
-//				if (CaseUtils.isCompType(subcomponent, "FILTER")) {
-//				if (isFilter(comp)) {
 					if (Dialog.askQuestion("Add Filter",
 							"A CASE Filter cannot be inserted next to another CASE Filter.  Would you like to add a new filter specification to the existing filter instead?")) {
 						createCompoundFilter = true;
@@ -256,10 +249,6 @@ public class AddFilterHandler extends AadlHandler {
 			if (!CasePropertyUtils.addCasePropertyImport(pkgSection)) {
 				return null;
 			}
-			// Import CASE_Model_Transformations file
-			if (!CaseUtils.addCaseModelTransformationsImport(pkgSection, true)) {
-				return null;
-			}
 
 			// Figure out component type by looking at the component type of the destination component
 			ComponentCategory compCategory = ((Subcomponent) selectedConnection.getDestination().getContext())
@@ -333,7 +322,7 @@ public class AddFilterHandler extends AadlHandler {
 
 			// Add filter properties
 			// CASE::COMP_TYPE Property
-			if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.COMP_TYPE, "FILTER", filterType)) {
+			if (!CasePropertyUtils.setCompType(filterType, "FILTER")) {
 //				return;
 			}
 
@@ -355,8 +344,7 @@ public class AddFilterHandler extends AadlHandler {
 			}
 
 			if (!filterPropId.isEmpty()) {
-				if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.COMP_SPEC, filterPropId,
-						filterType)) {
+				if (!CasePropertyUtils.setCompSpec(filterType, filterPropId)) {
 //					return;
 				}
 			}
@@ -520,32 +508,6 @@ public class AddFilterHandler extends AadlHandler {
 
 	}
 
-//	/**
-//	 * Determines if the specified component is a CASE filter
-//	 * @param comp
-//	 */
-//	private boolean isFilter(ComponentType comp) {
-//		try {
-//			EList<PropertyExpression> propVal = comp.getPropertyValues(CaseUtils.CASE_PROPSET_NAME, "COMP_TYPE");
-//			if (propVal != null) {
-//				for (PropertyExpression expr : propVal) {
-//					if (expr instanceof NamedValue) {
-//						NamedValue namedVal = (NamedValue) expr;
-//						AbstractNamedValue absVal = namedVal.getNamedValue();
-//						if (absVal instanceof EnumerationLiteral) {
-//							EnumerationLiteral enVal = (EnumerationLiteral) absVal;
-//							if (enVal.getName().equalsIgnoreCase("FILTER")) {
-//								return true;
-//							}
-//						}
-//					}
-//				}
-//			}
-//		} catch (Exception e) {
-//			return false;
-//		}
-//		return false;
-//	}
 
 	/**
 	 * Adds a new spec to the specified filter
@@ -638,7 +600,7 @@ public class AddFilterHandler extends AadlHandler {
 			propVal += filterPropId;
 
 			// Write property to filter component
-			if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.COMP_SPEC, propVal, filter)) {
+			if (!CasePropertyUtils.setCompSpec(filter, propVal)) {
 //				return;
 			}
 

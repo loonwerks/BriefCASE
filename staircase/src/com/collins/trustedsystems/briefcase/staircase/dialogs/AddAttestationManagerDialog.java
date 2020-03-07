@@ -52,8 +52,8 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 	private Text txtAgreeProperty;
 	private String implementationName;
 	private String implementationLanguage = "";
-	private String cacheTimeout;
-	private String cacheSize;
+	private long cacheTimeout = 0;
+	private long cacheSize = 0;
 	private String dispatchProtocol = "";
 	private PortCategory logPortType = null;
 	private String requirement;
@@ -391,8 +391,18 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 	private boolean saveInput() {
 		implementationName = txtImplementationName.getText();
 		implementationLanguage = txtImplementationLanguage.getText();
-		cacheTimeout = txtCacheTimeout.getText();
-		cacheSize = cboCacheSize.getText();
+		try {
+			cacheTimeout = Long.parseLong(txtCacheTimeout.getText());
+		} catch (NumberFormatException e) {
+			Dialog.showError("Add Attestation Manager", "Value of Cache Timeout must be an integer.");
+			return false;
+		}
+		try {
+			cacheSize = Long.parseLong(cboCacheSize.getText());
+		} catch (NumberFormatException e) {
+			Dialog.showError("Add Attestation Manager", "Value of Cache Size must be an integer.");
+			return false;
+		}
 		for (Button b : btnDispatchProtocol) {
 			if (b.getSelection() && !b.getText().equalsIgnoreCase("None")) {
 				dispatchProtocol = b.getText();
@@ -431,11 +441,11 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 		return implementationLanguage;
 	}
 
-	public String getCacheTimeout() {
+	public long getCacheTimeout() {
 		return cacheTimeout;
 	}
 
-	public String getCacheSize() {
+	public long getCacheSize() {
 		return cacheSize;
 	}
 

@@ -49,7 +49,6 @@ import com.collins.trustedsystems.briefcase.staircase.dialogs.AddVirtualizationD
 import com.collins.trustedsystems.briefcase.staircase.requirements.AddVirtualizationClaim;
 import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsManager;
 import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
-import com.collins.trustedsystems.briefcase.staircase.utils.CaseUtils;
 import com.collins.trustedsystems.briefcase.staircase.utils.ComponentCreateHelper;
 
 public class AddVirtualizationHandler extends AadlHandler {
@@ -224,10 +223,6 @@ public class AddVirtualizationHandler extends AadlHandler {
 				if (!CasePropertyUtils.addCasePropertyImport(pkgSection)) {
 					return null;
 				}
-				// Import CASE_Model_Transformations file
-				if (!CaseUtils.addCaseModelTransformationsImport(pkgSection, true)) {
-					return null;
-				}
 
 				// Create virtual processor component type
 				VirtualProcessorType vpType = (VirtualProcessorType) pkgSection
@@ -242,8 +237,7 @@ public class AddVirtualizationHandler extends AadlHandler {
 						pkgSection.getOwnedClassifiers().size() - 1);
 
 				// CASE::COMP_TYPE Property
-				if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.COMP_TYPE, "VIRTUAL_MACHINE",
-						vpType)) {
+				if (!CasePropertyUtils.setCompType(vpType, "VIRTUAL_MACHINE")) {
 //					return;
 				}
 
@@ -259,7 +253,7 @@ public class AddVirtualizationHandler extends AadlHandler {
 
 				// CASE::OS Property
 				if (!virtualMachineOS.isEmpty()) {
-					if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.OS, virtualMachineOS, vpImpl)) {
+					if (!CasePropertyUtils.setOs(vpImpl, virtualMachineOS)) {
 //						return;
 					}
 				}

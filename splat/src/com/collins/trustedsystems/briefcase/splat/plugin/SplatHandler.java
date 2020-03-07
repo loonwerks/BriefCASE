@@ -95,17 +95,6 @@ public class SplatHandler extends AbstractHandler {
 			IFile file = ResourcesPlugin.getWorkspace().getRoot().getFile(new Path(jsonURI.toPlatformString(true)));
 			String jsonPath = file.getRawLocation().toOSString();
 
-//			// Replace bounded numbers with unbounded equivalents
-//			try {
-//				String contents = Filesystem.readFile(file);
-//				contents = contents.replaceAll("Base_Types::(Integer_|Unsigned_|Natural)\\d*", "Base_Types::Integer");
-//				contents = contents.replaceAll("Base_Types::Float_\\d+", "Base_Types::Float");
-//				Filesystem.writeFile(file, contents);
-//			} catch (Exception e) {
-//				Dialog.showWarning("SPLAT",
-//						"Attempt to replace bounded numbers with their unbounded equivalents failed.  Check json file to ensure it does not contain bounded numbers.");
-//			}
-
 			Bundle bundle = Platform.getBundle(bundleId);
 			String splatDir = (FileLocator.toFileURL(FileLocator.find(bundle, new Path("resources"), null))).getFile();
 			String splatPath = (FileLocator
@@ -406,8 +395,7 @@ public class SplatHandler extends AbstractHandler {
 							if (!assuranceLevel.equalsIgnoreCase(SplatPreferenceConstants.ASSURANCE_LEVEL_BASIC)) {
 								implLang = "CakeML";
 							}
-							if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.COMP_IMPL, implLang,
-									ci)) {
+							if (!CasePropertyUtils.setCompImpl(ci, implLang)) {
 //								return;
 							}
 

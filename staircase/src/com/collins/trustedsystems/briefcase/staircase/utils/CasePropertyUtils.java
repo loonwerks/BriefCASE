@@ -245,6 +245,96 @@ public class CasePropertyUtils {
 		return true;
 	}
 
+	public static boolean setCompType(Classifier comp, String compType) {
+		try {
+			Property prop = Aadl2GlobalScopeUtil.get(comp, Aadl2Package.eINSTANCE.getProperty(),
+					CASE_PROPSET_NAME + "::" + COMP_TYPE);
+			EnumerationLiteral enumLit = Aadl2Factory.eINSTANCE.createEnumerationLiteral();
+			enumLit.setName(compType);
+			NamedValue namedVal = Aadl2Factory.eINSTANCE.createNamedValue();
+			namedVal.setNamedValue(enumLit);
+			comp.setPropertyValue(prop, namedVal);
+		} catch (PropertyDoesNotApplyToHolderException e) {
+			return false;
+		}
+		return true;
+	}
+
+	public static boolean setCompImpl(Classifier comp, String compImpl) {
+		try {
+			Property prop = Aadl2GlobalScopeUtil.get(comp, Aadl2Package.eINSTANCE.getProperty(),
+					CASE_PROPSET_NAME + "::" + COMP_IMPL);
+			StringLiteral strLit = Aadl2Factory.eINSTANCE.createStringLiteral();
+			strLit.setValue(compImpl);
+			comp.setPropertyValue(prop, strLit);
+		} catch (PropertyDoesNotApplyToHolderException e) {
+			return false;
+		}
+		return true;
+	}
+
+	public static boolean setCompSpec(Classifier comp, String compSpec) {
+		try {
+			String[] elements = compSpec.split(",");
+			Property prop = Aadl2GlobalScopeUtil.get(comp, Aadl2Package.eINSTANCE.getProperty(),
+					CASE_PROPSET_NAME + "::" + COMP_SPEC);
+			ListValue listVal = Aadl2Factory.eINSTANCE.createListValue();
+//			List<? extends PropertyExpression> listVal = new ArrayList<>();
+			for (String s : elements) {
+				StringLiteral strLit = (StringLiteral) listVal
+						.createOwnedListElement(Aadl2Package.eINSTANCE.getStringLiteral());
+				strLit.setValue(s);
+//				StringLiteral strLit = Aadl2Factory.eINSTANCE.createStringLiteral();
+//				strLit.setValue(s);
+//				listVal.add(strLit);
+			}
+
+			comp.setPropertyValue(prop, listVal.getOwnedListElements());
+		} catch (PropertyDoesNotApplyToHolderException e) {
+			return false;
+		}
+		return true;
+	}
+
+	public static boolean setCacheSize(Classifier comp, long cacheSize) {
+		try {
+			Property prop = Aadl2GlobalScopeUtil.get(comp, Aadl2Package.eINSTANCE.getProperty(),
+					CASE_PROPSET_NAME + "::" + CACHE_SIZE);
+			IntegerLiteral intLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
+			intLit.setValue(cacheSize);
+			comp.setPropertyValue(prop, intLit);
+		} catch (PropertyDoesNotApplyToHolderException e) {
+			return false;
+		}
+		return true;
+	}
+
+	public static boolean setCacheTimeout(Classifier comp, long cacheTimeout) {
+		try {
+			Property prop = Aadl2GlobalScopeUtil.get(comp, Aadl2Package.eINSTANCE.getProperty(),
+					CASE_PROPSET_NAME + "::" + CACHE_TIMEOUT);
+			IntegerLiteral intLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
+			intLit.setValue(cacheTimeout);
+			comp.setPropertyValue(prop, intLit);
+		} catch (PropertyDoesNotApplyToHolderException e) {
+			return false;
+		}
+		return true;
+	}
+
+	public static boolean setOs(Classifier comp, String os) {
+		try {
+			Property prop = Aadl2GlobalScopeUtil.get(comp, Aadl2Package.eINSTANCE.getProperty(),
+					CASE_PROPSET_NAME + "::" + OS);
+			StringLiteral strLit = Aadl2Factory.eINSTANCE.createStringLiteral();
+			strLit.setValue(os);
+			comp.setPropertyValue(prop, strLit);
+		} catch (PropertyDoesNotApplyToHolderException e) {
+			return false;
+		}
+		return true;
+	}
+
 	public static boolean isCompType(Classifier comp, String compType) {
 
 		try {

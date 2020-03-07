@@ -70,8 +70,8 @@ public class AddAttestationManagerHandler extends AadlHandler {
 	private String implementationName;
 	private String implementationLanguage;
 	private String dispatchProtocol;
-	private String cacheTimeout;
-	private String cacheSize;
+	private long cacheTimeout;
+	private long cacheSize;
 	private PortCategory logPortType;
 	private String attestationRequirement;
 	private boolean propagateGuarantees;
@@ -93,7 +93,6 @@ public class AddAttestationManagerHandler extends AadlHandler {
 
 		// Check if selected subcomponent is a comm driver
 		if (!CasePropertyUtils.isCompType(selectedSubcomponent.getClassifier(), "COMM_DRIVER")) {
-//		if (!CaseUtils.isCompType(selectedSubcomponent, "COMM_DRIVER")) {
 			Dialog.showError("Add Attestation Manager",
 					"A communication driver subcomponent must be selected to add an attestation manager.");
 			return;
@@ -120,13 +119,7 @@ public class AddAttestationManagerHandler extends AadlHandler {
 			implementationLanguage = wizard.getImplementationLanguage();
 			dispatchProtocol = wizard.getDispatchProtocol();
 			cacheTimeout = wizard.getCacheTimeout();
-			if (cacheTimeout.isEmpty()) {
-				cacheTimeout = "0";
-			}
 			cacheSize = wizard.getCacheSize();
-			if (cacheSize.isEmpty()) {
-				cacheSize = "0";
-			}
 			logPortType = wizard.getLogPortType();
 			attestationRequirement = wizard.getRequirement();
 			propagateGuarantees = wizard.getPropagateGuarantees();
@@ -374,8 +367,7 @@ public class AddAttestationManagerHandler extends AadlHandler {
 
 			// Add Attestation Manager properties
 			// CASE_Properties::COMP_TYPE Property
-			if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.COMP_TYPE, "ATTESTATION",
-					attestationManagerType)) {
+			if (!CasePropertyUtils.setCompType(attestationManagerType, "ATTESTATION")) {
 //				return;
 			}
 
@@ -394,8 +386,7 @@ public class AddAttestationManagerHandler extends AadlHandler {
 				}
 			}
 			if (!attestationPropId.isEmpty()) {
-				if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.COMP_SPEC, attestationPropId,
-						attestationManagerType)) {
+				if (!CasePropertyUtils.setCompSpec(attestationManagerType, attestationPropId)) {
 //					return;
 				}
 			}
@@ -415,24 +406,21 @@ public class AddAttestationManagerHandler extends AadlHandler {
 
 			// CASE_Properties::COMP_IMPL property
 			if (!implementationLanguage.isEmpty()) {
-				if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.COMP_IMPL, implementationLanguage,
-						attestationManagerImpl)) {
+				if (!CasePropertyUtils.setCompImpl(attestationManagerImpl, implementationLanguage)) {
 //					return;
 				}
 			}
 
 			// CASE_Properties::CACHE_TIMEOUT property
-			if (!cacheTimeout.isEmpty()) {
-				if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.CACHE_TIMEOUT, cacheTimeout,
-						attestationManagerImpl)) {
+			if (cacheTimeout > 0) {
+				if (!CasePropertyUtils.setCacheTimeout(attestationManagerImpl, cacheTimeout)) {
 //					return;
 				}
 			}
 
 			// CASE_Properties::CACHE_SIZE property
-			if (!cacheSize.isEmpty()) {
-				if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.CACHE_SIZE, cacheSize,
-						attestationManagerImpl)) {
+			if (cacheSize > 0) {
+				if (!CasePropertyUtils.setCacheSize(attestationManagerImpl, cacheSize)) {
 //					return;
 				}
 			}
@@ -641,7 +629,6 @@ public class AddAttestationManagerHandler extends AadlHandler {
 				return new AddAttestationManagerClaim(commDriver, attestationManagerSubcomp);
 			}
 			return null;
-//			}
 		});
 
 		// Add add_attestation claims to resolute prove statement, if applicable
@@ -669,7 +656,6 @@ public class AddAttestationManagerHandler extends AadlHandler {
 					dst = (Subcomponent) ne;
 					// Check if it's an attestation manager
 					if (CasePropertyUtils.isCompType(dst.getClassifier(), "ATTESTATION")) {
-//					if (CaseUtils.isCompType(dst, "ATTESTATION")) {
 						return dst;
 					}
 				}

@@ -45,7 +45,6 @@ import com.collins.trustedsystems.briefcase.staircase.requirements.AddSwitchClai
 import com.collins.trustedsystems.briefcase.staircase.requirements.CyberRequirement;
 import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsManager;
 import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
-import com.collins.trustedsystems.briefcase.staircase.utils.CaseUtils;
 import com.collins.trustedsystems.briefcase.staircase.utils.ComponentCreateHelper;
 import com.collins.trustedsystems.briefcase.staircase.utils.ModelTransformUtils;
 
@@ -158,10 +157,10 @@ public class AddSwitchHandler extends AadlHandler {
 			if (!CasePropertyUtils.addCasePropertyImport(pkgSection)) {
 				return null;
 			}
-			// Import CASE_Model_Transformations file
-			if (!CaseUtils.addCaseModelTransformationsImport(pkgSection, true)) {
-				return null;
-			}
+//			// Import CASE_Model_Transformations file
+//			if (!CaseUtils.addCaseModelTransformationsImport(pkgSection, true)) {
+//				return null;
+//			}
 
 			// Figure out component type by looking at the component type of the destination component
 			ComponentCategory compCategory = ((Subcomponent) selectedConnection.getDestination().getContext())
@@ -330,7 +329,8 @@ public class AddSwitchHandler extends AadlHandler {
 
 		// Add switch properties
 		// CASE::COMP_TYPE Property
-		if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.COMP_TYPE, "SWITCH", switchType)) {
+		if (!CasePropertyUtils.setCompType(switchType, "SWITCH")) {
+//		if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.COMP_TYPE, "SWITCH", switchType)) {
 //				return;
 		}
 
@@ -338,7 +338,8 @@ public class AddSwitchHandler extends AadlHandler {
 		String switchPropId = switchType.getName() + "_policy";
 
 		if (!switchPropId.isEmpty()) {
-			if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.COMP_SPEC, switchPropId, switchType)) {
+			if (!CasePropertyUtils.setCompSpec(switchType, switchPropId)) {
+//			if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.COMP_SPEC, switchPropId, switchType)) {
 //					return;
 			}
 		}

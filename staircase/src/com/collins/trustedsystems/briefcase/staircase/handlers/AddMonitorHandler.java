@@ -41,7 +41,6 @@ import com.collins.trustedsystems.briefcase.staircase.requirements.AddMonitorCla
 import com.collins.trustedsystems.briefcase.staircase.requirements.CyberRequirement;
 import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsManager;
 import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
-import com.collins.trustedsystems.briefcase.staircase.utils.CaseUtils;
 import com.collins.trustedsystems.briefcase.staircase.utils.ComponentCreateHelper;
 import com.collins.trustedsystems.briefcase.staircase.utils.ModelTransformUtils;
 
@@ -162,10 +161,10 @@ public class AddMonitorHandler extends AadlHandler {
 			if (!CasePropertyUtils.addCasePropertyImport(pkgSection)) {
 				return null;
 			}
-			// Import CASE_Model_Transformations file
-			if (!CaseUtils.addCaseModelTransformationsImport(pkgSection, true)) {
-				return null;
-			}
+//			// Import CASE_Model_Transformations file
+//			if (!CaseUtils.addCaseModelTransformationsImport(pkgSection, true)) {
+//				return null;
+//			}
 
 			// Figure out component type by looking at the component type of the destination component
 			ComponentCategory compCategory = ((Subcomponent) selectedConnection.getDestination().getContext())
@@ -304,7 +303,8 @@ public class AddMonitorHandler extends AadlHandler {
 
 			// Add monitor properties
 			// CASE::COMP_TYPE Property
-			if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.COMP_TYPE, "MONITOR", monitorType)) {
+			if (!CasePropertyUtils.setCompType(monitorType, "MONITOR")) {
+//			if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.COMP_TYPE, "MONITOR", monitorType)) {
 //					return;
 			}
 
@@ -316,8 +316,9 @@ public class AddMonitorHandler extends AadlHandler {
 				if (observationGate) {
 					monitorSpec += "," + monitorPropId + "_gate";
 				}
-				if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.COMP_SPEC, monitorSpec,
-						monitorType)) {
+				if (!CasePropertyUtils.setCompSpec(monitorType, monitorSpec)) {
+//				if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.COMP_SPEC, monitorSpec,
+//						monitorType)) {
 //						return;
 				}
 			}
