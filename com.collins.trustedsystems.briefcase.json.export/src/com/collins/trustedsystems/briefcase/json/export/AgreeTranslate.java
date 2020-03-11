@@ -23,6 +23,7 @@ import com.rockwellcollins.atc.agree.agree.AgreeContractLibrary;
 import com.rockwellcollins.atc.agree.agree.AgreeContractSubclause;
 import com.rockwellcollins.atc.agree.agree.AgreePackage;
 import com.rockwellcollins.atc.agree.agree.Arg;
+import com.rockwellcollins.atc.agree.agree.ArraySubExpr;
 import com.rockwellcollins.atc.agree.agree.AssertStatement;
 import com.rockwellcollins.atc.agree.agree.AssignStatement;
 import com.rockwellcollins.atc.agree.agree.AssumeStatement;
@@ -38,9 +39,11 @@ import com.rockwellcollins.atc.agree.agree.EventExpr;
 import com.rockwellcollins.atc.agree.agree.ExistsExpr;
 import com.rockwellcollins.atc.agree.agree.Expr;
 import com.rockwellcollins.atc.agree.agree.FnDef;
+import com.rockwellcollins.atc.agree.agree.FoldLeftExpr;
 import com.rockwellcollins.atc.agree.agree.ForallExpr;
 import com.rockwellcollins.atc.agree.agree.GuaranteeStatement;
 import com.rockwellcollins.atc.agree.agree.IfThenElseExpr;
+import com.rockwellcollins.atc.agree.agree.IndicesExpr;
 import com.rockwellcollins.atc.agree.agree.IntLitExpr;
 import com.rockwellcollins.atc.agree.agree.NamedElmExpr;
 import com.rockwellcollins.atc.agree.agree.NodeDef;
@@ -50,6 +53,7 @@ import com.rockwellcollins.atc.agree.agree.NodeStmt;
 import com.rockwellcollins.atc.agree.agree.PreExpr;
 import com.rockwellcollins.atc.agree.agree.PrimType;
 import com.rockwellcollins.atc.agree.agree.PropertyStatement;
+import com.rockwellcollins.atc.agree.agree.RealCast;
 import com.rockwellcollins.atc.agree.agree.RealLitExpr;
 import com.rockwellcollins.atc.agree.agree.RecordLitExpr;
 import com.rockwellcollins.atc.agree.agree.SelectionExpr;
@@ -228,9 +232,51 @@ public class AgreeTranslate {
 			return genForallExpr((ForallExpr) expr);
 		} else if (expr instanceof ExistsExpr) {
 			return genExistsExpr((ExistsExpr) expr);
+		} else if (expr instanceof ArraySubExpr) {
+			return genArraySubExpr((ArraySubExpr) expr);
+		} else if (expr instanceof FoldLeftExpr) {
+			return genFoldLeftExpr((FoldLeftExpr) expr);
+		} else if (expr instanceof IndicesExpr) {
+			return genIndicesExpr((IndicesExpr) expr);
+		} else if (expr instanceof RealCast) {
+			return genRealCast((RealCast) expr);
+
 		} else {
 			return new JsonPrimitive("new_case/genExpr/" + (expr == null ? "null" : expr.toString()));
 		}
+	}
+
+	private static JsonElement genIndicesExpr(IndicesExpr expr) {
+		JsonObject result = new JsonObject();
+		result.add("kind", new JsonPrimitive("IndicesExpr"));
+		result.add("array", genExpr(expr.getArray()));
+		return result;
+	}
+
+	private static JsonElement genRealCast(RealCast expr) {
+		JsonObject result = new JsonObject();
+		result.add("kind", new JsonPrimitive("RealCast"));
+		result.add("expr", genExpr(expr.getExpr()));
+		return result;
+	}
+
+	private static JsonElement genFoldLeftExpr(FoldLeftExpr expr) {
+		JsonObject result = new JsonObject();
+		result.add("kind", new JsonPrimitive("FoldLeftExpr"));
+		result.add("binding", new JsonPrimitive(expr.getBinding().getName()));
+		result.add("array", genExpr(expr.getArray()));
+		result.add("accumulator", new JsonPrimitive(expr.getAccumulator().getName()));
+		result.add("initial", genExpr(expr.getInitial()));
+		result.add("expr", genExpr(expr.getExpr()));
+		return result;
+	}
+
+	private static JsonElement genArraySubExpr(ArraySubExpr expr) {
+		JsonObject result = new JsonObject();
+		result.add("kind", new JsonPrimitive("ArraySubExpr"));
+		result.add("array", genExpr(expr.getExpr()));
+		result.add("index", genExpr(expr.getIndex()));
+		return result;
 	}
 
 	private static JsonElement genEnumLitExpr(EnumLitExpr expr) {
