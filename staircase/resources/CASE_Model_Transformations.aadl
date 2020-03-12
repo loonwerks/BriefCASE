@@ -402,7 +402,7 @@ public
 			is_seL4_component(comp) => analysis("ToolCheck", "SPLAT")
 			
 		is_of_case_type(comp : component, type_name : string) : bool =
-			has_property(comp, CASE_Properties::COMP_TYPE) and property(comp, CASE_Properties::COMP_TYPE) = type_name
+			has_property(comp, CASE_Properties::Component_Type) and property(comp, CASE_Properties::Component_Type) = type_name
 			
 --		-- Returns the set of components that are ancestors of a target component through communication pathways that don't pass through a filter
 --		get_non_filter_sources(target : component, filter : component, msg_type : data) : {component} = 
@@ -502,7 +502,7 @@ public
 			
 		implementation_language_assurance(comp : component) <=
 			** comp " implementation is appropriate for OS" **
-			is_seL4_component(comp) => (has_property(comp, CASE_Properties::COMP_IMPL) and property(comp, CASE_Properties::COMP_IMPL) = "CakeML")
+			is_seL4_component(comp) => (has_property(comp, CASE_Properties::Component_Impl) and property(comp, CASE_Properties::Component_Impl) = "CakeML")
 			
 		-- checks that a component will run on seL4 by checking that the processors it is bound to have the seL4 OS property
 		is_seL4_component(comp : component) : bool =
