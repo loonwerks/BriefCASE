@@ -7,6 +7,7 @@ import com.rockwellcollins.atc.resolute.resolute.Arg;
 import com.rockwellcollins.atc.resolute.resolute.BoolExpr;
 import com.rockwellcollins.atc.resolute.resolute.ClaimArg;
 import com.rockwellcollins.atc.resolute.resolute.ClaimAssumption;
+import com.rockwellcollins.atc.resolute.resolute.ClaimAttribute;
 import com.rockwellcollins.atc.resolute.resolute.ClaimBody;
 import com.rockwellcollins.atc.resolute.resolute.ClaimContext;
 import com.rockwellcollins.atc.resolute.resolute.ClaimString;
@@ -44,8 +45,16 @@ public class ClaimBuilder {
 		if (db instanceof ClaimBody) {
 			ClaimBody cb = (ClaimBody) db;
 			cb.getClaim().forEach(c -> this.claimText.add(c));
-			cb.getContext().forEach(c -> this.claimContext.add(c));
-			cb.getAssumptions().forEach(a -> this.claimAssumptions.add(a));
+//			cb.getContext().forEach(c -> this.claimContext.add(c));
+//			cb.getAssumptions().forEach(a -> this.claimAssumptions.add(a));
+			for (ClaimAttribute claimAttribute : cb.getAttributes()) {
+				if (claimAttribute instanceof ClaimContext) {
+					this.claimContext.add((ClaimContext) claimAttribute);
+				} else if (claimAttribute instanceof ClaimAssumption) {
+					this.claimAssumptions.add((ClaimAssumption) claimAttribute);
+				}
+			}
+
 			this.claimExpr = cb.getExpr();
 		} else {
 			throw new RuntimeException(claim.getName() + " must be a Resoltue claim");
@@ -91,8 +100,8 @@ public class ClaimBuilder {
 
 		ClaimBody body = f.createClaimBody();
 		claimText.forEach(ct -> body.getClaim().add(ct));
-		claimContext.forEach(cc -> body.getContext().add(cc));
-		claimAssumptions.forEach(ca -> body.getAssumptions().add(ca));
+		claimContext.forEach(cc -> body.getAttributes().add(cc));
+		claimAssumptions.forEach(ca -> body.getAttributes().add(ca));
 		body.setExpr(claimExpr);
 
 		def.setBody(body);

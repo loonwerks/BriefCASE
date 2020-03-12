@@ -45,6 +45,7 @@ import com.rockwellcollins.atc.agree.agree.SpecStatement;
 import com.rockwellcollins.atc.agree.parsing.AgreeAnnexParser;
 import com.rockwellcollins.atc.resolute.resolute.AnalysisStatement;
 import com.rockwellcollins.atc.resolute.resolute.BinaryExpr;
+import com.rockwellcollins.atc.resolute.resolute.ClaimAttribute;
 import com.rockwellcollins.atc.resolute.resolute.ClaimBody;
 import com.rockwellcollins.atc.resolute.resolute.ClaimContext;
 import com.rockwellcollins.atc.resolute.resolute.Definition;
@@ -56,6 +57,7 @@ import com.rockwellcollins.atc.resolute.resolute.ProveStatement;
 import com.rockwellcollins.atc.resolute.resolute.ResoluteFactory;
 import com.rockwellcollins.atc.resolute.resolute.ResoluteLibrary;
 import com.rockwellcollins.atc.resolute.resolute.ResoluteSubclause;
+import com.rockwellcollins.atc.resolute.resolute.StringExpr;
 
 /**
  * @author jbabar
@@ -812,9 +814,11 @@ public class CyberRequirement {
 	private ClaimContext createResoluteContext(String contextName, String contextValue) {
 		ClaimContext context = ResoluteFactory.eINSTANCE.createClaimContext();
 		context.setName(contextName);
-		StringLiteral s = Aadl2Factory.eINSTANCE.createStringLiteral();
-		s.setValue(getStringLiteral(contextValue));
-		context.setVal(s);
+		StringLiteral stringLiteral = Aadl2Factory.eINSTANCE.createStringLiteral();
+		stringLiteral.setValue(getStringLiteral(contextValue));
+		StringExpr stringExpr = ResoluteFactory.eINSTANCE.createStringExpr();
+		stringExpr.setVal(stringLiteral);
+		context.setExpr(stringExpr);
 		return context;
 	}
 
@@ -905,12 +909,17 @@ public class CyberRequirement {
 				body.setExpr(expr == null ? Create.FALSE() : expr);
 				if (body instanceof ClaimBody) {
 					ClaimBody claimBody = (ClaimBody) body;
-					for (ClaimContext context : claimBody.getContext()) {
-						if (context.getName().equalsIgnoreCase(formalized())) {
-							StringLiteral s = Aadl2Factory.eINSTANCE.createStringLiteral();
-							s.setValue(getStringLiteral(False()));
-							context.setVal(s);
-							break;
+					for (ClaimAttribute claimAttribute : claimBody.getAttributes()) {
+						if (claimAttribute instanceof ClaimContext) {
+							ClaimContext claimContext = (ClaimContext) claimAttribute;
+							if (claimContext.getName().equalsIgnoreCase(formalized())) {
+								StringLiteral stringLiteral = Aadl2Factory.eINSTANCE.createStringLiteral();
+								stringLiteral.setValue(getStringLiteral(False()));
+								StringExpr stringExpr = ResoluteFactory.eINSTANCE.createStringExpr();
+								stringExpr.setVal(stringLiteral);
+								claimContext.setExpr(stringExpr);
+								break;
+							}
 						}
 					}
 				}
@@ -966,13 +975,18 @@ public class CyberRequirement {
 
 	static String getContext(ClaimBody claimBody, String context) {
 		if (claimBody != null) {
-			for (ClaimContext c : claimBody.getContext()) {
-				if (c.getName().equalsIgnoreCase(context)) {
-					String val = c.getVal().getValue();
-					if (addQuotes) {
-						return val.substring(1, val.length() - 1);
-					} else {
-						return val;
+			for (ClaimAttribute claimAttribute : claimBody.getAttributes()) {
+				if (claimAttribute instanceof ClaimContext) {
+					ClaimContext claimContext = (ClaimContext) claimAttribute;
+					if (claimContext.getName().equalsIgnoreCase(context)) {
+						if (claimContext.getExpr() instanceof StringExpr) {
+							String val = ((StringExpr) claimContext.getExpr()).getVal().getValue();
+							if (addQuotes) {
+								return val.substring(1, val.length() - 1);
+							} else {
+								return val;
+							}
+						}
 					}
 				}
 			}
@@ -982,14 +996,15 @@ public class CyberRequirement {
 
 	private void setClaimContexts(final ClaimBody claimBody) {
 		// Annotate claim with requirement information
-		EList<ClaimContext> contexts = claimBody.getContext();
-		contexts.clear();
-		contexts.add(createResoluteContext(generatedBy(), getTool()));
-		contexts.add(
+		EList<ClaimAttribute> claimAttributes = claimBody.getAttributes();
+		claimAttributes.clear();
+		claimAttributes.add(createResoluteContext(generatedBy(), getTool()));
+		claimAttributes.add(
 				createResoluteContext(generatedOn(), DateFormat.getDateInstance().format(new Date(getDate() * 1000))));
-		contexts.add(createResoluteContext(reqComponent(), this.getContext()));
-		contexts.add(
+		claimAttributes.add(createResoluteContext(reqComponent(), this.getContext()));
+		claimAttributes.add(
 				createResoluteContext(formalized(), (getStatus() == CyberRequirement.addPlusAgree ? True() : False())));
+
 	}
 
 	public static IFile getContainingFile(String context) {
@@ -1069,7 +1084,6 @@ public class CyberRequirement {
 				}
 			}
 		} catch (CoreException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 
