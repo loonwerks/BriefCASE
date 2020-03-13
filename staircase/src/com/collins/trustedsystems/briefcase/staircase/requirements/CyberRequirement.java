@@ -45,7 +45,6 @@ import com.rockwellcollins.atc.agree.agree.SpecStatement;
 import com.rockwellcollins.atc.agree.parsing.AgreeAnnexParser;
 import com.rockwellcollins.atc.resolute.resolute.AnalysisStatement;
 import com.rockwellcollins.atc.resolute.resolute.BinaryExpr;
-import com.rockwellcollins.atc.resolute.resolute.ClaimAttribute;
 import com.rockwellcollins.atc.resolute.resolute.ClaimBody;
 import com.rockwellcollins.atc.resolute.resolute.ClaimContext;
 import com.rockwellcollins.atc.resolute.resolute.Definition;
@@ -909,7 +908,7 @@ public class CyberRequirement {
 				body.setExpr(expr == null ? Create.FALSE() : expr);
 				if (body instanceof ClaimBody) {
 					ClaimBody claimBody = (ClaimBody) body;
-					for (ClaimAttribute claimAttribute : claimBody.getAttributes()) {
+					for (NamedElement claimAttribute : claimBody.getAttributes()) {
 						if (claimAttribute instanceof ClaimContext) {
 							ClaimContext claimContext = (ClaimContext) claimAttribute;
 							if (claimContext.getName().equalsIgnoreCase(formalized())) {
@@ -975,7 +974,7 @@ public class CyberRequirement {
 
 	static String getContext(ClaimBody claimBody, String context) {
 		if (claimBody != null) {
-			for (ClaimAttribute claimAttribute : claimBody.getAttributes()) {
+			for (NamedElement claimAttribute : claimBody.getAttributes()) {
 				if (claimAttribute instanceof ClaimContext) {
 					ClaimContext claimContext = (ClaimContext) claimAttribute;
 					if (claimContext.getName().equalsIgnoreCase(context)) {
@@ -996,7 +995,7 @@ public class CyberRequirement {
 
 	private void setClaimContexts(final ClaimBody claimBody) {
 		// Annotate claim with requirement information
-		EList<ClaimAttribute> claimAttributes = claimBody.getAttributes();
+		EList<NamedElement> claimAttributes = claimBody.getAttributes();
 		claimAttributes.clear();
 		claimAttributes.add(createResoluteContext(generatedBy(), getTool()));
 		claimAttributes.add(
