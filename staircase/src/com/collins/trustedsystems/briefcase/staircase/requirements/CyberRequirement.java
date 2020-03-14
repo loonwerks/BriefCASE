@@ -815,7 +815,7 @@ public class CyberRequirement {
 		stringLiteral.setValue(getStringLiteral(contextValue));
 		StringExpr stringExpr = ResoluteFactory.eINSTANCE.createStringExpr();
 		stringExpr.setVal(stringLiteral);
-		context.setExpr(stringExpr);
+//		context.setExpr(stringExpr);
 		return context;
 	}
 

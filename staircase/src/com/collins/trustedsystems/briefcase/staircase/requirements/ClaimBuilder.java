@@ -97,8 +97,8 @@ public class ClaimBuilder {
 
 		ClaimBody body = f.createClaimBody();
 		claimText.forEach(ct -> body.getClaim().add(ct));
-		claimContext.forEach(cc -> body.getAttributes().add(cc));
-		claimAssumptions.forEach(ca -> body.getAttributes().add(ca));
+//		claimContext.forEach(cc -> body.getAttributes().add(cc));
+//		claimAssumptions.forEach(ca -> body.getAttributes().add(ca));
 		body.setExpr(claimExpr);
 
 		def.setBody(body);
