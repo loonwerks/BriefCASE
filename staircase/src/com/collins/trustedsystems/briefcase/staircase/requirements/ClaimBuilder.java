@@ -3,6 +3,8 @@ package com.collins.trustedsystems.briefcase.staircase.requirements;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.osate.aadl2.NamedElement;
+
 import com.rockwellcollins.atc.resolute.resolute.Arg;
 import com.rockwellcollins.atc.resolute.resolute.BoolExpr;
 import com.rockwellcollins.atc.resolute.resolute.ClaimArg;
@@ -44,13 +46,13 @@ public class ClaimBuilder {
 		if (db instanceof ClaimBody) {
 			ClaimBody cb = (ClaimBody) db;
 			cb.getClaim().forEach(c -> this.claimText.add(c));
-//			for (NamedElement claimAttribute : cb.getAttributes()) {
-//				if (claimAttribute instanceof ClaimContext) {
-//					this.claimContext.add((ClaimContext) claimAttribute);
-//				} else if (claimAttribute instanceof ClaimAssumption) {
-//					this.claimAssumptions.add((ClaimAssumption) claimAttribute);
-//				}
-//			}
+			for (NamedElement claimAttribute : cb.getAttributes()) {
+				if (claimAttribute instanceof ClaimContext) {
+					this.claimContext.add((ClaimContext) claimAttribute);
+				} else if (claimAttribute instanceof ClaimAssumption) {
+					this.claimAssumptions.add((ClaimAssumption) claimAttribute);
+				}
+			}
 
 			this.claimExpr = cb.getExpr();
 		} else {
@@ -97,8 +99,8 @@ public class ClaimBuilder {
 
 		ClaimBody body = f.createClaimBody();
 		claimText.forEach(ct -> body.getClaim().add(ct));
-//		claimContext.forEach(cc -> body.getAttributes().add(cc));
-//		claimAssumptions.forEach(ca -> body.getAttributes().add(ca));
+		claimContext.forEach(cc -> body.getAttributes().add(cc));
+		claimAssumptions.forEach(ca -> body.getAttributes().add(ca));
 		body.setExpr(claimExpr);
 
 		def.setBody(body);

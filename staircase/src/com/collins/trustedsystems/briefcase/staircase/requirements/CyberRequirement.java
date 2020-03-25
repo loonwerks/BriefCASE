@@ -4,6 +4,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
@@ -12,6 +13,7 @@ import java.util.Objects;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.common.util.TreeIterator;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
@@ -815,7 +817,7 @@ public class CyberRequirement {
 		stringLiteral.setValue(getStringLiteral(contextValue));
 		StringExpr stringExpr = ResoluteFactory.eINSTANCE.createStringExpr();
 		stringExpr.setVal(stringLiteral);
-//		context.setExpr(stringExpr);
+		context.setExpr(stringExpr);
 		return context;
 	}
 
@@ -904,22 +906,22 @@ public class CyberRequirement {
 				DefinitionBody body = fd.getBody();
 				Expr expr = removeClaim(body.getExpr(), claim.getName());
 				body.setExpr(expr == null ? Create.FALSE() : expr);
-//				if (body instanceof ClaimBody) {
-//					ClaimBody claimBody = (ClaimBody) body;
-//					for (NamedElement claimAttribute : claimBody.getAttributes()) {
-//						if (claimAttribute instanceof ClaimContext) {
-//							ClaimContext claimContext = (ClaimContext) claimAttribute;
-//							if (claimContext.getName().equalsIgnoreCase(formalized())) {
-//								StringLiteral stringLiteral = Aadl2Factory.eINSTANCE.createStringLiteral();
-//								stringLiteral.setValue(getStringLiteral(False()));
-//								StringExpr stringExpr = ResoluteFactory.eINSTANCE.createStringExpr();
-//								stringExpr.setVal(stringLiteral);
-//								claimContext.setExpr(stringExpr);
-//								break;
-//							}
-//						}
-//					}
-//				}
+				if (body instanceof ClaimBody) {
+					ClaimBody claimBody = (ClaimBody) body;
+					for (NamedElement claimAttribute : claimBody.getAttributes()) {
+						if (claimAttribute instanceof ClaimContext) {
+							ClaimContext claimContext = (ClaimContext) claimAttribute;
+							if (claimContext.getName().equalsIgnoreCase(formalized())) {
+								StringLiteral stringLiteral = Aadl2Factory.eINSTANCE.createStringLiteral();
+								stringLiteral.setValue(getStringLiteral(False()));
+								StringExpr stringExpr = ResoluteFactory.eINSTANCE.createStringExpr();
+								stringExpr.setVal(stringLiteral);
+								claimContext.setExpr(stringExpr);
+								break;
+							}
+						}
+					}
+				}
 				defResLib.setParsedAnnexLibrary(resLib);
 				return true;
 			}
@@ -972,35 +974,35 @@ public class CyberRequirement {
 
 	static String getContext(ClaimBody claimBody, String context) {
 		if (claimBody != null) {
-//			for (NamedElement claimAttribute : claimBody.getAttributes()) {
-//				if (claimAttribute instanceof ClaimContext) {
-//					ClaimContext claimContext = (ClaimContext) claimAttribute;
-//					if (claimContext.getName().equalsIgnoreCase(context)) {
-//						if (claimContext.getExpr() instanceof StringExpr) {
-//							String val = ((StringExpr) claimContext.getExpr()).getVal().getValue();
-//							if (addQuotes) {
-//								return val.substring(1, val.length() - 1);
-//							} else {
-//								return val;
-//							}
-//						}
-//					}
-//				}
-//			}
+			for (NamedElement claimAttribute : claimBody.getAttributes()) {
+				if (claimAttribute instanceof ClaimContext) {
+					ClaimContext claimContext = (ClaimContext) claimAttribute;
+					if (claimContext.getName().equalsIgnoreCase(context)) {
+						if (claimContext.getExpr() instanceof StringExpr) {
+							String val = ((StringExpr) claimContext.getExpr()).getVal().getValue();
+							if (addQuotes) {
+								return val.substring(1, val.length() - 1);
+							} else {
+								return val;
+							}
+						}
+					}
+				}
+			}
 		}
 		return "";
 	}
 
 	private void setClaimContexts(final ClaimBody claimBody) {
 		// Annotate claim with requirement information
-//		EList<NamedElement> claimAttributes = claimBody.getAttributes();
-//		claimAttributes.clear();
-//		claimAttributes.add(createResoluteContext(generatedBy(), getTool()));
-//		claimAttributes.add(
-//				createResoluteContext(generatedOn(), DateFormat.getDateInstance().format(new Date(getDate() * 1000))));
-//		claimAttributes.add(createResoluteContext(reqComponent(), this.getContext()));
-//		claimAttributes.add(
-//				createResoluteContext(formalized(), (getStatus() == CyberRequirement.addPlusAgree ? True() : False())));
+		EList<NamedElement> claimAttributes = claimBody.getAttributes();
+		claimAttributes.clear();
+		claimAttributes.add(createResoluteContext(generatedBy(), getTool()));
+		claimAttributes.add(
+				createResoluteContext(generatedOn(), DateFormat.getDateInstance().format(new Date(getDate() * 1000))));
+		claimAttributes.add(createResoluteContext(reqComponent(), this.getContext()));
+		claimAttributes.add(
+				createResoluteContext(formalized(), (getStatus() == CyberRequirement.addPlusAgree ? True() : False())));
 
 	}
 
