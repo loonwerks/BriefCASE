@@ -50,6 +50,7 @@ import com.collins.trustedsystems.briefcase.staircase.requirements.AddVirtualiza
 import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsManager;
 import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
 import com.collins.trustedsystems.briefcase.staircase.utils.ComponentCreateHelper;
+import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
 
 public class AddVirtualizationHandler extends AadlHandler {
 
@@ -176,6 +177,8 @@ public class AddVirtualizationHandler extends AadlHandler {
 		// into the same package as the selected subcomponent's containing implementation.
 		// Note that this could be a different package than the bound processor(s).
 		insertVirtualProcessor(EcoreUtil.getURI(selectedSub));
+
+		BriefcaseNotifier.notify("StairCASE - Virtualization", "Virtual machine added to model.");
 
 		return;
 

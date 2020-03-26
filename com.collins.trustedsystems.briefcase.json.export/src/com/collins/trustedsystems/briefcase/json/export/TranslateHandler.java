@@ -22,6 +22,7 @@ import org.osate.ge.BusinessObjectSelection;
 import org.osate.ui.dialogs.Dialog;
 
 import com.collins.trustedsystems.briefcase.json.export.AadlTranslate.AgreePrintOption;
+import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
 import com.collins.trustedsystems.briefcase.util.ModelHashcode;
 import com.collins.trustedsystems.briefcase.util.TraverseProject;
 import com.google.gson.JsonObject;
@@ -67,6 +68,7 @@ public class TranslateHandler extends AbstractHandler {
 		try {
 			// Generate json
 			Aadl2Json.createJson(header, AgreePrintOption.BOTH);
+			BriefcaseNotifier.notify("Export to JSON", "Export completed successfully.");
 		} catch (Exception e) {
 			Dialog.showError("JSON Generator", "Unable to export model to JSON format");
 			return null;

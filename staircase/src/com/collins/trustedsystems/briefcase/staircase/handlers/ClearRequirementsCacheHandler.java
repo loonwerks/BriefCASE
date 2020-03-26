@@ -6,6 +6,7 @@ import org.eclipse.core.commands.ExecutionException;
 import org.osate.ui.dialogs.Dialog;
 
 import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsManager;
+import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
 
 public class ClearRequirementsCacheHandler extends AbstractHandler {
 
@@ -24,6 +25,8 @@ public class ClearRequirementsCacheHandler extends AbstractHandler {
 
 		// Clear imported requirements in requirements manager
 		RequirementsManager.getInstance().clearRequirements();
+
+		BriefcaseNotifier.notify("Requirements Manager", "Requirements cache cleared.");
 
 	}
 

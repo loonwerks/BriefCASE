@@ -48,6 +48,7 @@ import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsM
 import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
 import com.collins.trustedsystems.briefcase.staircase.utils.CaseUtils;
 import com.collins.trustedsystems.briefcase.staircase.utils.ComponentCreateHelper;
+import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
 import com.rockwellcollins.atc.agree.agree.AgreeContract;
 import com.rockwellcollins.atc.agree.agree.AgreeContractSubclause;
 import com.rockwellcollins.atc.agree.unparsing.AgreeAnnexUnparser;
@@ -130,11 +131,11 @@ public class AddAttestationManagerHandler extends AadlHandler {
 
 		// Insert the attestation manager
 		if (attestationManager != null) {
-
 			associateNewRequirement(EcoreUtil.getURI(selectedSubcomponent), EcoreUtil.getURI(attestationManager));
-
+			BriefcaseNotifier.notify("StairCASE - Attestation", "New requirement associated with Attestation Manager.");
 		} else {
 			insertAttestationManager(uri);
+			BriefcaseNotifier.notify("StairCASE - Attestation", "Attestation Manager added to model.");
 		}
 
 		return;

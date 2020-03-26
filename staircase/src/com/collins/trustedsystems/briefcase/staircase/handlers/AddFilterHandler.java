@@ -51,6 +51,7 @@ import com.collins.trustedsystems.briefcase.staircase.requirements.CyberRequirem
 import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsManager;
 import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
 import com.collins.trustedsystems.briefcase.staircase.utils.ComponentCreateHelper;
+import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
 import com.rockwellcollins.atc.agree.agree.AgreeContract;
 import com.rockwellcollins.atc.agree.agree.AgreeContractSubclause;
 import com.rockwellcollins.atc.agree.agree.GuaranteeStatement;
@@ -200,8 +201,10 @@ public class AddFilterHandler extends AadlHandler {
 		// Insert the filter component
 		if (createCompoundFilter) {
 			addFilterSpec(EcoreUtil.getURI(subcomponent), EcoreUtil.getURI(filterOutConn));
+			BriefcaseNotifier.notify("StairCASE - Filter", "New requirement associated with Filter.");
 		} else {
 			insertFilterComponent(uri);
+			BriefcaseNotifier.notify("StairCASE - Filter", "Filter added to model.");
 		}
 
 		return;

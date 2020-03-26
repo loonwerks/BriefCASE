@@ -72,6 +72,7 @@ import org.osate.ui.dialogs.Dialog;
 
 import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
 import com.collins.trustedsystems.briefcase.staircase.utils.ComponentCreateHelper;
+import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
 
 public class Sel4TransformHandler extends AadlHandler {
 
@@ -129,6 +130,8 @@ public class Sel4TransformHandler extends AadlHandler {
 
 
 		transformSystem(selectedSystem, "");
+
+		BriefcaseNotifier.notify("StairCASE - seL4", "Model transformed for seL4 build.");
 
 	}
 

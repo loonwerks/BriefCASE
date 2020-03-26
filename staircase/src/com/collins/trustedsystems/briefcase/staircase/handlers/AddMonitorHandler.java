@@ -43,6 +43,7 @@ import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsM
 import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
 import com.collins.trustedsystems.briefcase.staircase.utils.ComponentCreateHelper;
 import com.collins.trustedsystems.briefcase.staircase.utils.ModelTransformUtils;
+import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
 
 public class AddMonitorHandler extends AadlHandler {
 
@@ -114,6 +115,8 @@ public class AddMonitorHandler extends AadlHandler {
 
 		// Insert the monitor component
 		insertMonitor(uri);
+
+		BriefcaseNotifier.notify("StairCASE - Monitor", "Monitor added to model.");
 
 		return;
 

@@ -30,6 +30,7 @@ import org.osate.ui.dialogs.Dialog;
 
 import com.collins.trustedsystems.briefcase.staircase.dialogs.ModelAnnotationsDialog;
 import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
+import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
 
 public class ModelAnnotationsHandler extends AadlHandler {
 
@@ -92,6 +93,8 @@ public class ModelAnnotationsHandler extends AadlHandler {
 		}
 
 		setAnnotations(component);
+
+		BriefcaseNotifier.notify("Model Annotations", "Model annotations complete.");
 
 	}
 

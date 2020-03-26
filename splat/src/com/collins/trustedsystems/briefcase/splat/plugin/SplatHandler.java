@@ -57,6 +57,7 @@ import com.collins.trustedsystems.briefcase.json.export.Aadl2Json;
 import com.collins.trustedsystems.briefcase.splat.Activator;
 import com.collins.trustedsystems.briefcase.splat.preferences.SplatPreferenceConstants;
 import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
+import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
 import com.collins.trustedsystems.briefcase.util.Filesystem;
 import com.collins.trustedsystems.briefcase.util.TraverseProject;
 
@@ -337,6 +338,9 @@ public class SplatHandler extends AbstractHandler {
 			e.printStackTrace();
 			return null;
 		}
+
+		BriefcaseNotifier.notify("SPLAT", "SPLAT completed successfully.");
+
 		return null;
 	}
 

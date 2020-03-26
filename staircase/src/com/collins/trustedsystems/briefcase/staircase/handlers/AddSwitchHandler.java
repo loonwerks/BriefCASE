@@ -47,6 +47,7 @@ import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsM
 import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
 import com.collins.trustedsystems.briefcase.staircase.utils.ComponentCreateHelper;
 import com.collins.trustedsystems.briefcase.staircase.utils.ModelTransformUtils;
+import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
 
 public class AddSwitchHandler extends AadlHandler {
 
@@ -111,6 +112,8 @@ public class AddSwitchHandler extends AadlHandler {
 
 		// Insert the switch component
 		insertSwitchComponent(uri);
+
+		BriefcaseNotifier.notify("StairCASE - Switch", "Switch added to model.");
 
 		return;
 

@@ -13,6 +13,7 @@ import org.osate.ui.dialogs.Dialog;
 import com.collins.trustedsystems.briefcase.staircase.dialogs.ImportRequirementsGUI;
 import com.collins.trustedsystems.briefcase.staircase.requirements.CyberRequirement;
 import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsManager;
+import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
 import com.collins.trustedsystems.briefcase.util.TraverseProject;
 
 public class ImportRequirementsHandler extends AbstractHandler {
@@ -73,6 +74,8 @@ public class ImportRequirementsHandler extends AbstractHandler {
 			List<CyberRequirement> updatedReqs = wizard.getRequirements();
 			reqMgr.updateRequirements(updatedReqs);
 		}
+
+		BriefcaseNotifier.notify("Requirements Manager", "Requirements import complete.");
 
 		return null;
 	}
