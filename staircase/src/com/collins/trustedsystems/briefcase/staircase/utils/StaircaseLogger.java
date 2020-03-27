@@ -47,10 +47,10 @@ public class StaircaseLogger {
 	private static MessageConsole findConsole(String name) {
 		ConsolePlugin plugin = ConsolePlugin.getDefault();
 		IConsoleManager conMan = plugin.getConsoleManager();
-		IConsole[] existing = conMan.getConsoles();
-		for (int i = 0; i < existing.length; i++) {
-			if (name.equals(existing[i].getName())) {
-				return (MessageConsole) existing[i];
+
+		for (IConsole con : conMan.getConsoles()) {
+			if (name.contentEquals(con.getName())) {
+				return (MessageConsole) con;
 			}
 		}
 		// no console found, so create a new one
