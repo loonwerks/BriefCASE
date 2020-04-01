@@ -463,9 +463,11 @@ public class AddMonitorHandler extends AadlHandler {
 				String monitorPolicy = monitorType.getName() + "_policy";
 				String agreeClauses = "{**" + System.lineSeparator();
 
-				agreeClauses += "const monitor_latched : bool = " + latched + ";" + System.lineSeparator();
+				agreeClauses += "const monitor_latched : bool = Get_Property(this, CASE_Properties::Monitor_Latched);"
+						+ System.lineSeparator();
 				agreeClauses += "property " + monitorPolicy + " = " + monitorAgreeProperty
 						+ System.lineSeparator();
+
 				agreeClauses += "guarantee " + monitorPropId + "_alert"
 						+ " \"A violation of the monitor policy shall trigger an alert\" : event(alert) = not "
 						+ monitorPolicy + ";"
