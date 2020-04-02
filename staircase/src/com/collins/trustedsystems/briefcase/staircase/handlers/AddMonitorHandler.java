@@ -305,25 +305,23 @@ public class AddMonitorHandler extends AadlHandler {
 			}
 
 			// Add monitor properties
-			// CASE::COMP_TYPE Property
+			// CASE_Properties::Component_Type Property
 			if (!CasePropertyUtils.setCompType(monitorType, "MONITOR")) {
-//			if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.COMP_TYPE, "MONITOR", monitorType)) {
-//					return;
+//				return null;
 			}
 
-			// CASE::COMP_SPEC property
-			// Parse the ID from the Monitor AGREE property
+			// CASE_Properties::Component_Spec property
+			// TODO: Parse the ID from the Monitor AGREE property
 			String monitorPropId = "Req_" + monitorType.getName();
 			if (!monitorAgreeProperty.isEmpty()) {
-				String monitorSpec = monitorPropId + "_alert";
-				if (observationGate) {
-					monitorSpec += "," + monitorPropId + "_gate";
+				if (!CasePropertyUtils.setCompSpec(monitorType, monitorPropId)) {
+//					return null;
 				}
-				if (!CasePropertyUtils.setCompSpec(monitorType, monitorSpec)) {
-//				if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.COMP_SPEC, monitorSpec,
-//						monitorType)) {
-//						return;
-				}
+			}
+
+			// CASE_Properties::Monitor_Latched
+			if (!CasePropertyUtils.setMonitorLatched(monitorType, latched)) {
+//				return null;
 			}
 
 			// Move to top of file
@@ -339,10 +337,10 @@ public class AddMonitorHandler extends AadlHandler {
 			// Move below component type
 			pkgSection.getOwnedClassifiers().move(1, pkgSection.getOwnedClassifiers().size() - 1);
 
-//			// CASE::COMP_IMPL property
+//			// CASE_Properties::Component_Impl property
 //			if (!monitorImplementationLanguage.isEmpty()) {
 //				if (!CaseUtils.addCasePropertyAssociation("COMP_IMPL", monitorImplementationLanguage, monitorImpl)) {
-////						return;
+////						return null;
 //				}
 //			}
 
@@ -455,37 +453,97 @@ public class AddMonitorHandler extends AadlHandler {
 			}
 
 			// AGREE
-			if (monitorAgreeProperty.length() > 0) {
-
-				if (!monitorAgreeProperty.trim().endsWith(";")) {
-					monitorAgreeProperty = monitorAgreeProperty.trim() + ";";
-				}
-				String monitorPolicy = monitorType.getName() + "_policy";
-				String agreeClauses = "{**" + System.lineSeparator();
-
-				agreeClauses += "const monitor_latched : bool = Get_Property(this, CASE_Properties::Monitor_Latched);"
-						+ System.lineSeparator();
-				agreeClauses += "property " + monitorPolicy + " = " + monitorAgreeProperty
-						+ System.lineSeparator();
-
-				agreeClauses += "guarantee " + monitorPropId + "_alert"
-						+ " \"A violation of the monitor policy shall trigger an alert\" : event(alert) = not "
-						+ monitorPolicy + ";"
-						+ System.lineSeparator();
-				if (observationGate) {
-					agreeClauses += "guarantee " + monitorPropId + "_gate"
-							+ " \"A violation of the monitor policy shall prevent the observed message from propagating\" : if "
-							+ monitorPolicy + " then event(" + MONITOR_GATE_PORT_NAME + ") and "
-							+ MONITOR_GATE_PORT_NAME + " = " + MONITOR_OBSERVED_PORT_NAME + " else not event("
-							+ MONITOR_GATE_PORT_NAME + ");" + System.lineSeparator();
-				}
-				agreeClauses += "**}";
-
-				final DefaultAnnexSubclause annexSubclauseImpl = ComponentCreateHelper
-						.createOwnedAnnexSubclause(monitorType);
-				annexSubclauseImpl.setName("agree");
-				annexSubclauseImpl.setSourceText(agreeClauses);
+			if (monitorAgreeProperty.isEmpty()) {
+				monitorAgreeProperty = "false;";
+			} else if (!monitorAgreeProperty.trim().endsWith(";")) {
+				monitorAgreeProperty = monitorAgreeProperty.trim() + ";";
 			}
+
+			String monitorPolicyName = monitorType.getName() + "_policy";
+			String gateString = "";
+			boolean observedEvent = false;
+			boolean gateEvent = false;
+			if (portObserved instanceof EventPort || portObserved instanceof EventDataPort) {
+				observedEvent = true;
+			}
+			if (observationGate) {
+				if (monGatePort instanceof EventPort || monGatePort instanceof EventDataPort) {
+					gateEvent = true;
+					gateString = "event(" + MONITOR_GATE_PORT_NAME + ")";
+				} else {
+					gateString = MONITOR_GATE_PORT_NAME;
+				}
+			}
+			String alertString = MONITOR_ALERT_PORT_NAME;
+			if (monAlertPort instanceof EventPort || monAlertPort instanceof EventDataPort) {
+				alertString = "event(" + MONITOR_ALERT_PORT_NAME + ")";
+			}
+			String resetString = "";
+			if (resetPort != null) {
+				if (monResetPort instanceof EventPort || monResetPort instanceof EventDataPort) {
+					resetString = "not event(" + MONITOR_RESET_PORT_NAME + ") and ";
+				} else {
+					resetString = "not " + MONITOR_RESET_PORT_NAME + " and ";
+				}
+			}
+			String guaranteeText = "\"A violation of the monitor policy shall trigger an alert";
+			if (observationGate) {
+				guaranteeText += ", and observed input shall not be propagated.\"";
+			} else {
+				guaranteeText += ".\"";
+			}
+			StringBuilder agreeClauses = new StringBuilder();
+			agreeClauses.append("{**" + System.lineSeparator());
+
+			agreeClauses.append("const is_latched : bool = Get_Property(this, CASE_Properties::Monitor_Latched);"
+					+ System.lineSeparator());
+			agreeClauses
+					.append("property " + monitorPolicyName + " = " + monitorAgreeProperty + System.lineSeparator());
+
+			agreeClauses.append("guarantee " + monitorPropId + " " + guaranteeText + " :" + System.lineSeparator());
+
+			agreeClauses.append("if " + resetString + "is_latched and prev(" + alertString + ", not "
+					+ monitorPolicyName + ") then" + System.lineSeparator());
+
+			agreeClauses.append(alertString);
+			if (gateEvent) {
+				agreeClauses.append(" and not " + gateString + System.lineSeparator());
+			} else {
+				agreeClauses.append(System.lineSeparator());
+			}
+			agreeClauses.append("else" + System.lineSeparator());
+			if (observedEvent) {
+				agreeClauses.append("if event(" + MONITOR_OBSERVED_PORT_NAME + ") then" + System.lineSeparator());
+			}
+			agreeClauses.append("if " + monitorPolicyName + " then" + System.lineSeparator());
+			agreeClauses.append("not " + alertString);
+			if (observationGate) {
+				if (gateEvent) {
+					agreeClauses.append(" and " + gateString);
+				}
+				agreeClauses.append(" and " + MONITOR_GATE_PORT_NAME + " = " + MONITOR_OBSERVED_PORT_NAME);
+			}
+			agreeClauses.append(System.lineSeparator() + "else" + System.lineSeparator());
+			agreeClauses.append(alertString);
+			if (gateEvent) {
+				agreeClauses.append(" and not " + gateString);
+			}
+			agreeClauses.append(System.lineSeparator());
+			if (observedEvent) {
+				agreeClauses.append("else" + System.lineSeparator());
+				agreeClauses.append("not " + alertString);
+				if (gateEvent) {
+					agreeClauses.append(" and not " + gateString);
+				}
+			}
+			agreeClauses.append(";" + System.lineSeparator());
+
+			agreeClauses.append("**}");
+
+			final DefaultAnnexSubclause annexSubclauseImpl = ComponentCreateHelper
+					.createOwnedAnnexSubclause(monitorType);
+			annexSubclauseImpl.setName("agree");
+			annexSubclauseImpl.setSourceText(agreeClauses.toString());
 
 			if (isProcess) {
 
@@ -509,7 +567,9 @@ public class AddMonitorHandler extends AadlHandler {
 			return null;
 		});
 
-		RequirementsManager.getInstance().modifyRequirement(monitorRequirement, claim);
+		if (claim != null) {
+			RequirementsManager.getInstance().modifyRequirement(monitorRequirement, claim);
+		}
 
 	}
 
