@@ -51,6 +51,7 @@ import com.rockwellcollins.atc.agree.agree.NodeEq;
 import com.rockwellcollins.atc.agree.agree.NodeLemma;
 import com.rockwellcollins.atc.agree.agree.NodeStmt;
 import com.rockwellcollins.atc.agree.agree.PreExpr;
+import com.rockwellcollins.atc.agree.agree.PrevExpr;
 import com.rockwellcollins.atc.agree.agree.PrimType;
 import com.rockwellcollins.atc.agree.agree.PropertyStatement;
 import com.rockwellcollins.atc.agree.agree.RealCast;
@@ -173,10 +174,17 @@ public class AgreeTranslate {
 	}
 
 	private static JsonElement genPreExpr(PreExpr expr) {
-
 		JsonObject result = new JsonObject();
 		result.add("kind", new JsonPrimitive("PreExpr"));
 		result.add("expr", genExpr(expr.getExpr()));
+		return result;
+	}
+
+	private static JsonElement genPrevExpr(PrevExpr expr) {
+		JsonObject result = new JsonObject();
+		result.add("kind", new JsonPrimitive("PrevExpr"));
+		result.add("delay", genExpr(expr.getDelay()));
+		result.add("init", genExpr(expr.getInit()));
 		return result;
 	}
 
@@ -228,6 +236,8 @@ public class AgreeTranslate {
 			return genEventExpr((EventExpr) expr);
 		} else if (expr instanceof PreExpr) {
 			return genPreExpr((PreExpr) expr);
+		} else if (expr instanceof PrevExpr) {
+			return genPrevExpr((PrevExpr) expr);
 		} else if (expr instanceof ForallExpr) {
 			return genForallExpr((ForallExpr) expr);
 		} else if (expr instanceof ExistsExpr) {
