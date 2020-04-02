@@ -466,7 +466,9 @@ public class AddFilterHandler extends AadlHandler {
 			return null;
 		});
 
-		RequirementsManager.getInstance().modifyRequirement(filterRequirement, claim);
+		if (claim != null) {
+			RequirementsManager.getInstance().modifyRequirement(filterRequirement, claim);
+		}
 	}
 
 	private String getSourceName(URI uri) {

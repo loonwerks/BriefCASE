@@ -54,6 +54,8 @@ public class CasePropertyUtils {
 
 	public static final String OS = "OS";
 
+	public static final String MONITOR_LATCHED = "Monitor_Latched";
+
 	/**
 	 * Adds the CASE_Properties file to the list of imported model units via the 'with' statement
 	 * to the specified package section
@@ -329,6 +331,19 @@ public class CasePropertyUtils {
 			StringLiteral strLit = Aadl2Factory.eINSTANCE.createStringLiteral();
 			strLit.setValue(os);
 			comp.setPropertyValue(prop, strLit);
+		} catch (PropertyDoesNotApplyToHolderException e) {
+			return false;
+		}
+		return true;
+	}
+
+	public static boolean setMonitorLatched(Classifier comp, boolean latched) {
+		try {
+			Property prop = Aadl2GlobalScopeUtil.get(comp, Aadl2Package.eINSTANCE.getProperty(),
+					CASE_PROPSET_NAME + "::" + MONITOR_LATCHED);
+			BooleanLiteral boolLit = Aadl2Factory.eINSTANCE.createBooleanLiteral();
+			boolLit.setValue(latched);
+			comp.setPropertyValue(prop, boolLit);
 		} catch (PropertyDoesNotApplyToHolderException e) {
 			return false;
 		}

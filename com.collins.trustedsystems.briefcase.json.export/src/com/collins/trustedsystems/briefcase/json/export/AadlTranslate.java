@@ -25,7 +25,9 @@ import org.osate.aadl2.ComponentType;
 import org.osate.aadl2.ConnectedElement;
 import org.osate.aadl2.Connection;
 import org.osate.aadl2.ContainedNamedElement;
+import org.osate.aadl2.DataAccess;
 import org.osate.aadl2.DataPort;
+import org.osate.aadl2.DataSubcomponentType;
 import org.osate.aadl2.DefaultAnnexLibrary;
 import org.osate.aadl2.DefaultAnnexSubclause;
 import org.osate.aadl2.EnumerationLiteral;
@@ -413,6 +415,23 @@ public class AadlTranslate extends Aadl2Switch<JsonElement> {
 		}
 		if (!bus.isEmpty()) {
 			result.add("bus", new JsonPrimitive(bus));
+		}
+
+		return result;
+	}
+
+	@Override
+	public JsonElement caseDataAccess(DataAccess access) {
+		JsonObject result = new JsonObject();
+		result.add("name", new JsonPrimitive(access.getName()));
+		result.add("kind", new JsonPrimitive("DataAccess"));
+		result.add("accessType", new JsonPrimitive(access.getKind().getName()));
+
+		DataSubcomponentType classifier = access.getDataFeatureClassifier();
+		String data = classifier.getQualifiedName();
+
+		if (!data.isEmpty()) {
+			result.add("data", new JsonPrimitive(data));
 		}
 
 		return result;

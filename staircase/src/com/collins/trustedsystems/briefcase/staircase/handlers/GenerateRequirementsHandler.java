@@ -17,7 +17,7 @@ import com.google.gson.JsonObject;
 
 public class GenerateRequirementsHandler extends AadlHandler {
 
-	private final static String GENERATE_REQUIREMENTS_TOOL_COMMAND = "com.collins.trustedsystems.briefcase.architecture.commands.GenerateRequirements.tool";
+	private final static String GENERATE_REQUIREMENTS_TOOL_COMMAND = "com.collins.trustedsystems.briefcase.staircase.commands.GenerateRequirements.tool";
 
 	@Override
 	protected void runCommand(URI uri) {
