@@ -455,6 +455,34 @@ finally {
 
 
 
+// Entry rule entryRuleJsonString
+entryRuleJsonString 
+:
+{ before(grammarAccess.getJsonStringRule()); }
+	 ruleJsonString
+{ after(grammarAccess.getJsonStringRule()); } 
+	 EOF 
+;
+
+// Rule JsonString
+ruleJsonString 
+    @init {
+		int stackSize = keepStackSize();
+    }
+    :
+(
+{ before(grammarAccess.getJsonStringAccess().getSTRINGTerminalRuleCall()); }
+	RULE_STRING
+{ after(grammarAccess.getJsonStringAccess().getSTRINGTerminalRuleCall()); }
+)
+
+;
+finally {
+	restoreStackSize(stackSize);
+}
+
+
+
 
 
 // Entry rule entryRuleContainedPropertyAssociation
@@ -6104,8 +6132,8 @@ rule__JsonAnnexString__ValueAssignment_1
     }
 :
 (
-{ before(grammarAccess.getJsonAnnexStringAccess().getValueSTRINGTerminalRuleCall_1_0()); }
-	RULE_STRING{ after(grammarAccess.getJsonAnnexStringAccess().getValueSTRINGTerminalRuleCall_1_0()); }
+{ before(grammarAccess.getJsonAnnexStringAccess().getValueJsonStringParserRuleCall_1_0()); }
+	ruleJsonString{ after(grammarAccess.getJsonAnnexStringAccess().getValueJsonStringParserRuleCall_1_0()); }
 )
 
 ;

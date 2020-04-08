@@ -263,23 +263,23 @@ public class JsonGrammarAccess extends AbstractGrammarElementFinder {
 		private final Group cGroup = (Group)rule.eContents().get(1);
 		private final Action cJsonAnnexStringAction_0 = (Action)cGroup.eContents().get(0);
 		private final Assignment cValueAssignment_1 = (Assignment)cGroup.eContents().get(1);
-		private final RuleCall cValueSTRINGTerminalRuleCall_1_0 = (RuleCall)cValueAssignment_1.eContents().get(0);
+		private final RuleCall cValueJsonStringParserRuleCall_1_0 = (RuleCall)cValueAssignment_1.eContents().get(0);
 		
 		//JsonAnnexString:
-		//	{JsonAnnexString} value=STRING;
+		//	{JsonAnnexString} value=JsonString;
 		@Override public ParserRule getRule() { return rule; }
 
-		//{JsonAnnexString} value=STRING
+		//{JsonAnnexString} value=JsonString
 		public Group getGroup() { return cGroup; }
 
 		//{JsonAnnexString}
 		public Action getJsonAnnexStringAction_0() { return cJsonAnnexStringAction_0; }
 
-		//value=STRING
+		//value=JsonString
 		public Assignment getValueAssignment_1() { return cValueAssignment_1; }
 
-		//STRING
-		public RuleCall getValueSTRINGTerminalRuleCall_1_0() { return cValueSTRINGTerminalRuleCall_1_0; }
+		//JsonString
+		public RuleCall getValueJsonStringParserRuleCall_1_0() { return cValueJsonStringParserRuleCall_1_0; }
 	}
 
 	public class JsonAnnexNumberElements extends AbstractParserRuleElementFinder {
@@ -408,6 +408,20 @@ public class JsonGrammarAccess extends AbstractGrammarElementFinder {
 		//'null'
 		public Keyword getNullKeyword_1() { return cNullKeyword_1; }
 	}
+
+	public class JsonStringElements extends AbstractParserRuleElementFinder {
+		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "com.collins.trustedsystems.briefcase.json.Json.JsonString");
+		private final RuleCall cSTRINGTerminalRuleCall = (RuleCall)rule.eContents().get(1);
+		
+		//JsonString aadl2::String:
+		//	STRING
+		//	//|	ESC_FWD_SLASH
+		//;
+		@Override public ParserRule getRule() { return rule; }
+
+		//STRING
+		public RuleCall getSTRINGTerminalRuleCall() { return cSTRINGTerminalRuleCall; }
+	}
 	
 	
 	private final AnnexLibraryElements pAnnexLibrary;
@@ -426,6 +440,8 @@ public class JsonGrammarAccess extends AbstractGrammarElementFinder {
 	private final JsonAnnexNullElements pJsonAnnexNull;
 	private final TerminalRule tINT_NUMBER;
 	private final TerminalRule tREAL_NUMBER;
+	private final TerminalRule tSTRING;
+	private final JsonStringElements pJsonString;
 	
 	private final Grammar grammar;
 
@@ -452,6 +468,8 @@ public class JsonGrammarAccess extends AbstractGrammarElementFinder {
 		this.pJsonAnnexNull = new JsonAnnexNullElements();
 		this.tINT_NUMBER = (TerminalRule) GrammarUtil.findRuleForName(getGrammar(), "com.collins.trustedsystems.briefcase.json.Json.INT_NUMBER");
 		this.tREAL_NUMBER = (TerminalRule) GrammarUtil.findRuleForName(getGrammar(), "com.collins.trustedsystems.briefcase.json.Json.REAL_NUMBER");
+		this.tSTRING = (TerminalRule) GrammarUtil.findRuleForName(getGrammar(), "com.collins.trustedsystems.briefcase.json.Json.STRING");
+		this.pJsonString = new JsonStringElements();
 	}
 	
 	protected Grammar internalFindGrammar(GrammarProvider grammarProvider) {
@@ -562,7 +580,7 @@ public class JsonGrammarAccess extends AbstractGrammarElementFinder {
 	}
 
 	//JsonAnnexString:
-	//	{JsonAnnexString} value=STRING;
+	//	{JsonAnnexString} value=JsonString;
 	public JsonAnnexStringElements getJsonAnnexStringAccess() {
 		return pJsonAnnexString;
 	}
@@ -635,6 +653,26 @@ public class JsonGrammarAccess extends AbstractGrammarElementFinder {
 	public TerminalRule getREAL_NUMBERRule() {
 		return tREAL_NUMBER;
 	} 
+
+	//@Override
+	//terminal STRING:
+	//	'"' ('\\' ('b' | 't' | 'n' | 'f' | 'r' | 'u' | '"' | "'" | '\\' | '/') | !('\\' | '"'))* '"' |
+	//	"'" ('\\' ('b' | 't' | 'n' | 'f' | 'r' | 'u' | '"' | "'" | '\\' | '/') | !('\\' | "'"))* "'";
+	public TerminalRule getSTRINGRule() {
+		return tSTRING;
+	} 
+
+	//JsonString aadl2::String:
+	//	STRING
+	//	//|	ESC_FWD_SLASH
+	//;
+	public JsonStringElements getJsonStringAccess() {
+		return pJsonString;
+	}
+	
+	public ParserRule getJsonStringRule() {
+		return getJsonStringAccess().getRule();
+	}
 
 	//PModel aadl2::Element:
 	//	ContainedPropertyAssociation //| BasicPropertyAssociation | PropertyAssociation
@@ -912,7 +950,7 @@ public class JsonGrammarAccess extends AbstractGrammarElementFinder {
 	}
 
 	//NoQuoteString:
-	//	STRING;
+	//	super::STRING;
 	public PropertiesGrammarAccess.NoQuoteStringElements getNoQuoteStringAccess() {
 		return gaProperties.getNoQuoteStringAccess();
 	}
@@ -1123,13 +1161,6 @@ public class JsonGrammarAccess extends AbstractGrammarElementFinder {
 	public ParserRule getSTARRule() {
 		return getSTARAccess().getRule();
 	}
-
-	//terminal STRING:
-	//	'"' ('\\' ('b' | 't' | 'n' | 'f' | 'r' | 'u' | '"' | "'" | '\\') | !('\\' | '"'))* '"' |
-	//	"'" ('\\' ('b' | 't' | 'n' | 'f' | 'r' | 'u' | '"' | "'" | '\\') | !('\\' | "'"))* "'";
-	public TerminalRule getSTRINGRule() {
-		return gaProperties.getSTRINGRule();
-	} 
 
 	//terminal ID:
 	//	('a'..'z'

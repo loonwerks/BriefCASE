@@ -28,7 +28,7 @@ public interface JsonAnnexString extends JsonAnnexElement
    * @return the value of the '<em>Value</em>' attribute.
    * @see #setValue(String)
    * @see com.collins.trustedsystems.briefcase.json.json.JsonPackage#getJsonAnnexString_Value()
-   * @model
+   * @model dataType="org.osate.aadl2.String"
    * @generated
    */
   String getValue();

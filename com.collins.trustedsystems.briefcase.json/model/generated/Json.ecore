@@ -26,7 +26,7 @@
         containment="true"/>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EClass" name="JsonAnnexString" eSuperTypes="#//JsonAnnexElement">
-    <eStructuralFeatures xsi:type="ecore:EAttribute" name="value" eType="ecore:EDataType platform:/plugin/org.eclipse.emf.ecore/model/Ecore.ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="value" eType="ecore:EDataType platform:/resource/org.osate.aadl2/model/aadl2.ecore#//String"/>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EClass" name="JsonAnnexNumber" eSuperTypes="#//JsonAnnexElement"/>
   <eClassifiers xsi:type="ecore:EClass" name="JsonAnnexBoolean" eSuperTypes="#//JsonAnnexElement"/>

@@ -35,3 +35,4 @@ Export-Package: com.collins.trustedsystems.briefcase.json.ui;
    org.eclipse.xtext",
  com.collins.trustedsystems.briefcase.json.ui.quickfix;uses:="org.osate.xtext.aadl2.properties.ui.quickfix"
 Bundle-Activator: com.collins.trustedsystems.briefcase.json.ui.internal.JsonActivator
+Import-Package: org.apache.log4j

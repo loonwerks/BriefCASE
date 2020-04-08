@@ -550,7 +550,6 @@ public class JsonPackageImpl extends EPackageImpl implements JsonPackage
 
     // Obtain other dependent packages
     Aadl2Package theAadl2Package = (Aadl2Package)EPackage.Registry.INSTANCE.getEPackage(Aadl2Package.eNS_URI);
-    EcorePackage theEcorePackage = (EcorePackage)EPackage.Registry.INSTANCE.getEPackage(EcorePackage.eNS_URI);
 
     // Create type parameters
 
@@ -590,7 +589,7 @@ public class JsonPackageImpl extends EPackageImpl implements JsonPackage
     initEReference(getJsonAnnexMember_JsonAnnexElement(), this.getJsonAnnexElement(), null, "jsonAnnexElement", null, 0, 1, JsonAnnexMember.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_COMPOSITE, !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
 
     initEClass(jsonAnnexStringEClass, JsonAnnexString.class, "JsonAnnexString", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
-    initEAttribute(getJsonAnnexString_Value(), theEcorePackage.getEString(), "value", null, 0, 1, JsonAnnexString.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEAttribute(getJsonAnnexString_Value(), theAadl2Package.getString(), "value", null, 0, 1, JsonAnnexString.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
 
     initEClass(jsonAnnexNumberEClass, JsonAnnexNumber.class, "JsonAnnexNumber", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
 

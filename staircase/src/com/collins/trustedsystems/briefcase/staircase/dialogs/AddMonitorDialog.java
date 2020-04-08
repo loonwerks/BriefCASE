@@ -88,8 +88,8 @@ public class AddMonitorDialog extends TitleAreaDialog {
 
 		// Add monitor information fields
 		createMonitorImplementationNameField(container);
-		createResetPortField(container);
 		createLatchedField(container);
+		createResetPortField(container);
 		createReferencePortsField(container);
 		createAlertPortField(container);
 		createObservationGateField(container);

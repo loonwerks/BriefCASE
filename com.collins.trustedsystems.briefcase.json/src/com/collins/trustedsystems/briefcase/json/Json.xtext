@@ -42,7 +42,7 @@ JsonAnnexMember returns JsonAnnexMember:
 ;
 
 JsonAnnexString:
-    {JsonAnnexString} value=STRING;
+    {JsonAnnexString} value=JsonString;
 
 JsonAnnexNumber:
 	{JsonAnnexInteger} value=SignedInteger
@@ -71,4 +71,14 @@ terminal INT_NUMBER:
     
 terminal REAL_NUMBER:
     ('-')? ('0'|('1'.. '9')) ('0'..'9')*  ('.' ('0'..'9')+ ) (('e'|'E') ('-'|'+')? ('0'..'9')+ )?;
+    
+@Override
+terminal STRING:
+	'"' ( '\\' ('b'|'t'|'n'|'f'|'r'|'u'|'"'|"'"|'\\'|'/') | !('\\'|'"') )* '"' |
+	"'" ( '\\' ('b'|'t'|'n'|'f'|'r'|'u'|'"'|"'"|'\\'|'/') | !('\\'|"'") )* "'"
+;
+
+JsonString returns aadl2::String: 
+	STRING
+; 
 

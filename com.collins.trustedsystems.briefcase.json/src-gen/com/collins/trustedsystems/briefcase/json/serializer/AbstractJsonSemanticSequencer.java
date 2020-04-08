@@ -339,7 +339,7 @@ public abstract class AbstractJsonSemanticSequencer extends PropertiesSemanticSe
 	 *     JsonAnnexString returns JsonAnnexString
 	 *
 	 * Constraint:
-	 *     value=STRING
+	 *     value=JsonString
 	 */
 	protected void sequence_JsonAnnexString(ISerializationContext context, JsonAnnexString semanticObject) {
 		if (errorAcceptor != null) {
@@ -347,7 +347,7 @@ public abstract class AbstractJsonSemanticSequencer extends PropertiesSemanticSe
 				errorAcceptor.accept(diagnosticProvider.createFeatureValueMissing(semanticObject, JsonPackage.Literals.JSON_ANNEX_STRING__VALUE));
 		}
 		SequenceFeeder feeder = createSequencerFeeder(context, semanticObject);
-		feeder.accept(grammarAccess.getJsonAnnexStringAccess().getValueSTRINGTerminalRuleCall_1_0(), semanticObject.getValue());
+		feeder.accept(grammarAccess.getJsonAnnexStringAccess().getValueJsonStringParserRuleCall_1_0(), semanticObject.getValue());
 		feeder.finish();
 	}
 	

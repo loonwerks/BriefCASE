@@ -17,29 +17,29 @@ public class InternalJsonLexer extends Lexer {
     public static final int True=14;
     public static final int False=11;
     public static final int RULE_REAL_NUMBER=35;
-    public static final int RULE_INT_EXPONENT=39;
+    public static final int RULE_INT_EXPONENT=40;
     public static final int PlusSignEqualsSignGreaterThanSign=15;
     public static final int LeftParenthesis=21;
     public static final int FullStopFullStop=16;
     public static final int To=20;
     public static final int Applies=7;
-    public static final int RULE_BASED_INTEGER=41;
+    public static final int RULE_BASED_INTEGER=42;
     public static final int RightSquareBracket=31;
     public static final int Binding=8;
     public static final int RULE_ID=45;
     public static final int RightParenthesis=22;
-    public static final int RULE_DIGIT=37;
+    public static final int RULE_DIGIT=38;
     public static final int ColonColon=17;
     public static final int PlusSign=24;
     public static final int LeftSquareBracket=30;
-    public static final int RULE_INTEGER_LIT=42;
+    public static final int RULE_INTEGER_LIT=43;
     public static final int In=19;
     public static final int Constant=6;
     public static final int RULE_INT_NUMBER=34;
-    public static final int RULE_REAL_LIT=40;
-    public static final int RULE_STRING=44;
+    public static final int RULE_REAL_LIT=41;
+    public static final int RULE_STRING=36;
     public static final int Classifier=4;
-    public static final int RULE_SL_COMMENT=36;
+    public static final int RULE_SL_COMMENT=37;
     public static final int Comma=25;
     public static final int HyphenMinus=26;
     public static final int Colon=28;
@@ -52,10 +52,10 @@ public class InternalJsonLexer extends Lexer {
     public static final int Reference=5;
     public static final int LeftCurlyBracket=32;
     public static final int Semicolon=29;
-    public static final int RULE_EXPONENT=38;
+    public static final int RULE_EXPONENT=39;
     public static final int Delta=10;
     public static final int Compute=9;
-    public static final int RULE_EXTENDED_DIGIT=43;
+    public static final int RULE_EXTENDED_DIGIT=44;
 
     // delegates
     // delegators
@@ -1592,30 +1592,189 @@ public class InternalJsonLexer extends Lexer {
     }
     // $ANTLR end "RULE_REAL_NUMBER"
 
+    // $ANTLR start "RULE_STRING"
+    public final void mRULE_STRING() throws RecognitionException {
+        try {
+            int _type = RULE_STRING;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // InternalJsonLexer.g:85:13: ( ( '\"' ( '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | 'u' | '\"' | '\\'' | '\\\\' | '/' ) | ~ ( ( '\\\\' | '\"' ) ) )* '\"' | '\\'' ( '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | 'u' | '\"' | '\\'' | '\\\\' | '/' ) | ~ ( ( '\\\\' | '\\'' ) ) )* '\\'' ) )
+            // InternalJsonLexer.g:85:15: ( '\"' ( '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | 'u' | '\"' | '\\'' | '\\\\' | '/' ) | ~ ( ( '\\\\' | '\"' ) ) )* '\"' | '\\'' ( '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | 'u' | '\"' | '\\'' | '\\\\' | '/' ) | ~ ( ( '\\\\' | '\\'' ) ) )* '\\'' )
+            {
+            // InternalJsonLexer.g:85:15: ( '\"' ( '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | 'u' | '\"' | '\\'' | '\\\\' | '/' ) | ~ ( ( '\\\\' | '\"' ) ) )* '\"' | '\\'' ( '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | 'u' | '\"' | '\\'' | '\\\\' | '/' ) | ~ ( ( '\\\\' | '\\'' ) ) )* '\\'' )
+            int alt11=2;
+            int LA11_0 = input.LA(1);
+
+            if ( (LA11_0=='\"') ) {
+                alt11=1;
+            }
+            else if ( (LA11_0=='\'') ) {
+                alt11=2;
+            }
+            else {
+                NoViableAltException nvae =
+                    new NoViableAltException("", 11, 0, input);
+
+                throw nvae;
+            }
+            switch (alt11) {
+                case 1 :
+                    // InternalJsonLexer.g:85:16: '\"' ( '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | 'u' | '\"' | '\\'' | '\\\\' | '/' ) | ~ ( ( '\\\\' | '\"' ) ) )* '\"'
+                    {
+                    match('\"'); 
+                    // InternalJsonLexer.g:85:20: ( '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | 'u' | '\"' | '\\'' | '\\\\' | '/' ) | ~ ( ( '\\\\' | '\"' ) ) )*
+                    loop9:
+                    do {
+                        int alt9=3;
+                        int LA9_0 = input.LA(1);
+
+                        if ( (LA9_0=='\\') ) {
+                            alt9=1;
+                        }
+                        else if ( ((LA9_0>='\u0000' && LA9_0<='!')||(LA9_0>='#' && LA9_0<='[')||(LA9_0>=']' && LA9_0<='\uFFFF')) ) {
+                            alt9=2;
+                        }
+
+
+                        switch (alt9) {
+                    	case 1 :
+                    	    // InternalJsonLexer.g:85:21: '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | 'u' | '\"' | '\\'' | '\\\\' | '/' )
+                    	    {
+                    	    match('\\'); 
+                    	    if ( input.LA(1)=='\"'||input.LA(1)=='\''||input.LA(1)=='/'||input.LA(1)=='\\'||input.LA(1)=='b'||input.LA(1)=='f'||input.LA(1)=='n'||input.LA(1)=='r'||(input.LA(1)>='t' && input.LA(1)<='u') ) {
+                    	        input.consume();
+
+                    	    }
+                    	    else {
+                    	        MismatchedSetException mse = new MismatchedSetException(null,input);
+                    	        recover(mse);
+                    	        throw mse;}
+
+
+                    	    }
+                    	    break;
+                    	case 2 :
+                    	    // InternalJsonLexer.g:85:70: ~ ( ( '\\\\' | '\"' ) )
+                    	    {
+                    	    if ( (input.LA(1)>='\u0000' && input.LA(1)<='!')||(input.LA(1)>='#' && input.LA(1)<='[')||(input.LA(1)>=']' && input.LA(1)<='\uFFFF') ) {
+                    	        input.consume();
+
+                    	    }
+                    	    else {
+                    	        MismatchedSetException mse = new MismatchedSetException(null,input);
+                    	        recover(mse);
+                    	        throw mse;}
+
+
+                    	    }
+                    	    break;
+
+                    	default :
+                    	    break loop9;
+                        }
+                    } while (true);
+
+                    match('\"'); 
+
+                    }
+                    break;
+                case 2 :
+                    // InternalJsonLexer.g:85:90: '\\'' ( '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | 'u' | '\"' | '\\'' | '\\\\' | '/' ) | ~ ( ( '\\\\' | '\\'' ) ) )* '\\''
+                    {
+                    match('\''); 
+                    // InternalJsonLexer.g:85:95: ( '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | 'u' | '\"' | '\\'' | '\\\\' | '/' ) | ~ ( ( '\\\\' | '\\'' ) ) )*
+                    loop10:
+                    do {
+                        int alt10=3;
+                        int LA10_0 = input.LA(1);
+
+                        if ( (LA10_0=='\\') ) {
+                            alt10=1;
+                        }
+                        else if ( ((LA10_0>='\u0000' && LA10_0<='&')||(LA10_0>='(' && LA10_0<='[')||(LA10_0>=']' && LA10_0<='\uFFFF')) ) {
+                            alt10=2;
+                        }
+
+
+                        switch (alt10) {
+                    	case 1 :
+                    	    // InternalJsonLexer.g:85:96: '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | 'u' | '\"' | '\\'' | '\\\\' | '/' )
+                    	    {
+                    	    match('\\'); 
+                    	    if ( input.LA(1)=='\"'||input.LA(1)=='\''||input.LA(1)=='/'||input.LA(1)=='\\'||input.LA(1)=='b'||input.LA(1)=='f'||input.LA(1)=='n'||input.LA(1)=='r'||(input.LA(1)>='t' && input.LA(1)<='u') ) {
+                    	        input.consume();
+
+                    	    }
+                    	    else {
+                    	        MismatchedSetException mse = new MismatchedSetException(null,input);
+                    	        recover(mse);
+                    	        throw mse;}
+
+
+                    	    }
+                    	    break;
+                    	case 2 :
+                    	    // InternalJsonLexer.g:85:145: ~ ( ( '\\\\' | '\\'' ) )
+                    	    {
+                    	    if ( (input.LA(1)>='\u0000' && input.LA(1)<='&')||(input.LA(1)>='(' && input.LA(1)<='[')||(input.LA(1)>=']' && input.LA(1)<='\uFFFF') ) {
+                    	        input.consume();
+
+                    	    }
+                    	    else {
+                    	        MismatchedSetException mse = new MismatchedSetException(null,input);
+                    	        recover(mse);
+                    	        throw mse;}
+
+
+                    	    }
+                    	    break;
+
+                    	default :
+                    	    break loop10;
+                        }
+                    } while (true);
+
+                    match('\''); 
+
+                    }
+                    break;
+
+            }
+
+
+            }
+
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        }
+    }
+    // $ANTLR end "RULE_STRING"
+
     // $ANTLR start "RULE_SL_COMMENT"
     public final void mRULE_SL_COMMENT() throws RecognitionException {
         try {
             int _type = RULE_SL_COMMENT;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // InternalJsonLexer.g:85:17: ( '--' (~ ( ( '\\n' | '\\r' ) ) )* ( ( '\\r' )? '\\n' )? )
-            // InternalJsonLexer.g:85:19: '--' (~ ( ( '\\n' | '\\r' ) ) )* ( ( '\\r' )? '\\n' )?
+            // InternalJsonLexer.g:87:17: ( '--' (~ ( ( '\\n' | '\\r' ) ) )* ( ( '\\r' )? '\\n' )? )
+            // InternalJsonLexer.g:87:19: '--' (~ ( ( '\\n' | '\\r' ) ) )* ( ( '\\r' )? '\\n' )?
             {
             match("--"); 
 
-            // InternalJsonLexer.g:85:24: (~ ( ( '\\n' | '\\r' ) ) )*
-            loop9:
+            // InternalJsonLexer.g:87:24: (~ ( ( '\\n' | '\\r' ) ) )*
+            loop12:
             do {
-                int alt9=2;
-                int LA9_0 = input.LA(1);
+                int alt12=2;
+                int LA12_0 = input.LA(1);
 
-                if ( ((LA9_0>='\u0000' && LA9_0<='\t')||(LA9_0>='\u000B' && LA9_0<='\f')||(LA9_0>='\u000E' && LA9_0<='\uFFFF')) ) {
-                    alt9=1;
+                if ( ((LA12_0>='\u0000' && LA12_0<='\t')||(LA12_0>='\u000B' && LA12_0<='\f')||(LA12_0>='\u000E' && LA12_0<='\uFFFF')) ) {
+                    alt12=1;
                 }
 
 
-                switch (alt9) {
+                switch (alt12) {
             	case 1 :
-            	    // InternalJsonLexer.g:85:24: ~ ( ( '\\n' | '\\r' ) )
+            	    // InternalJsonLexer.g:87:24: ~ ( ( '\\n' | '\\r' ) )
             	    {
             	    if ( (input.LA(1)>='\u0000' && input.LA(1)<='\t')||(input.LA(1)>='\u000B' && input.LA(1)<='\f')||(input.LA(1)>='\u000E' && input.LA(1)<='\uFFFF') ) {
             	        input.consume();
@@ -1631,31 +1790,31 @@ public class InternalJsonLexer extends Lexer {
             	    break;
 
             	default :
-            	    break loop9;
+            	    break loop12;
                 }
             } while (true);
 
-            // InternalJsonLexer.g:85:40: ( ( '\\r' )? '\\n' )?
-            int alt11=2;
-            int LA11_0 = input.LA(1);
+            // InternalJsonLexer.g:87:40: ( ( '\\r' )? '\\n' )?
+            int alt14=2;
+            int LA14_0 = input.LA(1);
 
-            if ( (LA11_0=='\n'||LA11_0=='\r') ) {
-                alt11=1;
+            if ( (LA14_0=='\n'||LA14_0=='\r') ) {
+                alt14=1;
             }
-            switch (alt11) {
+            switch (alt14) {
                 case 1 :
-                    // InternalJsonLexer.g:85:41: ( '\\r' )? '\\n'
+                    // InternalJsonLexer.g:87:41: ( '\\r' )? '\\n'
                     {
-                    // InternalJsonLexer.g:85:41: ( '\\r' )?
-                    int alt10=2;
-                    int LA10_0 = input.LA(1);
+                    // InternalJsonLexer.g:87:41: ( '\\r' )?
+                    int alt13=2;
+                    int LA13_0 = input.LA(1);
 
-                    if ( (LA10_0=='\r') ) {
-                        alt10=1;
+                    if ( (LA13_0=='\r') ) {
+                        alt13=1;
                     }
-                    switch (alt10) {
+                    switch (alt13) {
                         case 1 :
-                            // InternalJsonLexer.g:85:41: '\\r'
+                            // InternalJsonLexer.g:87:41: '\\r'
                             {
                             match('\r'); 
 
@@ -1685,8 +1844,8 @@ public class InternalJsonLexer extends Lexer {
     // $ANTLR start "RULE_EXPONENT"
     public final void mRULE_EXPONENT() throws RecognitionException {
         try {
-            // InternalJsonLexer.g:87:24: ( ( 'e' | 'E' ) ( '+' | '-' )? ( RULE_DIGIT )+ )
-            // InternalJsonLexer.g:87:26: ( 'e' | 'E' ) ( '+' | '-' )? ( RULE_DIGIT )+
+            // InternalJsonLexer.g:89:24: ( ( 'e' | 'E' ) ( '+' | '-' )? ( RULE_DIGIT )+ )
+            // InternalJsonLexer.g:89:26: ( 'e' | 'E' ) ( '+' | '-' )? ( RULE_DIGIT )+
             {
             if ( input.LA(1)=='E'||input.LA(1)=='e' ) {
                 input.consume();
@@ -1697,14 +1856,14 @@ public class InternalJsonLexer extends Lexer {
                 recover(mse);
                 throw mse;}
 
-            // InternalJsonLexer.g:87:36: ( '+' | '-' )?
-            int alt12=2;
-            int LA12_0 = input.LA(1);
+            // InternalJsonLexer.g:89:36: ( '+' | '-' )?
+            int alt15=2;
+            int LA15_0 = input.LA(1);
 
-            if ( (LA12_0=='+'||LA12_0=='-') ) {
-                alt12=1;
+            if ( (LA15_0=='+'||LA15_0=='-') ) {
+                alt15=1;
             }
-            switch (alt12) {
+            switch (alt15) {
                 case 1 :
                     // InternalJsonLexer.g:
                     {
@@ -1723,21 +1882,21 @@ public class InternalJsonLexer extends Lexer {
 
             }
 
-            // InternalJsonLexer.g:87:47: ( RULE_DIGIT )+
-            int cnt13=0;
-            loop13:
+            // InternalJsonLexer.g:89:47: ( RULE_DIGIT )+
+            int cnt16=0;
+            loop16:
             do {
-                int alt13=2;
-                int LA13_0 = input.LA(1);
+                int alt16=2;
+                int LA16_0 = input.LA(1);
 
-                if ( ((LA13_0>='0' && LA13_0<='9')) ) {
-                    alt13=1;
+                if ( ((LA16_0>='0' && LA16_0<='9')) ) {
+                    alt16=1;
                 }
 
 
-                switch (alt13) {
+                switch (alt16) {
             	case 1 :
-            	    // InternalJsonLexer.g:87:47: RULE_DIGIT
+            	    // InternalJsonLexer.g:89:47: RULE_DIGIT
             	    {
             	    mRULE_DIGIT(); 
 
@@ -1745,12 +1904,12 @@ public class InternalJsonLexer extends Lexer {
             	    break;
 
             	default :
-            	    if ( cnt13 >= 1 ) break loop13;
+            	    if ( cnt16 >= 1 ) break loop16;
                         EarlyExitException eee =
-                            new EarlyExitException(13, input);
+                            new EarlyExitException(16, input);
                         throw eee;
                 }
-                cnt13++;
+                cnt16++;
             } while (true);
 
 
@@ -1765,8 +1924,8 @@ public class InternalJsonLexer extends Lexer {
     // $ANTLR start "RULE_INT_EXPONENT"
     public final void mRULE_INT_EXPONENT() throws RecognitionException {
         try {
-            // InternalJsonLexer.g:89:28: ( ( 'e' | 'E' ) ( '+' )? ( RULE_DIGIT )+ )
-            // InternalJsonLexer.g:89:30: ( 'e' | 'E' ) ( '+' )? ( RULE_DIGIT )+
+            // InternalJsonLexer.g:91:28: ( ( 'e' | 'E' ) ( '+' )? ( RULE_DIGIT )+ )
+            // InternalJsonLexer.g:91:30: ( 'e' | 'E' ) ( '+' )? ( RULE_DIGIT )+
             {
             if ( input.LA(1)=='E'||input.LA(1)=='e' ) {
                 input.consume();
@@ -1777,16 +1936,16 @@ public class InternalJsonLexer extends Lexer {
                 recover(mse);
                 throw mse;}
 
-            // InternalJsonLexer.g:89:40: ( '+' )?
-            int alt14=2;
-            int LA14_0 = input.LA(1);
+            // InternalJsonLexer.g:91:40: ( '+' )?
+            int alt17=2;
+            int LA17_0 = input.LA(1);
 
-            if ( (LA14_0=='+') ) {
-                alt14=1;
+            if ( (LA17_0=='+') ) {
+                alt17=1;
             }
-            switch (alt14) {
+            switch (alt17) {
                 case 1 :
-                    // InternalJsonLexer.g:89:40: '+'
+                    // InternalJsonLexer.g:91:40: '+'
                     {
                     match('+'); 
 
@@ -1795,21 +1954,21 @@ public class InternalJsonLexer extends Lexer {
 
             }
 
-            // InternalJsonLexer.g:89:45: ( RULE_DIGIT )+
-            int cnt15=0;
-            loop15:
+            // InternalJsonLexer.g:91:45: ( RULE_DIGIT )+
+            int cnt18=0;
+            loop18:
             do {
-                int alt15=2;
-                int LA15_0 = input.LA(1);
+                int alt18=2;
+                int LA18_0 = input.LA(1);
 
-                if ( ((LA15_0>='0' && LA15_0<='9')) ) {
-                    alt15=1;
+                if ( ((LA18_0>='0' && LA18_0<='9')) ) {
+                    alt18=1;
                 }
 
 
-                switch (alt15) {
+                switch (alt18) {
             	case 1 :
-            	    // InternalJsonLexer.g:89:45: RULE_DIGIT
+            	    // InternalJsonLexer.g:91:45: RULE_DIGIT
             	    {
             	    mRULE_DIGIT(); 
 
@@ -1817,12 +1976,12 @@ public class InternalJsonLexer extends Lexer {
             	    break;
 
             	default :
-            	    if ( cnt15 >= 1 ) break loop15;
+            	    if ( cnt18 >= 1 ) break loop18;
                         EarlyExitException eee =
-                            new EarlyExitException(15, input);
+                            new EarlyExitException(18, input);
                         throw eee;
                 }
-                cnt15++;
+                cnt18++;
             } while (true);
 
 
@@ -1839,96 +1998,10 @@ public class InternalJsonLexer extends Lexer {
         try {
             int _type = RULE_REAL_LIT;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // InternalJsonLexer.g:91:15: ( ( RULE_DIGIT )+ ( '_' ( RULE_DIGIT )+ )* '.' ( RULE_DIGIT )+ ( '_' ( RULE_DIGIT )+ )* ( RULE_EXPONENT )? )
-            // InternalJsonLexer.g:91:17: ( RULE_DIGIT )+ ( '_' ( RULE_DIGIT )+ )* '.' ( RULE_DIGIT )+ ( '_' ( RULE_DIGIT )+ )* ( RULE_EXPONENT )?
+            // InternalJsonLexer.g:93:15: ( ( RULE_DIGIT )+ ( '_' ( RULE_DIGIT )+ )* '.' ( RULE_DIGIT )+ ( '_' ( RULE_DIGIT )+ )* ( RULE_EXPONENT )? )
+            // InternalJsonLexer.g:93:17: ( RULE_DIGIT )+ ( '_' ( RULE_DIGIT )+ )* '.' ( RULE_DIGIT )+ ( '_' ( RULE_DIGIT )+ )* ( RULE_EXPONENT )?
             {
-            // InternalJsonLexer.g:91:17: ( RULE_DIGIT )+
-            int cnt16=0;
-            loop16:
-            do {
-                int alt16=2;
-                int LA16_0 = input.LA(1);
-
-                if ( ((LA16_0>='0' && LA16_0<='9')) ) {
-                    alt16=1;
-                }
-
-
-                switch (alt16) {
-            	case 1 :
-            	    // InternalJsonLexer.g:91:17: RULE_DIGIT
-            	    {
-            	    mRULE_DIGIT(); 
-
-            	    }
-            	    break;
-
-            	default :
-            	    if ( cnt16 >= 1 ) break loop16;
-                        EarlyExitException eee =
-                            new EarlyExitException(16, input);
-                        throw eee;
-                }
-                cnt16++;
-            } while (true);
-
-            // InternalJsonLexer.g:91:29: ( '_' ( RULE_DIGIT )+ )*
-            loop18:
-            do {
-                int alt18=2;
-                int LA18_0 = input.LA(1);
-
-                if ( (LA18_0=='_') ) {
-                    alt18=1;
-                }
-
-
-                switch (alt18) {
-            	case 1 :
-            	    // InternalJsonLexer.g:91:30: '_' ( RULE_DIGIT )+
-            	    {
-            	    match('_'); 
-            	    // InternalJsonLexer.g:91:34: ( RULE_DIGIT )+
-            	    int cnt17=0;
-            	    loop17:
-            	    do {
-            	        int alt17=2;
-            	        int LA17_0 = input.LA(1);
-
-            	        if ( ((LA17_0>='0' && LA17_0<='9')) ) {
-            	            alt17=1;
-            	        }
-
-
-            	        switch (alt17) {
-            	    	case 1 :
-            	    	    // InternalJsonLexer.g:91:34: RULE_DIGIT
-            	    	    {
-            	    	    mRULE_DIGIT(); 
-
-            	    	    }
-            	    	    break;
-
-            	    	default :
-            	    	    if ( cnt17 >= 1 ) break loop17;
-            	                EarlyExitException eee =
-            	                    new EarlyExitException(17, input);
-            	                throw eee;
-            	        }
-            	        cnt17++;
-            	    } while (true);
-
-
-            	    }
-            	    break;
-
-            	default :
-            	    break loop18;
-                }
-            } while (true);
-
-            match('.'); 
-            // InternalJsonLexer.g:91:52: ( RULE_DIGIT )+
+            // InternalJsonLexer.g:93:17: ( RULE_DIGIT )+
             int cnt19=0;
             loop19:
             do {
@@ -1942,7 +2015,7 @@ public class InternalJsonLexer extends Lexer {
 
                 switch (alt19) {
             	case 1 :
-            	    // InternalJsonLexer.g:91:52: RULE_DIGIT
+            	    // InternalJsonLexer.g:93:17: RULE_DIGIT
             	    {
             	    mRULE_DIGIT(); 
 
@@ -1958,7 +2031,7 @@ public class InternalJsonLexer extends Lexer {
                 cnt19++;
             } while (true);
 
-            // InternalJsonLexer.g:91:64: ( '_' ( RULE_DIGIT )+ )*
+            // InternalJsonLexer.g:93:29: ( '_' ( RULE_DIGIT )+ )*
             loop21:
             do {
                 int alt21=2;
@@ -1971,10 +2044,10 @@ public class InternalJsonLexer extends Lexer {
 
                 switch (alt21) {
             	case 1 :
-            	    // InternalJsonLexer.g:91:65: '_' ( RULE_DIGIT )+
+            	    // InternalJsonLexer.g:93:30: '_' ( RULE_DIGIT )+
             	    {
             	    match('_'); 
-            	    // InternalJsonLexer.g:91:69: ( RULE_DIGIT )+
+            	    // InternalJsonLexer.g:93:34: ( RULE_DIGIT )+
             	    int cnt20=0;
             	    loop20:
             	    do {
@@ -1988,7 +2061,7 @@ public class InternalJsonLexer extends Lexer {
 
             	        switch (alt20) {
             	    	case 1 :
-            	    	    // InternalJsonLexer.g:91:69: RULE_DIGIT
+            	    	    // InternalJsonLexer.g:93:34: RULE_DIGIT
             	    	    {
             	    	    mRULE_DIGIT(); 
 
@@ -2013,16 +2086,102 @@ public class InternalJsonLexer extends Lexer {
                 }
             } while (true);
 
-            // InternalJsonLexer.g:91:83: ( RULE_EXPONENT )?
-            int alt22=2;
-            int LA22_0 = input.LA(1);
+            match('.'); 
+            // InternalJsonLexer.g:93:52: ( RULE_DIGIT )+
+            int cnt22=0;
+            loop22:
+            do {
+                int alt22=2;
+                int LA22_0 = input.LA(1);
 
-            if ( (LA22_0=='E'||LA22_0=='e') ) {
-                alt22=1;
+                if ( ((LA22_0>='0' && LA22_0<='9')) ) {
+                    alt22=1;
+                }
+
+
+                switch (alt22) {
+            	case 1 :
+            	    // InternalJsonLexer.g:93:52: RULE_DIGIT
+            	    {
+            	    mRULE_DIGIT(); 
+
+            	    }
+            	    break;
+
+            	default :
+            	    if ( cnt22 >= 1 ) break loop22;
+                        EarlyExitException eee =
+                            new EarlyExitException(22, input);
+                        throw eee;
+                }
+                cnt22++;
+            } while (true);
+
+            // InternalJsonLexer.g:93:64: ( '_' ( RULE_DIGIT )+ )*
+            loop24:
+            do {
+                int alt24=2;
+                int LA24_0 = input.LA(1);
+
+                if ( (LA24_0=='_') ) {
+                    alt24=1;
+                }
+
+
+                switch (alt24) {
+            	case 1 :
+            	    // InternalJsonLexer.g:93:65: '_' ( RULE_DIGIT )+
+            	    {
+            	    match('_'); 
+            	    // InternalJsonLexer.g:93:69: ( RULE_DIGIT )+
+            	    int cnt23=0;
+            	    loop23:
+            	    do {
+            	        int alt23=2;
+            	        int LA23_0 = input.LA(1);
+
+            	        if ( ((LA23_0>='0' && LA23_0<='9')) ) {
+            	            alt23=1;
+            	        }
+
+
+            	        switch (alt23) {
+            	    	case 1 :
+            	    	    // InternalJsonLexer.g:93:69: RULE_DIGIT
+            	    	    {
+            	    	    mRULE_DIGIT(); 
+
+            	    	    }
+            	    	    break;
+
+            	    	default :
+            	    	    if ( cnt23 >= 1 ) break loop23;
+            	                EarlyExitException eee =
+            	                    new EarlyExitException(23, input);
+            	                throw eee;
+            	        }
+            	        cnt23++;
+            	    } while (true);
+
+
+            	    }
+            	    break;
+
+            	default :
+            	    break loop24;
+                }
+            } while (true);
+
+            // InternalJsonLexer.g:93:83: ( RULE_EXPONENT )?
+            int alt25=2;
+            int LA25_0 = input.LA(1);
+
+            if ( (LA25_0=='E'||LA25_0=='e') ) {
+                alt25=1;
             }
-            switch (alt22) {
+            switch (alt25) {
                 case 1 :
-                    // InternalJsonLexer.g:91:83: RULE_EXPONENT
+                    // InternalJsonLexer.g:93:83: RULE_EXPONENT
                     {
                     mRULE_EXPONENT(); 
 
@@ -2047,24 +2206,24 @@ public class InternalJsonLexer extends Lexer {
         try {
             int _type = RULE_INTEGER_LIT;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // InternalJsonLexer.g:93:18: ( ( RULE_DIGIT )+ ( '_' ( RULE_DIGIT )+ )* ( '#' RULE_BASED_INTEGER '#' ( RULE_INT_EXPONENT )? | ( RULE_INT_EXPONENT )? ) )
-            // InternalJsonLexer.g:93:20: ( RULE_DIGIT )+ ( '_' ( RULE_DIGIT )+ )* ( '#' RULE_BASED_INTEGER '#' ( RULE_INT_EXPONENT )? | ( RULE_INT_EXPONENT )? )
+            // InternalJsonLexer.g:95:18: ( ( RULE_DIGIT )+ ( '_' ( RULE_DIGIT )+ )* ( '#' RULE_BASED_INTEGER '#' ( RULE_INT_EXPONENT )? | ( RULE_INT_EXPONENT )? ) )
+            // InternalJsonLexer.g:95:20: ( RULE_DIGIT )+ ( '_' ( RULE_DIGIT )+ )* ( '#' RULE_BASED_INTEGER '#' ( RULE_INT_EXPONENT )? | ( RULE_INT_EXPONENT )? )
             {
-            // InternalJsonLexer.g:93:20: ( RULE_DIGIT )+
-            int cnt23=0;
-            loop23:
+            // InternalJsonLexer.g:95:20: ( RULE_DIGIT )+
+            int cnt26=0;
+            loop26:
             do {
-                int alt23=2;
-                int LA23_0 = input.LA(1);
+                int alt26=2;
+                int LA26_0 = input.LA(1);
 
-                if ( ((LA23_0>='0' && LA23_0<='9')) ) {
-                    alt23=1;
+                if ( ((LA26_0>='0' && LA26_0<='9')) ) {
+                    alt26=1;
                 }
 
 
-                switch (alt23) {
+                switch (alt26) {
             	case 1 :
-            	    // InternalJsonLexer.g:93:20: RULE_DIGIT
+            	    // InternalJsonLexer.g:95:20: RULE_DIGIT
             	    {
             	    mRULE_DIGIT(); 
 
@@ -2072,45 +2231,45 @@ public class InternalJsonLexer extends Lexer {
             	    break;
 
             	default :
-            	    if ( cnt23 >= 1 ) break loop23;
+            	    if ( cnt26 >= 1 ) break loop26;
                         EarlyExitException eee =
-                            new EarlyExitException(23, input);
+                            new EarlyExitException(26, input);
                         throw eee;
                 }
-                cnt23++;
+                cnt26++;
             } while (true);
 
-            // InternalJsonLexer.g:93:32: ( '_' ( RULE_DIGIT )+ )*
-            loop25:
+            // InternalJsonLexer.g:95:32: ( '_' ( RULE_DIGIT )+ )*
+            loop28:
             do {
-                int alt25=2;
-                int LA25_0 = input.LA(1);
+                int alt28=2;
+                int LA28_0 = input.LA(1);
 
-                if ( (LA25_0=='_') ) {
-                    alt25=1;
+                if ( (LA28_0=='_') ) {
+                    alt28=1;
                 }
 
 
-                switch (alt25) {
+                switch (alt28) {
             	case 1 :
-            	    // InternalJsonLexer.g:93:33: '_' ( RULE_DIGIT )+
+            	    // InternalJsonLexer.g:95:33: '_' ( RULE_DIGIT )+
             	    {
             	    match('_'); 
-            	    // InternalJsonLexer.g:93:37: ( RULE_DIGIT )+
-            	    int cnt24=0;
-            	    loop24:
+            	    // InternalJsonLexer.g:95:37: ( RULE_DIGIT )+
+            	    int cnt27=0;
+            	    loop27:
             	    do {
-            	        int alt24=2;
-            	        int LA24_0 = input.LA(1);
+            	        int alt27=2;
+            	        int LA27_0 = input.LA(1);
 
-            	        if ( ((LA24_0>='0' && LA24_0<='9')) ) {
-            	            alt24=1;
+            	        if ( ((LA27_0>='0' && LA27_0<='9')) ) {
+            	            alt27=1;
             	        }
 
 
-            	        switch (alt24) {
+            	        switch (alt27) {
             	    	case 1 :
-            	    	    // InternalJsonLexer.g:93:37: RULE_DIGIT
+            	    	    // InternalJsonLexer.g:95:37: RULE_DIGIT
             	    	    {
             	    	    mRULE_DIGIT(); 
 
@@ -2118,12 +2277,12 @@ public class InternalJsonLexer extends Lexer {
             	    	    break;
 
             	    	default :
-            	    	    if ( cnt24 >= 1 ) break loop24;
+            	    	    if ( cnt27 >= 1 ) break loop27;
             	                EarlyExitException eee =
-            	                    new EarlyExitException(24, input);
+            	                    new EarlyExitException(27, input);
             	                throw eee;
             	        }
-            	        cnt24++;
+            	        cnt27++;
             	    } while (true);
 
 
@@ -2131,36 +2290,36 @@ public class InternalJsonLexer extends Lexer {
             	    break;
 
             	default :
-            	    break loop25;
+            	    break loop28;
                 }
             } while (true);
 
-            // InternalJsonLexer.g:93:51: ( '#' RULE_BASED_INTEGER '#' ( RULE_INT_EXPONENT )? | ( RULE_INT_EXPONENT )? )
-            int alt28=2;
-            int LA28_0 = input.LA(1);
+            // InternalJsonLexer.g:95:51: ( '#' RULE_BASED_INTEGER '#' ( RULE_INT_EXPONENT )? | ( RULE_INT_EXPONENT )? )
+            int alt31=2;
+            int LA31_0 = input.LA(1);
 
-            if ( (LA28_0=='#') ) {
-                alt28=1;
+            if ( (LA31_0=='#') ) {
+                alt31=1;
             }
             else {
-                alt28=2;}
-            switch (alt28) {
+                alt31=2;}
+            switch (alt31) {
                 case 1 :
-                    // InternalJsonLexer.g:93:52: '#' RULE_BASED_INTEGER '#' ( RULE_INT_EXPONENT )?
+                    // InternalJsonLexer.g:95:52: '#' RULE_BASED_INTEGER '#' ( RULE_INT_EXPONENT )?
                     {
                     match('#'); 
                     mRULE_BASED_INTEGER(); 
                     match('#'); 
-                    // InternalJsonLexer.g:93:79: ( RULE_INT_EXPONENT )?
-                    int alt26=2;
-                    int LA26_0 = input.LA(1);
+                    // InternalJsonLexer.g:95:79: ( RULE_INT_EXPONENT )?
+                    int alt29=2;
+                    int LA29_0 = input.LA(1);
 
-                    if ( (LA26_0=='E'||LA26_0=='e') ) {
-                        alt26=1;
+                    if ( (LA29_0=='E'||LA29_0=='e') ) {
+                        alt29=1;
                     }
-                    switch (alt26) {
+                    switch (alt29) {
                         case 1 :
-                            // InternalJsonLexer.g:93:79: RULE_INT_EXPONENT
+                            // InternalJsonLexer.g:95:79: RULE_INT_EXPONENT
                             {
                             mRULE_INT_EXPONENT(); 
 
@@ -2173,18 +2332,18 @@ public class InternalJsonLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // InternalJsonLexer.g:93:98: ( RULE_INT_EXPONENT )?
+                    // InternalJsonLexer.g:95:98: ( RULE_INT_EXPONENT )?
                     {
-                    // InternalJsonLexer.g:93:98: ( RULE_INT_EXPONENT )?
-                    int alt27=2;
-                    int LA27_0 = input.LA(1);
+                    // InternalJsonLexer.g:95:98: ( RULE_INT_EXPONENT )?
+                    int alt30=2;
+                    int LA30_0 = input.LA(1);
 
-                    if ( (LA27_0=='E'||LA27_0=='e') ) {
-                        alt27=1;
+                    if ( (LA30_0=='E'||LA30_0=='e') ) {
+                        alt30=1;
                     }
-                    switch (alt27) {
+                    switch (alt30) {
                         case 1 :
-                            // InternalJsonLexer.g:93:98: RULE_INT_EXPONENT
+                            // InternalJsonLexer.g:95:98: RULE_INT_EXPONENT
                             {
                             mRULE_INT_EXPONENT(); 
 
@@ -2213,8 +2372,8 @@ public class InternalJsonLexer extends Lexer {
     // $ANTLR start "RULE_DIGIT"
     public final void mRULE_DIGIT() throws RecognitionException {
         try {
-            // InternalJsonLexer.g:95:21: ( '0' .. '9' )
-            // InternalJsonLexer.g:95:23: '0' .. '9'
+            // InternalJsonLexer.g:97:21: ( '0' .. '9' )
+            // InternalJsonLexer.g:97:23: '0' .. '9'
             {
             matchRange('0','9'); 
 
@@ -2229,8 +2388,8 @@ public class InternalJsonLexer extends Lexer {
     // $ANTLR start "RULE_EXTENDED_DIGIT"
     public final void mRULE_EXTENDED_DIGIT() throws RecognitionException {
         try {
-            // InternalJsonLexer.g:97:30: ( ( '0' .. '9' | 'a' .. 'f' | 'A' .. 'F' ) )
-            // InternalJsonLexer.g:97:32: ( '0' .. '9' | 'a' .. 'f' | 'A' .. 'F' )
+            // InternalJsonLexer.g:99:30: ( ( '0' .. '9' | 'a' .. 'f' | 'A' .. 'F' ) )
+            // InternalJsonLexer.g:99:32: ( '0' .. '9' | 'a' .. 'f' | 'A' .. 'F' )
             {
             if ( (input.LA(1)>='0' && input.LA(1)<='9')||(input.LA(1)>='A' && input.LA(1)<='F')||(input.LA(1)>='a' && input.LA(1)<='f') ) {
                 input.consume();
@@ -2253,35 +2412,35 @@ public class InternalJsonLexer extends Lexer {
     // $ANTLR start "RULE_BASED_INTEGER"
     public final void mRULE_BASED_INTEGER() throws RecognitionException {
         try {
-            // InternalJsonLexer.g:99:29: ( RULE_EXTENDED_DIGIT ( ( '_' )? RULE_EXTENDED_DIGIT )* )
-            // InternalJsonLexer.g:99:31: RULE_EXTENDED_DIGIT ( ( '_' )? RULE_EXTENDED_DIGIT )*
+            // InternalJsonLexer.g:101:29: ( RULE_EXTENDED_DIGIT ( ( '_' )? RULE_EXTENDED_DIGIT )* )
+            // InternalJsonLexer.g:101:31: RULE_EXTENDED_DIGIT ( ( '_' )? RULE_EXTENDED_DIGIT )*
             {
             mRULE_EXTENDED_DIGIT(); 
-            // InternalJsonLexer.g:99:51: ( ( '_' )? RULE_EXTENDED_DIGIT )*
-            loop30:
+            // InternalJsonLexer.g:101:51: ( ( '_' )? RULE_EXTENDED_DIGIT )*
+            loop33:
             do {
-                int alt30=2;
-                int LA30_0 = input.LA(1);
+                int alt33=2;
+                int LA33_0 = input.LA(1);
 
-                if ( ((LA30_0>='0' && LA30_0<='9')||(LA30_0>='A' && LA30_0<='F')||LA30_0=='_'||(LA30_0>='a' && LA30_0<='f')) ) {
-                    alt30=1;
+                if ( ((LA33_0>='0' && LA33_0<='9')||(LA33_0>='A' && LA33_0<='F')||LA33_0=='_'||(LA33_0>='a' && LA33_0<='f')) ) {
+                    alt33=1;
                 }
 
 
-                switch (alt30) {
+                switch (alt33) {
             	case 1 :
-            	    // InternalJsonLexer.g:99:52: ( '_' )? RULE_EXTENDED_DIGIT
+            	    // InternalJsonLexer.g:101:52: ( '_' )? RULE_EXTENDED_DIGIT
             	    {
-            	    // InternalJsonLexer.g:99:52: ( '_' )?
-            	    int alt29=2;
-            	    int LA29_0 = input.LA(1);
+            	    // InternalJsonLexer.g:101:52: ( '_' )?
+            	    int alt32=2;
+            	    int LA32_0 = input.LA(1);
 
-            	    if ( (LA29_0=='_') ) {
-            	        alt29=1;
+            	    if ( (LA32_0=='_') ) {
+            	        alt32=1;
             	    }
-            	    switch (alt29) {
+            	    switch (alt32) {
             	        case 1 :
-            	            // InternalJsonLexer.g:99:52: '_'
+            	            // InternalJsonLexer.g:101:52: '_'
             	            {
             	            match('_'); 
 
@@ -2296,7 +2455,7 @@ public class InternalJsonLexer extends Lexer {
             	    break;
 
             	default :
-            	    break loop30;
+            	    break loop33;
                 }
             } while (true);
 
@@ -2308,165 +2467,6 @@ public class InternalJsonLexer extends Lexer {
         }
     }
     // $ANTLR end "RULE_BASED_INTEGER"
-
-    // $ANTLR start "RULE_STRING"
-    public final void mRULE_STRING() throws RecognitionException {
-        try {
-            int _type = RULE_STRING;
-            int _channel = DEFAULT_TOKEN_CHANNEL;
-            // InternalJsonLexer.g:101:13: ( ( '\"' ( '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | 'u' | '\"' | '\\'' | '\\\\' ) | ~ ( ( '\\\\' | '\"' ) ) )* '\"' | '\\'' ( '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | 'u' | '\"' | '\\'' | '\\\\' ) | ~ ( ( '\\\\' | '\\'' ) ) )* '\\'' ) )
-            // InternalJsonLexer.g:101:15: ( '\"' ( '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | 'u' | '\"' | '\\'' | '\\\\' ) | ~ ( ( '\\\\' | '\"' ) ) )* '\"' | '\\'' ( '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | 'u' | '\"' | '\\'' | '\\\\' ) | ~ ( ( '\\\\' | '\\'' ) ) )* '\\'' )
-            {
-            // InternalJsonLexer.g:101:15: ( '\"' ( '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | 'u' | '\"' | '\\'' | '\\\\' ) | ~ ( ( '\\\\' | '\"' ) ) )* '\"' | '\\'' ( '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | 'u' | '\"' | '\\'' | '\\\\' ) | ~ ( ( '\\\\' | '\\'' ) ) )* '\\'' )
-            int alt33=2;
-            int LA33_0 = input.LA(1);
-
-            if ( (LA33_0=='\"') ) {
-                alt33=1;
-            }
-            else if ( (LA33_0=='\'') ) {
-                alt33=2;
-            }
-            else {
-                NoViableAltException nvae =
-                    new NoViableAltException("", 33, 0, input);
-
-                throw nvae;
-            }
-            switch (alt33) {
-                case 1 :
-                    // InternalJsonLexer.g:101:16: '\"' ( '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | 'u' | '\"' | '\\'' | '\\\\' ) | ~ ( ( '\\\\' | '\"' ) ) )* '\"'
-                    {
-                    match('\"'); 
-                    // InternalJsonLexer.g:101:20: ( '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | 'u' | '\"' | '\\'' | '\\\\' ) | ~ ( ( '\\\\' | '\"' ) ) )*
-                    loop31:
-                    do {
-                        int alt31=3;
-                        int LA31_0 = input.LA(1);
-
-                        if ( (LA31_0=='\\') ) {
-                            alt31=1;
-                        }
-                        else if ( ((LA31_0>='\u0000' && LA31_0<='!')||(LA31_0>='#' && LA31_0<='[')||(LA31_0>=']' && LA31_0<='\uFFFF')) ) {
-                            alt31=2;
-                        }
-
-
-                        switch (alt31) {
-                    	case 1 :
-                    	    // InternalJsonLexer.g:101:21: '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | 'u' | '\"' | '\\'' | '\\\\' )
-                    	    {
-                    	    match('\\'); 
-                    	    if ( input.LA(1)=='\"'||input.LA(1)=='\''||input.LA(1)=='\\'||input.LA(1)=='b'||input.LA(1)=='f'||input.LA(1)=='n'||input.LA(1)=='r'||(input.LA(1)>='t' && input.LA(1)<='u') ) {
-                    	        input.consume();
-
-                    	    }
-                    	    else {
-                    	        MismatchedSetException mse = new MismatchedSetException(null,input);
-                    	        recover(mse);
-                    	        throw mse;}
-
-
-                    	    }
-                    	    break;
-                    	case 2 :
-                    	    // InternalJsonLexer.g:101:66: ~ ( ( '\\\\' | '\"' ) )
-                    	    {
-                    	    if ( (input.LA(1)>='\u0000' && input.LA(1)<='!')||(input.LA(1)>='#' && input.LA(1)<='[')||(input.LA(1)>=']' && input.LA(1)<='\uFFFF') ) {
-                    	        input.consume();
-
-                    	    }
-                    	    else {
-                    	        MismatchedSetException mse = new MismatchedSetException(null,input);
-                    	        recover(mse);
-                    	        throw mse;}
-
-
-                    	    }
-                    	    break;
-
-                    	default :
-                    	    break loop31;
-                        }
-                    } while (true);
-
-                    match('\"'); 
-
-                    }
-                    break;
-                case 2 :
-                    // InternalJsonLexer.g:101:86: '\\'' ( '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | 'u' | '\"' | '\\'' | '\\\\' ) | ~ ( ( '\\\\' | '\\'' ) ) )* '\\''
-                    {
-                    match('\''); 
-                    // InternalJsonLexer.g:101:91: ( '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | 'u' | '\"' | '\\'' | '\\\\' ) | ~ ( ( '\\\\' | '\\'' ) ) )*
-                    loop32:
-                    do {
-                        int alt32=3;
-                        int LA32_0 = input.LA(1);
-
-                        if ( (LA32_0=='\\') ) {
-                            alt32=1;
-                        }
-                        else if ( ((LA32_0>='\u0000' && LA32_0<='&')||(LA32_0>='(' && LA32_0<='[')||(LA32_0>=']' && LA32_0<='\uFFFF')) ) {
-                            alt32=2;
-                        }
-
-
-                        switch (alt32) {
-                    	case 1 :
-                    	    // InternalJsonLexer.g:101:92: '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | 'u' | '\"' | '\\'' | '\\\\' )
-                    	    {
-                    	    match('\\'); 
-                    	    if ( input.LA(1)=='\"'||input.LA(1)=='\''||input.LA(1)=='\\'||input.LA(1)=='b'||input.LA(1)=='f'||input.LA(1)=='n'||input.LA(1)=='r'||(input.LA(1)>='t' && input.LA(1)<='u') ) {
-                    	        input.consume();
-
-                    	    }
-                    	    else {
-                    	        MismatchedSetException mse = new MismatchedSetException(null,input);
-                    	        recover(mse);
-                    	        throw mse;}
-
-
-                    	    }
-                    	    break;
-                    	case 2 :
-                    	    // InternalJsonLexer.g:101:137: ~ ( ( '\\\\' | '\\'' ) )
-                    	    {
-                    	    if ( (input.LA(1)>='\u0000' && input.LA(1)<='&')||(input.LA(1)>='(' && input.LA(1)<='[')||(input.LA(1)>=']' && input.LA(1)<='\uFFFF') ) {
-                    	        input.consume();
-
-                    	    }
-                    	    else {
-                    	        MismatchedSetException mse = new MismatchedSetException(null,input);
-                    	        recover(mse);
-                    	        throw mse;}
-
-
-                    	    }
-                    	    break;
-
-                    	default :
-                    	    break loop32;
-                        }
-                    } while (true);
-
-                    match('\''); 
-
-                    }
-                    break;
-
-            }
-
-
-            }
-
-            state.type = _type;
-            state.channel = _channel;
-        }
-        finally {
-        }
-    }
-    // $ANTLR end "RULE_STRING"
 
     // $ANTLR start "RULE_ID"
     public final void mRULE_ID() throws RecognitionException {
@@ -2605,7 +2605,7 @@ public class InternalJsonLexer extends Lexer {
     // $ANTLR end "RULE_WS"
 
     public void mTokens() throws RecognitionException {
-        // InternalJsonLexer.g:1:8: ( Classifier | Reference | Constant | Applies | Binding | Compute | Delta | False | Modes | Null | True | PlusSignEqualsSignGreaterThanSign | FullStopFullStop | ColonColon | EqualsSignGreaterThanSign | In | To | LeftParenthesis | RightParenthesis | Asterisk | PlusSign | Comma | HyphenMinus | FullStop | Colon | Semicolon | LeftSquareBracket | RightSquareBracket | LeftCurlyBracket | RightCurlyBracket | RULE_INT_NUMBER | RULE_REAL_NUMBER | RULE_SL_COMMENT | RULE_REAL_LIT | RULE_INTEGER_LIT | RULE_STRING | RULE_ID | RULE_WS )
+        // InternalJsonLexer.g:1:8: ( Classifier | Reference | Constant | Applies | Binding | Compute | Delta | False | Modes | Null | True | PlusSignEqualsSignGreaterThanSign | FullStopFullStop | ColonColon | EqualsSignGreaterThanSign | In | To | LeftParenthesis | RightParenthesis | Asterisk | PlusSign | Comma | HyphenMinus | FullStop | Colon | Semicolon | LeftSquareBracket | RightSquareBracket | LeftCurlyBracket | RightCurlyBracket | RULE_INT_NUMBER | RULE_REAL_NUMBER | RULE_STRING | RULE_SL_COMMENT | RULE_REAL_LIT | RULE_INTEGER_LIT | RULE_ID | RULE_WS )
         int alt37=38;
         alt37 = dfa37.predict(input);
         switch (alt37) {
@@ -2834,30 +2834,30 @@ public class InternalJsonLexer extends Lexer {
                 }
                 break;
             case 33 :
-                // InternalJsonLexer.g:1:385: RULE_SL_COMMENT
+                // InternalJsonLexer.g:1:385: RULE_STRING
+                {
+                mRULE_STRING(); 
+
+                }
+                break;
+            case 34 :
+                // InternalJsonLexer.g:1:397: RULE_SL_COMMENT
                 {
                 mRULE_SL_COMMENT(); 
 
                 }
                 break;
-            case 34 :
-                // InternalJsonLexer.g:1:401: RULE_REAL_LIT
+            case 35 :
+                // InternalJsonLexer.g:1:413: RULE_REAL_LIT
                 {
                 mRULE_REAL_LIT(); 
 
                 }
                 break;
-            case 35 :
-                // InternalJsonLexer.g:1:415: RULE_INTEGER_LIT
+            case 36 :
+                // InternalJsonLexer.g:1:427: RULE_INTEGER_LIT
                 {
                 mRULE_INTEGER_LIT(); 
-
-                }
-                break;
-            case 36 :
-                // InternalJsonLexer.g:1:432: RULE_STRING
-                {
-                mRULE_STRING(); 
 
                 }
                 break;
@@ -2883,15 +2883,15 @@ public class InternalJsonLexer extends Lexer {
 
     protected DFA37 dfa37 = new DFA37(this);
     static final String DFA37_eotS =
-        "\1\uffff\11\33\1\51\1\53\1\55\1\uffff\1\33\4\uffff\1\60\5\uffff\1\63\3\uffff\12\33\1\102\6\uffff\1\103\2\uffff\2\63\4\uffff\13\33\2\uffff\1\63\1\uffff\1\65\1\105\11\33\1\136\1\137\2\uffff\6\33\1\150\1\151\1\152\3\uffff\1\105\6\33\3\uffff\2\33\1\163\1\33\1\165\1\166\1\33\1\170\1\uffff\1\33\2\uffff\1\33\1\uffff\1\173\1\174\2\uffff";
+        "\1\uffff\11\33\1\51\1\53\1\55\1\uffff\1\33\4\uffff\1\60\5\uffff\1\62\3\uffff\12\33\1\102\6\uffff\1\103\2\uffff\1\62\3\uffff\1\62\1\uffff\13\33\2\uffff\1\62\1\uffff\1\64\1\105\11\33\1\136\1\137\2\uffff\6\33\1\150\1\151\1\152\3\uffff\1\105\6\33\3\uffff\2\33\1\163\1\33\1\165\1\166\1\33\1\170\1\uffff\1\33\2\uffff\1\33\1\uffff\1\173\1\174\2\uffff";
     static final String DFA37_eofS =
         "\175\uffff";
     static final String DFA37_minS =
-        "\1\11\1\114\1\105\1\120\1\111\1\105\1\101\1\117\1\125\1\117\1\75\1\56\1\72\1\uffff\1\116\4\uffff\1\55\5\uffff\1\43\3\uffff\1\101\1\115\1\106\1\120\1\116\2\114\1\104\1\114\1\125\1\60\6\uffff\1\60\2\uffff\1\56\1\43\1\uffff\1\60\1\uffff\1\60\2\123\1\120\1\105\1\114\1\104\1\124\1\123\1\105\1\114\1\105\2\uffff\1\56\1\uffff\1\56\1\60\1\123\1\124\1\125\1\122\2\111\1\101\1\105\1\123\2\60\1\uffff\1\53\1\111\1\101\1\124\2\105\1\116\3\60\2\uffff\2\60\1\106\1\116\1\105\1\116\1\123\1\107\3\uffff\1\111\1\124\1\60\1\103\2\60\1\105\1\60\1\uffff\1\105\2\uffff\1\122\1\uffff\2\60\2\uffff";
+        "\1\11\1\114\1\105\1\120\1\111\1\105\1\101\1\117\1\125\1\117\1\75\1\56\1\72\1\uffff\1\116\4\uffff\1\55\5\uffff\1\43\3\uffff\1\101\1\115\1\106\1\120\1\116\2\114\1\104\1\114\1\125\1\60\6\uffff\1\60\2\uffff\1\56\1\uffff\1\60\1\uffff\1\43\1\60\2\123\1\120\1\105\1\114\1\104\1\124\1\123\1\105\1\114\1\105\2\uffff\1\56\1\uffff\1\56\1\60\1\123\1\124\1\125\1\122\2\111\1\101\1\105\1\123\2\60\1\uffff\1\53\1\111\1\101\1\124\2\105\1\116\3\60\2\uffff\2\60\1\106\1\116\1\105\1\116\1\123\1\107\3\uffff\1\111\1\124\1\60\1\103\2\60\1\105\1\60\1\uffff\1\105\2\uffff\1\122\1\uffff\2\60\2\uffff";
     static final String DFA37_maxS =
-        "\1\175\1\157\1\145\1\160\1\151\1\145\1\141\1\157\1\165\1\162\1\75\1\56\1\72\1\uffff\1\156\4\uffff\1\71\5\uffff\1\145\3\uffff\1\141\1\156\1\146\1\160\1\156\2\154\1\144\1\154\1\165\1\172\6\uffff\1\172\2\uffff\1\71\1\145\1\uffff\1\71\1\uffff\1\71\2\163\1\160\1\145\1\154\1\144\1\164\1\163\1\145\1\154\1\145\2\uffff\1\71\1\uffff\1\137\1\145\1\163\1\164\1\165\1\162\2\151\1\141\1\145\1\163\2\172\1\uffff\1\71\1\151\1\141\1\164\2\145\1\156\3\172\2\uffff\2\71\1\146\1\156\1\145\1\156\1\163\1\147\3\uffff\1\151\1\164\1\172\1\143\2\172\1\145\1\172\1\uffff\1\145\2\uffff\1\162\1\uffff\2\172\2\uffff";
+        "\1\175\1\157\1\145\1\160\1\151\1\145\1\141\1\157\1\165\1\162\1\75\1\56\1\72\1\uffff\1\156\4\uffff\1\71\5\uffff\1\145\3\uffff\1\141\1\156\1\146\1\160\1\156\2\154\1\144\1\154\1\165\1\172\6\uffff\1\172\2\uffff\1\71\1\uffff\1\71\1\uffff\1\145\1\71\2\163\1\160\1\145\1\154\1\144\1\164\1\163\1\145\1\154\1\145\2\uffff\1\71\1\uffff\1\137\1\145\1\163\1\164\1\165\1\162\2\151\1\141\1\145\1\163\2\172\1\uffff\1\71\1\151\1\141\1\164\2\145\1\156\3\172\2\uffff\2\71\1\146\1\156\1\145\1\156\1\163\1\147\3\uffff\1\151\1\164\1\172\1\143\2\172\1\145\1\172\1\uffff\1\145\2\uffff\1\162\1\uffff\2\172\2\uffff";
     static final String DFA37_acceptS =
-        "\15\uffff\1\17\1\uffff\1\22\1\23\1\24\1\26\1\uffff\1\32\1\33\1\34\1\35\1\36\1\uffff\1\44\1\45\1\46\13\uffff\1\14\1\25\1\15\1\30\1\16\1\31\1\uffff\1\41\1\27\2\uffff\1\37\1\uffff\1\43\14\uffff\1\21\1\20\1\uffff\1\40\15\uffff\1\42\12\uffff\1\12\1\13\10\uffff\1\7\1\10\1\11\10\uffff\1\6\1\uffff\1\4\1\5\1\uffff\1\3\2\uffff\1\2\1\1";
+        "\15\uffff\1\17\1\uffff\1\22\1\23\1\24\1\26\1\uffff\1\32\1\33\1\34\1\35\1\36\1\uffff\1\41\1\45\1\46\13\uffff\1\14\1\25\1\15\1\30\1\16\1\31\1\uffff\1\42\1\27\1\uffff\1\37\1\uffff\1\44\15\uffff\1\21\1\20\1\uffff\1\40\15\uffff\1\43\12\uffff\1\12\1\13\10\uffff\1\7\1\10\1\11\10\uffff\1\6\1\uffff\1\4\1\5\1\uffff\1\3\2\uffff\1\2\1\1";
     static final String DFA37_specialS =
         "\175\uffff}>";
     static final String[] DFA37_transitionS = DFA37_transitionS_.DFA37_transitionS;
@@ -2922,7 +2922,7 @@ public class InternalJsonLexer extends Lexer {
                 "",
                 "",
                 "",
-                "\1\65\12\uffff\1\66\1\uffff\12\62\13\uffff\1\65\31\uffff\1\64\5\uffff\1\65",
+                "\1\64\12\uffff\1\66\1\uffff\12\65\13\uffff\1\64\31\uffff\1\63\5\uffff\1\64",
                 "",
                 "",
                 "",
@@ -2947,10 +2947,10 @@ public class InternalJsonLexer extends Lexer {
                 "",
                 "",
                 "\1\105\1\uffff\12\104",
-                "\1\65\12\uffff\1\66\1\uffff\12\62\13\uffff\1\65\31\uffff\1\64\5\uffff\1\65",
                 "",
                 "\12\106",
                 "",
+                "\1\64\12\uffff\1\66\1\uffff\12\65\13\uffff\1\64\31\uffff\1\63\5\uffff\1\64",
                 "\12\107",
                 "\1\110\37\uffff\1\110",
                 "\1\111\37\uffff\1\111",
@@ -2967,7 +2967,7 @@ public class InternalJsonLexer extends Lexer {
                 "",
                 "\1\105\1\uffff\12\104",
                 "",
-                "\1\123\1\uffff\12\106\45\uffff\1\64",
+                "\1\123\1\uffff\12\106\45\uffff\1\63",
                 "\12\107\13\uffff\1\124\31\uffff\1\123\5\uffff\1\124",
                 "\1\125\37\uffff\1\125",
                 "\1\126\37\uffff\1\126",
@@ -3055,7 +3055,7 @@ public class InternalJsonLexer extends Lexer {
             this.transition = DFA37_transition;
         }
         public String getDescription() {
-            return "1:1: Tokens : ( Classifier | Reference | Constant | Applies | Binding | Compute | Delta | False | Modes | Null | True | PlusSignEqualsSignGreaterThanSign | FullStopFullStop | ColonColon | EqualsSignGreaterThanSign | In | To | LeftParenthesis | RightParenthesis | Asterisk | PlusSign | Comma | HyphenMinus | FullStop | Colon | Semicolon | LeftSquareBracket | RightSquareBracket | LeftCurlyBracket | RightCurlyBracket | RULE_INT_NUMBER | RULE_REAL_NUMBER | RULE_SL_COMMENT | RULE_REAL_LIT | RULE_INTEGER_LIT | RULE_STRING | RULE_ID | RULE_WS );";
+            return "1:1: Tokens : ( Classifier | Reference | Constant | Applies | Binding | Compute | Delta | False | Modes | Null | True | PlusSignEqualsSignGreaterThanSign | FullStopFullStop | ColonColon | EqualsSignGreaterThanSign | In | To | LeftParenthesis | RightParenthesis | Asterisk | PlusSign | Comma | HyphenMinus | FullStop | Colon | Semicolon | LeftSquareBracket | RightSquareBracket | LeftCurlyBracket | RightCurlyBracket | RULE_INT_NUMBER | RULE_REAL_NUMBER | RULE_STRING | RULE_SL_COMMENT | RULE_REAL_LIT | RULE_INTEGER_LIT | RULE_ID | RULE_WS );";
         }
     }
  

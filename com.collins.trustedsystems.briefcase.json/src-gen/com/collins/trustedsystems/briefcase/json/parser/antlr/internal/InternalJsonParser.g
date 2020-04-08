@@ -499,19 +499,19 @@ ruleJsonAnnexString returns [EObject current=null]
     }
 )(
 (
-		lv_value_1_0=RULE_STRING
-		{
-			newLeafNode(lv_value_1_0, grammarAccess.getJsonAnnexStringAccess().getValueSTRINGTerminalRuleCall_1_0()); 
-		}
-		{
+		{ 
+	        newCompositeNode(grammarAccess.getJsonAnnexStringAccess().getValueJsonStringParserRuleCall_1_0()); 
+	    }
+		lv_value_1_0=ruleJsonString		{
 	        if ($current==null) {
-	            $current = createModelElement(grammarAccess.getJsonAnnexStringRule());
+	            $current = createModelElementForParent(grammarAccess.getJsonAnnexStringRule());
 	        }
-       		setWithLastConsumed(
+       		set(
        			$current, 
        			"value",
         		lv_value_1_0, 
-        		"org.osate.xtext.aadl2.properties.Properties.STRING");
+        		"com.collins.trustedsystems.briefcase.json.Json.JsonString");
+	        afterParserOrEnumRuleCall();
 	    }
 
 )
@@ -721,6 +721,35 @@ ruleJsonAnnexNull returns [EObject current=null]
     }
 )
 ;
+
+
+
+
+
+// Entry rule entryRuleJsonString
+entryRuleJsonString returns [String current=null] 
+:
+	{ newCompositeNode(grammarAccess.getJsonStringRule()); } 
+	 iv_ruleJsonString=ruleJsonString 
+	 { $current=$iv_ruleJsonString.current.getText(); }  
+	 EOF 
+;
+
+// Rule JsonString
+ruleJsonString returns [AntlrDatatypeRuleToken current=new AntlrDatatypeRuleToken()] 
+    @init { enterRule(); 
+    }
+    @after { leaveRule();
+    }:
+    this_STRING_0=RULE_STRING    {
+		$current.merge(this_STRING_0);
+    }
+
+    { 
+    newLeafNode(this_STRING_0, grammarAccess.getJsonStringAccess().getSTRINGTerminalRuleCall()); 
+    }
+
+    ;
 
 
 

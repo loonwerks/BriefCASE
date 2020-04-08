@@ -3,17 +3,22 @@
  */
 package com.collins.trustedsystems.briefcase.json.validation;
 
+import java.util.Map;
+
+import org.eclipse.emf.ecore.EObject;
+
+import com.collins.trustedsystems.briefcase.json.json.JsonPackage;
+
 /**
- * This class contains custom validation rules. 
+ * This class contains custom validation rules.
  *
  * See https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#validation
  */
 public class JsonJavaValidator extends com.collins.trustedsystems.briefcase.json.validation.AbstractJsonJavaValidator {
 
-//	@Check
-//	public void checkGreetingStartsWithCapital(Greeting greeting) {
-//		if (!Character.isUpperCase(greeting.getName().charAt(0))) {
-//			warning("Name should start with a capital", MyDslPackage.Literals.GREETING__NAME);
-//		}
-//	}
+	@Override
+	protected boolean isResponsible(Map<Object, Object> context, EObject eObject) {
+		return (eObject.eClass().getEPackage() == JsonPackage.eINSTANCE);
+	}
+
 }

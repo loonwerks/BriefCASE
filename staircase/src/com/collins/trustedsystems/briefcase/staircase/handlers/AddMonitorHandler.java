@@ -242,7 +242,7 @@ public class AddMonitorHandler extends AadlHandler {
 			// Create monitor alert port
 			Port monAlertPort = null;
 			final Port dstAlertPort = ModelTransformUtils.getPort(containingImpl, alertPort);
-			// If user didn't specify an alert inport, make it an event data port
+			// If user didn't specify an alert inport, make it an event data port with no type
 			if (dstAlertPort == null) {
 				monAlertPort = ComponentCreateHelper.createOwnedEventDataPort(monitorType);
 			} else if (dstAlertPort instanceof EventDataPort) {
