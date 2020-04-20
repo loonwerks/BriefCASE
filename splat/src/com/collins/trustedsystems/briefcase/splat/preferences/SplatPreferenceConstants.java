@@ -22,4 +22,11 @@ public class SplatPreferenceConstants {
 	public static final String OUTPUT_DIRECTORY = "splatOutputDirectory";
 	public static final String GENERATE_LOG = "splatGenerateLog";
 	public static final String LOG_FILENAME = "splatLogFilename";
+
+	public static final String CODE_GENERATION = "splatCodeGeneration";
+	public static final String CODE_GENERATION_C = "splatCodeGenerationC";
+	public static final String CODE_GENERATION_SML = "splatCodeGenerationSML";
+	public static final String CODE_GENERATION_ADA = "splatCodeGenerationAda";
+	public static final String CODE_GENERATION_SLANG = "splatCodeGenerationSlang";
+	public static final String CODE_GENERATION_JAVA = "splatCodeGenerationJava";
 }

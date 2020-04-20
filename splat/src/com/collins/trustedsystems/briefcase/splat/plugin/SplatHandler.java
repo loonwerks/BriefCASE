@@ -133,6 +133,7 @@ public class SplatHandler extends AbstractHandler {
 			}
 			String assuranceLevel = Activator.getDefault().getPreferenceStore()
 					.getString(SplatPreferenceConstants.ASSURANCE_LEVEL);
+			cmdLineArgs.add("-alevel");
 			if (assuranceLevel.equals(SplatPreferenceConstants.ASSURANCE_LEVEL_CAKE)) {
 				cmdLineArgs.add("cake");
 			} else if (assuranceLevel.equals(SplatPreferenceConstants.ASSURANCE_LEVEL_HOL)) {
@@ -141,6 +142,21 @@ public class SplatHandler extends AbstractHandler {
 				cmdLineArgs.add("full");
 			} else {
 				cmdLineArgs.add("basic");
+			}
+
+			String codeGeneration = Activator.getDefault().getPreferenceStore()
+					.getString(SplatPreferenceConstants.CODE_GENERATION);
+			cmdLineArgs.add("-codegen");
+			if (codeGeneration.equals(SplatPreferenceConstants.CODE_GENERATION_C)) {
+				cmdLineArgs.add("C");
+			} else if (codeGeneration.equals(SplatPreferenceConstants.CODE_GENERATION_SML)) {
+				cmdLineArgs.add("SML");
+			} else if (codeGeneration.equals(SplatPreferenceConstants.CODE_GENERATION_ADA)) {
+				cmdLineArgs.add("Ada");
+			} else if (codeGeneration.equals(SplatPreferenceConstants.CODE_GENERATION_SLANG)) {
+				cmdLineArgs.add("Slang");
+			} else {
+				cmdLineArgs.add("Java");
 			}
 
 			if (Activator.getDefault().getPreferenceStore().getBoolean(SplatPreferenceConstants.CHECK_PROPERTIES)) {

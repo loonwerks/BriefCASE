@@ -16,6 +16,12 @@ public class SplatPreferenceInitializer extends AbstractPreferenceInitializer {
 		store.setDefault(SplatPreferenceConstants.ASSURANCE_LEVEL_CAKE, false);
 		store.setDefault(SplatPreferenceConstants.ASSURANCE_LEVEL_HOL, false);
 		store.setDefault(SplatPreferenceConstants.ASSURANCE_LEVEL_FULL, false);
+		store.setDefault(SplatPreferenceConstants.CODE_GENERATION, SplatPreferenceConstants.CODE_GENERATION_C);
+		store.setDefault(SplatPreferenceConstants.CODE_GENERATION_C, true);
+		store.setDefault(SplatPreferenceConstants.CODE_GENERATION_SML, false);
+		store.setDefault(SplatPreferenceConstants.CODE_GENERATION_ADA, false);
+		store.setDefault(SplatPreferenceConstants.CODE_GENERATION_SLANG, false);
+		store.setDefault(SplatPreferenceConstants.CODE_GENERATION_JAVA, false);
 		store.setDefault(SplatPreferenceConstants.INTEGER_WIDTH, 32);
 		store.setDefault(SplatPreferenceConstants.OPTIMIZE, false);
 		store.setDefault(SplatPreferenceConstants.ENDIAN, SplatPreferenceConstants.ENDIAN_LITTLE);

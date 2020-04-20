@@ -22,6 +22,7 @@ import com.collins.trustedsystems.briefcase.splat.Activator;
 public class SplatPreferencePage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
 
 	private EnabledRadioGroupFieldEditor splatAssuranceLevelFieldEditor = null;
+	private EnabledRadioGroupFieldEditor splatCodeGenFieldEditor = null;
 	private BooleanFieldEditor splatCheckPropertiesFieldEditor = null;
 //	private BooleanFieldEditor splatPreserveModelNums = null;
 	private BooleanFieldEditor splatLogFieldEditor = null;
@@ -46,6 +47,18 @@ public class SplatPreferencePage extends FieldEditorPreferencePage implements IW
 				new boolean[] { true, false, false, false }, getFieldEditorParent(), true) {
 		};
 		addField(splatAssuranceLevelFieldEditor);
+
+		// Code Gen Options
+		splatCodeGenFieldEditor = new EnabledRadioGroupFieldEditor(SplatPreferenceConstants.CODE_GENERATION,
+				"Code Generation",
+				5,
+				new String[][] { { "C", SplatPreferenceConstants.CODE_GENERATION_C },
+						{ "SML", SplatPreferenceConstants.CODE_GENERATION_SML },
+						{ "Ada", SplatPreferenceConstants.CODE_GENERATION_ADA },
+						{ "Slang", SplatPreferenceConstants.CODE_GENERATION_SLANG },
+						{ "Java", SplatPreferenceConstants.CODE_GENERATION_JAVA } },
+				new boolean[] { true, true, true, false, false }, getFieldEditorParent(), true);
+		addField(splatCodeGenFieldEditor);
 //		addField(new RadioGroupFieldEditor(SplatPreferenceConstants.ASSURANCE_LEVEL, "Assurance level", 4,
 //				new String[][] { { "Basic", SplatPreferenceConstants.ASSURANCE_LEVEL_BASIC },
 //						{ "CakeML", SplatPreferenceConstants.ASSURANCE_LEVEL_CAKE },
