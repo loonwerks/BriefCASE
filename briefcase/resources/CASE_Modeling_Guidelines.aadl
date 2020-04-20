@@ -177,7 +177,7 @@ private
 			
 		no_fan_in() <=
 			** "Multiple incoming connections to a single port are not allowed" **
-			forall (f : feature) . lint_check(f, (direction(f) = "in") => (size(connections(f)) <= 1))
+			forall (p : port) . lint_check(p, (direction(p) = "in") => (size(connections(p)) <= 1))
 		
 	**};
 	
