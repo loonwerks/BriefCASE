@@ -216,7 +216,7 @@ public class SplatHandler extends AbstractHandler {
 				Process dockerListImages = null;
 
 				// name of the splat image
-				String dockerImage = "splatimgupdated";
+				String dockerImage = "splatimg";
 				System.out.println(
 						"_________________________________________________________________________________________________________________");
 				System.out.println("Running SPLAT inside docker container");
@@ -258,7 +258,7 @@ public class SplatHandler extends AbstractHandler {
 
 				// If the required image does not exist in the local machine then load the image
 				if (!imageExists) {
-					System.out.println("Loading docker image ''" + dockerImage + "'' for SPLAT");
+					System.out.println("Loading docker image \"" + dockerImage + "\" for SPLAT");
 					String loadDockerImage = "docker load -i " + splatImagePath;
 					dockerLoadImage = Runtime.getRuntime().exec(loadDockerImage);
 					BufferedReader stdErr = new BufferedReader(
@@ -277,7 +277,7 @@ public class SplatHandler extends AbstractHandler {
 						out.println(s);
 					}
 				} else {
-					System.out.println("SPLAT image ''" + dockerImage + "'' is already loaded");
+					System.out.println("SPLAT image \"" + dockerImage + "\" is already loaded");
 				}
 
 				// build the docker run command
