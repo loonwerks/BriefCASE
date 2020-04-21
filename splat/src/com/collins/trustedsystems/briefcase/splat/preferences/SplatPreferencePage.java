@@ -24,6 +24,7 @@ public class SplatPreferencePage extends FieldEditorPreferencePage implements IW
 	private EnabledRadioGroupFieldEditor splatAssuranceLevelFieldEditor = null;
 	private EnabledRadioGroupFieldEditor splatCodeGenFieldEditor = null;
 	private BooleanFieldEditor splatCheckPropertiesFieldEditor = null;
+	private BooleanFieldEditor splatCheckPlatformPreferenceFieldEditor = null;
 //	private BooleanFieldEditor splatPreserveModelNums = null;
 	private BooleanFieldEditor splatLogFieldEditor = null;
 	private FileFieldEditor splatLogFileFieldEditor = null;
@@ -151,6 +152,12 @@ public class SplatPreferencePage extends FieldEditorPreferencePage implements IW
 			}
 		};
 		addField(splatLogFileFieldEditor);
+
+		splatCheckPlatformPreferenceFieldEditor = new BooleanFieldEditor(
+				SplatPreferenceConstants.CHECK_PLATFORM_PREFERENCE, "Run SPLAT on Native Linux OS",
+				getFieldEditorParent());
+		splatCheckPlatformPreferenceFieldEditor.setEnabled(true, getFieldEditorParent());
+		addField(splatCheckPlatformPreferenceFieldEditor);
 
 	}
 

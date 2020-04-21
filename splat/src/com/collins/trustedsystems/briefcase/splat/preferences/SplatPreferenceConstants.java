@@ -29,4 +29,5 @@ public class SplatPreferenceConstants {
 	public static final String CODE_GENERATION_ADA = "splatCodeGenerationAda";
 	public static final String CODE_GENERATION_SLANG = "splatCodeGenerationSlang";
 	public static final String CODE_GENERATION_JAVA = "splatCodeGenerationJava";
+	public static final String CHECK_PLATFORM_PREFERENCE = "splatCheckPlatformPreference";
 }
