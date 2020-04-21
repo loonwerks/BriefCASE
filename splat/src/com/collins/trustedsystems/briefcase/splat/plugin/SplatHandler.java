@@ -100,11 +100,8 @@ public class SplatHandler extends AbstractHandler {
 			String splatDir = (FileLocator.toFileURL(FileLocator.find(bundle, new Path("resources"), null))).getFile();
 			String splatPath = (FileLocator
 					.toFileURL(FileLocator.find(bundle, new Path("resources/splat"), null))).getFile();
-			// Check if docker image tar file exists
-			// If it exists, we'll assume we want to run SPLAT in docker, even if other options are available
-//			boolean dockerTarballExists = (FileLocator.find(bundle, new Path("resources/splat_image.tar"),
-//					null) != null);
 
+			// Check if user selection and run SPLAT on the chosen platform
 			boolean isLinuxrPlatformSelected = Activator.getDefault().getPreferenceStore()
 					.getBoolean(SplatPreferenceConstants.CHECK_PLATFORM_PREFERENCE);
 			if (!isLinuxrPlatformSelected) {
@@ -130,13 +127,12 @@ public class SplatHandler extends AbstractHandler {
 			String commands = "";
 
 			// acquiring user preferences and setting them up accordingly for the exec command
-//			if (!dockerTarballExists) {
 			if (isLinuxrPlatformSelected) {
 				cmdLineArgs.add(splatPath);
 			}
 			String assuranceLevel = Activator.getDefault().getPreferenceStore()
 					.getString(SplatPreferenceConstants.ASSURANCE_LEVEL);
-//			cmdLineArgs.add("-alevel");
+			cmdLineArgs.add("-alevel");
 			if (assuranceLevel.equals(SplatPreferenceConstants.ASSURANCE_LEVEL_CAKE)) {
 				cmdLineArgs.add("cake");
 			} else if (assuranceLevel.equals(SplatPreferenceConstants.ASSURANCE_LEVEL_HOL)) {
@@ -144,14 +140,14 @@ public class SplatHandler extends AbstractHandler {
 			} else if (assuranceLevel.equals(SplatPreferenceConstants.ASSURANCE_LEVEL_FULL)) {
 				cmdLineArgs.add("full");
 			} else {
-//				cmdLineArgs.add("basic");
+				cmdLineArgs.add("basic");
 			}
 
 			String codeGeneration = Activator.getDefault().getPreferenceStore()
 					.getString(SplatPreferenceConstants.CODE_GENERATION);
-//			cmdLineArgs.add("-codegen");
+			cmdLineArgs.add("-codegen");
 			if (codeGeneration.equals(SplatPreferenceConstants.CODE_GENERATION_C)) {
-//				cmdLineArgs.add("C");
+				cmdLineArgs.add("C");
 			} else if (codeGeneration.equals(SplatPreferenceConstants.CODE_GENERATION_SML)) {
 				cmdLineArgs.add("SML");
 			} else if (codeGeneration.equals(SplatPreferenceConstants.CODE_GENERATION_ADA)) {
@@ -166,10 +162,9 @@ public class SplatHandler extends AbstractHandler {
 				cmdLineArgs.add("-checkprops");
 			}
 
-//			cmdLineArgs.add("-outdir");
-//			if (dockerTarballExists) {
+			cmdLineArgs.add("-outdir");
 			if (!isLinuxrPlatformSelected) {
-//				cmdLineArgs.add("./");
+				cmdLineArgs.add("./");
 			} else {
 				cmdLineArgs.add(Activator.getDefault().getPreferenceStore()
 						.getString(SplatPreferenceConstants.OUTPUT_DIRECTORY));
@@ -207,7 +202,6 @@ public class SplatHandler extends AbstractHandler {
 			}
 
 			// input file
-//			if (dockerTarballExists) {
 			if (!isLinuxrPlatformSelected) {
 				cmdLineArgs.add(jsonURI.lastSegment());
 			} else {
@@ -215,7 +209,6 @@ public class SplatHandler extends AbstractHandler {
 			}
 
 			// Run SPLAT inside docker container
-//			if (dockerTarballExists) {
 			if (!isLinuxrPlatformSelected) {
 
 				Process dockerLoadImage = null;
@@ -287,7 +280,7 @@ public class SplatHandler extends AbstractHandler {
 				}
 
 				// build the docker run command
-				commands += "sudo docker run --rm -v ";
+				commands += "docker run --rm -v ";
 				commands += Activator.getDefault().getPreferenceStore()
 						.getString(SplatPreferenceConstants.OUTPUT_DIRECTORY) + ":/user ";
 				commands += dockerImage + " ";
@@ -316,7 +309,6 @@ public class SplatHandler extends AbstractHandler {
 			console = findConsole("SPLAT");
 			out = console.newMessageStream();
 
-//			if (dockerTarballExists) {
 			if (!isLinuxrPlatformSelected) {
 				out.println(commands);
 			} else {
