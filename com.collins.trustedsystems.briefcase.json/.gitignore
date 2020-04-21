@@ -1,6 +1,5 @@
 /target/
 *.jar
 /bin/
-/xtend-gen/
 *._trace
 */**/.gitignore
