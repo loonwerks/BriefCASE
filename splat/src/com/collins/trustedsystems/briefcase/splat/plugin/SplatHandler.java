@@ -100,12 +100,11 @@ public class SplatHandler extends AbstractHandler {
 			String splatDir = (FileLocator.toFileURL(FileLocator.find(bundle, new Path("resources"), null))).getFile();
 			String splatPath = (FileLocator
 					.toFileURL(FileLocator.find(bundle, new Path("resources/splat"), null))).getFile();
-			// Check if docker image tar file exists
-			// If it exists, we'll assume we want to run SPLAT in docker, even if other options are available
-			boolean dockerTarballExists = (FileLocator.find(bundle, new Path("resources/splat_image.tar"),
-					null) != null);
 
-			if (dockerTarballExists) {
+			// Check if user selection and run SPLAT on the chosen platform
+			boolean isLinuxrPlatformSelected = Activator.getDefault().getPreferenceStore()
+					.getBoolean(SplatPreferenceConstants.CHECK_PLATFORM_PREFERENCE);
+			if (!isLinuxrPlatformSelected) {
 				if (!checkDockerInstall()) {
 					Dialog.showError("SPLAT",
 							"Docker is not installed.  A Docker installation is required in order to run SPLAT.");
@@ -128,7 +127,7 @@ public class SplatHandler extends AbstractHandler {
 			String commands = "";
 
 			// acquiring user preferences and setting them up accordingly for the exec command
-			if (!dockerTarballExists) {
+			if (isLinuxrPlatformSelected) {
 				cmdLineArgs.add(splatPath);
 			}
 			String assuranceLevel = Activator.getDefault().getPreferenceStore()
@@ -164,7 +163,7 @@ public class SplatHandler extends AbstractHandler {
 			}
 
 			cmdLineArgs.add("-outdir");
-			if (dockerTarballExists) {
+			if (!isLinuxrPlatformSelected) {
 				cmdLineArgs.add("./");
 			} else {
 				cmdLineArgs.add(Activator.getDefault().getPreferenceStore()
@@ -203,20 +202,20 @@ public class SplatHandler extends AbstractHandler {
 			}
 
 			// input file
-			if (dockerTarballExists) {
+			if (!isLinuxrPlatformSelected) {
 				cmdLineArgs.add(jsonURI.lastSegment());
 			} else {
 				cmdLineArgs.add(jsonPath);
 			}
 
 			// Run SPLAT inside docker container
-			if (dockerTarballExists) {
+			if (!isLinuxrPlatformSelected) {
 
 				Process dockerLoadImage = null;
 				Process dockerListImages = null;
 
 				// name of the splat image
-				String dockerImage = "splatimgupdated";
+				String dockerImage = "splatimg";
 				System.out.println(
 						"_________________________________________________________________________________________________________________");
 				System.out.println("Running SPLAT inside docker container");
@@ -258,7 +257,7 @@ public class SplatHandler extends AbstractHandler {
 
 				// If the required image does not exist in the local machine then load the image
 				if (!imageExists) {
-					System.out.println("Loading docker image ''" + dockerImage + "'' for SPLAT");
+					System.out.println("Loading docker image \"" + dockerImage + "\" for SPLAT");
 					String loadDockerImage = "docker load -i " + splatImagePath;
 					dockerLoadImage = Runtime.getRuntime().exec(loadDockerImage);
 					BufferedReader stdErr = new BufferedReader(
@@ -277,7 +276,7 @@ public class SplatHandler extends AbstractHandler {
 						out.println(s);
 					}
 				} else {
-					System.out.println("SPLAT image ''" + dockerImage + "'' is already loaded");
+					System.out.println("SPLAT image \"" + dockerImage + "\" is already loaded");
 				}
 
 				// build the docker run command
@@ -310,7 +309,7 @@ public class SplatHandler extends AbstractHandler {
 			console = findConsole("SPLAT");
 			out = console.newMessageStream();
 
-			if (dockerTarballExists) {
+			if (!isLinuxrPlatformSelected) {
 				out.println(commands);
 			} else {
 				String cmdLine = "";

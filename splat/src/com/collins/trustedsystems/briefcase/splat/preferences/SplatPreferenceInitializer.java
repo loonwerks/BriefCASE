@@ -38,5 +38,6 @@ public class SplatPreferenceInitializer extends AbstractPreferenceInitializer {
 		store.setDefault(SplatPreferenceConstants.GENERATE_LOG, true);
 		store.setDefault(SplatPreferenceConstants.LOG_FILENAME,
 				ResourcesPlugin.getWorkspace().getRoot().getLocation().toString() + "/splat.log");
+		store.setDefault(SplatPreferenceConstants.CHECK_PLATFORM_PREFERENCE, false);
 	}
 }
