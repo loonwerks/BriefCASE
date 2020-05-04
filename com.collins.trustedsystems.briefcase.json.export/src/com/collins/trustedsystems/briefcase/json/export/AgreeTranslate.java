@@ -30,6 +30,7 @@ import com.rockwellcollins.atc.agree.agree.AssumeStatement;
 import com.rockwellcollins.atc.agree.agree.BinaryExpr;
 import com.rockwellcollins.atc.agree.agree.BoolLitExpr;
 import com.rockwellcollins.atc.agree.agree.CallExpr;
+import com.rockwellcollins.atc.agree.agree.ComponentRef;
 import com.rockwellcollins.atc.agree.agree.ConstStatement;
 import com.rockwellcollins.atc.agree.agree.Contract;
 import com.rockwellcollins.atc.agree.agree.DoubleDotRef;
@@ -41,6 +42,7 @@ import com.rockwellcollins.atc.agree.agree.Expr;
 import com.rockwellcollins.atc.agree.agree.FnDef;
 import com.rockwellcollins.atc.agree.agree.FoldLeftExpr;
 import com.rockwellcollins.atc.agree.agree.ForallExpr;
+import com.rockwellcollins.atc.agree.agree.GetPropertyExpr;
 import com.rockwellcollins.atc.agree.agree.GuaranteeStatement;
 import com.rockwellcollins.atc.agree.agree.IfThenElseExpr;
 import com.rockwellcollins.atc.agree.agree.IndicesExpr;
@@ -59,6 +61,7 @@ import com.rockwellcollins.atc.agree.agree.RealLitExpr;
 import com.rockwellcollins.atc.agree.agree.RecordLitExpr;
 import com.rockwellcollins.atc.agree.agree.SelectionExpr;
 import com.rockwellcollins.atc.agree.agree.SpecStatement;
+import com.rockwellcollins.atc.agree.agree.ThisRef;
 import com.rockwellcollins.atc.agree.agree.Type;
 import com.rockwellcollins.atc.agree.agree.UnaryExpr;
 
@@ -188,6 +191,24 @@ public class AgreeTranslate {
 		return result;
 	}
 
+	private static JsonElement genGetPropertyExpr(GetPropertyExpr expr) {
+		JsonObject result = new JsonObject();
+		result.add("kind", new JsonPrimitive("GetPropertyExpr"));
+		result.add("property", new JsonPrimitive(expr.getProp().getName()));
+		result.add("componentRef", genComponentRef(expr.getComponentRef()));
+		return result;
+	}
+
+	private static JsonElement genComponentRef(ComponentRef ref) {
+		if (ref instanceof ThisRef) {
+			return new JsonPrimitive("ThisRef");
+		} else if (ref instanceof DoubleDotRef) {
+			return genDoubleDotRef((DoubleDotRef) ref);
+		} else {
+			return null;
+		}
+	}
+
 	private static JsonElement genForallExpr(ForallExpr expr) {
 
 		JsonObject result = new JsonObject();
@@ -250,7 +271,8 @@ public class AgreeTranslate {
 			return genIndicesExpr((IndicesExpr) expr);
 		} else if (expr instanceof RealCast) {
 			return genRealCast((RealCast) expr);
-
+		} else if (expr instanceof GetPropertyExpr) {
+			return genGetPropertyExpr((GetPropertyExpr) expr);
 		} else {
 			return new JsonPrimitive("new_case/genExpr/" + (expr == null ? "null" : expr.toString()));
 		}
