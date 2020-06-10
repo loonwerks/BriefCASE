@@ -13,7 +13,7 @@ Require-Bundle: org.osate.aadl2;bundle-version="[2.0.0,4.0.0)",
  com.collins.trustedsystems.briefcase.json.export,
  com.collins.trustedsystems.briefcase.staircase,
  org.osate.aadl2.modelsupport;bundle-version="[2.0.0,5.0.0)",
- org.osate.ui;bundle-version="[2.0.0,4.0.0)",
+ org.osate.ui;bundle-version="[2.0.0,5.0.0)",
  org.osate.xtext.aadl2.properties;bundle-version="[1.1.0,2.0.0)"
 Import-Package: org.eclipse.ui,
  org.eclipse.ui.part
