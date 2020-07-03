@@ -9,7 +9,7 @@ public
 			info (print("Linting CASE_Tools ruleset"))
 			
 			-- Only one processor-bound process can contain thread or thread-group subcomponents
-			error (one_process())
+			-- error (one_process())
 			
 			-- AADL modes are not currently supported by CASE tools
 			warning (modes_ignored())
@@ -51,7 +51,7 @@ public
 			warning (no_processor_subcomponents())
 			
 			-- Thread implementations must indicate location of source code or binary
-			error (threads_have_source())
+			--error (threads_have_source())
 			
 			-- Ports must be in or out, but not both
 			error (unidirectional_ports())
