@@ -25,6 +25,7 @@ import org.osate.aadl2.AadlPackage;
 import org.osate.aadl2.AnnexLibrary;
 import org.osate.aadl2.AnnexSubclause;
 import org.osate.aadl2.Classifier;
+import org.osate.aadl2.ComponentImplementation;
 import org.osate.aadl2.DefaultAnnexLibrary;
 import org.osate.aadl2.DefaultAnnexSubclause;
 import org.osate.aadl2.NamedElement;
@@ -1015,30 +1016,49 @@ public class CyberRequirement {
 	}
 
 	public static String getSubcomponentQualifiedName(String qualifiedName) {
-		Classifier classifier = null;
+
 		if (!qualifiedName.contains("::")) {
 			return null;
 		}
 		String pkgName = Aadl2Util.getPackageName(qualifiedName);
 
+		String[] parts = qualifiedName.split("\\.");
+		if (parts.length <= 1) {
+			return null;
+		}
+		String compName = parts[0] + "." + parts[1];
+
 		for (AadlPackage pkg : TraverseProject.getPackagesInProject(TraverseProject.getCurrentProject())) {
 			if (pkg.getName().equalsIgnoreCase(pkgName)) {
-				for (NamedElement c : EcoreUtil2.getAllContentsOfType(pkg, NamedElement.class)) {
-					if (c.hasName() && c.getQualifiedName().equalsIgnoreCase(qualifiedName)) {
-						if (c instanceof Subcomponent) {
-							Subcomponent sub = (Subcomponent) c;
-							classifier = sub.getComponentType();
-						} else {
-							classifier = (Classifier) c;
+
+				for (ComponentImplementation compImpl : EcoreUtil2.getAllContentsOfType(pkg.getOwnedPublicSection(),
+						ComponentImplementation.class)) {
+					if (compImpl.getQualifiedName().equalsIgnoreCase(compName)) {
+
+						ComponentImplementation ci = compImpl;
+						Subcomponent sub = null;
+						for (int i = 2; i < parts.length; i++) {
+							sub = null;
+							for (Subcomponent subcomp : ci.getOwnedSubcomponents()) {
+								if (subcomp.getName().equalsIgnoreCase(parts[i])) {
+									ci = subcomp.getComponentImplementation();
+									sub = subcomp;
+									break;
+								}
+							}
+							if (sub == null) {
+								return null;
+							}
 						}
-						break;
+						return sub.getQualifiedName();
 					}
 				}
+
 				break;
 			}
 		}
 
-		return classifier.getQualifiedName();
+		return null;
 	}
 
 	public static IFile getSubcomponentContainingFile(String qualifiedName) {

@@ -503,6 +503,9 @@ public class ImportRequirementsGUI extends Dialog {
 	private boolean contextExists(String context, ComponentImplementation compImpl) {
 		// context will be in the form of pkg::comp.impl.<subcomp>.<subcomp>...
 		String[] parts = context.split("\\.");
+		if (parts.length <= 1) {
+			return false;
+		}
 		String compName = parts[0] + "." + parts[1];
 		if (!compName.equalsIgnoreCase(compImpl.getQualifiedName())) {
 			return false;
