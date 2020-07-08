@@ -429,30 +429,34 @@ public class ImportRequirementsGUI extends Dialog {
 
 				// Find the context (component, connection, etc) in the model
 				Classifier contextClassifier = CyberRequirement.getImplementationClassifier(req.getContext());
-				boolean contextFound = false;
-				if (contextClassifier instanceof ComponentImplementation) {
-					ComponentImplementation ci = (ComponentImplementation) contextClassifier;
-					for (Subcomponent sub : ci.getOwnedSubcomponents()) {
-						if (sub.getQualifiedName().equalsIgnoreCase(req.getContext())) {
-							contextFound = true;
-							break;
-						}
-					}
-					for (Connection conn : ci.getOwnedConnections()) {
-						if (conn.getQualifiedName().equalsIgnoreCase(req.getContext())) {
-							contextFound = true;
-							// Make sure connection isn't being formalized
-							if (req.getStatus() == CyberRequirement.addPlusAgree) {
-								org.osate.ui.dialogs.Dialog.showError("Requirements Manager",
-										req.getContext() + ": Requirements on connections cannot be formalized.");
-								req.setStatus(CyberRequirement.toDo);
-								updateTableItem(i);
-								return false;
-							}
-							break;
-						}
-					}
+				if (!(contextClassifier instanceof ComponentImplementation)) {
+					return false;
 				}
+				boolean contextFound = contextExists(req.getContext(), (ComponentImplementation) contextClassifier);
+//				boolean contextFound = false;
+//				if (contextClassifier instanceof ComponentImplementation) {
+//					ComponentImplementation ci = (ComponentImplementation) contextClassifier;
+//					for (Subcomponent sub : ci.getOwnedSubcomponents()) {
+//						if (sub.getQualifiedName().equalsIgnoreCase(req.getContext())) {
+//							contextFound = true;
+//							break;
+//						}
+//					}
+//					for (Connection conn : ci.getOwnedConnections()) {
+//						if (conn.getQualifiedName().equalsIgnoreCase(req.getContext())) {
+//							contextFound = true;
+//							// Make sure connection isn't being formalized
+//							if (req.getStatus() == CyberRequirement.addPlusAgree) {
+//								org.osate.ui.dialogs.Dialog.showError("Requirements Manager",
+//										req.getContext() + ": Requirements on connections cannot be formalized.");
+//								req.setStatus(CyberRequirement.toDo);
+//								updateTableItem(i);
+//								return false;
+//							}
+//							break;
+//						}
+//					}
+//				}
 				// Check for invalid context
 				if (contextClassifier == null || !contextFound) {
 					org.osate.ui.dialogs.Dialog.showError("Requirements Manager", req.getContext()
@@ -494,6 +498,40 @@ public class ImportRequirementsGUI extends Dialog {
 
 	public List<CyberRequirement> getRequirements() {
 		return requirements;
+	}
+
+	private boolean contextExists(String context, ComponentImplementation compImpl) {
+		// context will be in the form of pkg::comp.impl.<subcomp>.<subcomp>...
+		String[] parts = context.split("\\.");
+		String compName = parts[0] + "." + parts[1];
+		if (!compName.equalsIgnoreCase(compImpl.getQualifiedName())) {
+			return false;
+		}
+
+		ComponentImplementation ci = compImpl;
+
+		for (int i = 2; i < parts.length; i++) {
+			boolean partFound = false;
+			for (Subcomponent subcomp : ci.getOwnedSubcomponents()) {
+				if (subcomp.getName().equalsIgnoreCase(parts[i])) {
+					ci = subcomp.getComponentImplementation();
+					partFound = true;
+					break;
+				}
+			}
+			if (!partFound) {
+				for (Connection conn : ci.getOwnedConnections()) {
+					if (conn.getName().equalsIgnoreCase(parts[i])) {
+						partFound = true;
+						break;
+					}
+				}
+			}
+			if (!partFound) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 }

@@ -870,7 +870,7 @@ public class RequirementsManager {
 
 			XtextEditor editor = (XtextEditor) TraverseProject.getCurrentEditor();
 			if (editor != null) {
-				IFile file = TraverseProject.getCurrentProject().getFile(editor.getResource().getName());
+				IFile file = (IFile) editor.getResource();
 				AadlPackage pkg = TraverseProject.getPackageInFile(file);
 				for (NamedElement e : pkg.getOwnedPublicSection().getOwnedMembers()) {
 					if (e instanceof ComponentImplementation && e.getName().equalsIgnoreCase(topLevelImplName)) {
