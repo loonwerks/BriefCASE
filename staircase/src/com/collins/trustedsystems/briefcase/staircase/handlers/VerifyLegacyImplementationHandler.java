@@ -1,5 +1,6 @@
 package com.collins.trustedsystems.briefcase.staircase.handlers;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -8,14 +9,19 @@ import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.xtext.EcoreUtil2;
+import org.osate.aadl2.Classifier;
 import org.osate.aadl2.ComponentImplementation;
 import org.osate.aadl2.ComponentType;
+import org.osate.aadl2.Property;
+import org.osate.aadl2.PropertyAssociation;
 import org.osate.aadl2.PropertyExpression;
+import org.osate.aadl2.PropertySet;
 import org.osate.aadl2.impl.ComponentImplementationImpl;
 import org.osate.aadl2.instance.ComponentInstance;
 import org.osate.aadl2.instance.SystemInstance;
 import org.osate.aadl2.instance.impl.ComponentInstanceImpl;
 import org.osate.aadl2.instantiation.InstantiateModel;
+import org.osate.aadl2.properties.PropertyNotPresentException;
 import org.osate.ui.dialogs.Dialog;
 
 import com.rockwellcollins.atc.agree.agree.impl.AssumeStatementImpl;
@@ -125,6 +131,31 @@ public class VerifyLegacyImplementationHandler extends AadlHandler {
 
 	}
 
+	private List<PropertyExpression> getPropertyExpressions(EObject eObj, String propertySetName, String propertyName) {
+		List<PropertyExpression> result = new ArrayList<>();
+		if (eObj instanceof Classifier) {
+			Classifier classifier = (Classifier) eObj;
+			for (PropertyAssociation propertyAssoc : classifier.getAllPropertyAssociations()) {
+				Property property = propertyAssoc.getProperty();
+				if (property.eContainer() instanceof PropertySet
+						&& ((PropertySet) property.eContainer()).getName().equals(propertySetName)
+						&& property.getName().equals(propertyName)) {
+					try {
+						if (property.isList()) {
+							result.addAll(classifier.getPropertyValueList(property));
+						} else {
+							result.add(classifier.getSimplePropertyValue(property));
+						}
+					} catch (final PropertyNotPresentException p_ex) {
+						// We simply return an empty list when there is no property associations
+					}
+				}
+			}
+		}
+		return result;
+	}
+
+	@SuppressWarnings("unused")
 	private Set<ComponentType> getLegacyComponents(EObject eObj) {
 
 		Set<ComponentType> components = new HashSet<>();
@@ -132,7 +163,7 @@ public class VerifyLegacyImplementationHandler extends AadlHandler {
 		if (eObj instanceof ComponentType) {
 			// Make sure it is a legacy component (i.e. an implementation exists)
 			ComponentType component = (ComponentType) eObj;
-			if (component.getPropertyValues("Programming_Properties", "Source_Text").size() > 0) {
+			if (getPropertyExpressions(component, "Programming_Properties", "Source_Text").size() > 0) {
 				components.add((ComponentType) eObj);
 			}
 		} else if (eObj instanceof ComponentImplementationImpl) {
@@ -154,7 +185,7 @@ public class VerifyLegacyImplementationHandler extends AadlHandler {
 				ComponentType component = (ComponentType) compInstanceImpl.getComponentClassifier();
 				// Check the "Source_Text" property value, which is the name of the binary or source file
 				// This is how we know this component is a legacy component
-				if (component.getPropertyValues("Programming_Properties", "Source_Text").size() > 0) {
+				if (getPropertyExpressions(component, "Programming_Properties", "Source_Text").size() > 0) {
 					components.add(component);
 				}
 			}
@@ -163,6 +194,7 @@ public class VerifyLegacyImplementationHandler extends AadlHandler {
 		return components;
 	}
 
+	@SuppressWarnings("unused")
 	private String generateManifest(ComponentType component) {
 		StringBuilder manifest = new StringBuilder();
 
@@ -171,13 +203,16 @@ public class VerifyLegacyImplementationHandler extends AadlHandler {
 		return manifest.toString();
 	}
 
+	@SuppressWarnings("unused")
 	private String generateContracts(ComponentType component) {
 
 		StringBuilder contract = new StringBuilder();
 		String predicate = null;
 
 		// Get entrypoint function name
-		EList<PropertyExpression> funcNames = component.getPropertyValues("Programming_Properties",
+		List<PropertyExpression> funcNames = getPropertyExpressions(
+				component,
+				"Programming_Properties",
 				"Compute_Entrypoint");
 		if (funcNames.isEmpty()) {
 			Dialog.showError("No entrypoint function specified",
@@ -225,15 +260,17 @@ public class VerifyLegacyImplementationHandler extends AadlHandler {
 		return contract.toString();
 	}
 
+	@SuppressWarnings("unused")
 	private String buildPredicate(String expression) {
 		String predicate = null;
 		return predicate;
 	}
 
+	@SuppressWarnings("unused")
 	private boolean uploadBinary(ComponentType component) {
 
 		// TODO: Get binary path/name
-		EList<PropertyExpression> binaries = component.getPropertyValues("Programming_Properties", "Source_Text");
+		List<PropertyExpression> binaries = getPropertyExpressions(component, "Programming_Properties", "Source_Text");
 		if (binaries.isEmpty()) {
 			Dialog.showError("No binary specified", "No binary is specified for " + component.getName() + ".");
 			return false;
