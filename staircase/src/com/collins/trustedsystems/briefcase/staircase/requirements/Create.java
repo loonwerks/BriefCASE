@@ -127,6 +127,21 @@ public class Create {
 		return thisExpr;
 	}
 
+	public static ThisExpr THIS(String qualifiedName, NamedElement namedElement) {
+		ThisExpr thisExpr = factory.createThisExpr();
+		NestedDotID id = factory.createNestedDotID();
+		qualifiedNameToNestedDotID(id, qualifiedName);
+		thisExpr.setSub(id.getSub());
+		id = thisExpr.getSub();
+		while (id.getSub() != null) {
+			id = id.getSub();
+		}
+		NestedDotID sub = factory.createNestedDotID();
+		sub.setBase(namedElement);
+		id.setSub(sub);
+		return thisExpr;
+	}
+
 	public static ThisExpr THIS(NamedElement ne) {
 		ThisExpr thisExpr = factory.createThisExpr();
 		if (ne != null) {
