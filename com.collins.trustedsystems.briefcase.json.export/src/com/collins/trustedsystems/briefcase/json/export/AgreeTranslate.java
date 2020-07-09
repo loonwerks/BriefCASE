@@ -546,6 +546,7 @@ public class AgreeTranslate {
 		return result;
 	}
 
+	@SuppressWarnings("unused")
 	private static JsonArray genComponentClassifier(ComponentClassifier cc) {
 
 		JsonArray components = new JsonArray();
@@ -563,6 +564,7 @@ public class AgreeTranslate {
 		return components;
 	}
 
+	@SuppressWarnings("unused")
 	private static JsonArray genAadlPackage(AadlPackage pkg) {
 
 		JsonArray components = new JsonArray();
@@ -580,6 +582,7 @@ public class AgreeTranslate {
 		return components;
 	}
 
+	@SuppressWarnings("unused")
 	private static JsonObject genAadlPackageSection(PackageSection pkgSection) {
 
 		JsonObject agreeLib = new JsonObject();

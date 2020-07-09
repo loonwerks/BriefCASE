@@ -23,6 +23,7 @@ public class TouchHandler extends AbstractHandler {
 		return null;
 	}
 
+	@SuppressWarnings("unused")
 	private void touch(String filename) {
 		File file = new File(filename);
 		if (file.exists()) {
