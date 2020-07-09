@@ -7,8 +7,6 @@
 		<version>0.2.2-SNAPSHOT</version>
 	</parent>
 
-	<groupId>com.collins.trustedsystems.briefcase</groupId>
 	<artifactId>com.collins.trustedsystems.briefcase</artifactId>
-	<version>0.2.2-SNAPSHOT</version>
 	<packaging>eclipse-plugin</packaging>
 </project>

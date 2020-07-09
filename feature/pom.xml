@@ -8,7 +8,6 @@
 	</parent>
 
 	<artifactId>com.collins.trustedsystems.briefcase.feature</artifactId>
-	<version>0.2.2-SNAPSHOT</version>
 	<packaging>eclipse-feature</packaging>
 
 	<build>

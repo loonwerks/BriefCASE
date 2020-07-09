@@ -8,5 +8,4 @@
 	</parent>
 	<artifactId>com.collins.trustedsystems.briefcase.splat</artifactId>
 	<packaging>eclipse-plugin</packaging>
-	<version>0.2.2-SNAPSHOT</version>
 </project>
