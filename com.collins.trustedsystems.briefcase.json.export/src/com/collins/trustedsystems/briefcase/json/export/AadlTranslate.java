@@ -205,7 +205,6 @@ public class AadlTranslate extends Aadl2Switch<JsonElement> {
 		result.add("category", new JsonPrimitive(ct.getCategory().getName()));
 		TypeExtension te = ct.getOwnedExtension();
 		if (te != null) {
-//			result.add("extends", doSwitch(te.getExtended()));
 			result.add("extends", new JsonPrimitive(te.getExtended().getQualifiedName()));
 		}
 
@@ -216,22 +215,6 @@ public class AadlTranslate extends Aadl2Switch<JsonElement> {
 		if (features.size() > 0) {
 			result.add("features", features);
 		}
-
-//		JsonArray abstractFeatures = new JsonArray();
-//		for (AbstractFeature abstractFeature : ct.getOwnedAbstractFeatures()) {
-//			abstractFeatures.add(doSwitch(abstractFeature));
-//		}
-//		if (abstractFeatures.size() > 0) {
-//			result.add("abstractFeatures", abstractFeatures);
-//		}
-
-//		JsonArray featureGroups = new JsonArray();
-//		for (FeatureGroup featureGroup : ct.getOwnedFeatureGroups()) {
-//			featureGroups.add(doSwitch(featureGroup));
-//		}
-//		if (featureGroups.size() > 0) {
-//			result.add("featureGroups", featureGroups);
-//		}
 
 		JsonArray flowSpecifications = new JsonArray();
 		for (FlowSpecification flowSpecification : ct.getOwnedFlowSpecifications()) {
@@ -272,7 +255,6 @@ public class AadlTranslate extends Aadl2Switch<JsonElement> {
 		result.add("category", new JsonPrimitive(ci.getCategory().getName()));
 		ImplementationExtension ie = ci.getOwnedExtension();
 		if (ie != null) {
-//			result.add("extends", doSwitch(ie.getExtended()));
 			result.add("extends", new JsonPrimitive(ie.getExtended().getQualifiedName()));
 		}
 
@@ -320,7 +302,7 @@ public class AadlTranslate extends Aadl2Switch<JsonElement> {
 
 		String kind = "";
 		if (c instanceof PortConnection) {
-			kind = "port";
+			kind = "PortConnection";
 		} else if (c instanceof AccessConnection) {
 			kind = ((AccessConnection) c).getAccessCategory().getName() + "Access";
 		}
@@ -514,26 +496,32 @@ public class AadlTranslate extends Aadl2Switch<JsonElement> {
 
 	/* Begin Properties */
 
-	private JsonElement getEnumerationLiteral(EnumerationLiteral enumLit) {
-		return new JsonPrimitive(enumLit.getName().toString());
+	private JsonElement genEnumerationLiteral(EnumerationLiteral enumLit) {
+		JsonObject o = new JsonObject();
+		o.add("kind", new JsonPrimitive("EnumerationLiteral"));
+		o.add("value", new JsonPrimitive(enumLit.getName().toString()));
+		return o;
 	}
 
-	private JsonElement getListValue(ListValue lv) {
+	private JsonElement genListValue(ListValue lv) {
+		JsonObject o = new JsonObject();
+		o.add("kind", new JsonPrimitive("ListValue"));
 		JsonArray vsJson = new JsonArray();
 		for (PropertyExpression pe : lv.getOwnedListElements()) {
 			vsJson.add(genPropertyExpression(pe));
 		}
-		return vsJson;
+		o.add("value", vsJson);
+		return o;
 	}
 
 	private JsonElement genNamedValue(NamedValue v) {
 		if (v.getNamedValue() instanceof EnumerationLiteral) {
-			return getEnumerationLiteral((EnumerationLiteral) v.getNamedValue());
+			return genEnumerationLiteral((EnumerationLiteral) v.getNamedValue());
 
 		} else if (v.getNamedValue() instanceof PropertyConstant) {
 			JsonObject o = new JsonObject();
 			o.add("kind", new JsonPrimitive("PropertyConstant"));
-			o.add("name", new JsonPrimitive(((PropertyConstant) v.getNamedValue()).getName()));
+			o.add("value", new JsonPrimitive(((PropertyConstant) v.getNamedValue()).getName()));
 			return o;
 
 		}
@@ -547,19 +535,24 @@ public class AadlTranslate extends Aadl2Switch<JsonElement> {
 		PropertyExpression pMax = v.getMaximum();
 
 		JsonObject result = new JsonObject();
+		JsonObject range = new JsonObject();
 		result.add("kind", new JsonPrimitive("RangeValue"));
-		result.add("min", genPropertyExpression(pMin));
-		result.add("max", genPropertyExpression(pMax));
+		range.add("min", genPropertyExpression(pMin));
+		range.add("max", genPropertyExpression(pMax));
+		result.add("value", range);
 
 		return result;
 
 	}
 
 	private JsonElement genRecordValue(RecordValue v) {
+		JsonObject record = new JsonObject();
 		JsonObject result = new JsonObject();
+		result.add("kind", new JsonPrimitive("RecordValue"));
 		for (BasicPropertyAssociation pa : v.getOwnedFieldValues()) {
-			result.add(pa.getProperty().getName(), genPropertyExpression(pa.getValue()));
+			record.add(pa.getProperty().getName(), genPropertyExpression(pa.getValue()));
 		}
+		result.add("value", record);
 		return result;
 	}
 
@@ -568,28 +561,58 @@ public class AadlTranslate extends Aadl2Switch<JsonElement> {
 			return genNamedValue((NamedValue) v);
 
 		} else if (v instanceof ListValue) {
-			return getListValue((ListValue) v);
+			return genListValue((ListValue) v);
 
 		} else if (v instanceof StringLiteral) {
-			return new JsonPrimitive(((StringLiteral) v).getValue());
+			JsonObject result = new JsonObject();
+			result.add("kind", new JsonPrimitive("StringLiteral"));
+			result.add("value", new JsonPrimitive(((StringLiteral) v).getValue()));
+			return result;
 
 		} else if (v instanceof IntegerLiteral) {
-			return new JsonPrimitive((((IntegerLiteral) v).getValue()));
+			IntegerLiteral il = (IntegerLiteral) v;
+			JsonObject result = new JsonObject();
+			result.add("kind", new JsonPrimitive("IntegerLiteral"));
+			result.add("value", new JsonPrimitive(il.getValue()));
+			if (il.getUnit() == null) {
+				result.add("unit", JsonNull.INSTANCE);
+			} else {
+				result.add("unit", new JsonPrimitive(il.getUnit().getName()));
+			}
+			return result;
 
 		} else if (v instanceof ReferenceValue) {
-			return new JsonPrimitive(((ReferenceValue) v).getPath().getNamedElement().getName());
+			JsonObject result = new JsonObject();
+			result.add("kind", new JsonPrimitive("ReferenceValue"));
+			result.add("value", new JsonPrimitive(((ReferenceValue) v).getPath().getNamedElement().getName()));
+			return result;
 
 		} else if (v instanceof RangeValue) {
 			return genRangeValue((RangeValue) v);
 
 		} else if (v instanceof ClassifierValue) {
-			return new JsonPrimitive(((ClassifierValue) v).getClassifier().getQualifiedName());
+			JsonObject result = new JsonObject();
+			result.add("kind", new JsonPrimitive("ClassifierValue"));
+			result.add("value", new JsonPrimitive(((ClassifierValue) v).getClassifier().getQualifiedName()));
+			return result;
 
 		} else if (v instanceof BooleanLiteral) {
-			return new JsonPrimitive(((BooleanLiteral) v).getValue());
+			JsonObject result = new JsonObject();
+			result.add("kind", new JsonPrimitive("BooleanLiteral"));
+			result.add("value", new JsonPrimitive(((BooleanLiteral) v).getValue()));
+			return result;
 
 		} else if (v instanceof RealLiteral) {
-			return new JsonPrimitive(((RealLiteral) v).getValue());
+			RealLiteral rl = (RealLiteral) v;
+			JsonObject result = new JsonObject();
+			result.add("kind", new JsonPrimitive("RealLiteral"));
+			result.add("value", new JsonPrimitive(rl.getValue()));
+			if (rl.getUnit() == null) {
+				result.add("unit", JsonNull.INSTANCE);
+			} else {
+				result.add("unit", new JsonPrimitive(rl.getUnit().getName()));
+			}
+			return result;
 
 		} else if (v instanceof RecordValue) {
 			return genRecordValue((RecordValue) v);
@@ -836,7 +859,7 @@ public class AadlTranslate extends Aadl2Switch<JsonElement> {
 	public JsonElement caseFlowSpecification(FlowSpecification flow) {
 		JsonObject result = new JsonObject();
 		result.add("name", new JsonPrimitive(flow.getName()));
-//		result.add("kind", new JsonPrimitive("flow"));
+		result.add("kind", new JsonPrimitive("FlowSpecification"));
 		result.add("flowKind", new JsonPrimitive(flow.getKind().getLiteral()));
 		String flowEndName = null;
 		FlowEnd flowEnd = flow.getInEnd();
