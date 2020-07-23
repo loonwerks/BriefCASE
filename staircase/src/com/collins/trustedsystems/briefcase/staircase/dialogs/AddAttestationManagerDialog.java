@@ -41,8 +41,10 @@ import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
  */
 public class AddAttestationManagerDialog extends TitleAreaDialog {
 
-	private Text txtImplementationName;
-	private Text txtImplementationLanguage;
+	private Text txtMgrImplementationName;
+	private Text txtGateImplementationName;
+	private Text txtMgrImplementationLanguage;
+	private Text txtGateImplementationLanguage;
 	private Text txtCacheTimeout;
 	private Combo cboCacheSize;
 	private List<Button> btnDispatchProtocol = new ArrayList<>();
@@ -50,8 +52,10 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 	private Combo cboRequirement;
 	private Button btnPropagateGuarantees;
 	private Text txtAgreeProperty;
-	private String implementationName;
-	private String implementationLanguage = "";
+	private String attestationManagerImplName;
+	private String attestationGateImplName;
+	private String attestationManagerImplLanguage = "";
+	private String attestationGateImplLanguage = "";
 	private long cacheTimeout = 0;
 	private long cacheSize = 0;
 	private String dispatchProtocol = "";
@@ -62,6 +66,7 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 	private List<String> requirements = new ArrayList<>();
 	private String agreeProperty;
 	private Subcomponent attestationManager = null;
+	private Subcomponent attestationGate = null;
 
 	private static final int MAX_CACHE_SIZE = 6;
 	private static final int DEFAULT_CACHE_SIZE = 4;
@@ -90,10 +95,12 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 		return size;
 	}
 
-	public void create(String commDriver, List<String> requirements, Subcomponent attestationManager) {
+	public void create(String commDriver, List<String> requirements, Subcomponent attestationManager,
+			Subcomponent attestationGate) {
 		this.commDriver = commDriver;
 		this.requirements = requirements;
 		this.attestationManager = attestationManager;
+		this.attestationGate = attestationGate;
 
 		if (commDriver == null || commDriver.isEmpty()) {
 			Dialog.showError("Add Attestation Manager", "Unknown communication driver.");
@@ -115,8 +122,10 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 		container.setLayout(layout);
 
 		// Add attestation manager information fields
-		createImplementationNameField(container);
-		createImplementationLanguageField(container);
+		createMgrImplementationNameField(container);
+		createGateImplementationNameField(container);
+		createMgrImplementationLanguageField(container);
+		createGateImplementationLanguageField(container);
 		createCacheTimeoutField(container);
 		createCacheSizeField(container);
 		createDispatchProtocolField(container);
@@ -131,7 +140,7 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 	}
 
 
-	private void createImplementationNameField(Composite container) {
+	private void createMgrImplementationNameField(Composite container) {
 
 		Label lblImplNameField = new Label(container, SWT.NONE);
 		lblImplNameField.setText("Attestation Manager implementation name");
@@ -139,18 +148,18 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 		GridData dataInfoField = new GridData();
 		dataInfoField.grabExcessHorizontalSpace = true;
 		dataInfoField.horizontalAlignment = SWT.FILL;
-		txtImplementationName = new Text(container, SWT.BORDER);
-		txtImplementationName.setLayoutData(dataInfoField);
+		txtMgrImplementationName = new Text(container, SWT.BORDER);
+		txtMgrImplementationName.setLayoutData(dataInfoField);
 		if (attestationManager == null) {
-			txtImplementationName.setText(AddAttestationManagerHandler.AM_IMPL_NAME);
+			txtMgrImplementationName.setText(AddAttestationManagerHandler.AM_IMPL_NAME);
 		} else {
-			txtImplementationName.setText(attestationManager.getName());
-			txtImplementationName.setEnabled(false);
+			txtMgrImplementationName.setText(attestationManager.getName());
+			txtMgrImplementationName.setEnabled(false);
 		}
 
 	}
 
-	private void createImplementationLanguageField(Composite container) {
+	private void createMgrImplementationLanguageField(Composite container) {
 
 		Label lblImplLangField = new Label(container, SWT.NONE);
 		lblImplLangField.setText("Attestation Manager implementation language");
@@ -158,11 +167,46 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 		GridData dataInfoField = new GridData();
 		dataInfoField.grabExcessHorizontalSpace = true;
 		dataInfoField.horizontalAlignment = SWT.FILL;
-		txtImplementationLanguage = new Text(container, SWT.BORDER);
-		txtImplementationLanguage.setLayoutData(dataInfoField);
-		txtImplementationLanguage.setText(DEFAULT_IMPL_LANGUAGE);
+		txtMgrImplementationLanguage = new Text(container, SWT.BORDER);
+		txtMgrImplementationLanguage.setLayoutData(dataInfoField);
+		txtMgrImplementationLanguage.setText(DEFAULT_IMPL_LANGUAGE);
 		if (attestationManager != null) {
-			txtImplementationLanguage.setEnabled(false);
+			txtMgrImplementationLanguage.setEnabled(false);
+		}
+	}
+
+	private void createGateImplementationNameField(Composite container) {
+
+		Label lblImplNameField = new Label(container, SWT.NONE);
+		lblImplNameField.setText("Attestation Gate implementation name");
+
+		GridData dataInfoField = new GridData();
+		dataInfoField.grabExcessHorizontalSpace = true;
+		dataInfoField.horizontalAlignment = SWT.FILL;
+		txtGateImplementationName = new Text(container, SWT.BORDER);
+		txtGateImplementationName.setLayoutData(dataInfoField);
+		if (attestationGate == null) {
+			txtGateImplementationName.setText(AddAttestationManagerHandler.AG_IMPL_NAME);
+		} else {
+			txtGateImplementationName.setText(attestationGate.getName());
+			txtGateImplementationName.setEnabled(false);
+		}
+
+	}
+
+	private void createGateImplementationLanguageField(Composite container) {
+
+		Label lblImplLangField = new Label(container, SWT.NONE);
+		lblImplLangField.setText("Attestation Gate implementation language");
+
+		GridData dataInfoField = new GridData();
+		dataInfoField.grabExcessHorizontalSpace = true;
+		dataInfoField.horizontalAlignment = SWT.FILL;
+		txtGateImplementationLanguage = new Text(container, SWT.BORDER);
+		txtGateImplementationLanguage.setLayoutData(dataInfoField);
+		txtGateImplementationLanguage.setText(DEFAULT_IMPL_LANGUAGE);
+		if (attestationGate != null) {
+			txtGateImplementationLanguage.setEnabled(false);
 		}
 	}
 
@@ -389,8 +433,10 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 	 * @param container
 	 */
 	private boolean saveInput() {
-		implementationName = txtImplementationName.getText();
-		implementationLanguage = txtImplementationLanguage.getText();
+		attestationManagerImplName = txtMgrImplementationName.getText();
+		attestationManagerImplLanguage = txtMgrImplementationLanguage.getText();
+		attestationGateImplName = txtGateImplementationName.getText();
+		attestationGateImplLanguage = txtGateImplementationLanguage.getText();
 		try {
 			cacheTimeout = Long.parseLong(txtCacheTimeout.getText());
 		} catch (NumberFormatException e) {
@@ -433,12 +479,20 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 		return true;
 	}
 
-	public String getImplementationName() {
-		return implementationName;
+	public String getAttestationManagerImplName() {
+		return attestationManagerImplName;
 	}
 
-	public String getImplementationLanguage() {
-		return implementationLanguage;
+	public String getAttestationGateImplName() {
+		return attestationGateImplName;
+	}
+
+	public String getAttestationManagerImplLanguage() {
+		return attestationManagerImplLanguage;
+	}
+
+	public String getAttestationGateImplLanguage() {
+		return attestationGateImplLanguage;
 	}
 
 	public long getCacheTimeout() {

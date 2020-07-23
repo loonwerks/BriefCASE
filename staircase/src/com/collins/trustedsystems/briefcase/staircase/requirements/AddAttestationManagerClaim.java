@@ -14,11 +14,14 @@ public class AddAttestationManagerClaim extends BuiltInClaim {
 
 	private final Subcomponent commDriver;
 	private final Subcomponent attestationManager;
+	private final Subcomponent attestationGate;
 
-	public AddAttestationManagerClaim(Subcomponent commDriver, Subcomponent attestationManager) {
+	public AddAttestationManagerClaim(Subcomponent commDriver, Subcomponent attestationManager,
+			Subcomponent attestationGate) {
 		super(ADD_ATTESTATION_MANAGER);
 		this.commDriver = commDriver;
 		this.attestationManager = attestationManager;
+		this.attestationGate = attestationGate;
 	}
 
 	@Override
@@ -26,6 +29,7 @@ public class AddAttestationManagerClaim extends BuiltInClaim {
 		List<Expr> callArgs = new ArrayList<>();
 		callArgs.add(Create.THIS(this.commDriver));
 		callArgs.add(Create.THIS(this.attestationManager));
+		callArgs.add(Create.THIS(this.attestationGate));
 		return callArgs;
 	}
 
@@ -34,6 +38,7 @@ public class AddAttestationManagerClaim extends BuiltInClaim {
 		List<Arg> defParams = new ArrayList<>();
 		defParams.add(Create.arg("comm_driver", Create.baseType("component")));
 		defParams.add(Create.arg("attestation_manager", Create.baseType("component")));
+		defParams.add(Create.arg("attestation_gate", Create.baseType("component")));
 		return defParams;
 	}
 
