@@ -314,6 +314,14 @@ public class AadlTranslate extends Aadl2Switch<JsonElement> {
 		result.add("destination", new JsonPrimitive(getName(c.getDestination())));
 		result.add("bidirectional", new JsonPrimitive(c.isBidirectional()));
 
+		JsonArray properties = new JsonArray();
+		for (PropertyAssociation pa : c.getOwnedPropertyAssociations()) {
+			properties.add(doSwitch(pa));
+		}
+		if (properties.size() > 0) {
+			result.add("properties", properties);
+		}
+
 		return result;
 	}
 
