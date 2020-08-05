@@ -95,6 +95,7 @@ public class ClaimBuilder {
 
 		FunctionDefinition def = f.createFunctionDefinition();
 		def.setName(name);
+		def.setClaimType("goal");
 		args.forEach(a -> def.getArgs().add(a));
 
 		ClaimBody body = f.createClaimBody();
