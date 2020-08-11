@@ -39,8 +39,9 @@ public class AddMonitorClaim extends BuiltInClaim {
 	@Override
 	public List<Expr> getCallArgs() {
 		List<Expr> callArgs = new ArrayList<>();
+		String qualifiedName = this.reqContext.substring(0, this.reqContext.lastIndexOf("."));
 		callArgs.add(Create.THIS(this.reqContext));
-		callArgs.add(Create.THIS(this.monitor));
+		callArgs.add(Create.THIS(qualifiedName, this.monitor));
 		if (this.monitorType == ADD_MONITOR_GATE) {
 			callArgs.add(Create.THIS(this.gateContext));
 			callArgs.add(Create.id(this.msgType));

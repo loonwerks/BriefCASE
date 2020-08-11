@@ -37,7 +37,7 @@ import com.collins.trustedsystems.briefcase.staircase.handlers.AddAttestationMan
 import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
 
 /**
- * This class creates the Add Attestation Manager wizard
+ * This class creates the Add Attestation wizard
  */
 public class AddAttestationManagerDialog extends TitleAreaDialog {
 
@@ -47,6 +47,7 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 	private Text txtGateImplementationLanguage;
 	private Text txtCacheTimeout;
 	private Combo cboCacheSize;
+	private Text txtIdListDataType;
 	private List<Button> btnDispatchProtocol = new ArrayList<>();
 	private List<Button> btnLogPortType = new ArrayList<>();
 	private Combo cboRequirement;
@@ -58,6 +59,7 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 	private String attestationGateImplLanguage = "";
 	private long cacheTimeout = 0;
 	private long cacheSize = 0;
+	private String idListDataType = "";
 	private String dispatchProtocol = "";
 	private PortCategory logPortType = null;
 	private String requirement;
@@ -82,9 +84,9 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 	@Override
 	public void create() {
 		super.create();
-		setTitle("Add Attestation Manager");
+		setTitle("Add Attestation");
 		setMessage(
-				"Enter Attestation Manager details.  You may optionally leave these fields empty and manually edit the model.",
+				"Enter Attestation details.  You may optionally leave these fields empty and manually edit the model.",
 				IMessageProvider.NONE);
 	}
 
@@ -103,12 +105,12 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 		this.attestationGate = attestationGate;
 
 		if (commDriver == null || commDriver.isEmpty()) {
-			Dialog.showError("Add Attestation Manager", "Unknown communication driver.");
+			Dialog.showError("Add Attestation", "Unknown communication driver.");
 			return;
 		}
 		super.create();
-		setTitle("Add Attestation Manager to " + commDriver);
-		setMessage("Enter Attestation Manager details for adding attestation to " + commDriver
+		setTitle("Add Attestation to " + commDriver);
+		setMessage("Enter Attestation details for adding attestation to " + commDriver
 				+ ".  You may optionally leave these fields empty and manually edit the AADL attestation manager component once it is added to the model.",
 				IMessageProvider.NONE);
 	}
@@ -128,6 +130,7 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 		createGateImplementationLanguageField(container);
 		createCacheTimeoutField(container);
 		createCacheSizeField(container);
+		createIdListDataTypeField(container);
 		createDispatchProtocolField(container);
 		createLogPortField(container);
 		createRequirementField(container);
@@ -267,6 +270,39 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 				}
 			}
 			cboCacheSize.setEnabled(false);
+		}
+
+	}
+
+	private void createIdListDataTypeField(Composite container) {
+
+		Label lblIdListDataTypeField = new Label(container, SWT.NONE);
+		lblIdListDataTypeField.setText("ID list data type");
+
+		GridData dataInfoField = new GridData();
+		dataInfoField.grabExcessHorizontalSpace = true;
+		dataInfoField.horizontalAlignment = SWT.FILL;
+		txtIdListDataType = new Text(container, SWT.BORDER);
+		txtIdListDataType.setLayoutData(dataInfoField);
+
+		if (attestationManager != null) {
+
+			ComponentType ct = attestationManager.getComponentType();
+			for (Feature f : ct.getOwnedFeatures()) {
+				if (f.getName().equalsIgnoreCase(AddAttestationManagerHandler.AM_PORT_TRUSTED_IDS_NAME)) {
+					String dataType = "";
+					if (f instanceof EventDataPort) {
+						EventDataPort port = (EventDataPort) f;
+						dataType = port.getDataFeatureClassifier().getQualifiedName();
+					} else if (f instanceof DataPort) {
+						DataPort port = (DataPort) f;
+						dataType = port.getDataFeatureClassifier().getQualifiedName();
+					}
+					txtIdListDataType.setText(dataType);
+				}
+			}
+
+			txtIdListDataType.setEnabled(false);
 		}
 
 	}
@@ -440,15 +476,20 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 		try {
 			cacheTimeout = Long.parseLong(txtCacheTimeout.getText());
 		} catch (NumberFormatException e) {
-			Dialog.showError("Add Attestation Manager", "Value of Cache Timeout must be an integer.");
+			Dialog.showError("Add Attestation", "Value of Cache Timeout must be an integer.");
 			return false;
 		}
 		try {
 			cacheSize = Long.parseLong(cboCacheSize.getText());
 		} catch (NumberFormatException e) {
-			Dialog.showError("Add Attestation Manager", "Value of Cache Size must be an integer.");
+			Dialog.showError("Add Attestation", "Value of Cache Size must be an integer.");
 			return false;
 		}
+		if (!txtIdListDataType.getText().isEmpty() && !txtIdListDataType.getText().contains("::")) {
+			Dialog.showError("Add Attestation", "ID list data type must be a qualified name.");
+			return false;
+		}
+		idListDataType = txtIdListDataType.getText();
 		for (Button b : btnDispatchProtocol) {
 			if (b.getSelection() && !b.getText().equalsIgnoreCase("None")) {
 				dispatchProtocol = b.getText();
@@ -466,8 +507,7 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 		if (requirement.equals(NO_REQUIREMENT_SELECTED)) {
 			requirement = "";
 		} else if (!requirements.contains(requirement)) {
-			Dialog.showError("Add Attestation Manager",
-					"Attestation Manager requirement " + requirement
+			Dialog.showError("Add Attestation", "Attestation requirement " + requirement
 							+ " does not exist in the model.  Select a requirement from the list, or choose "
 							+ NO_REQUIREMENT_SELECTED + ".");
 			return false;
@@ -501,6 +541,10 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 
 	public long getCacheSize() {
 		return cacheSize;
+	}
+
+	public String getIdListDataType() {
+		return idListDataType;
 	}
 
 	public String getDispatchProtocol() {
