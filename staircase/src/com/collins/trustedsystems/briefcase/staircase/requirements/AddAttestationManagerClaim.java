@@ -12,13 +12,15 @@ public class AddAttestationManagerClaim extends BuiltInClaim {
 
 	private static final String ADD_ATTESTATION_MANAGER = "Add_Attestation_Manager";
 
+	private final String reqContext;
 	private final Subcomponent commDriver;
 	private final Subcomponent attestationManager;
 	private final Subcomponent attestationGate;
 
-	public AddAttestationManagerClaim(Subcomponent commDriver, Subcomponent attestationManager,
+	public AddAttestationManagerClaim(String reqContext, Subcomponent commDriver, Subcomponent attestationManager,
 			Subcomponent attestationGate) {
 		super(ADD_ATTESTATION_MANAGER);
+		this.reqContext = reqContext;
 		this.commDriver = commDriver;
 		this.attestationManager = attestationManager;
 		this.attestationGate = attestationGate;
@@ -27,9 +29,10 @@ public class AddAttestationManagerClaim extends BuiltInClaim {
 	@Override
 	public List<Expr> getCallArgs() {
 		List<Expr> callArgs = new ArrayList<>();
-		callArgs.add(Create.THIS(this.commDriver));
-		callArgs.add(Create.THIS(this.attestationManager));
-		callArgs.add(Create.THIS(this.attestationGate));
+		String qualifiedName = this.reqContext.substring(0, this.reqContext.lastIndexOf("."));
+		callArgs.add(Create.THIS(qualifiedName, this.commDriver));
+		callArgs.add(Create.THIS(qualifiedName, this.attestationManager));
+		callArgs.add(Create.THIS(qualifiedName, this.attestationGate));
 		return callArgs;
 	}
 

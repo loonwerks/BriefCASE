@@ -46,6 +46,7 @@ import org.osate.xtext.aadl2.properties.util.ThreadProperties;
 
 import com.collins.trustedsystems.briefcase.staircase.dialogs.AddAttestationManagerDialog;
 import com.collins.trustedsystems.briefcase.staircase.requirements.AddAttestationManagerClaim;
+import com.collins.trustedsystems.briefcase.staircase.requirements.CyberRequirement;
 import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsManager;
 import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
 import com.collins.trustedsystems.briefcase.staircase.utils.CaseUtils;
@@ -168,7 +169,9 @@ public class AddAttestationManagerHandler extends AadlHandler {
 			// Add add_attestation claims to resolute prove statement, if applicable
 			// TODO: Test after requirements import has been updated
 			if (!attestationRequirement.isEmpty()) {
-				return new AddAttestationManagerClaim(commDriver, attestationManager, attestationGate);
+				CyberRequirement req = RequirementsManager.getInstance().getRequirement(attestationRequirement);
+				return new AddAttestationManagerClaim(req.getContext(), commDriver, attestationManager,
+						attestationGate);
 			}
 
 			return null;
@@ -766,7 +769,9 @@ public class AddAttestationManagerHandler extends AadlHandler {
 
 			// Add add_attestation claims to resolute prove statement, if applicable
 			if (!attestationRequirement.isEmpty()) {
-				return new AddAttestationManagerClaim(commDriver, attestationManagerSubcomp, attestationGateSubcomp);
+				CyberRequirement req = RequirementsManager.getInstance().getRequirement(attestationRequirement);
+				return new AddAttestationManagerClaim(req.getContext(), commDriver, attestationManagerSubcomp,
+						attestationGateSubcomp);
 			}
 			return null;
 		});
