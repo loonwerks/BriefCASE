@@ -43,7 +43,7 @@ public class AddMonitorClaim extends BuiltInClaim {
 		callArgs.add(Create.THIS(this.reqContext));
 		callArgs.add(Create.THIS(qualifiedName, this.monitor));
 		if (this.monitorType == ADD_MONITOR_GATE) {
-			callArgs.add(Create.THIS(this.gateContext));
+			callArgs.add(Create.THIS(qualifiedName + "." + this.gateContext));
 			callArgs.add(Create.id(this.msgType));
 		}
 		return callArgs;

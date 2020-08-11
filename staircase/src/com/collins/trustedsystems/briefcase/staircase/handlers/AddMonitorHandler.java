@@ -557,7 +557,7 @@ public class AddMonitorHandler extends AadlHandler {
 				CyberRequirement req = RequirementsManager.getInstance().getRequirement(monitorRequirement);
 				if (observationGate) {
 					return new AddMonitorClaim(req.getContext(), monitorSubcomp,
-						selectedConnection.getDestination().getContext().getQualifiedName(),
+							selectedConnection.getDestination().getContext().getName(),
 						observedDataFeatureClassifier);
 				} else {
 					return new AddMonitorClaim(req.getContext(), monitorSubcomp);
