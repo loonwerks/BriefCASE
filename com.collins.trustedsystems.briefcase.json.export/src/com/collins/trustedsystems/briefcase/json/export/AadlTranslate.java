@@ -11,6 +11,7 @@ import org.osate.aadl2.AbstractFeature;
 import org.osate.aadl2.AccessConnection;
 import org.osate.aadl2.AnnexLibrary;
 import org.osate.aadl2.AnnexSubclause;
+import org.osate.aadl2.ArrayDimension;
 import org.osate.aadl2.BasicProperty;
 import org.osate.aadl2.BasicPropertyAssociation;
 import org.osate.aadl2.BooleanLiteral;
@@ -385,6 +386,13 @@ public class AadlTranslate extends Aadl2Switch<JsonElement> {
 		result.add("name", new JsonPrimitive(sc.getName()));
 		result.add("kind", new JsonPrimitive("Subcomponent"));
 		result.add("category", new JsonPrimitive(sc.getCategory().getName()));
+		JsonArray arrayDimensions = new JsonArray();
+		for (ArrayDimension ad : sc.getArrayDimensions()) {
+			arrayDimensions.add(doSwitch(ad));
+		}
+		if (arrayDimensions.size() > 0) {
+			result.add("dimensions", arrayDimensions);
+		}
 		ComponentClassifier c = sc.getClassifier();
 		if (c == null) {
 			result.add("classifier", JsonNull.INSTANCE);
@@ -860,6 +868,14 @@ public class AadlTranslate extends Aadl2Switch<JsonElement> {
 			result.add("appliesTo", appliesTo);
 		}
 
+		return result;
+	}
+
+	@Override
+	public JsonElement caseArrayDimension(ArrayDimension ad) {
+		JsonObject result = new JsonObject();
+		result.add("kind", new JsonPrimitive("ArrayDimension"));
+		result.add("value", new JsonPrimitive(new Long(ad.getSize().getSize())));
 		return result;
 	}
 
