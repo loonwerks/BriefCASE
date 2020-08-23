@@ -79,6 +79,9 @@ public class AddMonitorHandler extends AadlHandler {
 		final PortConnection selectedConnection = (PortConnection) eObj;
 		ComponentImplementation ci = selectedConnection.getContainingComponentImpl();
 
+		// TODO: Check if monitor is being placed after a filter. If so, filter requirement claim needs
+		// to be updated so filter_exists doesn't return false
+
 		// Provide list of outports that can be connected to monitor's expected in port
 		List<String> outports = ModelTransformUtils.getOutports(ci);
 
