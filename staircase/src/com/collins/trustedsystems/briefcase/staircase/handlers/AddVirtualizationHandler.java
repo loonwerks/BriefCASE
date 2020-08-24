@@ -37,8 +37,6 @@ import org.osate.aadl2.Realization;
 import org.osate.aadl2.ReferenceValue;
 import org.osate.aadl2.Subcomponent;
 import org.osate.aadl2.SystemSubcomponent;
-import org.osate.aadl2.ThreadGroupSubcomponent;
-import org.osate.aadl2.ThreadSubcomponent;
 import org.osate.aadl2.VirtualProcessorImplementation;
 import org.osate.aadl2.VirtualProcessorSubcomponent;
 import org.osate.aadl2.VirtualProcessorType;
@@ -81,20 +79,24 @@ public class AddVirtualizationHandler extends AadlHandler {
 		// Get the current selection
 		EObject eObj = getEObject(uri);
 		Subcomponent selectedSub = null;
-		// TODO: handle system, device, abstract subcomponents
-		if (eObj instanceof SystemSubcomponent || eObj instanceof ProcessSubcomponent
-				|| eObj instanceof ThreadSubcomponent
-				|| eObj instanceof ThreadGroupSubcomponent) {
+		if (eObj instanceof SystemSubcomponent || eObj instanceof ProcessSubcomponent) {
 			selectedSub = (Subcomponent) eObj;
 		} else {
 			Dialog.showError("Add Virtualization",
-					"A system, process, thread, or thread group implementation subcomponent must be selected in order to add virtualization.");
+					"A system or process implementation subcomponent must be selected in order to add virtualization.");
 			return;
 		}
 
 		// Make sure subcomponent refers to a component implementation
 		if (selectedSub.getComponentImplementation() == null) {
 			Dialog.showError("Add Virtualization", "Selected subcomponent must be a component implementation.");
+			return;
+		}
+
+		// Selected subcomponent must only contain software subcomponents
+		if (!isSoftwareComponent(selectedSub)) {
+			Dialog.showError("Add Virtualization",
+					"Selected component must only contain software subcomponents (system, process, thread group, thread).");
 			return;
 		}
 
@@ -511,6 +513,26 @@ public class AddVirtualizationHandler extends AadlHandler {
 			cpe.setNamedElement(currentSub);
 		}
 		return cne;
+	}
+
+	private boolean isSoftwareComponent(Subcomponent sub) {
+		if (sub.getComponentImplementation().getCategory() == ComponentCategory.THREAD) {
+			return true;
+		} else if (sub.getComponentImplementation().getCategory() == ComponentCategory.SYSTEM
+				|| sub.getComponentImplementation().getCategory() == ComponentCategory.PROCESS
+				|| sub.getComponentImplementation().getCategory() == ComponentCategory.THREAD_GROUP) {
+			if (sub.getComponentImplementation() == null) {
+				return true;
+			}
+			for (Subcomponent s : sub.getComponentImplementation().getOwnedSubcomponents()) {
+				if (!isSoftwareComponent(s)) {
+					return false;
+				}
+			}
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 }
