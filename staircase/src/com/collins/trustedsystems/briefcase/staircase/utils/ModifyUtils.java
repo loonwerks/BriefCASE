@@ -36,6 +36,10 @@ public class ModifyUtils {
 		return xedit;
 	}
 
+	public static XtextEditor getActiveEditor() {
+		return (XtextEditor) PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActiveEditor();
+	}
+
 	public static void closeEditor(XtextEditor editor, boolean save) {
 		IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
 		if (save) {

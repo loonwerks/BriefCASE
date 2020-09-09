@@ -60,6 +60,7 @@ public class JsonRequirementsFile {
 			}
 			this.date = req.date;
 			this.hash = req.hash;
+			this.implementation = req.implementation;
 			req.getRequirements().forEach(r -> {
 				if (this.requirements == null) {
 					this.requirements = new ArrayList<CyberRequirement>();

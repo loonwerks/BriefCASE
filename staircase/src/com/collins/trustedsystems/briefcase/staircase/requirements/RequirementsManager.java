@@ -24,6 +24,8 @@ import org.eclipse.ui.part.FileEditorInput;
 import org.eclipse.xtext.ui.editor.XtextEditor;
 import org.eclipse.xtext.ui.editor.utils.EditorUtils;
 import org.osate.aadl2.AadlPackage;
+import org.osate.aadl2.ComponentImplementation;
+import org.osate.aadl2.NamedElement;
 import org.osate.ui.dialogs.Dialog;
 
 import com.collins.trustedsystems.briefcase.staircase.utils.CaseUtils;
@@ -832,15 +834,52 @@ public class RequirementsManager {
 		}
 
 		public void importJsonRequrementsFiles(List<JsonRequirementsFile> reqFiles) {
-			reqFiles.forEach(file -> {
-				importRequirements(file.getRequirements());
-			});
+			reqFiles.forEach(file -> importJsonRequrementsFile(file));
+		}
+
+		public void importJsonRequrementsFile(JsonRequirementsFile reqFile) {
+			// Prepending the qualified name of the top-level implementation to each requirement's context
+			// before calling importRequirements
+
+			// Make changes to the requirements' contexts
+			List<CyberRequirement> reqs = reqFile.getRequirements();
+			ComponentImplementation ci = getComponentImplementationInCurrentEditor(reqFile.getImplementation());
+			if (ci == null) {
+				throw new RuntimeException(
+				"Unknown top-level component implementation referred by import requirements file: " + reqFile.getImplementation());
+			}
+			String ciQualifiedName = ci.getQualifiedName();
+			reqs.forEach(e -> e.setContext(ciQualifiedName + "." + e.getContext()));
+
+			// Import requirements
+			importRequirements(reqs);
 		}
 
 		public void importRequirements(List<CyberRequirement> reqs) {
 			// Add reqs to the database of requirements
 			// Note: if requirement already exists, it will get updated
 			reqs.forEach(e -> importRequirement(e));
+		}
+
+		public ComponentImplementation getComponentImplementationInCurrentEditor(String implInstanceName) {
+			// implInstanceName example:
+			// topLevelImplementation_Impl_Instance
+			String[] tokens = implInstanceName.split("_");
+			assert (tokens.length == 3);
+			String topLevelImplName = tokens[0] + "." + tokens[1];
+
+			XtextEditor editor = (XtextEditor) TraverseProject.getCurrentEditor();
+			if (editor != null) {
+				IFile file = (IFile) editor.getResource();
+				AadlPackage pkg = TraverseProject.getPackageInFile(file);
+				for (NamedElement e : pkg.getOwnedPublicSection().getOwnedMembers()) {
+					if (e instanceof ComponentImplementation && e.getName().equalsIgnoreCase(topLevelImplName)) {
+						System.out.println("Found complement implementation: " + e.getQualifiedName());
+						return (ComponentImplementation) e;
+					}
+				}
+			}
+			return null;
 		}
 
 		public void importRequirement(CyberRequirement req) {

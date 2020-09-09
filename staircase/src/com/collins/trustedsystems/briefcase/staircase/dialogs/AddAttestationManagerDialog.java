@@ -37,23 +37,29 @@ import com.collins.trustedsystems.briefcase.staircase.handlers.AddAttestationMan
 import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
 
 /**
- * This class creates the Add Attestation Manager wizard
+ * This class creates the Add Attestation wizard
  */
 public class AddAttestationManagerDialog extends TitleAreaDialog {
 
-	private Text txtImplementationName;
-	private Text txtImplementationLanguage;
+	private Text txtMgrImplementationName;
+	private Text txtGateImplementationName;
+	private Text txtMgrImplementationLanguage;
+	private Text txtGateImplementationLanguage;
 	private Text txtCacheTimeout;
 	private Combo cboCacheSize;
+	private Text txtIdListDataType;
 	private List<Button> btnDispatchProtocol = new ArrayList<>();
 	private List<Button> btnLogPortType = new ArrayList<>();
 	private Combo cboRequirement;
 	private Button btnPropagateGuarantees;
 	private Text txtAgreeProperty;
-	private String implementationName;
-	private String implementationLanguage = "";
+	private String attestationManagerImplName;
+	private String attestationGateImplName;
+	private String attestationManagerImplLanguage = "";
+	private String attestationGateImplLanguage = "";
 	private long cacheTimeout = 0;
 	private long cacheSize = 0;
+	private String idListDataType = "";
 	private String dispatchProtocol = "";
 	private PortCategory logPortType = null;
 	private String requirement;
@@ -62,6 +68,7 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 	private List<String> requirements = new ArrayList<>();
 	private String agreeProperty;
 	private Subcomponent attestationManager = null;
+	private Subcomponent attestationGate = null;
 
 	private static final int MAX_CACHE_SIZE = 6;
 	private static final int DEFAULT_CACHE_SIZE = 4;
@@ -77,9 +84,9 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 	@Override
 	public void create() {
 		super.create();
-		setTitle("Add Attestation Manager");
+		setTitle("Add Attestation");
 		setMessage(
-				"Enter Attestation Manager details.  You may optionally leave these fields empty and manually edit the model.",
+				"Enter Attestation details.  You may optionally leave these fields empty and manually edit the model.",
 				IMessageProvider.NONE);
 	}
 
@@ -90,18 +97,20 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 		return size;
 	}
 
-	public void create(String commDriver, List<String> requirements, Subcomponent attestationManager) {
+	public void create(String commDriver, List<String> requirements, Subcomponent attestationManager,
+			Subcomponent attestationGate) {
 		this.commDriver = commDriver;
 		this.requirements = requirements;
 		this.attestationManager = attestationManager;
+		this.attestationGate = attestationGate;
 
 		if (commDriver == null || commDriver.isEmpty()) {
-			Dialog.showError("Add Attestation Manager", "Unknown communication driver.");
+			Dialog.showError("Add Attestation", "Unknown communication driver.");
 			return;
 		}
 		super.create();
-		setTitle("Add Attestation Manager to " + commDriver);
-		setMessage("Enter Attestation Manager details for adding attestation to " + commDriver
+		setTitle("Add Attestation to " + commDriver);
+		setMessage("Enter Attestation details for adding attestation to " + commDriver
 				+ ".  You may optionally leave these fields empty and manually edit the AADL attestation manager component once it is added to the model.",
 				IMessageProvider.NONE);
 	}
@@ -115,10 +124,13 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 		container.setLayout(layout);
 
 		// Add attestation manager information fields
-		createImplementationNameField(container);
-		createImplementationLanguageField(container);
+		createMgrImplementationNameField(container);
+		createGateImplementationNameField(container);
+		createMgrImplementationLanguageField(container);
+		createGateImplementationLanguageField(container);
 		createCacheTimeoutField(container);
 		createCacheSizeField(container);
+		createIdListDataTypeField(container);
 		createDispatchProtocolField(container);
 		createLogPortField(container);
 		createRequirementField(container);
@@ -131,7 +143,7 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 	}
 
 
-	private void createImplementationNameField(Composite container) {
+	private void createMgrImplementationNameField(Composite container) {
 
 		Label lblImplNameField = new Label(container, SWT.NONE);
 		lblImplNameField.setText("Attestation Manager implementation name");
@@ -139,18 +151,18 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 		GridData dataInfoField = new GridData();
 		dataInfoField.grabExcessHorizontalSpace = true;
 		dataInfoField.horizontalAlignment = SWT.FILL;
-		txtImplementationName = new Text(container, SWT.BORDER);
-		txtImplementationName.setLayoutData(dataInfoField);
+		txtMgrImplementationName = new Text(container, SWT.BORDER);
+		txtMgrImplementationName.setLayoutData(dataInfoField);
 		if (attestationManager == null) {
-			txtImplementationName.setText(AddAttestationManagerHandler.AM_IMPL_NAME);
+			txtMgrImplementationName.setText(AddAttestationManagerHandler.AM_IMPL_NAME);
 		} else {
-			txtImplementationName.setText(attestationManager.getName());
-			txtImplementationName.setEnabled(false);
+			txtMgrImplementationName.setText(attestationManager.getName());
+			txtMgrImplementationName.setEnabled(false);
 		}
 
 	}
 
-	private void createImplementationLanguageField(Composite container) {
+	private void createMgrImplementationLanguageField(Composite container) {
 
 		Label lblImplLangField = new Label(container, SWT.NONE);
 		lblImplLangField.setText("Attestation Manager implementation language");
@@ -158,11 +170,46 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 		GridData dataInfoField = new GridData();
 		dataInfoField.grabExcessHorizontalSpace = true;
 		dataInfoField.horizontalAlignment = SWT.FILL;
-		txtImplementationLanguage = new Text(container, SWT.BORDER);
-		txtImplementationLanguage.setLayoutData(dataInfoField);
-		txtImplementationLanguage.setText(DEFAULT_IMPL_LANGUAGE);
+		txtMgrImplementationLanguage = new Text(container, SWT.BORDER);
+		txtMgrImplementationLanguage.setLayoutData(dataInfoField);
+		txtMgrImplementationLanguage.setText(DEFAULT_IMPL_LANGUAGE);
 		if (attestationManager != null) {
-			txtImplementationLanguage.setEnabled(false);
+			txtMgrImplementationLanguage.setEnabled(false);
+		}
+	}
+
+	private void createGateImplementationNameField(Composite container) {
+
+		Label lblImplNameField = new Label(container, SWT.NONE);
+		lblImplNameField.setText("Attestation Gate implementation name");
+
+		GridData dataInfoField = new GridData();
+		dataInfoField.grabExcessHorizontalSpace = true;
+		dataInfoField.horizontalAlignment = SWT.FILL;
+		txtGateImplementationName = new Text(container, SWT.BORDER);
+		txtGateImplementationName.setLayoutData(dataInfoField);
+		if (attestationGate == null) {
+			txtGateImplementationName.setText(AddAttestationManagerHandler.AG_IMPL_NAME);
+		} else {
+			txtGateImplementationName.setText(attestationGate.getName());
+			txtGateImplementationName.setEnabled(false);
+		}
+
+	}
+
+	private void createGateImplementationLanguageField(Composite container) {
+
+		Label lblImplLangField = new Label(container, SWT.NONE);
+		lblImplLangField.setText("Attestation Gate implementation language");
+
+		GridData dataInfoField = new GridData();
+		dataInfoField.grabExcessHorizontalSpace = true;
+		dataInfoField.horizontalAlignment = SWT.FILL;
+		txtGateImplementationLanguage = new Text(container, SWT.BORDER);
+		txtGateImplementationLanguage.setLayoutData(dataInfoField);
+		txtGateImplementationLanguage.setText(DEFAULT_IMPL_LANGUAGE);
+		if (attestationGate != null) {
+			txtGateImplementationLanguage.setEnabled(false);
 		}
 	}
 
@@ -223,6 +270,39 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 				}
 			}
 			cboCacheSize.setEnabled(false);
+		}
+
+	}
+
+	private void createIdListDataTypeField(Composite container) {
+
+		Label lblIdListDataTypeField = new Label(container, SWT.NONE);
+		lblIdListDataTypeField.setText("ID list data type");
+
+		GridData dataInfoField = new GridData();
+		dataInfoField.grabExcessHorizontalSpace = true;
+		dataInfoField.horizontalAlignment = SWT.FILL;
+		txtIdListDataType = new Text(container, SWT.BORDER);
+		txtIdListDataType.setLayoutData(dataInfoField);
+
+		if (attestationManager != null) {
+
+			ComponentType ct = attestationManager.getComponentType();
+			for (Feature f : ct.getOwnedFeatures()) {
+				if (f.getName().equalsIgnoreCase(AddAttestationManagerHandler.AM_PORT_TRUSTED_IDS_NAME)) {
+					String dataType = "";
+					if (f instanceof EventDataPort) {
+						EventDataPort port = (EventDataPort) f;
+						dataType = port.getDataFeatureClassifier().getQualifiedName();
+					} else if (f instanceof DataPort) {
+						DataPort port = (DataPort) f;
+						dataType = port.getDataFeatureClassifier().getQualifiedName();
+					}
+					txtIdListDataType.setText(dataType);
+				}
+			}
+
+			txtIdListDataType.setEnabled(false);
 		}
 
 	}
@@ -389,20 +469,27 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 	 * @param container
 	 */
 	private boolean saveInput() {
-		implementationName = txtImplementationName.getText();
-		implementationLanguage = txtImplementationLanguage.getText();
+		attestationManagerImplName = txtMgrImplementationName.getText();
+		attestationManagerImplLanguage = txtMgrImplementationLanguage.getText();
+		attestationGateImplName = txtGateImplementationName.getText();
+		attestationGateImplLanguage = txtGateImplementationLanguage.getText();
 		try {
 			cacheTimeout = Long.parseLong(txtCacheTimeout.getText());
 		} catch (NumberFormatException e) {
-			Dialog.showError("Add Attestation Manager", "Value of Cache Timeout must be an integer.");
+			Dialog.showError("Add Attestation", "Value of Cache Timeout must be an integer.");
 			return false;
 		}
 		try {
 			cacheSize = Long.parseLong(cboCacheSize.getText());
 		} catch (NumberFormatException e) {
-			Dialog.showError("Add Attestation Manager", "Value of Cache Size must be an integer.");
+			Dialog.showError("Add Attestation", "Value of Cache Size must be an integer.");
 			return false;
 		}
+		if (!txtIdListDataType.getText().isEmpty() && !txtIdListDataType.getText().contains("::")) {
+			Dialog.showError("Add Attestation", "ID list data type must be a qualified name.");
+			return false;
+		}
+		idListDataType = txtIdListDataType.getText();
 		for (Button b : btnDispatchProtocol) {
 			if (b.getSelection() && !b.getText().equalsIgnoreCase("None")) {
 				dispatchProtocol = b.getText();
@@ -420,8 +507,7 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 		if (requirement.equals(NO_REQUIREMENT_SELECTED)) {
 			requirement = "";
 		} else if (!requirements.contains(requirement)) {
-			Dialog.showError("Add Attestation Manager",
-					"Attestation Manager requirement " + requirement
+			Dialog.showError("Add Attestation", "Attestation requirement " + requirement
 							+ " does not exist in the model.  Select a requirement from the list, or choose "
 							+ NO_REQUIREMENT_SELECTED + ".");
 			return false;
@@ -433,12 +519,20 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 		return true;
 	}
 
-	public String getImplementationName() {
-		return implementationName;
+	public String getAttestationManagerImplName() {
+		return attestationManagerImplName;
 	}
 
-	public String getImplementationLanguage() {
-		return implementationLanguage;
+	public String getAttestationGateImplName() {
+		return attestationGateImplName;
+	}
+
+	public String getAttestationManagerImplLanguage() {
+		return attestationManagerImplLanguage;
+	}
+
+	public String getAttestationGateImplLanguage() {
+		return attestationGateImplLanguage;
 	}
 
 	public long getCacheTimeout() {
@@ -447,6 +541,10 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 
 	public long getCacheSize() {
 		return cacheSize;
+	}
+
+	public String getIdListDataType() {
+		return idListDataType;
 	}
 
 	public String getDispatchProtocol() {

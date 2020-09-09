@@ -36,8 +36,7 @@ import org.osate.aadl2.PublicPackageSection;
 import org.osate.aadl2.Realization;
 import org.osate.aadl2.ReferenceValue;
 import org.osate.aadl2.Subcomponent;
-import org.osate.aadl2.ThreadGroupSubcomponent;
-import org.osate.aadl2.ThreadSubcomponent;
+import org.osate.aadl2.SystemSubcomponent;
 import org.osate.aadl2.VirtualProcessorImplementation;
 import org.osate.aadl2.VirtualProcessorSubcomponent;
 import org.osate.aadl2.VirtualProcessorType;
@@ -80,19 +79,24 @@ public class AddVirtualizationHandler extends AadlHandler {
 		// Get the current selection
 		EObject eObj = getEObject(uri);
 		Subcomponent selectedSub = null;
-		// TODO: handle system, device, abstract subcomponents
-		if (eObj instanceof ProcessSubcomponent || eObj instanceof ThreadSubcomponent
-				|| eObj instanceof ThreadGroupSubcomponent) {
+		if (eObj instanceof SystemSubcomponent || eObj instanceof ProcessSubcomponent) {
 			selectedSub = (Subcomponent) eObj;
 		} else {
 			Dialog.showError("Add Virtualization",
-					"A process, thread, or thread group implementation subcomponent must be selected in order to add virtualization.");
+					"A system or process implementation subcomponent must be selected in order to add virtualization.");
 			return;
 		}
 
 		// Make sure subcomponent refers to a component implementation
 		if (selectedSub.getComponentImplementation() == null) {
 			Dialog.showError("Add Virtualization", "Selected subcomponent must be a component implementation.");
+			return;
+		}
+
+		// Selected subcomponent must only contain software subcomponents
+		if (!isSoftwareComponent(selectedSub)) {
+			Dialog.showError("Add Virtualization",
+					"Selected component must only contain software subcomponents (system, process, thread group, thread).");
 			return;
 		}
 
@@ -281,15 +285,18 @@ public class AddVirtualizationHandler extends AadlHandler {
 				Iterator<PropertyAssociation> paIterator = containingImpl.getOwnedPropertyAssociations().iterator();
 				while (paIterator.hasNext()) {
 					PropertyAssociation pa = paIterator.next();
-					if (!pa.getProperty().getName().equalsIgnoreCase(DeploymentProperties.ACTUAL_PROCESSOR_BINDING)) {
+					Property prop = pa.getProperty();
+					if (prop == null || prop.getName() == null
+							|| !prop.getName()
+							.equalsIgnoreCase(DeploymentProperties.ACTUAL_PROCESSOR_BINDING)) {
 						continue;
 					}
 					// Find bindings to processors (there could be multiple)
 					for (ModalPropertyValue val : pa.getOwnedValues()) {
 						ListValue listVal = (ListValue) val.getOwnedValue();
-						for (PropertyExpression prop : listVal.getOwnedListElements()) {
-							if (prop instanceof ReferenceValue) {
-								ReferenceValue refVal = (ReferenceValue) prop;
+						for (PropertyExpression propExpr : listVal.getOwnedListElements()) {
+							if (propExpr instanceof ReferenceValue) {
+								ReferenceValue refVal = (ReferenceValue) propExpr;
 								// Check if the referenced processor was bound to a virtualized component
 								String processorRef = refVal.getPath().getNamedElement().getName();
 								if (boundProcessors.contains(processorRef)) {
@@ -418,42 +425,45 @@ public class AddVirtualizationHandler extends AadlHandler {
 		ComponentImplementation ci = rootSub.getContainingComponentImpl();
 
 		for (PropertyAssociation pa : ci.getOwnedPropertyAssociations()) {
-			if (pa.getProperty().getName().equalsIgnoreCase(DeploymentProperties.ACTUAL_PROCESSOR_BINDING)) {
-				for (ContainedNamedElement cne : pa.getAppliesTos()) {
-					ContainmentPathElement cpe = cne.getPath();
-					String appliesTo = cpe.getNamedElement().getName();
-					Subcomponent boundSub = rootSub;
-					while (cpe.getPath() != null) {
-						cpe = cpe.getPath();
-						appliesTo += "." + cpe.getNamedElement().getName();
+			Property prop = pa.getProperty();
+			if (prop != null && prop.getName() != null) {
+				if (pa.getProperty().getName().equalsIgnoreCase(DeploymentProperties.ACTUAL_PROCESSOR_BINDING)) {
+					for (ContainedNamedElement cne : pa.getAppliesTos()) {
+						ContainmentPathElement cpe = cne.getPath();
+						String appliesTo = cpe.getNamedElement().getName();
+						Subcomponent boundSub = rootSub;
+						while (cpe.getPath() != null) {
+							cpe = cpe.getPath();
+							appliesTo += "." + cpe.getNamedElement().getName();
 
-						for (Subcomponent sub : boundSub.getComponentImplementation().getOwnedSubcomponents()) {
-							if (sub.getName().equalsIgnoreCase(cpe.getNamedElement().getName())) {
-								boundSub = sub;
-								break;
+							for (Subcomponent sub : boundSub.getComponentImplementation().getOwnedSubcomponents()) {
+								if (sub.getName().equalsIgnoreCase(cpe.getNamedElement().getName())) {
+									boundSub = sub;
+									break;
+								}
 							}
+
 						}
 
-					}
+						// Get the processor this subcomponent is bound to
+						for (ModalPropertyValue val : pa.getOwnedValues()) {
+							ListValue listVal = (ListValue) val.getOwnedValue();
+							for (PropertyExpression propExpr : listVal.getOwnedListElements()) {
+								if (propExpr instanceof ReferenceValue) {
+									ReferenceValue refVal = (ReferenceValue) propExpr;
 
-					// Get the processor this subcomponent is bound to
-					for (ModalPropertyValue val : pa.getOwnedValues()) {
-						ListValue listVal = (ListValue) val.getOwnedValue();
-						for (PropertyExpression propExpr : listVal.getOwnedListElements()) {
-							if (propExpr instanceof ReferenceValue) {
-								ReferenceValue refVal = (ReferenceValue) propExpr;
+									if (refVal.getPath().getNamedElement() instanceof ProcessorSubcomponent || refVal
+											.getPath().getNamedElement() instanceof VirtualProcessorSubcomponent) {
 
-								if (refVal.getPath().getNamedElement() instanceof ProcessorSubcomponent
-										|| refVal.getPath().getNamedElement() instanceof VirtualProcessorSubcomponent) {
+										if (explicitProcessorBindings.get(appliesTo) == null) {
+											explicitProcessorBindings.put(appliesTo, new HashSet<String>(
+													Arrays.asList(refVal.getPath().getNamedElement().getName())));
+										} else {
+											explicitProcessorBindings.get(appliesTo)
+													.add(refVal.getPath().getNamedElement().getName());
+										}
 
-									if (explicitProcessorBindings.get(appliesTo) == null) {
-										explicitProcessorBindings.put(appliesTo, new HashSet<String>(
-												Arrays.asList(refVal.getPath().getNamedElement().getName())));
-									} else {
-										explicitProcessorBindings.get(appliesTo)
-												.add(refVal.getPath().getNamedElement().getName());
 									}
-
 								}
 							}
 						}
@@ -503,6 +513,26 @@ public class AddVirtualizationHandler extends AadlHandler {
 			cpe.setNamedElement(currentSub);
 		}
 		return cne;
+	}
+
+	private boolean isSoftwareComponent(Subcomponent sub) {
+		if (sub.getComponentImplementation().getCategory() == ComponentCategory.THREAD) {
+			return true;
+		} else if (sub.getComponentImplementation().getCategory() == ComponentCategory.SYSTEM
+				|| sub.getComponentImplementation().getCategory() == ComponentCategory.PROCESS
+				|| sub.getComponentImplementation().getCategory() == ComponentCategory.THREAD_GROUP) {
+			if (sub.getComponentImplementation() == null) {
+				return true;
+			}
+			for (Subcomponent s : sub.getComponentImplementation().getOwnedSubcomponents()) {
+				if (!isSoftwareComponent(s)) {
+					return false;
+				}
+			}
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 }

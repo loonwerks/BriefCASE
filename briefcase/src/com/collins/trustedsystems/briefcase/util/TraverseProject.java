@@ -22,6 +22,10 @@ import org.osate.workspace.WorkspacePlugin;
 
 public class TraverseProject {
 
+	public static IEditorPart getCurrentEditor() {
+		return PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActiveEditor();
+	}
+
 	public static IProject getCurrentProject() {
 		// Eclipse does not have the concept of a "current project"
 		// So we will use the project associated with the file that is currently

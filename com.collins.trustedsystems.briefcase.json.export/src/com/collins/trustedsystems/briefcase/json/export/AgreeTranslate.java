@@ -112,7 +112,7 @@ public class AgreeTranslate {
 	private static JsonElement genSelectionExpr(SelectionExpr expr) {
 
 		JsonObject result = new JsonObject();
-		result.add("kind", new JsonPrimitive("Selection"));
+		result.add("kind", new JsonPrimitive("SelectionExpr"));
 		String selection = expr.getField().getName();
 
 		result.add("target", genExpr(expr.getTarget()));

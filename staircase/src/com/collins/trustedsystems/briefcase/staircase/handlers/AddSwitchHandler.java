@@ -228,8 +228,9 @@ public class AddSwitchHandler extends AadlHandler {
 	 * Inserts a switch component into the model, including switch type definition
 	 * and implementation (including correct wiring).
 	 * The switch is inserted at the location of the selected connection
+	 * This is a public static function to support other transforms that include a switch.
 	 * @param compImpl - The component implementation to add the switch to
-	 * @param inPortMap - Map of switch input port names to the message source connection ends (specified by <subcomponent>.<feature>)
+	 * @param inPortMap - Map of switch input port names to the message source connection ends (specified by subcomponent.feature)
 	 * @param conn - The output connection of the switch (this is the connection the switch is placed on)
 	 * @param compCategory - The component category of the switch
 	 * @param dispatchProtocol - The dispatch protocol (sporadic, periodic) for thread components

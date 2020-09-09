@@ -31,8 +31,9 @@ public class AddFilterClaim extends BuiltInClaim {
 	public List<Expr> getCallArgs() {
 		List<Expr> callArgs = new ArrayList<>();
 		callArgs.add(Create.THIS(this.reqContext));
-		callArgs.add(Create.THIS(this.filter));
-		callArgs.add(Create.THIS(this.connection));
+		String qualifiedName = this.reqContext.substring(0, this.reqContext.lastIndexOf("."));
+		callArgs.add(Create.THIS(qualifiedName, this.filter));
+		callArgs.add(Create.THIS(qualifiedName, this.connection));
 		callArgs.add(Create.id(this.msgType));
 		return callArgs;
 	}

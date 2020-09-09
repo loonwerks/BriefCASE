@@ -117,10 +117,10 @@ public class AddVirtualizationDialog extends TitleAreaDialog {
 	 */
 	private void createComponentSelectionField(Composite container) {
 		// Don't display this field if
-		// Component contains one or no subcomponents OR component is a thread
+		// Component contains one or no subcomponents OR component is a process
 		if (this.subcomponent.getComponentImplementation().getOwnedSubcomponents() == null
 				|| this.subcomponent.getComponentImplementation().getOwnedSubcomponents().size() <= 1
-				|| this.subcomponent.getComponentType().getCategory() == ComponentCategory.THREAD) {
+				|| this.subcomponent.getComponentType().getCategory() == ComponentCategory.PROCESS) {
 			return;
 		}
 

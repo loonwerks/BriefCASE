@@ -17,6 +17,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.osate.aadl2.ComponentImplementation;
 import org.osate.aadl2.Subcomponent;
+import org.osate.aadl2.SystemImplementation;
 
 public class SubcomponentSelector {
 
@@ -41,7 +42,7 @@ public class SubcomponentSelector {
 		@Override
 		public boolean hasChildren(Object element) {
 			Subcomponent sub = (Subcomponent) element;
-			if (sub.getClassifier() instanceof ComponentImplementation) {
+			if (sub.getClassifier() instanceof SystemImplementation) {
 				return sub.getComponentImplementation().getOwnedSubcomponents().size() > 0;
 			}
 			return false;
@@ -61,7 +62,7 @@ public class SubcomponentSelector {
 		@Override
 		public Object[] getChildren(Object parentElement) {
 			Subcomponent sub = (Subcomponent) parentElement;
-			if (sub.getClassifier() instanceof ComponentImplementation) {
+			if (sub.getClassifier() instanceof SystemImplementation) {
 				ComponentImplementation compImpl = sub.getComponentImplementation();
 				return compImpl.getOwnedSubcomponents().toArray();
 			}
@@ -131,7 +132,7 @@ public class SubcomponentSelector {
 	}
 
 	private void populateParentMap(Subcomponent sub, Map<Subcomponent, Subcomponent> parentMap) {
-		if (sub.getClassifier() instanceof ComponentImplementation) {
+		if (sub.getClassifier() instanceof SystemImplementation) {
 			for (Subcomponent child : sub.getComponentImplementation().getOwnedSubcomponents()) {
 				parentMap.put(child, sub);
 				populateParentMap(child, parentMap);
