@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Automatic-Module-Name: com.collins.trustedsystems.briefcase.json.ui
 Bundle-ManifestVersion: 2
 Bundle-Name: com.collins.trustedsystems.briefcase.json.ui
-Bundle-Version: 0.2.2.qualifier
+Bundle-Version: 0.3.0
 Bundle-SymbolicName: com.collins.trustedsystems.briefcase.json.ui;singleton:=true
 Bundle-ActivationPolicy: lazy
 Require-Bundle: com.collins.trustedsystems.briefcase.json,
