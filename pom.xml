@@ -134,7 +134,7 @@
 						<artifact>
 							<groupId>com.collins.trustedsystems.briefcase</groupId>
 							<artifactId>com.collins.trustedsystems.briefcase.target</artifactId>
-							<version>0.2.2-SNAPSHOT</version>
+							<version>${project.parent.version}</version>
 						</artifact>
 					</target>
 					<environments>
