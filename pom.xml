@@ -4,7 +4,7 @@
 
 	<groupId>com.collins.trustedsystems.briefcase</groupId>
 	<artifactId>com.collins.trustedsystems.briefcase.parent</artifactId>
-	<version>0.2.2-SNAPSHOT</version>
+	<version>0.3.0</version>
 	<packaging>pom</packaging>
 
 	<modules>
@@ -409,7 +409,7 @@
 	<scm>
 		<connection>scm:git:git@github.com:loonwerks/BriefCASE.git</connection>
 		<developerConnection>scm:git:git@github.com:loonwerks/BriefCASE.git</developerConnection>
-		<tag>HEAD</tag>
+		<tag>0.3.0-RELEASE</tag>
 	</scm>
 
 </project>
