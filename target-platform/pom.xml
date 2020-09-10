@@ -10,7 +10,6 @@
 
 	<name>Target Definition for CASE BriefCASE Plugin</name>
 	<artifactId>com.collins.trustedsystems.briefcase.target</artifactId>
-	<version>0.2.2-SNAPSHOT</version>
 	<packaging>eclipse-target-definition</packaging>
 
 </project>
