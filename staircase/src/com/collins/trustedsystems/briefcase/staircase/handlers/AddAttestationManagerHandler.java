@@ -27,6 +27,7 @@ import org.osate.aadl2.DataSubcomponentType;
 import org.osate.aadl2.DefaultAnnexSubclause;
 import org.osate.aadl2.EnumerationLiteral;
 import org.osate.aadl2.EventDataPort;
+import org.osate.aadl2.EventPort;
 import org.osate.aadl2.Feature;
 import org.osate.aadl2.NamedElement;
 import org.osate.aadl2.NamedValue;
@@ -36,6 +37,7 @@ import org.osate.aadl2.PortCategory;
 import org.osate.aadl2.PortConnection;
 import org.osate.aadl2.PrivatePackageSection;
 import org.osate.aadl2.Property;
+import org.osate.aadl2.PropertyAssociation;
 import org.osate.aadl2.PublicPackageSection;
 import org.osate.aadl2.Realization;
 import org.osate.aadl2.Subcomponent;
@@ -248,7 +250,29 @@ public class AddAttestationManagerHandler extends AadlHandler {
 			// Give it a unique name
 			commDriverType.setName(getUniqueName(commDriver.getComponentType().getName() + "_Attestation", true,
 					pkgSection.getOwnedClassifiers()));
-			commDriverType.setExtended(commDriver.getComponentType());
+//			commDriverType.setExtended(commDriver.getComponentType());
+
+			// Copy the features
+			for (Feature f : commDriver.getComponentType().getOwnedFeatures()) {
+				if (f instanceof EventDataPort) {
+					EventDataPort p = ComponentCreateHelper.createOwnedEventDataPort(commDriverType);
+					p.setName(f.getName());
+					p.setDataFeatureClassifier(((EventDataPort) f).getDataFeatureClassifier());
+					p.setIn(((EventDataPort) f).isIn());
+					p.setOut(((EventDataPort) f).isOut());
+				} else if (f instanceof DataPort) {
+					DataPort p = ComponentCreateHelper.createOwnedDataPort(commDriverType);
+					p.setName(f.getName());
+					p.setDataFeatureClassifier(((DataPort) f).getDataFeatureClassifier());
+					p.setIn(((DataPort) f).isIn());
+					p.setOut(((DataPort) f).isOut());
+				} else if (f instanceof EventPort) {
+					EventPort p = ComponentCreateHelper.createOwnedEventPort(commDriverType);
+					p.setName(f.getName());
+					p.setIn(((EventPort) f).isIn());
+					p.setOut(((EventPort) f).isOut());
+				}
+			}
 
 			// Get the request and response message types from the CASE_Model_Transformations package
 			DataImplementation requestMsgImpl = null;
@@ -274,17 +298,27 @@ public class AddAttestationManagerHandler extends AadlHandler {
 			commRes.setName(AM_PORT_ATTESTATION_RESPONSE_NAME);
 			commRes.setOut(true);
 
-			// Create attestation request and response ports for communicating with the message sender
-			final EventDataPort commReqEx = ComponentCreateHelper
-					.createOwnedEventDataPort(commDriverType);
-			final EventDataPort commResEx = ComponentCreateHelper
-					.createOwnedEventDataPort(commDriverType);
-			commReqEx.setDataFeatureClassifier(requestMsgImpl);
-			commResEx.setDataFeatureClassifier(responseMsgImpl);
-			commReqEx.setName(AM_PORT_ATTESTATION_REQUEST_NAME_EXTERNAL);
-			commReqEx.setOut(true);
-			commResEx.setName(AM_PORT_ATTESTATION_RESPONSE_NAME_EXTERNAL);
-			commResEx.setIn(true);
+//			// Create attestation request and response ports for communicating with the message sender
+//			final EventDataPort commReqEx = ComponentCreateHelper
+//					.createOwnedEventDataPort(commDriverType);
+//			final EventDataPort commResEx = ComponentCreateHelper
+//					.createOwnedEventDataPort(commDriverType);
+//			commReqEx.setDataFeatureClassifier(requestMsgImpl);
+//			commResEx.setDataFeatureClassifier(responseMsgImpl);
+//			commReqEx.setName(AM_PORT_ATTESTATION_REQUEST_NAME_EXTERNAL);
+//			commReqEx.setOut(true);
+//			commResEx.setName(AM_PORT_ATTESTATION_RESPONSE_NAME_EXTERNAL);
+//			commResEx.setIn(true);
+
+			// Copy the properties
+			copyPropertyAssociations(commDriver.getComponentType(), commDriverType);
+
+			// Copy the annexes
+			for (AnnexSubclause annexSubclause : commDriver.getComponentType().getOwnedAnnexSubclauses()) {
+				DefaultAnnexSubclause defaultAnnexSubclause = commDriverType.createOwnedAnnexSubclause();
+				defaultAnnexSubclause.setName(annexSubclause.getName());
+				defaultAnnexSubclause.setSourceText(((DefaultAnnexSubclause) annexSubclause).getSourceText());
+			}
 
 			// TODO: AGREE?
 
@@ -296,9 +330,22 @@ public class AddAttestationManagerHandler extends AadlHandler {
 			final ComponentImplementation commDriverImpl = (ComponentImplementation) pkgSection
 					.createOwnedClassifier(ComponentCreateHelper.getImplClass(compCategory));
 			commDriverImpl.setName(commDriverType.getName() + ".Impl");
-			commDriverImpl.setExtended(commDriver.getComponentImplementation());
+//			commDriverImpl.setExtended(commDriver.getComponentImplementation());
 			final Realization commRealization = commDriverImpl.createOwnedRealization();
 			commRealization.setImplemented(commDriverType);
+
+			// TODO: Copy the subcomponents
+			// TODO: Copy the connections
+
+			// Copy the properties
+			copyPropertyAssociations(commDriver.getComponentImplementation(), commDriverImpl);
+
+			// Copy the annexes
+			for (AnnexSubclause annexSubclause : commDriver.getComponentImplementation().getOwnedAnnexSubclauses()) {
+				DefaultAnnexSubclause defaultAnnexSubclause = commDriverImpl.createOwnedAnnexSubclause();
+				defaultAnnexSubclause.setName(annexSubclause.getName());
+				defaultAnnexSubclause.setSourceText(((DefaultAnnexSubclause) annexSubclause).getSourceText());
+			}
 
 			// Add it to proper place (below extended comm driver type)
 			pkgSection.getOwnedClassifiers().move(getIndex(ci.getTypeName(), pkgSection.getOwnedClassifiers()),
@@ -833,6 +880,27 @@ public class AddAttestationManagerHandler extends AadlHandler {
 		}
 
 		return null;
+	}
+
+	/**
+	 * Copies property associations from one AADL named element to another.
+	 * Only valid property associations accepted by the 'to' element will be copied
+	 * @param from
+	 * @param to
+	 */
+	private void copyPropertyAssociations(NamedElement from, NamedElement to) {
+		if (to == null || from == null) {
+			return;
+		}
+		for (PropertyAssociation pa : from.getOwnedPropertyAssociations()) {
+			PropertyAssociation propAssoc = EcoreUtil.copy(pa);
+			Property prop = propAssoc.getProperty();
+			if (to.acceptsProperty(prop)) {
+				to.getOwnedPropertyAssociations().add(propAssoc);
+			} else {
+				// TODO: log exception
+			}
+		}
 	}
 
 }
