@@ -66,7 +66,7 @@ public class SubcomponentSelector {
 				ComponentImplementation compImpl = sub.getComponentImplementation();
 				return compImpl.getOwnedSubcomponents().toArray();
 			}
-			return null;
+			return new Object[0];
 		}
 	}
 

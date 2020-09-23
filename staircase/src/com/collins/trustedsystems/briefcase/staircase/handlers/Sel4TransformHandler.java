@@ -113,6 +113,7 @@ public class Sel4TransformHandler extends AadlHandler {
 				}
 			}
 		}
+		// TODO: Allow user to specify during the transform which processor is seL4
 		if (!sel4Found || processorBindings.isEmpty()) {
 			Dialog.showError("seL4 Transform",
 					"Selected system implementation must contain at least one software subcomponent that is bound to an seL4 processor to perform the seL4 transform.");
@@ -580,6 +581,7 @@ public class Sel4TransformHandler extends AadlHandler {
 					liftContract = true;
 				} else {
 					// Copy AGREE annex
+					// TODO: Need to give unique IDs
 					DefaultAnnexSubclause defaultAnnexSubclause = (DefaultAnnexSubclause) EcoreUtil
 							.copy(annexSubclause);
 					transformType.getOwnedAnnexSubclauses().add(defaultAnnexSubclause);
