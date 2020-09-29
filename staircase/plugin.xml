@@ -103,22 +103,6 @@
                </menu>
             </menu>
             <menu
-                  id="com.collins.trustedsystems.briefcase.menus.outline.component"
-                  label="Component Analysis">
-               <command
-                     commandId="com.collins.trustedsystems.briefcase.staircase.commands.SelectImplementation"
-                     id="com.collins.trustedsystems.briefcase.menus.outline.component.SelectImplementation"
-                     label="Select Implementation..."
-                     style="push">
-               </command>
-               <command
-                     commandId="com.collins.trustedsystems.briefcase.staircase.commands.VerifyImplementation"
-                     id="com.collins.trustedsystems.briefcase.menus.outline.component.RunIvaldi"
-                     label="Run Ivaldi"
-                     style="push">
-               </command>
-            </menu>
-            <menu
                   id="com.collins.trustedsystems.briefcase.menus.outline.build"
                   label="System Build">
             </menu>
@@ -223,22 +207,6 @@
                      id="com.collins.trustedsystems.briefcase.menus.menubar.resiliency.synthesis"
                      label="Synthesis Tools">
                </menu>
-            </menu>
-            <menu
-                  id="com.collins.trustedsystems.briefcase.menus.menubar.component"
-                  label="Component Analysis">
-               <command
-                     commandId="com.collins.trustedsystems.briefcase.staircase.commands.SelectImplementation"
-                     id="com.collins.trustedsystems.briefcase.menus.menubar.component.SelectImplementation"
-                     label="Select Implementation..."
-                     style="push">
-               </command>
-               <command
-                     commandId="com.collins.trustedsystems.briefcase.staircase.commands.VerifyImplementation"
-                     id="com.collins.trustedsystems.briefcase.menus.menubar.component.RunIvaldi"
-                     label="Run Ivaldi..."
-                     style="push">
-               </command>
             </menu>
             <menu
                   id="com.collins.trustedsystems.briefcase.menus.menubar.build"
@@ -367,22 +335,6 @@
                </menu>
             </menu>
             <menu
-                  id="com.collins.trustedsystems.briefcase.menus.editor.component"
-                  label="Component Analysis">
-               <command
-                     commandId="com.collins.trustedsystems.briefcase.staircase.commands.SelectImplementation"
-                     id="com.collins.trustedsystems.briefcase.menus.editor.component.SelectImplementation"
-                     label="Select Implementation..."
-                     style="push">
-               </command>
-               <command
-                     commandId="com.collins.trustedsystems.briefcase.staircase.commands.VerifyImplementation"
-                     id="com.collins.trustedsystems.briefcase.menus.editor.component.RunIvaldi"
-                     label="Run Ivaldi"
-                     style="push">
-               </command>
-            </menu>
-            <menu
                   id="com.collins.trustedsystems.briefcase.menus.editor.build"
                   label="System Build">
             </menu>
@@ -449,14 +401,6 @@
             name="Model Annotations">
       </command>
       <command
-            id="com.collins.trustedsystems.briefcase.staircase.commands.SelectImplementation"
-            name="Select Implementation">
-      </command>
-      <command
-            id="com.collins.trustedsystems.briefcase.staircase.commands.VerifyImplementation"
-            name="Verify Implementation">
-      </command>
-      <command
             id="com.collins.trustedsystems.briefcase.staircase.commands.FilterChecker"
             name="Filter Checker">
       </command>
@@ -494,14 +438,6 @@
       <handler
             class="com.collins.trustedsystems.briefcase.staircase.handlers.ModelAnnotationsHandler"
             commandId="com.collins.trustedsystems.briefcase.staircase.commands.ModelAnnotations">
-      </handler>
-      <handler
-            class="com.collins.trustedsystems.briefcase.staircase.handlers.SelectImplementationHandler"
-            commandId="com.collins.trustedsystems.briefcase.staircase.commands.SelectImplementation">
-      </handler>
-      <handler
-            class="com.collins.trustedsystems.briefcase.staircase.handlers.VerifyLegacyImplementationHandler"
-            commandId="com.collins.trustedsystems.briefcase.staircase.commands.VerifyImplementation">
       </handler>
       <handler
             class="com.collins.trustedsystems.briefcase.staircase.handlers.ImportRequirementsHandler"
