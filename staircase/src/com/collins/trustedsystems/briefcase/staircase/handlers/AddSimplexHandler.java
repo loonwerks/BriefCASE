@@ -26,6 +26,7 @@ import org.osate.ui.dialogs.Dialog;
 
 import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
 import com.collins.trustedsystems.briefcase.staircase.utils.CaseUtils;
+import com.collins.trustedsystems.briefcase.staircase.utils.ModelTransformUtils;
 
 public class AddSimplexHandler extends AadlHandler {
 
@@ -354,7 +355,8 @@ public class AddSimplexHandler extends AadlHandler {
 					portConn = processImpl.createOwnedPortConnection();
 					// Give it a unique name
 					portConn.setName(
-							getUniqueName(CONNECTION_IMPL_NAME, false, processImpl.getOwnedPortConnections()));
+							ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false,
+									processImpl.getOwnedPortConnections()));
 					portConn.setBidirectional(false);
 					src = portConn.createSource();
 					src.setContext(sub.get(i));
@@ -381,7 +383,8 @@ public class AddSimplexHandler extends AadlHandler {
 				portConn = processImpl.createOwnedPortConnection();
 				// Give it a unique name
 				portConn.setName(
-						getUniqueName(CONNECTION_IMPL_NAME, false, processImpl.getOwnedPortConnections()));
+						ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false,
+								processImpl.getOwnedPortConnections()));
 				portConn.setBidirectional(false);
 				src = portConn.createSource();
 				src.setContext(monitorThreadSubComp);
@@ -395,7 +398,8 @@ public class AddSimplexHandler extends AadlHandler {
 					portConn = processImpl.createOwnedPortConnection();
 					// Give it a unique name
 					portConn.setName(
-						getUniqueName(CONNECTION_IMPL_NAME, false, processImpl.getOwnedPortConnections()));
+							ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false,
+									processImpl.getOwnedPortConnections()));
 					portConn.setBidirectional(false);
 
 					src = portConn.createSource();
@@ -411,7 +415,8 @@ public class AddSimplexHandler extends AadlHandler {
 					portConn = processImpl.createOwnedPortConnection();
 					// Give it a unique name
 					portConn.setName(
-						getUniqueName(CONNECTION_IMPL_NAME, false, processImpl.getOwnedPortConnections()));
+							ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false,
+									processImpl.getOwnedPortConnections()));
 					portConn.setBidirectional(false);
 
 					src = portConn.createSource();
@@ -444,7 +449,8 @@ public class AddSimplexHandler extends AadlHandler {
 					portConn = processImpl.createOwnedPortConnection();
 					// Give it a unique name
 					portConn.setName(
-						getUniqueName(CONNECTION_IMPL_NAME, false, processImpl.getOwnedPortConnections()));
+							ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false,
+									processImpl.getOwnedPortConnections()));
 					portConn.setBidirectional(false);
 
 					src = portConn.createSource();

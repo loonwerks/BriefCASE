@@ -53,6 +53,7 @@ import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsM
 import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
 import com.collins.trustedsystems.briefcase.staircase.utils.CaseUtils;
 import com.collins.trustedsystems.briefcase.staircase.utils.ComponentCreateHelper;
+import com.collins.trustedsystems.briefcase.staircase.utils.ModelTransformUtils;
 import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
 import com.rockwellcollins.atc.agree.agree.AgreeContract;
 import com.rockwellcollins.atc.agree.agree.AgreeContractSubclause;
@@ -64,22 +65,24 @@ public class AddAttestationManagerHandler extends AadlHandler {
 	static final String AM_RESPONSE_MSG_NAME = "CASE_AttestationResponseMsg";
 	static final String AM_REQUEST_MSG_IMPL_NAME = "CASE_AttestationRequestMsg.Impl";
 	static final String AM_RESPONSE_MSG_IMPL_NAME = "CASE_AttestationResponseMsg.Impl";
-	static final String AM_COMP_TYPE_NAME = "CASE_AttestationManager";
-	static final String AM_GATE_TYPE_NAME = "CASE_AttestationGate";
-	public static final String AM_LOG_PORT_NAME = "message_log";
-	static final String AM_PORT_ATTESTATION_REQUEST_NAME = "am_request";
-	static final String AM_PORT_ATTESTATION_RESPONSE_NAME = "am_response";
-	public static final String AM_PORT_TRUSTED_IDS_NAME = "trusted_ids";
-	static final String AM_PORT_ATTESTATION_REQUEST_NAME_EXTERNAL = "comm_request";
-	static final String AM_PORT_ATTESTATION_RESPONSE_NAME_EXTERNAL = "comm_response";
-	public static final String AM_IMPL_NAME = "AttestationManager";
-	public static final String AG_IMPL_NAME = "AttestationGate";
+	public static final String AM_COMP_TYPE_NAME = "CASE_AttestationManager";
+	public static final String AG_COMP_TYPE_NAME = "CASE_AttestationGate";
+	public static final String AM_LOG_PORT_NAME = "LogMessage";
+	static final String AM_PORT_ATTESTATION_REQUEST_NAME = "AttestationRequest";
+	static final String AM_PORT_ATTESTATION_RESPONSE_NAME = "AttestationResponse";
+	public static final String AM_PORT_TRUSTED_IDS_NAME = "TrustedIds";
+//	static final String AM_PORT_ATTESTATION_REQUEST_NAME_EXTERNAL = "comm_request";
+//	static final String AM_PORT_ATTESTATION_RESPONSE_NAME_EXTERNAL = "comm_response";
+	public static final String AM_SUBCOMP_NAME = "AttestationManager";
+	public static final String AG_SUBCOMP_NAME = "AttestationGate";
 	static final String CONNECTION_IMPL_NAME = "c";
 
-	private String attestationManagerImplName;
-	private String attestationGateImplName;
-	private String attestationManagerImplLanguage;
-	private String attestationGateImplLanguage;
+	private String attestationManagerComponentName;
+	private String attestationGateComponentName;
+	private String attestationManagerSubcomponentName;
+	private String attestationGateSubcomponentName;
+//	private String attestationManagerImplLanguage;
+//	private String attestationGateImplLanguage;
 	private String dispatchProtocol;
 	private long cacheTimeout;
 	private long cacheSize;
@@ -127,12 +130,26 @@ public class AddAttestationManagerHandler extends AadlHandler {
 				PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell());
 		List<String> importedRequirements = new ArrayList<>();
 		RequirementsManager.getInstance().getImportedRequirements().forEach(r -> importedRequirements.add(r.getId()));
-		wizard.create(selectedSubcomponent.getName(), importedRequirements, attestationManager, attestationGate);
+		wizard.create(selectedSubcomponent, importedRequirements, attestationManager, attestationGate);
 		if (wizard.open() == Window.OK) {
-			attestationManagerImplName = wizard.getAttestationManagerImplName();
-			attestationGateImplName = wizard.getAttestationGateImplName();
-			attestationManagerImplLanguage = wizard.getAttestationManagerImplLanguage();
-			attestationGateImplLanguage = wizard.getAttestationManagerImplLanguage();
+			attestationManagerComponentName = wizard.getAttestationManagerComponentName();
+			if (attestationManagerComponentName.isEmpty()) {
+				attestationManagerComponentName = AM_COMP_TYPE_NAME;
+			}
+			attestationGateComponentName = wizard.getAttestationGateComponentName();
+			if (attestationGateComponentName.isEmpty()) {
+				attestationGateComponentName = AG_COMP_TYPE_NAME;
+			}
+			attestationManagerSubcomponentName = wizard.getAttestationManagerSubcomponentName();
+			if (attestationManagerSubcomponentName.isEmpty()) {
+				attestationManagerSubcomponentName = AM_SUBCOMP_NAME;
+			}
+			attestationGateSubcomponentName = wizard.getAttestationGateSubcomponentName();
+			if (attestationGateSubcomponentName.isEmpty()) {
+				attestationGateSubcomponentName = AG_SUBCOMP_NAME;
+			}
+//			attestationManagerImplLanguage = wizard.getAttestationManagerImplLanguage();
+//			attestationGateImplLanguage = wizard.getAttestationManagerImplLanguage();
 			dispatchProtocol = wizard.getDispatchProtocol();
 			cacheTimeout = wizard.getCacheTimeout();
 			cacheSize = wizard.getCacheSize();
@@ -155,6 +172,9 @@ public class AddAttestationManagerHandler extends AadlHandler {
 			BriefcaseNotifier.notify("StairCASE - Attestation", "Attestation added to model.");
 		}
 
+		// Save
+		saveChanges(false);
+
 		return;
 
 	}
@@ -169,7 +189,6 @@ public class AddAttestationManagerHandler extends AadlHandler {
 			Subcomponent attestationGate = (Subcomponent) resource.getEObject(attestationGateUri.fragment());
 
 			// Add add_attestation claims to resolute prove statement, if applicable
-			// TODO: Test after requirements import has been updated
 			if (!attestationRequirement.isEmpty()) {
 				CyberRequirement req = RequirementsManager.getInstance().getRequirement(attestationRequirement);
 				return new AddAttestationManagerClaim(req.getContext(), commDriver, attestationManager,
@@ -248,7 +267,8 @@ public class AddAttestationManagerHandler extends AadlHandler {
 			final ComponentType commDriverType = (ComponentType) pkgSection
 					.createOwnedClassifier(ComponentCreateHelper.getTypeClass(compCategory));
 			// Give it a unique name
-			commDriverType.setName(getUniqueName(commDriver.getComponentType().getName() + "_Attestation", true,
+			commDriverType.setName(
+					ModelTransformUtils.getUniqueName(commDriver.getComponentType().getName() + "_Attestation", true,
 					pkgSection.getOwnedClassifiers()));
 //			commDriverType.setExtended(commDriver.getComponentType());
 
@@ -355,7 +375,9 @@ public class AddAttestationManagerHandler extends AadlHandler {
 			final ComponentType attestationManagerType = (ComponentType) pkgSection
 					.createOwnedClassifier(ComponentCreateHelper.getTypeClass(compCategory));
 			// Give it a unique name
-			attestationManagerType.setName(getUniqueName(AM_COMP_TYPE_NAME, true, pkgSection.getOwnedClassifiers()));
+			attestationManagerType.setName(
+					ModelTransformUtils.getUniqueName(attestationManagerComponentName, true,
+							pkgSection.getOwnedClassifiers()));
 
 			// Add the ports for communicating attestation requests/responses with the Comm Driver
 			final EventDataPort amReq = ComponentCreateHelper
@@ -446,12 +468,12 @@ public class AddAttestationManagerHandler extends AadlHandler {
 			// Add it to proper place (just below component type)
 			pkgSection.getOwnedClassifiers().move(1, pkgSection.getOwnedClassifiers().size() - 1);
 
-			// CASE_Properties::Component_Impl property
-			if (!attestationManagerImplLanguage.isEmpty()) {
-				if (!CasePropertyUtils.setCompImpl(attestationManagerImpl, attestationManagerImplLanguage)) {
-//					return;
-				}
-			}
+//			// CASE_Properties::Component_Impl property
+//			if (!attestationManagerImplLanguage.isEmpty()) {
+//				if (!CasePropertyUtils.setCompImpl(attestationManagerImpl, attestationManagerImplLanguage)) {
+////					return;
+//				}
+//			}
 
 			// CASE_Properties::CACHE_TIMEOUT property
 			if (cacheTimeout > 0) {
@@ -492,7 +514,8 @@ public class AddAttestationManagerHandler extends AadlHandler {
 
 			// Give it a unique name
 			attestationManagerSubcomp
-					.setName(getUniqueName(attestationManagerImplName, true, ci.getOwnedSubcomponents()));
+					.setName(ModelTransformUtils.getUniqueName(attestationManagerSubcomponentName, true,
+							ci.getOwnedSubcomponents()));
 			// Assign thread implementation
 			ComponentCreateHelper.setSubcomponentType(attestationManagerSubcomp, attestationManagerImpl);
 
@@ -500,7 +523,9 @@ public class AddAttestationManagerHandler extends AadlHandler {
 			final ComponentType attestationGateType = (ComponentType) pkgSection
 					.createOwnedClassifier(ComponentCreateHelper.getTypeClass(compCategory));
 			// Give it a unique name
-			attestationGateType.setName(getUniqueName(AM_GATE_TYPE_NAME, true, pkgSection.getOwnedClassifiers()));
+			attestationGateType.setName(
+					ModelTransformUtils.getUniqueName(attestationGateComponentName, true,
+							pkgSection.getOwnedClassifiers()));
 
 			// Create Attestation Gate ports
 			// To do this we need to look at the current connections of the comm driver in the implementation
@@ -608,12 +633,12 @@ public class AddAttestationManagerHandler extends AadlHandler {
 			// Add it to proper place (just below component type)
 			pkgSection.getOwnedClassifiers().move(1, pkgSection.getOwnedClassifiers().size() - 1);
 
-			// CASE_Properties::Component_Impl property
-			if (!attestationGateImplLanguage.isEmpty()) {
-				if (!CasePropertyUtils.setCompImpl(attestationGateImpl, attestationGateImplLanguage)) {
-//					return;
-				}
-			}
+//			// CASE_Properties::Component_Impl property
+//			if (!attestationGateImplLanguage.isEmpty()) {
+//				if (!CasePropertyUtils.setCompImpl(attestationGateImpl, attestationGateImplLanguage)) {
+////					return;
+//				}
+//			}
 
 			// Dispatch protocol property
 			if (!dispatchProtocol.isEmpty() && compCategory == ComponentCategory.THREAD) {
@@ -630,7 +655,9 @@ public class AddAttestationManagerHandler extends AadlHandler {
 			final Subcomponent attestationGateSubcomp = ComponentCreateHelper.createOwnedSubcomponent(ci, compCategory);
 
 			// Give it a unique name
-			attestationGateSubcomp.setName(getUniqueName(attestationGateImplName, true, ci.getOwnedSubcomponents()));
+			attestationGateSubcomp.setName(
+					ModelTransformUtils.getUniqueName(attestationGateSubcomponentName, true,
+							ci.getOwnedSubcomponents()));
 			// Assign implementation
 			ComponentCreateHelper.setSubcomponentType(attestationGateSubcomp, attestationGateImpl);
 
@@ -727,7 +754,8 @@ public class AddAttestationManagerHandler extends AadlHandler {
 			int idxOffset = 0;
 			for (PortConnection newPortConn : newPortConns) {
 				// Make sure each new connection has a unique name
-				newPortConn.setName(getUniqueName(CONNECTION_IMPL_NAME, false, ci.getOwnedPortConnections()));
+				newPortConn.setName(
+						ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false, ci.getOwnedPortConnections()));
 				ci.getOwnedPortConnections().add(newPortConn);
 				// Move to right place
 				ci.getOwnedPortConnections().move(connIdx + idxOffset, ci.getOwnedPortConnections().size() - 1);

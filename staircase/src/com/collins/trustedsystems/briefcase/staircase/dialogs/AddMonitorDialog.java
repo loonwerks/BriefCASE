@@ -8,6 +8,8 @@ import java.util.Map;
 import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -20,14 +22,22 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.osate.aadl2.Classifier;
+import org.osate.aadl2.ComponentImplementation;
+import org.osate.aadl2.ProcessImplementation;
+import org.osate.aadl2.ThreadGroupImplementation;
+import org.osate.aadl2.modelsupport.util.AadlUtil;
 import org.osate.ui.dialogs.Dialog;
 
 import com.collins.trustedsystems.briefcase.staircase.dialogs.MultiPortSelector.PortDirection;
 import com.collins.trustedsystems.briefcase.staircase.handlers.AddMonitorHandler;
+import com.collins.trustedsystems.briefcase.staircase.utils.ModelTransformUtils;
 
 public class AddMonitorDialog extends TitleAreaDialog {
 
-	private Text txtMonitorImplementationName;
+	private ComponentImplementation context;
+	private Text txtMonitorComponentName;
+	private Text txtMonitorSubcomponentName;
 	private Label lblResetConnectionField;
 	private Button btnReset;
 	private Combo cboResetPort;
@@ -36,16 +46,20 @@ public class AddMonitorDialog extends TitleAreaDialog {
 	private Combo cboAlertPort;
 	private Button btnObservationGate;
 	private List<Button> btnDispatchProtocol = new ArrayList<>();
+	private Label lblPeriodField;
+	private Text txtPeriod;
 	private Combo cboMonitorRequirement;
 	private Text txtAgreeProperty;
 
-	private String monitorImplementationName;
+	private String monitorComponentName;
+	private String monitorSubcomponentName;
 	private String resetPort = "";
 	private boolean latched = false;
 	private Map<String, String> referencePorts = new HashMap<>();
 	private String alertPort = "";
 	private boolean observationGate = false;
 	private String dispatchProtocol = "";
+	private String period = "";
 	private String monitorRequirement = "";
 	private String agreeProperty = "";
 
@@ -71,6 +85,11 @@ public class AddMonitorDialog extends TitleAreaDialog {
 				IMessageProvider.NONE);
 	}
 
+	public void create(ComponentImplementation context) {
+		this.context = context;
+		create();
+	}
+
 	@Override
 	protected Point getInitialSize() {
 		final Point size = super.getInitialSize();
@@ -87,13 +106,17 @@ public class AddMonitorDialog extends TitleAreaDialog {
 		container.setLayout(layout);
 
 		// Add monitor information fields
-		createMonitorImplementationNameField(container);
+		createMonitorComponentNameField(container);
+		createMonitorSubcomponentNameField(container);
 		createLatchedField(container);
 		createResetPortField(container);
 		createReferencePortsField(container);
 		createAlertPortField(container);
 		createObservationGateField(container);
-		createDispatchProtocolField(container);
+		// Only display dispatch protocol if filter is a thread
+		if (context instanceof ProcessImplementation || context instanceof ThreadGroupImplementation) {
+			createDispatchProtocolField(container);
+		}
 		createRequirementField(container);
 		createAgreeField(container);
 
@@ -101,19 +124,35 @@ public class AddMonitorDialog extends TitleAreaDialog {
 	}
 
 	/**
-	 * Creates the input text field for specifying the monitor implementation name
+	 * Creates the input text field for specifying the monitor component name
 	 * @param container
 	 */
-	private void createMonitorImplementationNameField(Composite container) {
-		Label lblMonitorImplNameField = new Label(container, SWT.NONE);
-		lblMonitorImplNameField.setText("Monitor implementation name");
+	private void createMonitorComponentNameField(Composite container) {
+		Label lblMonitorComponentNameField = new Label(container, SWT.NONE);
+		lblMonitorComponentNameField.setText("Monitor component instance name");
 
 		GridData dataInfoField = new GridData();
 		dataInfoField.grabExcessHorizontalSpace = true;
 		dataInfoField.horizontalAlignment = GridData.FILL;
-		txtMonitorImplementationName = new Text(container, SWT.BORDER);
-		txtMonitorImplementationName.setLayoutData(dataInfoField);
-		txtMonitorImplementationName.setText(AddMonitorHandler.MONITOR_COMP_IMPL_NAME);
+		txtMonitorComponentName = new Text(container, SWT.BORDER);
+		txtMonitorComponentName.setLayoutData(dataInfoField);
+		txtMonitorComponentName.setText(AddMonitorHandler.MONITOR_COMP_TYPE_NAME);
+	}
+
+	/**
+	 * Creates the input text field for specifying the monitor subcomponent instance name
+	 * @param container
+	 */
+	private void createMonitorSubcomponentNameField(Composite container) {
+		Label lblMonitorSubcomponentNameField = new Label(container, SWT.NONE);
+		lblMonitorSubcomponentNameField.setText("Monitor subcomponent instance name");
+
+		GridData dataInfoField = new GridData();
+		dataInfoField.grabExcessHorizontalSpace = true;
+		dataInfoField.horizontalAlignment = GridData.FILL;
+		txtMonitorSubcomponentName = new Text(container, SWT.BORDER);
+		txtMonitorSubcomponentName.setLayoutData(dataInfoField);
+		txtMonitorSubcomponentName.setText(AddMonitorHandler.MONITOR_SUBCOMP_NAME);
 	}
 
 	/**
@@ -249,6 +288,22 @@ public class AddMonitorDialog extends TitleAreaDialog {
 		Button btnNoProtocol = new Button(protocolGroup, SWT.RADIO);
 		btnNoProtocol.setText("None");
 		btnNoProtocol.setSelection(true);
+		btnNoProtocol.addSelectionListener(new SelectionListener() {
+
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				lblPeriodField.setEnabled(!btnNoProtocol.getSelection());
+				txtPeriod.setEnabled(!btnNoProtocol.getSelection());
+				if (btnNoProtocol.getSelection()) {
+					txtPeriod.setText("");
+				}
+			}
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {
+				widgetSelected(e);
+			}
+		});
 
 		Button btnPeriodic = new Button(protocolGroup, SWT.RADIO);
 		btnPeriodic.setText("Periodic");
@@ -257,6 +312,17 @@ public class AddMonitorDialog extends TitleAreaDialog {
 		Button btnSporadic = new Button(protocolGroup, SWT.RADIO);
 		btnSporadic.setText("Sporadic");
 		btnSporadic.setSelection(false);
+
+		lblPeriodField = new Label(container, SWT.NONE);
+		lblPeriodField.setText("Period");
+		lblPeriodField.setEnabled(false);
+
+		GridData dataInfoField = new GridData();
+		dataInfoField.grabExcessHorizontalSpace = true;
+		dataInfoField.horizontalAlignment = SWT.FILL;
+		txtPeriod = new Text(container, SWT.BORDER);
+		txtPeriod.setLayoutData(dataInfoField);
+		txtPeriod.setEnabled(false);
 
 		btnDispatchProtocol.add(btnNoProtocol);
 		btnDispatchProtocol.add(btnPeriodic);
@@ -304,7 +370,43 @@ public class AddMonitorDialog extends TitleAreaDialog {
 	 * @param container
 	 */
 	private boolean saveInput() {
-		monitorImplementationName = txtMonitorImplementationName.getText();
+		List<Classifier> componentsInPackage = AadlUtil.getContainingPackageSection(context).getOwnedClassifiers();
+
+		// Monitor Component Name
+		if (!txtMonitorComponentName.getText().isEmpty()
+				&& !ModelTransformUtils.isValidName(txtMonitorComponentName.getText())) {
+			Dialog.showError("Add Monitor", "Monitor component name " + txtMonitorComponentName.getText()
+					+ " contains invalid characters. Only 'A..Z', 'a..z', '0..9', and '_' are permitted");
+			return false;
+		} else if (AadlUtil.findNamedElementInList(componentsInPackage, txtMonitorComponentName.getText()) != null) {
+			Dialog.showError("Add Monitor", "Component " + txtMonitorComponentName.getText()
+					+ " already exists in model. Use the suggested name or enter a new one.");
+			txtMonitorComponentName.setText(
+					ModelTransformUtils.getUniqueName(txtMonitorComponentName.getText(), true, componentsInPackage));
+			return false;
+		} else {
+			monitorComponentName = txtMonitorComponentName.getText();
+		}
+
+		// Monitor Subcomponent Instance Name
+		if (!txtMonitorSubcomponentName.getText().isEmpty()
+				&& !ModelTransformUtils.isValidName(txtMonitorSubcomponentName.getText())) {
+			Dialog.showError("Add Monitor", "Monitor subcomponent instance name " + txtMonitorSubcomponentName.getText()
+					+ " contains invalid characters. Only 'A..Z', 'a..z', '0..9', and '_' are permitted");
+			return false;
+		} else if (AadlUtil.findNamedElementInList(context.getOwnedSubcomponents(),
+				txtMonitorSubcomponentName.getText()) != null) {
+			Dialog.showError("Add Monitor", "Subcomponent " + txtMonitorSubcomponentName.getText()
+					+ " already exists in model. Use the suggested name or enter a new one.");
+			txtMonitorSubcomponentName.setText(ModelTransformUtils.getUniqueName(txtMonitorSubcomponentName.getText(),
+					true, context.getOwnedSubcomponents()));
+			return false;
+		} else {
+			monitorSubcomponentName = txtMonitorSubcomponentName.getText();
+		}
+//		monitorSubcomponentName = txtMonitorSubcomponentName.getText();
+
+		// Reset Port
 		if (btnReset.getSelection()) {
 			resetPort = cboResetPort.getText();
 			if (resetPort.equals(NO_PORT_SELECTED)) {
@@ -318,7 +420,11 @@ public class AddMonitorDialog extends TitleAreaDialog {
 		} else {
 			resetPort = null;
 		}
+
+		// Latched
 		latched = btnLatched.getSelection();
+
+		// Reference Ports
 		referencePorts = mpsReferencePorts.getContents();
 		for (Map.Entry<String, String> refPort : referencePorts.entrySet()) {
 			if (refPort.getKey().isEmpty()) {
@@ -329,6 +435,8 @@ public class AddMonitorDialog extends TitleAreaDialog {
 				return false;
 			}
 		}
+
+		// Alert Port
 		alertPort = cboAlertPort.getText();
 		if (alertPort.equals(NO_PORT_SELECTED)) {
 			alertPort = "";
@@ -338,13 +446,28 @@ public class AddMonitorDialog extends TitleAreaDialog {
 					+ NO_PORT_SELECTED + ".");
 			return false;
 		}
+
+		// Gate Observed Signal
 		observationGate = btnObservationGate.getSelection();
+
+		// Dispatch Protocol and Period
 		for (Button b : btnDispatchProtocol) {
 			if (b.getSelection() && !b.getText().equalsIgnoreCase("None")) {
 				dispatchProtocol = b.getText();
+				// make sure period is properly formatted
+				if (txtPeriod.getText().isEmpty()
+						|| txtPeriod.getText().matches("((\\d)+(\\s)*(ps|ns|us|ms|sec|min|hr)?)")) {
+					period = txtPeriod.getText();
+				} else {
+					Dialog.showError("Add Monitor", "Monitor period " + txtPeriod.getText()
+							+ " is malformed. See the AADL definition of Period in Timing_Properties.aadl.");
+					return false;
+				}
 				break;
 			}
 		}
+
+		// Requirement
 		monitorRequirement = cboMonitorRequirement.getText();
 		if (monitorRequirement.equals(NO_REQUIREMENT_SELECTED)) {
 			monitorRequirement = "";
@@ -355,6 +478,8 @@ public class AddMonitorDialog extends TitleAreaDialog {
 							+ NO_REQUIREMENT_SELECTED + ".");
 			return false;
 		}
+
+		// AGREE Property
 		agreeProperty = txtAgreeProperty.getText();
 
 		return true;
@@ -368,8 +493,12 @@ public class AddMonitorDialog extends TitleAreaDialog {
 		super.okPressed();
 	}
 
-	public String getMonitorImplementationName() {
-		return monitorImplementationName;
+	public String getMonitorComponentName() {
+		return monitorComponentName;
+	}
+
+	public String getMonitorSubcomponentName() {
+		return monitorSubcomponentName;
 	}
 
 	public String getResetPort() {
@@ -394,6 +523,10 @@ public class AddMonitorDialog extends TitleAreaDialog {
 
 	public String getDispatchProtocol() {
 		return dispatchProtocol;
+	}
+
+	public String getPeriod() {
+		return period;
 	}
 
 	public String getAgreeProperty() {

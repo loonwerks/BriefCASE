@@ -72,6 +72,7 @@ import org.osate.ui.dialogs.Dialog;
 
 import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
 import com.collins.trustedsystems.briefcase.staircase.utils.ComponentCreateHelper;
+import com.collins.trustedsystems.briefcase.staircase.utils.ModelTransformUtils;
 import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
 
 public class Sel4TransformHandler extends AadlHandler {
@@ -634,7 +635,8 @@ public class Sel4TransformHandler extends AadlHandler {
 				if (transformFeature instanceof Port) {
 					PortConnection pc = transformImpl.createOwnedPortConnection();
 					pc.setName(
-							getUniqueName(PORT_CONNECTION_IMPL_NAME, false, transformImpl.getOwnedPortConnections()));
+							ModelTransformUtils.getUniqueName(PORT_CONNECTION_IMPL_NAME, false,
+									transformImpl.getOwnedPortConnections()));
 					pc.setBidirectional(((Port) transformFeature).getDirection() == DirectionType.IN_OUT);
 					ConnectedElement src = pc.createSource();
 					ConnectedElement dst = pc.createDestination();
@@ -651,7 +653,7 @@ public class Sel4TransformHandler extends AadlHandler {
 					}
 				} else if (transformFeature instanceof Access) {
 					AccessConnection ac = transformImpl.createOwnedAccessConnection();
-					ac.setName(getUniqueName(ACCESS_CONNECTION_IMPL_NAME, false,
+					ac.setName(ModelTransformUtils.getUniqueName(ACCESS_CONNECTION_IMPL_NAME, false,
 							transformImpl.getOwnedAccessConnections()));
 					ConnectedElement src = ac.createSource();
 					ConnectedElement dst = ac.createDestination();
@@ -726,7 +728,8 @@ public class Sel4TransformHandler extends AadlHandler {
 				if (c instanceof PortConnection) {
 					PortConnection pc = transformImpl.createOwnedPortConnection();
 					pc.setName(
-							getUniqueName(PORT_CONNECTION_IMPL_NAME, false, transformImpl.getOwnedPortConnections()));
+							ModelTransformUtils.getUniqueName(PORT_CONNECTION_IMPL_NAME, false,
+									transformImpl.getOwnedPortConnections()));
 					pc.setBidirectional(c.isBidirectional());
 					ConnectedElement src = pc.createSource();
 					ConnectedElement dst = pc.createDestination();
@@ -738,7 +741,7 @@ public class Sel4TransformHandler extends AadlHandler {
 					copyPropertyAssociations(c, pc);
 				} else if (c instanceof AccessConnection) {
 					AccessConnection ac = transformImpl.createOwnedAccessConnection();
-					ac.setName(getUniqueName(ACCESS_CONNECTION_IMPL_NAME, false,
+					ac.setName(ModelTransformUtils.getUniqueName(ACCESS_CONNECTION_IMPL_NAME, false,
 							transformImpl.getOwnedAccessConnections()));
 					ConnectedElement src = ac.createSource();
 					ConnectedElement dst = ac.createDestination();

@@ -15,20 +15,27 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.osate.aadl2.Classifier;
 import org.osate.aadl2.ComponentCategory;
+import org.osate.aadl2.ComponentImplementation;
 import org.osate.aadl2.Subcomponent;
+import org.osate.aadl2.modelsupport.util.AadlUtil;
 import org.osate.ui.dialogs.Dialog;
 
 import com.collins.trustedsystems.briefcase.staircase.handlers.AddVirtualizationHandler;
+import com.collins.trustedsystems.briefcase.staircase.utils.ModelTransformUtils;
 
 public class AddVirtualizationDialog extends TitleAreaDialog {
 
-	private Text txtVirtualProcessorName;
+	private ComponentImplementation context;
+	private Text txtVirtualProcessorComponentName;
+	private Text txtVirtualProcessorSubcomponentName;
 	private Text txtVirtualMachineOS;
 	private SubcomponentSelector subcomponentSelector = null;
 	private Combo cboVirtualizationRequirement;
 
-	private String virtualProcessorName = "";
+	private String virtualProcessorComponentName = "";
+	private String virtualProcessorSubcomponentName = "";
 	private String virtualMachineOS = "";
 	private List<String> subcomponents = new ArrayList<>();
 	private String virtualizationRequirement = "";
@@ -53,6 +60,12 @@ public class AddVirtualizationDialog extends TitleAreaDialog {
 				IMessageProvider.NONE);
 	}
 
+	public void create(Subcomponent subcomponent) {
+		this.context = subcomponent.getContainingComponentImpl();
+		this.subcomponent = subcomponent;
+		create();
+	}
+
 	@Override
 	protected Point getInitialSize() {
 		final Point size = super.getInitialSize();
@@ -68,8 +81,9 @@ public class AddVirtualizationDialog extends TitleAreaDialog {
 		GridLayout layout = new GridLayout(2, false);
 		container.setLayout(layout);
 
-		// Add filter information fields
-		createVirtualProcessorNameField(container);
+		// Add virtualization information fields
+		createVirtualProcessorComponentNameField(container);
+		createVirtualProcessorSubcomponentNameField(container);
 		createOSField(container);
 		createComponentSelectionField(container);
 		createRequirementField(container);
@@ -77,21 +91,36 @@ public class AddVirtualizationDialog extends TitleAreaDialog {
 		return area;
 	}
 
-
 	/**
-	 * Creates the input text field for specifying the virtual processor name
+	 * Creates the input text field for specifying the virtual processor component name
 	 * @param container
 	 */
-	private void createVirtualProcessorNameField(Composite container) {
+	private void createVirtualProcessorComponentNameField(Composite container) {
 		Label lblVirtualProcessorNameField = new Label(container, SWT.NONE);
-		lblVirtualProcessorNameField.setText("Virtual Processor implementation name");
+		lblVirtualProcessorNameField.setText("Virtual Processor component name");
 
 		GridData dataInfoField = new GridData();
 		dataInfoField.grabExcessHorizontalSpace = true;
 		dataInfoField.horizontalAlignment = SWT.FILL;
-		txtVirtualProcessorName = new Text(container, SWT.BORDER);
-		txtVirtualProcessorName.setLayoutData(dataInfoField);
-		txtVirtualProcessorName.setText(AddVirtualizationHandler.VIRTUAL_PROCESSOR_IMPL_NAME);
+		txtVirtualProcessorComponentName = new Text(container, SWT.BORDER);
+		txtVirtualProcessorComponentName.setLayoutData(dataInfoField);
+		txtVirtualProcessorComponentName.setText(AddVirtualizationHandler.VIRTUAL_PROCESSOR_COMP_TYPE_NAME);
+	}
+
+	/**
+	 * Creates the input text field for specifying the virtual processor subcomponent instance name
+	 * @param container
+	 */
+	private void createVirtualProcessorSubcomponentNameField(Composite container) {
+		Label lblVirtualProcessorNameField = new Label(container, SWT.NONE);
+		lblVirtualProcessorNameField.setText("Virtual Processor subcomponent name");
+
+		GridData dataInfoField = new GridData();
+		dataInfoField.grabExcessHorizontalSpace = true;
+		dataInfoField.horizontalAlignment = SWT.FILL;
+		txtVirtualProcessorSubcomponentName = new Text(container, SWT.BORDER);
+		txtVirtualProcessorSubcomponentName.setLayoutData(dataInfoField);
+		txtVirtualProcessorSubcomponentName.setText(AddVirtualizationHandler.VIRTUAL_PROCESSOR_SUBCOMP_NAME);
 	}
 
 	/**
@@ -167,15 +196,56 @@ public class AddVirtualizationDialog extends TitleAreaDialog {
 	 */
 	private boolean saveInput() {
 
-		virtualProcessorName = txtVirtualProcessorName.getText();
+		List<Classifier> componentsInPackage = AadlUtil.getContainingPackageSection(context).getOwnedClassifiers();
+
+		// VirtualProcessor Component Name
+		if (!txtVirtualProcessorComponentName.getText().isEmpty()
+				&& !ModelTransformUtils.isValidName(txtVirtualProcessorComponentName.getText())) {
+			Dialog.showError("Add Virtualization",
+					"VirtualProcessor component name " + txtVirtualProcessorComponentName.getText()
+							+ " contains invalid characters. Only 'A..Z', 'a..z', '0..9', and '_' are permitted");
+			return false;
+		} else if (AadlUtil.findNamedElementInList(componentsInPackage,
+				txtVirtualProcessorComponentName.getText()) != null) {
+			Dialog.showError("Add Virtualization", "Component " + txtVirtualProcessorComponentName.getText()
+					+ " already exists in model. Use the suggested name or enter a new one.");
+			txtVirtualProcessorComponentName.setText(ModelTransformUtils
+					.getUniqueName(txtVirtualProcessorComponentName.getText(), true, componentsInPackage));
+			return false;
+		} else {
+			virtualProcessorComponentName = txtVirtualProcessorComponentName.getText();
+		}
+
+		// VirtualProcessor Subcomponent Instance Name
+		if (!txtVirtualProcessorSubcomponentName.getText().isEmpty()
+				&& !ModelTransformUtils.isValidName(txtVirtualProcessorSubcomponentName.getText())) {
+			Dialog.showError("Add VirtualProcessor",
+					"Virtual Processor subcomponent instance name " + txtVirtualProcessorSubcomponentName.getText()
+							+ " contains invalid characters. Only 'A..Z', 'a..z', '0..9', and '_' are permitted");
+			return false;
+		} else if (AadlUtil.findNamedElementInList(context.getOwnedSubcomponents(),
+				txtVirtualProcessorSubcomponentName.getText()) != null) {
+			Dialog.showError("Add Virtualization", "Subcomponent " + txtVirtualProcessorSubcomponentName.getText()
+					+ " already exists in model. Use the suggested name or enter a new one.");
+			txtVirtualProcessorSubcomponentName.setText(ModelTransformUtils.getUniqueName(
+					txtVirtualProcessorSubcomponentName.getText(), true, context.getOwnedSubcomponents()));
+			return false;
+		} else {
+			virtualProcessorSubcomponentName = txtVirtualProcessorSubcomponentName.getText();
+		}
+//		virtualProcessorName = txtVirtualProcessorName.getText();
+
+		// OS
 		virtualMachineOS = txtVirtualMachineOS.getText();
 
+		// Subcomponents to virtualize
 		subcomponents = subcomponentSelector.getContents();
 		if (subcomponents.isEmpty()) {
 			Dialog.showError("Add Virtualization", "No subcomponents have been selected to virtualize.");
 			return false;
 		}
 
+		// Requirement
 		virtualizationRequirement = cboVirtualizationRequirement.getText();
 		if (virtualizationRequirement.equals(NO_REQUIREMENT_SELECTED)) {
 			virtualizationRequirement = "";
@@ -189,8 +259,12 @@ public class AddVirtualizationDialog extends TitleAreaDialog {
 		return true;
 	}
 
-	public String getVirtualProcessorName() {
-		return virtualProcessorName;
+	public String getVirtualProcessorComponentName() {
+		return virtualProcessorComponentName;
+	}
+
+	public String getVirtualProcessorSubcomponentName() {
+		return virtualProcessorSubcomponentName;
 	}
 
 	public String getVirtualMachineOS() {
@@ -205,9 +279,9 @@ public class AddVirtualizationDialog extends TitleAreaDialog {
 		return virtualizationRequirement;
 	}
 
-	public void setSelectedSubcomponent(Subcomponent subcomponent) {
-		this.subcomponent = subcomponent;
-	}
+//	public void setSelectedSubcomponent(Subcomponent subcomponent) {
+//		this.subcomponent = subcomponent;
+//	}
 
 	public void setRequirements(List<String> requirements) {
 		this.requirements = requirements;

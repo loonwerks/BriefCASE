@@ -19,6 +19,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.osate.aadl2.Aadl2Package;
+import org.osate.aadl2.Classifier;
 import org.osate.aadl2.ComponentImplementation;
 import org.osate.aadl2.ComponentType;
 import org.osate.aadl2.DataPort;
@@ -31,20 +32,25 @@ import org.osate.aadl2.Property;
 import org.osate.aadl2.PropertyExpression;
 import org.osate.aadl2.Subcomponent;
 import org.osate.aadl2.modelsupport.scoping.Aadl2GlobalScopeUtil;
+import org.osate.aadl2.modelsupport.util.AadlUtil;
 import org.osate.ui.dialogs.Dialog;
 
 import com.collins.trustedsystems.briefcase.staircase.handlers.AddAttestationManagerHandler;
 import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
+import com.collins.trustedsystems.briefcase.staircase.utils.ModelTransformUtils;
 
 /**
  * This class creates the Add Attestation wizard
  */
 public class AddAttestationManagerDialog extends TitleAreaDialog {
 
-	private Text txtMgrImplementationName;
-	private Text txtGateImplementationName;
-	private Text txtMgrImplementationLanguage;
-	private Text txtGateImplementationLanguage;
+	private ComponentImplementation context = null;
+	private Text txtMgrComponentName;
+	private Text txtGateComponentName;
+	private Text txtMgrSubcomponentName;
+	private Text txtGateSubcomponentName;
+//	private Text txtMgrImplementationLanguage;
+//	private Text txtGateImplementationLanguage;
 	private Text txtCacheTimeout;
 	private Combo cboCacheSize;
 	private Text txtIdListDataType;
@@ -53,10 +59,12 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 	private Combo cboRequirement;
 	private Button btnPropagateGuarantees;
 	private Text txtAgreeProperty;
-	private String attestationManagerImplName;
-	private String attestationGateImplName;
-	private String attestationManagerImplLanguage = "";
-	private String attestationGateImplLanguage = "";
+	private String attestationManagerComponentName;
+	private String attestationGateComponentName;
+	private String attestationManagerSubcomponentName;
+	private String attestationGateSubcomponentName;
+//	private String attestationManagerImplLanguage = "";
+//	private String attestationGateImplLanguage = "";
 	private long cacheTimeout = 0;
 	private long cacheSize = 0;
 	private String idListDataType = "";
@@ -73,7 +81,7 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 	private static final int MAX_CACHE_SIZE = 6;
 	private static final int DEFAULT_CACHE_SIZE = 4;
 
-	private static final String DEFAULT_IMPL_LANGUAGE = "CakeML";
+//	private static final String DEFAULT_IMPL_LANGUAGE = "CakeML";
 	private static final String NO_REQUIREMENT_SELECTED = "<No requirement selected>";
 
 	public AddAttestationManagerDialog(Shell parentShell) {
@@ -97,21 +105,24 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 		return size;
 	}
 
-	public void create(String commDriver, List<String> requirements, Subcomponent attestationManager,
+	public void create(Subcomponent commDriver, List<String> requirements, Subcomponent attestationManager,
 			Subcomponent attestationGate) {
-		this.commDriver = commDriver;
+
+		if (commDriver == null) {
+			Dialog.showError("Add Attestation", "Unknown communication driver.");
+			return;
+		}
+
+		this.context = commDriver.getComponentImplementation();
+		this.commDriver = commDriver.getName();
 		this.requirements = requirements;
 		this.attestationManager = attestationManager;
 		this.attestationGate = attestationGate;
 
-		if (commDriver == null || commDriver.isEmpty()) {
-			Dialog.showError("Add Attestation", "Unknown communication driver.");
-			return;
-		}
 		super.create();
-		setTitle("Add Attestation to " + commDriver);
-		setMessage("Enter Attestation details for adding attestation to " + commDriver
-				+ ".  You may optionally leave these fields empty and manually edit the AADL attestation manager component once it is added to the model.",
+		setTitle("Add Attestation to " + this.commDriver);
+		setMessage("Enter Attestation details for adding attestation to " + this.commDriver
+				+ ".  You may optionally leave these fields empty and manually edit the AADL attestation manager and gate components once they are added to the model.",
 				IMessageProvider.NONE);
 	}
 
@@ -124,10 +135,12 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 		container.setLayout(layout);
 
 		// Add attestation manager information fields
-		createMgrImplementationNameField(container);
-		createGateImplementationNameField(container);
-		createMgrImplementationLanguageField(container);
-		createGateImplementationLanguageField(container);
+		createMgrComponentNameField(container);
+		createMgrSubcomponentNameField(container);
+		createGateComponentNameField(container);
+		createGateSubcomponentNameField(container);
+//		createMgrImplementationLanguageField(container);
+//		createGateImplementationLanguageField(container);
 		createCacheTimeoutField(container);
 		createCacheSizeField(container);
 		createIdListDataTypeField(container);
@@ -142,76 +155,119 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 		return area;
 	}
 
+	private void createMgrComponentNameField(Composite container) {
 
-	private void createMgrImplementationNameField(Composite container) {
-
-		Label lblImplNameField = new Label(container, SWT.NONE);
-		lblImplNameField.setText("Attestation Manager implementation name");
+		Label lblComponentNameField = new Label(container, SWT.NONE);
+		lblComponentNameField.setText("Attestation Manager component name");
 
 		GridData dataInfoField = new GridData();
 		dataInfoField.grabExcessHorizontalSpace = true;
 		dataInfoField.horizontalAlignment = SWT.FILL;
-		txtMgrImplementationName = new Text(container, SWT.BORDER);
-		txtMgrImplementationName.setLayoutData(dataInfoField);
+		txtMgrComponentName = new Text(container, SWT.BORDER);
+		txtMgrComponentName.setLayoutData(dataInfoField);
 		if (attestationManager == null) {
-			txtMgrImplementationName.setText(AddAttestationManagerHandler.AM_IMPL_NAME);
+			txtMgrComponentName
+					.setText(ModelTransformUtils.getUniqueName(AddAttestationManagerHandler.AM_COMP_TYPE_NAME, true,
+							AadlUtil.getContainingPackageSection(context).getOwnedClassifiers()));
 		} else {
-			txtMgrImplementationName.setText(attestationManager.getName());
-			txtMgrImplementationName.setEnabled(false);
+			txtMgrComponentName.setText(attestationManager.getComponentType().getName());
+			txtMgrComponentName.setEnabled(false);
 		}
 
 	}
 
-	private void createMgrImplementationLanguageField(Composite container) {
+	private void createMgrSubcomponentNameField(Composite container) {
 
-		Label lblImplLangField = new Label(container, SWT.NONE);
-		lblImplLangField.setText("Attestation Manager implementation language");
+		Label lblSubcomponentNameField = new Label(container, SWT.NONE);
+		lblSubcomponentNameField.setText("Attestation Manager subcomponent name");
 
 		GridData dataInfoField = new GridData();
 		dataInfoField.grabExcessHorizontalSpace = true;
 		dataInfoField.horizontalAlignment = SWT.FILL;
-		txtMgrImplementationLanguage = new Text(container, SWT.BORDER);
-		txtMgrImplementationLanguage.setLayoutData(dataInfoField);
-		txtMgrImplementationLanguage.setText(DEFAULT_IMPL_LANGUAGE);
-		if (attestationManager != null) {
-			txtMgrImplementationLanguage.setEnabled(false);
+		txtMgrSubcomponentName = new Text(container, SWT.BORDER);
+		txtMgrSubcomponentName.setLayoutData(dataInfoField);
+		if (attestationManager == null) {
+			txtMgrSubcomponentName.setText(ModelTransformUtils.getUniqueName(
+					AddAttestationManagerHandler.AM_SUBCOMP_NAME, true, context.getOwnedSubcomponents()));
+		} else {
+			txtMgrSubcomponentName.setText(attestationManager.getName());
+			txtMgrSubcomponentName.setEnabled(false);
 		}
+
 	}
 
-	private void createGateImplementationNameField(Composite container) {
+//	private void createMgrImplementationLanguageField(Composite container) {
+//
+//		Label lblImplLangField = new Label(container, SWT.NONE);
+//		lblImplLangField.setText("Attestation Manager implementation language");
+//
+//		GridData dataInfoField = new GridData();
+//		dataInfoField.grabExcessHorizontalSpace = true;
+//		dataInfoField.horizontalAlignment = SWT.FILL;
+//		txtMgrImplementationLanguage = new Text(container, SWT.BORDER);
+//		txtMgrImplementationLanguage.setLayoutData(dataInfoField);
+//		txtMgrImplementationLanguage.setText(DEFAULT_IMPL_LANGUAGE);
+//		if (attestationManager != null) {
+//			txtMgrImplementationLanguage.setEnabled(false);
+//		}
+//	}
 
-		Label lblImplNameField = new Label(container, SWT.NONE);
-		lblImplNameField.setText("Attestation Gate implementation name");
+	private void createGateComponentNameField(Composite container) {
+
+		Label lblComponentNameField = new Label(container, SWT.NONE);
+		lblComponentNameField.setText("Attestation Gate component name");
 
 		GridData dataInfoField = new GridData();
 		dataInfoField.grabExcessHorizontalSpace = true;
 		dataInfoField.horizontalAlignment = SWT.FILL;
-		txtGateImplementationName = new Text(container, SWT.BORDER);
-		txtGateImplementationName.setLayoutData(dataInfoField);
+		txtGateComponentName = new Text(container, SWT.BORDER);
+		txtGateComponentName.setLayoutData(dataInfoField);
+		if (attestationManager == null) {
+			txtGateComponentName
+					.setText(ModelTransformUtils.getUniqueName(AddAttestationManagerHandler.AG_COMP_TYPE_NAME, true,
+							AadlUtil.getContainingPackageSection(context).getOwnedClassifiers()));
+		} else {
+			txtGateComponentName.setText(attestationGate.getComponentType().getName());
+			txtGateComponentName.setEnabled(false);
+		}
+
+	}
+
+	private void createGateSubcomponentNameField(Composite container) {
+
+		Label lblSubcomponentNameField = new Label(container, SWT.NONE);
+		lblSubcomponentNameField.setText("Attestation Gate subcomponent name");
+
+		GridData dataInfoField = new GridData();
+		dataInfoField.grabExcessHorizontalSpace = true;
+		dataInfoField.horizontalAlignment = SWT.FILL;
+		txtGateSubcomponentName = new Text(container, SWT.BORDER);
+		txtGateSubcomponentName.setLayoutData(dataInfoField);
 		if (attestationGate == null) {
-			txtGateImplementationName.setText(AddAttestationManagerHandler.AG_IMPL_NAME);
+			txtGateSubcomponentName.setText(ModelTransformUtils.getUniqueName(
+					AddAttestationManagerHandler.AG_SUBCOMP_NAME, true, context.getOwnedSubcomponents()));
 		} else {
-			txtGateImplementationName.setText(attestationGate.getName());
-			txtGateImplementationName.setEnabled(false);
+			txtGateSubcomponentName.setText(attestationGate.getName());
+			txtGateSubcomponentName.setEnabled(false);
 		}
 
 	}
 
-	private void createGateImplementationLanguageField(Composite container) {
-
-		Label lblImplLangField = new Label(container, SWT.NONE);
-		lblImplLangField.setText("Attestation Gate implementation language");
-
-		GridData dataInfoField = new GridData();
-		dataInfoField.grabExcessHorizontalSpace = true;
-		dataInfoField.horizontalAlignment = SWT.FILL;
-		txtGateImplementationLanguage = new Text(container, SWT.BORDER);
-		txtGateImplementationLanguage.setLayoutData(dataInfoField);
-		txtGateImplementationLanguage.setText(DEFAULT_IMPL_LANGUAGE);
-		if (attestationGate != null) {
-			txtGateImplementationLanguage.setEnabled(false);
-		}
-	}
+//	private void createGateImplementationLanguageField(Composite container) {
+//
+//		Label lblImplLangField = new Label(container, SWT.NONE);
+//		lblImplLangField.setText("Attestation Gate implementation language");
+//
+//		GridData dataInfoField = new GridData();
+//		dataInfoField.grabExcessHorizontalSpace = true;
+//		dataInfoField.horizontalAlignment = SWT.FILL;
+//		txtGateImplementationLanguage = new Text(container, SWT.BORDER);
+//		txtGateImplementationLanguage.setLayoutData(dataInfoField);
+//		txtGateImplementationLanguage.setText(DEFAULT_IMPL_LANGUAGE);
+//		if (attestationGate != null) {
+//			txtGateImplementationLanguage.setEnabled(false);
+//		}
+//	}
 
 	private void createCacheTimeoutField(Composite container) {
 
@@ -469,33 +525,116 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 	 * @param container
 	 */
 	private boolean saveInput() {
-		attestationManagerImplName = txtMgrImplementationName.getText();
-		attestationManagerImplLanguage = txtMgrImplementationLanguage.getText();
-		attestationGateImplName = txtGateImplementationName.getText();
-		attestationGateImplLanguage = txtGateImplementationLanguage.getText();
+		List<Classifier> componentsInPackage = AadlUtil.getContainingPackageSection(context).getOwnedClassifiers();
+
+		// Attestation Manager Component Name
+		if (!txtMgrComponentName.getText().isEmpty()
+				&& !ModelTransformUtils.isValidName(txtMgrComponentName.getText())) {
+			Dialog.showError("Add Attestation", "Attestation Manager component name " + txtMgrComponentName.getText()
+					+ " contains invalid characters. Only 'A..Z', 'a..z', '0..9', and '_' are permitted");
+			return false;
+		} else if (attestationManager == null
+				&& AadlUtil.findNamedElementInList(componentsInPackage, txtMgrComponentName.getText()) != null) {
+			Dialog.showError("Add Attestation", "Component " + txtMgrComponentName.getText()
+					+ " already exists in model. Use the suggested name or enter a new one.");
+			txtMgrComponentName.setText(
+					ModelTransformUtils.getUniqueName(txtMgrComponentName.getText(), true, componentsInPackage));
+			return false;
+		} else {
+			attestationManagerComponentName = txtMgrComponentName.getText();
+		}
+
+		// Attestation Gate Component Name
+		if (!txtGateComponentName.getText().isEmpty()
+				&& !ModelTransformUtils.isValidName(txtGateComponentName.getText())) {
+			Dialog.showError("Add Attestation", "Attestation Gate component name " + txtGateComponentName.getText()
+					+ " contains invalid characters. Only 'A..Z', 'a..z', '0..9', and '_' are permitted");
+			return false;
+		} else if (attestationManager == null
+				&& AadlUtil.findNamedElementInList(componentsInPackage, txtGateComponentName.getText()) != null) {
+			Dialog.showError("Add Attestation", "Component " + txtGateComponentName.getText()
+					+ " already exists in model. Use the suggested name or enter a new one.");
+			txtGateComponentName.setText(
+					ModelTransformUtils.getUniqueName(txtGateComponentName.getText(), true, componentsInPackage));
+			return false;
+		} else {
+			attestationGateComponentName = txtGateComponentName.getText();
+		}
+
+		// Attestation Manager Subcomponent Instance Name
+		if (!txtMgrSubcomponentName.getText().isEmpty()
+				&& !ModelTransformUtils.isValidName(txtMgrSubcomponentName.getText())) {
+			Dialog.showError("Add Attestation",
+					"Attestation Manager subcomponent instance name " + txtMgrSubcomponentName.getText()
+							+ " contains invalid characters. Only 'A..Z', 'a..z', '0..9', and '_' are permitted");
+			return false;
+		} else if (attestationManager == null && AadlUtil.findNamedElementInList(context.getOwnedSubcomponents(),
+				txtMgrSubcomponentName.getText()) != null) {
+			Dialog.showError("Add Attestation", "Subcomponent " + txtMgrSubcomponentName.getText()
+					+ " already exists in model. Use the suggested name or enter a new one.");
+			txtMgrSubcomponentName.setText(ModelTransformUtils.getUniqueName(txtMgrSubcomponentName.getText(), true,
+					context.getOwnedSubcomponents()));
+			return false;
+		} else {
+			attestationManagerSubcomponentName = txtMgrSubcomponentName.getText();
+		}
+//		attestationManagerSubcomponentName = txtMgrSubcomponentName.getText();
+
+//		attestationManagerImplLanguage = txtMgrImplementationLanguage.getText();
+
+		// Attestation Gate Subcomponent Instance Name
+		if (!txtGateSubcomponentName.getText().isEmpty()
+				&& !ModelTransformUtils.isValidName(txtGateSubcomponentName.getText())) {
+			Dialog.showError("Add Attestation",
+					"Attestation Gate subcomponent instance name " + txtGateSubcomponentName.getText()
+							+ " contains invalid characters. Only 'A..Z', 'a..z', '0..9', and '_' are permitted");
+			return false;
+		} else if (attestationManager == null && AadlUtil.findNamedElementInList(context.getOwnedSubcomponents(),
+				txtGateSubcomponentName.getText()) != null) {
+			Dialog.showError("Add Attestation", "Subcomponent " + txtGateSubcomponentName.getText()
+					+ " already exists in model. Use the suggested name or enter a new one.");
+			txtGateSubcomponentName.setText(ModelTransformUtils.getUniqueName(txtGateSubcomponentName.getText(), true,
+					context.getOwnedSubcomponents()));
+			return false;
+		} else {
+			attestationGateSubcomponentName = txtGateSubcomponentName.getText();
+		}
+//		attestationGateSubcomponentName = txtGateSubcomponentName.getText();
+
+//		attestationGateImplLanguage = txtGateImplementationLanguage.getText();
+
+		// Timeout
 		try {
 			cacheTimeout = Long.parseLong(txtCacheTimeout.getText());
 		} catch (NumberFormatException e) {
 			Dialog.showError("Add Attestation", "Value of Cache Timeout must be an integer.");
 			return false;
 		}
+
+		// Cache Size
 		try {
 			cacheSize = Long.parseLong(cboCacheSize.getText());
 		} catch (NumberFormatException e) {
 			Dialog.showError("Add Attestation", "Value of Cache Size must be an integer.");
 			return false;
 		}
+
+		// ID List Data Type
 		if (!txtIdListDataType.getText().isEmpty() && !txtIdListDataType.getText().contains("::")) {
 			Dialog.showError("Add Attestation", "ID list data type must be a qualified name.");
 			return false;
 		}
 		idListDataType = txtIdListDataType.getText();
+
+		// Dispatch Protocol and Period
 		for (Button b : btnDispatchProtocol) {
 			if (b.getSelection() && !b.getText().equalsIgnoreCase("None")) {
 				dispatchProtocol = b.getText();
 				break;
 			}
 		}
+
+		// Log Port
 		logPortType = null;
 		for (int i = 0; i < btnLogPortType.size(); i++) {
 			if (btnLogPortType.get(i).getSelection()) {
@@ -503,6 +642,8 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 				break;
 			}
 		}
+
+		// Requirement
 		requirement = cboRequirement.getText();
 		if (requirement.equals(NO_REQUIREMENT_SELECTED)) {
 			requirement = "";
@@ -519,21 +660,29 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 		return true;
 	}
 
-	public String getAttestationManagerImplName() {
-		return attestationManagerImplName;
+	public String getAttestationManagerComponentName() {
+		return attestationManagerComponentName;
 	}
 
-	public String getAttestationGateImplName() {
-		return attestationGateImplName;
+	public String getAttestationGateComponentName() {
+		return attestationGateComponentName;
 	}
 
-	public String getAttestationManagerImplLanguage() {
-		return attestationManagerImplLanguage;
+	public String getAttestationManagerSubcomponentName() {
+		return attestationManagerSubcomponentName;
 	}
 
-	public String getAttestationGateImplLanguage() {
-		return attestationGateImplLanguage;
+	public String getAttestationGateSubcomponentName() {
+		return attestationGateSubcomponentName;
 	}
+
+//	public String getAttestationManagerImplLanguage() {
+//		return attestationManagerImplLanguage;
+//	}
+
+//	public String getAttestationGateImplLanguage() {
+//		return attestationGateImplLanguage;
+//	}
 
 	public long getCacheTimeout() {
 		return cacheTimeout;

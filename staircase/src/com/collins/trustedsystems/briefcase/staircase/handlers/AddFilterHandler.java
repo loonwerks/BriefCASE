@@ -28,6 +28,7 @@ import org.osate.aadl2.DefaultAnnexSubclause;
 import org.osate.aadl2.EnumerationLiteral;
 import org.osate.aadl2.EventDataPort;
 import org.osate.aadl2.EventPort;
+import org.osate.aadl2.IntegerLiteral;
 import org.osate.aadl2.NamedValue;
 import org.osate.aadl2.PackageSection;
 import org.osate.aadl2.Port;
@@ -40,10 +41,12 @@ import org.osate.aadl2.PublicPackageSection;
 import org.osate.aadl2.Realization;
 import org.osate.aadl2.StringLiteral;
 import org.osate.aadl2.Subcomponent;
+import org.osate.aadl2.UnitLiteral;
 import org.osate.aadl2.modelsupport.scoping.Aadl2GlobalScopeUtil;
 import org.osate.ui.dialogs.Dialog;
 import org.osate.xtext.aadl2.properties.util.GetProperties;
 import org.osate.xtext.aadl2.properties.util.ThreadProperties;
+import org.osate.xtext.aadl2.properties.util.TimingProperties;
 
 import com.collins.trustedsystems.briefcase.staircase.dialogs.AddFilterDialog;
 import com.collins.trustedsystems.briefcase.staircase.requirements.AddFilterClaim;
@@ -51,6 +54,7 @@ import com.collins.trustedsystems.briefcase.staircase.requirements.CyberRequirem
 import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsManager;
 import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
 import com.collins.trustedsystems.briefcase.staircase.utils.ComponentCreateHelper;
+import com.collins.trustedsystems.briefcase.staircase.utils.ModelTransformUtils;
 import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
 import com.rockwellcollins.atc.agree.agree.AgreeContract;
 import com.rockwellcollins.atc.agree.agree.AgreeContractSubclause;
@@ -62,16 +66,20 @@ import com.rockwellcollins.atc.resolute.resolute.FunctionDefinition;
 
 public class AddFilterHandler extends AadlHandler {
 
-	static final String FILTER_COMP_TYPE_NAME = "CASE_Filter";
-	static final String FILTER_PORT_IN_NAME = "filter_in";
-	static final String FILTER_PORT_OUT_NAME = "filter_out";
-	public static final String FILTER_LOG_PORT_NAME = "message_log";
-	public static final String FILTER_IMPL_NAME = "FLT";
+	public static final String FILTER_COMP_TYPE_NAME = "CASE_Filter";
+	public static final String FILTER_PORT_IN_NAME = "Input";
+	public static final String FILTER_PORT_OUT_NAME = "Output";
+	public static final String FILTER_LOG_PORT_NAME = "LogMessage";
+	public static final String FILTER_SUBCOMP_NAME = "Filter";
 	static final String CONNECTION_IMPL_NAME = "c";
 
-	private String filterImplementationName;
+	private String filterComponentName;
+	private String filterSubcomponentName;
 //	private String filterImplementationLanguage;
 	private String filterDispatchProtocol;
+	private String filterPeriod;
+	private String inputPortName;
+	private String outputPortName;
 	private PortCategory logPortType;
 	private String filterRequirement;
 	private String filterAgreeProperty;
@@ -182,14 +190,27 @@ public class AddFilterHandler extends AadlHandler {
 		if (createCompoundFilter) {
 			wizard.createCompoundFilter(subcomponent);
 		}
-		wizard.create();
+		wizard.create(selectedConnection.getContainingComponentImpl());
 		if (wizard.open() == Window.OK) {
 //			filterImplementationLanguage = wizard.getFilterImplementationLanguage();
-			filterImplementationName = wizard.getFilterImplementationName();
-			if (filterImplementationName == "") {
-				filterImplementationName = FILTER_IMPL_NAME;
+			filterComponentName = wizard.getFilterComponentName();
+			if (filterComponentName == "") {
+				filterComponentName = FILTER_COMP_TYPE_NAME;
+			}
+			filterSubcomponentName = wizard.getFilterSubcomponentName();
+			if (filterSubcomponentName == "") {
+				filterSubcomponentName = FILTER_SUBCOMP_NAME;
 			}
 			filterDispatchProtocol = wizard.getDispatchProtocol();
+			filterPeriod = wizard.getPeriod();
+			inputPortName = wizard.getInputPortName();
+			if (inputPortName == "") {
+				inputPortName = FILTER_PORT_IN_NAME;
+			}
+			outputPortName = wizard.getOutputPortName();
+			if (outputPortName == "") {
+				outputPortName = FILTER_PORT_OUT_NAME;
+			}
 			logPortType = wizard.getLogPortType();
 			filterRequirement = wizard.getRequirement();
 			filterAgreeProperty = wizard.getAgreeProperty();
@@ -206,6 +227,9 @@ public class AddFilterHandler extends AadlHandler {
 			insertFilterComponent(uri);
 			BriefcaseNotifier.notify("StairCASE - Filter", "Filter added to model.");
 		}
+
+		// Save
+		saveChanges(false);
 
 		return;
 
@@ -272,7 +296,8 @@ public class AddFilterHandler extends AadlHandler {
 					.createOwnedClassifier(ComponentCreateHelper.getTypeClass(compCategory));
 
 			// Give it a unique name
-			filterType.setName(getUniqueName(FILTER_COMP_TYPE_NAME, true, pkgSection.getOwnedClassifiers()));
+			filterType.setName(
+					ModelTransformUtils.getUniqueName(filterComponentName, true, pkgSection.getOwnedClassifiers()));
 
 			// Create filter ports
 			final Port port = (Port) selectedConnection.getDestination().getConnectionEnd();
@@ -300,10 +325,10 @@ public class AddFilterHandler extends AadlHandler {
 			}
 
 			portIn.setIn(true);
-			portIn.setName(FILTER_PORT_IN_NAME);
+			portIn.setName(inputPortName);
 
 			portOut.setOut(true);
-			portOut.setName(FILTER_PORT_OUT_NAME);
+			portOut.setName(outputPortName);
 
 			// The data subcomponent type could be in a different package.
 			// Make sure to include it in the with clause
@@ -381,6 +406,17 @@ public class AddFilterHandler extends AadlHandler {
 				nv.setNamedValue(dispatchProtocolLit);
 				filterImpl.setPropertyValue(dispatchProtocolProp, nv);
 			}
+			// Period
+			if (!filterPeriod.isEmpty() && compCategory == ComponentCategory.THREAD) {
+				Property periodProp = GetProperties.lookupPropertyDefinition(filterImpl, TimingProperties._NAME, TimingProperties.PERIOD);
+				IntegerLiteral periodLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
+				UnitLiteral unit = Aadl2Factory.eINSTANCE.createUnitLiteral();
+				unit.setName(filterPeriod.replaceAll("[\\d]", "").trim());
+				periodLit.setBase(0);
+				periodLit.setValue(Long.parseLong(filterPeriod.replaceAll("[\\D]", "").trim()));
+				periodLit.setUnit(unit);
+				filterImpl.setPropertyValue(periodProp, periodLit);
+			}
 
 			// Add it to proper place (just below component type)
 			pkgSection.getOwnedClassifiers().move(1, pkgSection.getOwnedClassifiers().size() - 1);
@@ -391,14 +427,16 @@ public class AddFilterHandler extends AadlHandler {
 
 			// Give it a unique name
 			filterSubcomp
-					.setName(getUniqueName(filterImplementationName, true, containingImpl.getOwnedSubcomponents()));
+					.setName(ModelTransformUtils.getUniqueName(filterSubcomponentName, true,
+							containingImpl.getOwnedSubcomponents()));
 
 			ComponentCreateHelper.setSubcomponentType(filterSubcomp, filterImpl);
 
 			// Create connection from filter to connection destination
 			final PortConnection portConnOut = containingImpl.createOwnedPortConnection();
 			// Give it a unique name
-			portConnOut.setName(getUniqueName(CONNECTION_IMPL_NAME, false, containingImpl.getOwnedPortConnections()));
+			portConnOut.setName(ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false,
+					containingImpl.getOwnedPortConnections()));
 			portConnOut.setBidirectional(false);
 			final ConnectedElement filterOutSrc = portConnOut.createSource();
 			filterOutSrc.setContext(filterSubcomp);
@@ -427,7 +465,7 @@ public class AddFilterHandler extends AadlHandler {
 
 				// replace source out port name with filter out port name
 				agreeClauses = agreeClauses.replace(selectedConnection.getSource().getConnectionEnd().getName(),
-						FILTER_PORT_OUT_NAME);
+						outputPortName);
 
 				if (!filterAgreeProperty.isEmpty()) {
 					agreeClauses = agreeClauses + filterAgreeProperty + System.lineSeparator();
@@ -469,6 +507,7 @@ public class AddFilterHandler extends AadlHandler {
 		if (claim != null) {
 			RequirementsManager.getInstance().modifyRequirement(filterRequirement, claim);
 		}
+
 	}
 
 	private String getSourceName(URI uri) {
@@ -500,7 +539,11 @@ public class AddFilterHandler extends AadlHandler {
 					for (SpecStatement ss : agreeContract.getSpecs()) {
 						if (ss instanceof GuaranteeStatement) {
 							GuaranteeStatement gs = (GuaranteeStatement) ss;
-							String guarantee = "guarantee " + gs.getName().trim() + " \"" + gs.getStr().trim() + "\" : "
+							String guarantee = "guarantee ";
+							if (gs.getName() != null) {
+								guarantee += gs.getName().trim();
+							}
+							guarantee += " \"" + gs.getStr().trim() + "\" : "
 									+ unparser.unparseExpr(gs.getExpr(), "").trim() + ";";
 							guarantees.add(guarantee);
 						}

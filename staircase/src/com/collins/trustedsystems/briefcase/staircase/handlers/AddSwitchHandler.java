@@ -253,7 +253,8 @@ public class AddSwitchHandler extends AadlHandler {
 				.createOwnedClassifier(ComponentCreateHelper.getTypeClass(compCategory));
 
 		// Give it a unique name
-		switchType.setName(getUniqueName(SWITCH_COMP_TYPE_NAME, true, pkgSection.getOwnedClassifiers()));
+		switchType.setName(
+				ModelTransformUtils.getUniqueName(SWITCH_COMP_TYPE_NAME, true, pkgSection.getOwnedClassifiers()));
 
 		// Create switch input port(s)
 		Map<String, Port> inPorts = new HashMap<>();
@@ -383,7 +384,8 @@ public class AddSwitchHandler extends AadlHandler {
 		final Subcomponent switchSubcomp = ComponentCreateHelper.createOwnedSubcomponent(compImpl, compCategory);
 
 		// Give it a unique name
-		switchSubcomp.setName(getUniqueName(SWITCH_COMP_IMPL_NAME, true, compImpl.getOwnedSubcomponents()));
+		switchSubcomp.setName(
+				ModelTransformUtils.getUniqueName(SWITCH_COMP_IMPL_NAME, true, compImpl.getOwnedSubcomponents()));
 
 		ComponentCreateHelper.setSubcomponentType(switchSubcomp, switchImpl);
 
@@ -397,7 +399,8 @@ public class AddSwitchHandler extends AadlHandler {
 			Port p = ModelTransformUtils.getPort(compImpl, inPort.getValue());
 			final PortConnection portConnInput = compImpl.createOwnedPortConnection();
 			// Give it a unique name
-			portConnInput.setName(getUniqueName(CONNECTION_IMPL_NAME, false, compImpl.getOwnedPortConnections()));
+			portConnInput.setName(
+					ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false, compImpl.getOwnedPortConnections()));
 			portConnInput.setBidirectional(false);
 			final ConnectedElement switchInputSrc = portConnInput.createSource();
 			switchInputSrc.setContext(ModelTransformUtils.getSubcomponent(compImpl, inPort.getValue()));
@@ -411,7 +414,8 @@ public class AddSwitchHandler extends AadlHandler {
 		if (controlSrcPort != null && !controlSrcPort.isEmpty()) {
 			final PortConnection portConnControl = compImpl.createOwnedPortConnection();
 			// Give it a unique name
-			portConnControl.setName(getUniqueName(CONNECTION_IMPL_NAME, false, compImpl.getOwnedPortConnections()));
+			portConnControl.setName(
+					ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false, compImpl.getOwnedPortConnections()));
 			portConnControl.setBidirectional(false);
 			final ConnectedElement switchControlSrc = portConnControl.createSource();
 			switchControlSrc.setContext(ModelTransformUtils.getSubcomponent(compImpl, controlSrcPort));

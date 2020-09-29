@@ -49,15 +49,17 @@ import com.collins.trustedsystems.briefcase.staircase.requirements.AddVirtualiza
 import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsManager;
 import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
 import com.collins.trustedsystems.briefcase.staircase.utils.ComponentCreateHelper;
+import com.collins.trustedsystems.briefcase.staircase.utils.ModelTransformUtils;
 import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
 
 public class AddVirtualizationHandler extends AadlHandler {
 
-	static final String VIRTUAL_PROCESSOR_TYPE_NAME = "CASE_Virtual_Machine";
-	public static final String VIRTUAL_PROCESSOR_IMPL_NAME = "VM";
+	public static final String VIRTUAL_PROCESSOR_COMP_TYPE_NAME = "CASE_VirtualMachine";
+	public static final String VIRTUAL_PROCESSOR_SUBCOMP_NAME = "VirtualMachine";
 	static final String CONNECTION_IMPL_NAME = "c";
 
-	private String virtualProcessorName;
+	private String virtualProcessorComponentName;
+	private String virtualProcessorSubcomponentName;
 	private String virtualMachineOS;
 	private List<String> virtualizationComponents;
 	private String virtualizationRequirement;
@@ -112,22 +114,26 @@ public class AddVirtualizationHandler extends AadlHandler {
 			return;
 		}
 
-		// Open wizard to enter filter info
+		// Open wizard to enter virtualization info
 		final AddVirtualizationDialog wizard = new AddVirtualizationDialog(
 				PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell());
 
 		List<String> requirements = new ArrayList<>();
 		RequirementsManager.getInstance().getImportedRequirements().forEach(r -> requirements.add(r.getId()));
-		wizard.setSelectedSubcomponent(selectedSub);
+//		wizard.setSelectedSubcomponent(selectedSub);
 		wizard.setRequirements(requirements);
 
-		wizard.create();
+		wizard.create(selectedSub);
 		if (wizard.open() == Window.OK) {
-			virtualProcessorName = wizard.getVirtualProcessorName();
-			virtualMachineOS = wizard.getVirtualMachineOS();
-			if (virtualProcessorName == "") {
-				virtualProcessorName = VIRTUAL_PROCESSOR_IMPL_NAME;
+			virtualProcessorComponentName = wizard.getVirtualProcessorComponentName();
+			if (virtualProcessorComponentName.isEmpty()) {
+				virtualProcessorComponentName = VIRTUAL_PROCESSOR_COMP_TYPE_NAME;
 			}
+			virtualProcessorSubcomponentName = wizard.getVirtualProcessorSubcomponentName();
+			if (virtualProcessorSubcomponentName == "") {
+				virtualProcessorSubcomponentName = VIRTUAL_PROCESSOR_SUBCOMP_NAME;
+			}
+			virtualMachineOS = wizard.getVirtualMachineOS();
 			virtualizationComponents = wizard.getVirtualizationComponents();
 			virtualizationRequirement = wizard.getRequirement();
 		} else {
@@ -235,7 +241,8 @@ public class AddVirtualizationHandler extends AadlHandler {
 				VirtualProcessorType vpType = (VirtualProcessorType) pkgSection
 						.createOwnedClassifier(Aadl2Package.eINSTANCE.getVirtualProcessorType());
 				// Give it a unique name
-				vpType.setName(getUniqueName(VIRTUAL_PROCESSOR_TYPE_NAME, true, pkgSection.getOwnedClassifiers()));
+				vpType.setName(ModelTransformUtils.getUniqueName(virtualProcessorComponentName, true,
+						pkgSection.getOwnedClassifiers()));
 
 				// Put in the right place in the package (before the selected subcomponent's containing implementation)
 				pkgSection.getOwnedClassifiers().move(
@@ -271,7 +278,8 @@ public class AddVirtualizationHandler extends AadlHandler {
 						ComponentCategory.VIRTUAL_PROCESSOR);
 
 				// Give it a unique name
-				vpSub.setName(getUniqueName(virtualProcessorName, true, containingImpl.getOwnedSubcomponents()));
+				vpSub.setName(ModelTransformUtils.getUniqueName(virtualProcessorSubcomponentName, true,
+						containingImpl.getOwnedSubcomponents()));
 
 				// Set subcomponent type
 				vpSub.setVirtualProcessorSubcomponentType(vpImpl);

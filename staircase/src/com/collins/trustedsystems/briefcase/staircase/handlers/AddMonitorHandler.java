@@ -23,6 +23,7 @@ import org.osate.aadl2.DefaultAnnexSubclause;
 import org.osate.aadl2.EnumerationLiteral;
 import org.osate.aadl2.EventDataPort;
 import org.osate.aadl2.EventPort;
+import org.osate.aadl2.IntegerLiteral;
 import org.osate.aadl2.NamedValue;
 import org.osate.aadl2.PackageSection;
 import org.osate.aadl2.Port;
@@ -32,9 +33,11 @@ import org.osate.aadl2.Property;
 import org.osate.aadl2.PublicPackageSection;
 import org.osate.aadl2.Realization;
 import org.osate.aadl2.Subcomponent;
+import org.osate.aadl2.UnitLiteral;
 import org.osate.ui.dialogs.Dialog;
 import org.osate.xtext.aadl2.properties.util.GetProperties;
 import org.osate.xtext.aadl2.properties.util.ThreadProperties;
+import org.osate.xtext.aadl2.properties.util.TimingProperties;
 
 import com.collins.trustedsystems.briefcase.staircase.dialogs.AddMonitorDialog;
 import com.collins.trustedsystems.briefcase.staircase.requirements.AddMonitorClaim;
@@ -47,17 +50,19 @@ import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
 
 public class AddMonitorHandler extends AadlHandler {
 
-	static final String MONITOR_COMP_TYPE_NAME = "CASE_Monitor";
-	static final String MONITOR_OBSERVED_PORT_NAME = "observed";
-	static final String MONITOR_GATE_PORT_NAME = "output";
-	static final String MONITOR_ALERT_PORT_NAME = "alert";
+	public static final String MONITOR_COMP_TYPE_NAME = "CASE_Monitor";
+	static final String MONITOR_OBSERVED_PORT_NAME = "Observed";
+	static final String MONITOR_GATE_PORT_NAME = "Output";
+	static final String MONITOR_ALERT_PORT_NAME = "Alert";
 //	static final String MONITOR_ALERT_PORT_DATA_TYPE = "Base_Types::Boolean";
-	static final String MONITOR_RESET_PORT_NAME = "reset";
-	public static final String MONITOR_COMP_IMPL_NAME = "MON";
+	static final String MONITOR_RESET_PORT_NAME = "Reset";
+	public static final String MONITOR_SUBCOMP_NAME = "Monitor";
 	static final String CONNECTION_IMPL_NAME = "c";
 
-	private String monitorImplementationName;
+	private String monitorComponentName;
+	private String monitorSubcomponentName;
 	private String dispatchProtocol;
+	private String period;
 	private String resetPort;
 	private boolean latched;
 	private Map<String, String> referencePorts;
@@ -98,15 +103,20 @@ public class AddMonitorHandler extends AadlHandler {
 
 		wizard.setPorts(inports, outports);
 		wizard.setRequirements(requirements);
-		wizard.create();
+		wizard.create(selectedConnection.getContainingComponentImpl());
 		if (wizard.open() == Window.OK) {
-			monitorImplementationName = wizard.getMonitorImplementationName();
-			if (monitorImplementationName == "") {
-				monitorImplementationName = MONITOR_COMP_IMPL_NAME;
+			monitorComponentName = wizard.getMonitorComponentName();
+			if (monitorComponentName == "") {
+				monitorComponentName = MONITOR_COMP_TYPE_NAME;
+			}
+			monitorSubcomponentName = wizard.getMonitorSubcomponentName();
+			if (monitorSubcomponentName == "") {
+				monitorSubcomponentName = MONITOR_SUBCOMP_NAME;
 			}
 			resetPort = wizard.getResetPort();
 			latched = wizard.getLatched();
 			dispatchProtocol = wizard.getDispatchProtocol();
+			period = wizard.getPeriod();
 			referencePorts = wizard.getReferencePorts();
 			alertPort = wizard.getAlertPort();
 			observationGate = wizard.getObservationGate();
@@ -120,6 +130,9 @@ public class AddMonitorHandler extends AadlHandler {
 		insertMonitor(uri);
 
 		BriefcaseNotifier.notify("StairCASE - Monitor", "Monitor added to model.");
+
+		// Save
+		saveChanges(false);
 
 		return;
 
@@ -191,7 +204,8 @@ public class AddMonitorHandler extends AadlHandler {
 					.createOwnedClassifier(ComponentCreateHelper.getTypeClass(compCategory));
 
 			// Give it a unique name
-			monitorType.setName(getUniqueName(MONITOR_COMP_TYPE_NAME, true, pkgSection.getOwnedClassifiers()));
+			monitorType.setName(
+					ModelTransformUtils.getUniqueName(monitorComponentName, true, pkgSection.getOwnedClassifiers()));
 
 			// Create monitor observed port
 			Port portSrc = (Port) selectedConnection.getSource().getConnectionEnd();
@@ -357,6 +371,18 @@ public class AddMonitorHandler extends AadlHandler {
 				nv.setNamedValue(dispatchProtocolLit);
 				monitorImpl.setPropertyValue(dispatchProtocolProp, nv);
 			}
+			// Period
+			if (!period.isEmpty() && compCategory == ComponentCategory.THREAD) {
+				Property periodProp = GetProperties.lookupPropertyDefinition(monitorImpl, TimingProperties._NAME,
+						TimingProperties.PERIOD);
+				IntegerLiteral periodLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
+				UnitLiteral unit = Aadl2Factory.eINSTANCE.createUnitLiteral();
+				unit.setName(period.replaceAll("[\\d]", "").trim());
+				periodLit.setBase(0);
+				periodLit.setValue(Long.parseLong(period.replaceAll("[\\D]", "").trim()));
+				periodLit.setUnit(unit);
+				monitorImpl.setPropertyValue(periodProp, periodLit);
+			}
 
 			// Insert monitor subcomponent in containing component implementation
 			final Subcomponent monitorSubcomp = ComponentCreateHelper.createOwnedSubcomponent(containingImpl,
@@ -364,7 +390,8 @@ public class AddMonitorHandler extends AadlHandler {
 
 			// Give it a unique name
 			monitorSubcomp
-					.setName(getUniqueName(monitorImplementationName, true, containingImpl.getOwnedSubcomponents()));
+					.setName(ModelTransformUtils.getUniqueName(monitorSubcomponentName, true,
+							containingImpl.getOwnedSubcomponents()));
 
 			ComponentCreateHelper.setSubcomponentType(monitorSubcomp, monitorImpl);
 
@@ -372,7 +399,8 @@ public class AddMonitorHandler extends AadlHandler {
 			final PortConnection portConnObserved = containingImpl.createOwnedPortConnection();
 			// Give it a unique name
 			portConnObserved
-					.setName(getUniqueName(CONNECTION_IMPL_NAME, false, containingImpl.getOwnedPortConnections()));
+					.setName(ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false,
+							containingImpl.getOwnedPortConnections()));
 			portConnObserved.setBidirectional(false);
 			final ConnectedElement monitorObservedSrc = portConnObserved.createSource();
 			monitorObservedSrc.setContext(selectedConnection.getSource().getContext());
@@ -398,7 +426,8 @@ public class AddMonitorHandler extends AadlHandler {
 				for (Map.Entry<Port, Port> portEntry : monReferencePorts.entrySet()) {
 					final PortConnection portConnExpected = containingImpl.createOwnedPortConnection();
 					portConnExpected.setName(
-							getUniqueName(CONNECTION_IMPL_NAME, false, containingImpl.getOwnedPortConnections()));
+							ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false,
+									containingImpl.getOwnedPortConnections()));
 					portConnExpected.setBidirectional(false);
 					final ConnectedElement monitorExpectedSrc = portConnExpected.createSource();
 					monitorExpectedSrc.setContext(
@@ -421,7 +450,8 @@ public class AddMonitorHandler extends AadlHandler {
 			if (!alertPort.isEmpty()) {
 				portConnAlert = containingImpl.createOwnedPortConnection();
 				portConnAlert
-						.setName(getUniqueName(CONNECTION_IMPL_NAME, false, containingImpl.getOwnedPortConnections()));
+						.setName(ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false,
+								containingImpl.getOwnedPortConnections()));
 				portConnAlert.setBidirectional(false);
 				final ConnectedElement monitorAlertSrc = portConnAlert.createSource();
 				monitorAlertSrc.setContext(monitorSubcomp);
@@ -440,7 +470,8 @@ public class AddMonitorHandler extends AadlHandler {
 			if (resetPort != null && !resetPort.isEmpty()) {
 				final PortConnection portConnReset = containingImpl.createOwnedPortConnection();
 				portConnReset
-						.setName(getUniqueName(CONNECTION_IMPL_NAME, false, containingImpl.getOwnedPortConnections()));
+						.setName(ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false,
+								containingImpl.getOwnedPortConnections()));
 				portConnReset.setBidirectional(false);
 				final ConnectedElement monitorResetSrc = portConnReset.createSource();
 				monitorResetSrc.setContext(ModelTransformUtils.getSubcomponent(containingImpl, resetPort));
