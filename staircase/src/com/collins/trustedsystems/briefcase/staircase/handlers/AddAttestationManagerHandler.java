@@ -263,7 +263,7 @@ public class AddAttestationManagerHandler extends AadlHandler {
 				compCategory = ComponentCategory.THREAD;
 			}
 
-			// Create new comm driver component that extends the selected one
+			// Create new comm driver component that copies the selected one
 			final ComponentType commDriverType = (ComponentType) pkgSection
 					.createOwnedClassifier(ComponentCreateHelper.getTypeClass(compCategory));
 			// Give it a unique name
@@ -278,12 +278,16 @@ public class AddAttestationManagerHandler extends AadlHandler {
 					EventDataPort p = ComponentCreateHelper.createOwnedEventDataPort(commDriverType);
 					p.setName(f.getName());
 					p.setDataFeatureClassifier(((EventDataPort) f).getDataFeatureClassifier());
+					// Make sure data classifier package is in with clause
+					ModelTransformUtils.importContainingPackage(p.getDataFeatureClassifier(), pkgSection);
 					p.setIn(((EventDataPort) f).isIn());
 					p.setOut(((EventDataPort) f).isOut());
 				} else if (f instanceof DataPort) {
 					DataPort p = ComponentCreateHelper.createOwnedDataPort(commDriverType);
 					p.setName(f.getName());
 					p.setDataFeatureClassifier(((DataPort) f).getDataFeatureClassifier());
+					// Make sure data classifier package is in with clause
+					ModelTransformUtils.importContainingPackage(p.getDataFeatureClassifier(), pkgSection);
 					p.setIn(((DataPort) f).isIn());
 					p.setOut(((DataPort) f).isOut());
 				} else if (f instanceof EventPort) {
@@ -337,10 +341,62 @@ public class AddAttestationManagerHandler extends AadlHandler {
 			for (AnnexSubclause annexSubclause : commDriver.getComponentType().getOwnedAnnexSubclauses()) {
 				DefaultAnnexSubclause defaultAnnexSubclause = commDriverType.createOwnedAnnexSubclause();
 				defaultAnnexSubclause.setName(annexSubclause.getName());
-				defaultAnnexSubclause.setSourceText(((DefaultAnnexSubclause) annexSubclause).getSourceText());
-			}
+				if (annexSubclause.getName().equalsIgnoreCase("agree")) {
 
-			// TODO: AGREE?
+					// Make sure statement IDs are unique
+					List<String> specStatements = new ArrayList<>();
+					AgreeContractSubclause agreeContractSubclause = (AgreeContractSubclause) defaultAnnexSubclause
+							.getParsedAnnexSubclause();
+					AgreeAnnexUnparser unparser = new AgreeAnnexUnparser();
+					String specs = unparser.unparseContract((AgreeContract) agreeContractSubclause.getContract(), "");
+					for (String spec : specs.split(";")) {
+						String specType = "";
+						if (spec.trim().toLowerCase().startsWith("guarantee")) {
+							specType = "guarantee ";
+						} else if (spec.trim().toLowerCase().startsWith("assume")) {
+							specType = "assume ";
+						} else if (spec.trim().toLowerCase().startsWith("lemma")) {
+							specType = "lemma ";
+						} else if (spec.trim().toLowerCase().startsWith("assert")) {
+							specType = "assert ";
+						}
+						if (!specType.isEmpty()) {
+							String newSpec = "";
+							for (String line : spec.trim().concat(";").split(System.lineSeparator())) {
+								newSpec += line.trim() + " ";
+							}
+
+							String expr = newSpec.substring(newSpec.lastIndexOf(":") + 1, newSpec.lastIndexOf(";"))
+									.trim();
+							String desc = newSpec.substring(newSpec.indexOf("\""), newSpec.lastIndexOf("\"") + 1)
+									.trim();
+							String id = newSpec
+									.substring(newSpec.toLowerCase().indexOf(specType) + specType.length(),
+											newSpec.indexOf("\""))
+									.trim();
+
+							newSpec = specType;
+							// If spec has an ID, append a suffix to maintain ID uniqueness
+							if (!id.isEmpty()) {
+								newSpec += id + "_Attestation ";
+							}
+							newSpec += desc + " : " + expr + ";";
+
+							specStatements.add(newSpec);
+						} else {
+							specStatements.add(spec + ";");
+						}
+					}
+					String agreeClauses = "{**" + System.lineSeparator();
+					for (String s : specStatements) {
+						agreeClauses += s + System.lineSeparator();
+					}
+					agreeClauses += "**};";
+					defaultAnnexSubclause.setSourceText(agreeClauses);
+				} else {
+					defaultAnnexSubclause.setSourceText(((DefaultAnnexSubclause) annexSubclause).getSourceText());
+				}
+			}
 
 			// Put just above it's containing implementation
 			pkgSection.getOwnedClassifiers().move(getIndex(ci.getTypeName(), pkgSection.getOwnedClassifiers()),
@@ -354,7 +410,13 @@ public class AddAttestationManagerHandler extends AadlHandler {
 			final Realization commRealization = commDriverImpl.createOwnedRealization();
 			commRealization.setImplemented(commDriverType);
 
-			// TODO: Copy the subcomponents
+			// Copy the subcomponents
+			for (Subcomponent oldSubcomponent : commDriver.getComponentImplementation().getOwnedSubcomponents()) {
+				Subcomponent newSubcomponent = ComponentCreateHelper.createOwnedSubcomponent(commDriverImpl,
+						oldSubcomponent.getCategory());
+				newSubcomponent.setName(oldSubcomponent.getName());
+				copyPropertyAssociations(oldSubcomponent, newSubcomponent);
+			}
 			// TODO: Copy the connections
 
 			// Copy the properties
@@ -796,8 +858,8 @@ public class AddAttestationManagerHandler extends AadlHandler {
 										guarantee.indexOf("\"")).trim();
 
 								// If guarantee has an ID, append a suffix to maintain ID uniqueness
-								if (id.length() > 0) {
-									id = id.concat("_AttestationManager");
+								if (!id.isEmpty()) {
+									id += "_AttestationManager";
 								} else {
 									id = "Req" + gCtr++ + "_AttestationManager";
 								}
@@ -817,14 +879,14 @@ public class AddAttestationManagerHandler extends AadlHandler {
 				}
 
 				for (String guarantee : guarantees) {
-					agreeClauses = agreeClauses + guarantee + System.lineSeparator();
+					agreeClauses += guarantee + System.lineSeparator();
 				}
 
 				if (!attestationAgreeProperty.isEmpty()) {
-					agreeClauses = agreeClauses + attestationAgreeProperty + System.lineSeparator();
+					agreeClauses += attestationAgreeProperty + System.lineSeparator();
 				}
 
-				agreeClauses = agreeClauses + "**}";
+				agreeClauses += "**}";
 
 				// If agreeClauses is not an empty annex, print it
 				if (attestationAgreeProperty.length() > 0 || guarantees.size() > 0) {
@@ -924,6 +986,7 @@ public class AddAttestationManagerHandler extends AadlHandler {
 			PropertyAssociation propAssoc = EcoreUtil.copy(pa);
 			Property prop = propAssoc.getProperty();
 			if (to.acceptsProperty(prop)) {
+				// TODO: Make sure property package is in with clause?
 				to.getOwnedPropertyAssociations().add(propAssoc);
 			} else {
 				// TODO: log exception
