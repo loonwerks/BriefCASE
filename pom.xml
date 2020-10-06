@@ -352,7 +352,7 @@
 		<repository>
 			<id>Eclipse</id>
 			<layout>p2</layout>
-			<url>${eclipse.mirror}/releases/2019-03/</url>
+			<url>${eclipse.mirror}/releases/2020-03/</url>
 		</repository>
 		<repository>
 			<id>Formal-Methods-Workbench-Updates</id>
