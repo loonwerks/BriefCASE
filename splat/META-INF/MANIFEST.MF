@@ -5,7 +5,7 @@ Bundle-SymbolicName: com.collins.trustedsystems.briefcase.splat;singleton:=true
 Bundle-Version: 0.3.1.qualifier
 Automatic-Module-Name: com.collins.trustedsystems.briefcase.splat
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
-Require-Bundle: org.osate.aadl2;bundle-version="[2.0.0,4.0.0)",
+Require-Bundle: org.osate.aadl2;bundle-version="[4.0.0,5.0.0)",
  org.eclipse.xtext.ui,
  org.eclipse.ui.console,
  org.eclipse.ui.workbench,
@@ -14,7 +14,7 @@ Require-Bundle: org.osate.aadl2;bundle-version="[2.0.0,4.0.0)",
  com.collins.trustedsystems.briefcase.staircase,
  org.osate.aadl2.modelsupport;bundle-version="[2.0.0,5.0.0)",
  org.osate.ui;bundle-version="[2.0.0,5.0.0)",
- org.osate.xtext.aadl2.properties;bundle-version="[1.1.0,2.0.0)"
+ org.osate.xtext.aadl2.properties;bundle-version="[2.0.0,3.0.0)"
 Import-Package: org.eclipse.ui,
  org.eclipse.ui.part
 Bundle-ClassPath: .
