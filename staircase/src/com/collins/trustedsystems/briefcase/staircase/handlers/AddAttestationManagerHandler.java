@@ -345,7 +345,7 @@ public class AddAttestationManagerHandler extends AadlHandler {
 
 					// Make sure statement IDs are unique
 					List<String> specStatements = new ArrayList<>();
-					AgreeContractSubclause agreeContractSubclause = (AgreeContractSubclause) defaultAnnexSubclause
+					AgreeContractSubclause agreeContractSubclause = (AgreeContractSubclause) ((DefaultAnnexSubclause) annexSubclause)
 							.getParsedAnnexSubclause();
 					AgreeAnnexUnparser unparser = new AgreeAnnexUnparser();
 					String specs = unparser.unparseContract((AgreeContract) agreeContractSubclause.getContract(), "");
@@ -366,8 +366,10 @@ public class AddAttestationManagerHandler extends AadlHandler {
 								newSpec += line.trim() + " ";
 							}
 
-							String expr = newSpec.substring(newSpec.lastIndexOf(":") + 1, newSpec.lastIndexOf(";"))
+							String expr = newSpec.substring(newSpec.lastIndexOf("\"") + 1, newSpec.lastIndexOf(";"))
 									.trim();
+							// get rid of : delimiter
+							expr = expr.substring(1).trim();
 							String desc = newSpec.substring(newSpec.indexOf("\""), newSpec.lastIndexOf("\"") + 1)
 									.trim();
 							String id = newSpec
@@ -383,7 +385,7 @@ public class AddAttestationManagerHandler extends AadlHandler {
 							newSpec += desc + " : " + expr + ";";
 
 							specStatements.add(newSpec);
-						} else {
+						} else if (!spec.trim().isEmpty()) {
 							specStatements.add(spec + ";");
 						}
 					}
@@ -391,7 +393,7 @@ public class AddAttestationManagerHandler extends AadlHandler {
 					for (String s : specStatements) {
 						agreeClauses += s + System.lineSeparator();
 					}
-					agreeClauses += "**};";
+					agreeClauses += "**}";
 					defaultAnnexSubclause.setSourceText(agreeClauses);
 				} else {
 					defaultAnnexSubclause.setSourceText(((DefaultAnnexSubclause) annexSubclause).getSourceText());
