@@ -28,9 +28,11 @@ import org.osate.aadl2.EventPort;
 import org.osate.aadl2.Feature;
 import org.osate.aadl2.IntegerLiteral;
 import org.osate.aadl2.PortCategory;
+import org.osate.aadl2.ProcessImplementation;
 import org.osate.aadl2.Property;
 import org.osate.aadl2.PropertyExpression;
 import org.osate.aadl2.Subcomponent;
+import org.osate.aadl2.ThreadGroupImplementation;
 import org.osate.aadl2.modelsupport.scoping.Aadl2GlobalScopeUtil;
 import org.osate.aadl2.modelsupport.util.AadlUtil;
 import org.osate.ui.dialogs.Dialog;
@@ -144,7 +146,9 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 		createCacheTimeoutField(container);
 		createCacheSizeField(container);
 		createIdListDataTypeField(container);
-		createDispatchProtocolField(container);
+		if (context instanceof ProcessImplementation || context instanceof ThreadGroupImplementation) {
+			createDispatchProtocolField(container);
+		}
 		createLogPortField(container);
 		createRequirementField(container);
 		if (attestationManager == null) {

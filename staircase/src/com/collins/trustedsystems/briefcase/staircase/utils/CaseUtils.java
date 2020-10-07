@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.emf.common.util.URI;
@@ -26,8 +27,8 @@ public class CaseUtils {
 	public static final String CASE_MODEL_TRANSFORMATIONS_NAME = "CASE_Model_Transformations";
 	public static final String CASE_MODEL_TRANSFORMATIONS_FILE = CASE_MODEL_TRANSFORMATIONS_NAME + ".aadl";
 	public static final String CASE_REQUIREMENTS_NAME = "CASE_Requirements";
-	public static final String CASE_REQUIREMENTS_FILE = CASE_REQUIREMENTS_NAME + ".aadl";
-//	public static final String CASE_REQUIREMENTS_DATABASE_FILE = "CASE_Requirements_Database.json";
+	public static final String CASE_REQUIREMENTS_DIR = "Requirements/";
+	public static final String CASE_REQUIREMENTS_FILE = CASE_REQUIREMENTS_DIR + CASE_REQUIREMENTS_NAME + ".aadl";
 	public static final String CASE_REQUIREMENTS_DATABASE_FILE = ".reqdb";
 
 
@@ -137,6 +138,19 @@ public class CaseUtils {
 
 		final IFile caseReqFile = TraverseProject.getCurrentProject().getFile(CASE_REQUIREMENTS_FILE);
 		if (!caseReqFile.exists()) {
+
+			// Create Requirements directory, if it doesn't exist
+			IFolder reqFolder = TraverseProject.getCurrentProject().getFolder(CASE_REQUIREMENTS_DIR);
+			if (!reqFolder.exists()) {
+				try {
+					reqFolder.create(false, true, new NullProgressMonitor());
+				} catch (CoreException e) {
+					System.out.println("CASE_Requirements package not created successfully.");
+					e.printStackTrace();
+					return null;
+				}
+			}
+
 			String newline = System.lineSeparator();
 			String tab = "\t";
 			String contents = "package CASE_Requirements" + newline + "private" + newline + tab
@@ -145,7 +159,9 @@ public class CaseUtils {
 			try {
 				caseReqFile.create(source, false, new NullProgressMonitor());
 			} catch (CoreException e) {
+				System.out.println("CASE_Requirements package not created successfully.");
 				e.printStackTrace();
+				return null;
 			}
 		}
 

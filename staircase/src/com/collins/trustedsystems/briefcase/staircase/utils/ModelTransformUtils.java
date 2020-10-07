@@ -5,11 +5,16 @@ import java.util.Collection;
 import java.util.List;
 import java.util.TreeSet;
 
+import org.eclipse.emf.ecore.EObject;
+import org.osate.aadl2.AadlPackage;
 import org.osate.aadl2.ComponentImplementation;
 import org.osate.aadl2.Feature;
+import org.osate.aadl2.ModelUnit;
 import org.osate.aadl2.NamedElement;
+import org.osate.aadl2.PackageSection;
 import org.osate.aadl2.Port;
 import org.osate.aadl2.Subcomponent;
+import org.osate.aadl2.modelsupport.util.AadlUtil;
 
 public class ModelTransformUtils {
 
@@ -156,6 +161,34 @@ public class ModelTransformUtils {
 		} while (!done);
 
 		return newIdentifier;
+	}
+
+	/**
+	 * Adds the containing package of the specified object to the specified package section's with clause if it isn't already present
+	 * @param obj - Object whose containing package needs to be imported
+	 * @param pkgSection - Package Section
+	 */
+	public static void importContainingPackage(EObject obj, PackageSection pkgSection) {
+
+		AadlPackage pkg = AadlUtil.getContainingPackage(obj);
+		if (pkg == null) {
+			return;
+		}
+		// Don't add the with clause if it is for the current package
+		AadlPackage thisPkg = AadlUtil.getContainingPackage(pkgSection);
+		if (thisPkg == null || pkg.getName().equalsIgnoreCase(thisPkg.getName())) {
+			return;
+		}
+		boolean pkgFound = false;
+		for (ModelUnit mu : pkgSection.getImportedUnits()) {
+			if (mu.getName().equalsIgnoreCase(pkg.getName())) {
+				pkgFound = true;
+				break;
+			}
+		}
+		if (!pkgFound) {
+			pkgSection.getImportedUnits().add(pkg);
+		}
 	}
 
 	/**
