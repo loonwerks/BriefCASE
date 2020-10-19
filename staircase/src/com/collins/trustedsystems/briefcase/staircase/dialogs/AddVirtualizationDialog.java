@@ -239,10 +239,14 @@ public class AddVirtualizationDialog extends TitleAreaDialog {
 		virtualMachineOS = txtVirtualMachineOS.getText();
 
 		// Subcomponents to virtualize
-		subcomponents = subcomponentSelector.getContents();
-		if (subcomponents.isEmpty()) {
-			Dialog.showError("Add Virtualization", "No subcomponents have been selected to virtualize.");
-			return false;
+		if (subcomponentSelector == null) {
+			subcomponents.add(this.subcomponent.getName());
+		} else {
+			subcomponents = subcomponentSelector.getContents();
+			if (subcomponents.isEmpty()) {
+				Dialog.showError("Add Virtualization", "No subcomponents have been selected to virtualize.");
+				return false;
+			}
 		}
 
 		// Requirement
