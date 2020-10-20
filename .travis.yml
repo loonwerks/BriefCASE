@@ -21,6 +21,10 @@ env:
   - DISPLAY=:99.0
   - secure: Cnl2GVnijXN53cSMgRnoblpS+HfAGHBmBR8goLD0yqlkBKp1KyUIxjb0s37HXCP/rFQxVj5Z18EqioavfYpHQXUlG3zcda4Xc3/GtsdVCemY24PmFc1a+voLDU8b5hWY5V1M+s/KomQbmZxAHVzJu5Cc7CHJxodY1iSp1i6/E81lOoMqJUWcOo6dEbTiep3Q5XzvLktGdrSYZ+lU6bA2PvFc34rRKU+UkcYh/+Y7DefJ82ooGm+SSj375bGNiwTTteCLz0gz9G/xyKnZKjsXuyI6hd7sWiDy90Ja8GFeYzS/UJ7I08zPCgis+TucVvvMWi/xLTJKk6+NwtC5itgL8JW48YnLXx7gRDezoXA70YDK4OOA8oOW+XzJsDsG1l0N2X9JsIzAetu87y9u4PTGtbo7Ba2wAb5aeF2NP4EZg3s9uveYP+hvptrIcBt77Nhkk1+7VzXjGZtpJBzCAxpWYuXits5meLFA8tO/MRAjS9Uu74UVyleijv2owiZuHTq/AExhlJdSKfCQfTSTNiQL2EDIvFvqbeozR9fhxtQYYrzoAOu0v7Y0IcHQlGLNududqXhnegY6VObY1QZLQhIALlBRkKEiHEaXdY1z0L+sp8DdtKalJBif+iznLk3XyJHXZMDJpcvOr7G1+WKNNKg2J9bCPIOihG94YbkBSI7o+9M=
 
+branches:
+  except:
+  - master-support-osate-2.9.0
+
 before_install:
 - pip3 install --user --upgrade setuptools
 - pip3 install --user boto3 GitPython github3.py mako pandocfilters
