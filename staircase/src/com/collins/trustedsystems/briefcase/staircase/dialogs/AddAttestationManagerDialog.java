@@ -59,7 +59,7 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 	private List<Button> btnDispatchProtocol = new ArrayList<>();
 	private List<Button> btnLogPortType = new ArrayList<>();
 	private Combo cboRequirement;
-	private Button btnPropagateGuarantees;
+//	private Button btnPropagateGuarantees;
 	private Text txtAgreeProperty;
 	private String attestationManagerComponentName;
 	private String attestationGateComponentName;
@@ -73,7 +73,7 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 	private String dispatchProtocol = "";
 	private PortCategory logPortType = null;
 	private String requirement;
-	private boolean propagateGuarantees;
+//	private boolean propagateGuarantees;
 	private String commDriver = "";
 	private List<String> requirements = new ArrayList<>();
 	private String agreeProperty;
@@ -152,7 +152,7 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 		createLogPortField(container);
 		createRequirementField(container);
 		if (attestationManager == null) {
-			createPropagateGuaranteesField(container);
+//			createPropagateGuaranteesField(container);
 			createAgreePropertyField(container);
 		}
 
@@ -482,23 +482,23 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 
 	}
 
-	/**
-	 * Creates the input text field for specifying the guarantees to propagate
-	 * @param container
-	 */
-	private void createPropagateGuaranteesField(Composite container) {
-
-		Label lblPropagateGuaranteesField = new Label(container, SWT.NONE);
-		lblPropagateGuaranteesField.setText("Preserve Guarantees from " + commDriver);
-
-		GridData dataInfoField = new GridData();
-		dataInfoField.grabExcessHorizontalSpace = true;
-		dataInfoField.horizontalAlignment = SWT.FILL;
-		btnPropagateGuarantees = new Button(container, SWT.CHECK);
-		btnPropagateGuarantees.setSelection(true);
-		btnPropagateGuarantees.setLayoutData(dataInfoField);
-
-	}
+//	/**
+//	 * Creates the input text field for specifying the guarantees to propagate
+//	 * @param container
+//	 */
+//	private void createPropagateGuaranteesField(Composite container) {
+//
+//		Label lblPropagateGuaranteesField = new Label(container, SWT.NONE);
+//		lblPropagateGuaranteesField.setText("Preserve Guarantees from " + commDriver);
+//
+//		GridData dataInfoField = new GridData();
+//		dataInfoField.grabExcessHorizontalSpace = true;
+//		dataInfoField.horizontalAlignment = SWT.FILL;
+//		btnPropagateGuarantees = new Button(container, SWT.CHECK);
+//		btnPropagateGuarantees.setSelection(true);
+//		btnPropagateGuarantees.setLayoutData(dataInfoField);
+//
+//	}
 
 	/**
 	 * Creates the input text field for specifying the attestation agree property
@@ -659,7 +659,7 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 		}
 		if (attestationManager == null) {
 			agreeProperty = txtAgreeProperty.getText();
-			propagateGuarantees = btnPropagateGuarantees.getSelection();
+//			propagateGuarantees = btnPropagateGuarantees.getSelection();
 		}
 		return true;
 	}
@@ -708,9 +708,9 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 		return logPortType;
 	}
 
-	public boolean getPropagateGuarantees() {
-		return propagateGuarantees;
-	}
+//	public boolean getPropagateGuarantees() {
+//		return propagateGuarantees;
+//	}
 
 	public String getRequirement() {
 		return requirement;

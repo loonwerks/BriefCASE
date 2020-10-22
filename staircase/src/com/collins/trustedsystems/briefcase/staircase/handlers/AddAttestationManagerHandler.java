@@ -89,7 +89,7 @@ public class AddAttestationManagerHandler extends AadlHandler {
 	private String idListDataType;
 	private PortCategory logPortType;
 	private String attestationRequirement;
-	private boolean propagateGuarantees;
+//	private boolean propagateGuarantees;
 	private String attestationAgreeProperty;
 
 	@Override
@@ -156,7 +156,7 @@ public class AddAttestationManagerHandler extends AadlHandler {
 			idListDataType = wizard.getIdListDataType();
 			logPortType = wizard.getLogPortType();
 			attestationRequirement = wizard.getRequirement();
-			propagateGuarantees = wizard.getPropagateGuarantees();
+//			propagateGuarantees = wizard.getPropagateGuarantees();
 			attestationAgreeProperty = wizard.getAgreeProperty();
 		} else {
 			return;
@@ -217,8 +217,8 @@ public class AddAttestationManagerHandler extends AadlHandler {
 
 			// Retrieve the model object to modify
 			Subcomponent commDriver = (Subcomponent) resource.getEObject(uri.fragment());
-			// Get comm driver component type
-			ComponentType selectedCommDriverType = commDriver.getComponentType();
+//			// Get comm driver component type
+//			ComponentType selectedCommDriverType = commDriver.getComponentType();
 			// Get containing component implementation
 			ComponentImplementation ci = commDriver.getContainingComponentImpl();
 
@@ -827,62 +827,63 @@ public class AddAttestationManagerHandler extends AadlHandler {
 			}
 
 			// Propagate Agree Guarantees from comm driver, if there are any
-			if (attestationAgreeProperty.length() > 0 || propagateGuarantees) {
+			if (attestationAgreeProperty.length() > 0) {
+//			if (attestationAgreeProperty.length() > 0 || propagateGuarantees) {
 
 				String agreeClauses = "{**" + System.lineSeparator();
 
-				// Get guarantees from comm driver
-				List<String> guarantees = new ArrayList<>();
-				for (AnnexSubclause annexSubclause : selectedCommDriverType.getOwnedAnnexSubclauses()) {
-					// Get the Agree annex
-					if (annexSubclause.getName().equalsIgnoreCase("agree")) {
-						DefaultAnnexSubclause annexSubclauseImpl = (DefaultAnnexSubclause) annexSubclause;
-						// See if the agree annex contains guarantee statements
-						AgreeContractSubclause agreeContract = (AgreeContractSubclause) annexSubclauseImpl
-								.getParsedAnnexSubclause();
-						AgreeAnnexUnparser unparser = new AgreeAnnexUnparser();
-						// TODO: use unparser to unparse just guarantee statements
-						String specs = unparser.unparseContract((AgreeContract) agreeContract.getContract(), "");
-						int gCtr = 1;
-						for (String spec : specs.split(";")) {
-							if (spec.trim().toLowerCase().startsWith("guarantee")) {
-								String guarantee = "";
-								for (String line : spec.trim().concat(";").split(System.lineSeparator())) {
-									guarantee += line.trim() + " ";
-								}
-
-								String expr = guarantee
-										.substring(guarantee.lastIndexOf(":") + 1, guarantee.lastIndexOf(";")).trim();
-								String desc = guarantee
-										.substring(guarantee.indexOf("\""), guarantee.lastIndexOf("\"") + 1).trim();
-								String id = guarantee.substring(
-										guarantee.toLowerCase().indexOf("guarantee ") + "guarantee ".length(),
-										guarantee.indexOf("\"")).trim();
-
-								// If guarantee has an ID, append a suffix to maintain ID uniqueness
-								if (!id.isEmpty()) {
-									id += "_AttestationManager";
-								} else {
-									id = "Req" + gCtr++ + "_AttestationManager";
-								}
-
-								// Replace comm driver out port name with attestation manager out port name
-								for (Feature feature : selectedCommDriverType.getOwnedFeatures()) {
-									expr = expr.replace(feature.getName(), feature.getName() + "_out");
-								}
-
-								guarantee = "guarantee " + id + " " + desc + " : " + expr + ";";
-
-								guarantees.add(guarantee);
-							}
-						}
-						break;
-					}
-				}
-
-				for (String guarantee : guarantees) {
-					agreeClauses += guarantee + System.lineSeparator();
-				}
+//				// Get guarantees from comm driver
+//				List<String> guarantees = new ArrayList<>();
+//				for (AnnexSubclause annexSubclause : selectedCommDriverType.getOwnedAnnexSubclauses()) {
+//					// Get the Agree annex
+//					if (annexSubclause.getName().equalsIgnoreCase("agree")) {
+//						DefaultAnnexSubclause annexSubclauseImpl = (DefaultAnnexSubclause) annexSubclause;
+//						// See if the agree annex contains guarantee statements
+//						AgreeContractSubclause agreeContract = (AgreeContractSubclause) annexSubclauseImpl
+//								.getParsedAnnexSubclause();
+//						AgreeAnnexUnparser unparser = new AgreeAnnexUnparser();
+//						// TODO: use unparser to unparse just guarantee statements
+//						String specs = unparser.unparseContract((AgreeContract) agreeContract.getContract(), "");
+//						int gCtr = 1;
+//						for (String spec : specs.split(";")) {
+//							if (spec.trim().toLowerCase().startsWith("guarantee")) {
+//								String guarantee = "";
+//								for (String line : spec.trim().concat(";").split(System.lineSeparator())) {
+//									guarantee += line.trim() + " ";
+//								}
+//
+//								String expr = guarantee
+//										.substring(guarantee.lastIndexOf(":") + 1, guarantee.lastIndexOf(";")).trim();
+//								String desc = guarantee
+//										.substring(guarantee.indexOf("\""), guarantee.lastIndexOf("\"") + 1).trim();
+//								String id = guarantee.substring(
+//										guarantee.toLowerCase().indexOf("guarantee ") + "guarantee ".length(),
+//										guarantee.indexOf("\"")).trim();
+//
+//								// If guarantee has an ID, append a suffix to maintain ID uniqueness
+//								if (!id.isEmpty()) {
+//									id += "_AttestationManager";
+//								} else {
+//									id = "Req" + gCtr++ + "_AttestationManager";
+//								}
+//
+//								// Replace comm driver out port name with attestation manager out port name
+//								for (Feature feature : selectedCommDriverType.getOwnedFeatures()) {
+//									expr = expr.replace(feature.getName(), feature.getName() + "_out");
+//								}
+//
+//								guarantee = "guarantee " + id + " " + desc + " : " + expr + ";";
+//
+//								guarantees.add(guarantee);
+//							}
+//						}
+//						break;
+//					}
+//				}
+//
+//				for (String guarantee : guarantees) {
+//					agreeClauses += guarantee + System.lineSeparator();
+//				}
 
 				if (!attestationAgreeProperty.isEmpty()) {
 					agreeClauses += attestationAgreeProperty + System.lineSeparator();
@@ -891,7 +892,8 @@ public class AddAttestationManagerHandler extends AadlHandler {
 				agreeClauses += "**}";
 
 				// If agreeClauses is not an empty annex, print it
-				if (attestationAgreeProperty.length() > 0 || guarantees.size() > 0) {
+//				if (attestationAgreeProperty.length() > 0 || guarantees.size() > 0) {
+				if (attestationAgreeProperty.length() > 0) {
 					final DefaultAnnexSubclause annexSubclauseImpl = ComponentCreateHelper
 							.createOwnedAnnexSubclause(attestationGateType);
 					annexSubclauseImpl.setName("agree");
