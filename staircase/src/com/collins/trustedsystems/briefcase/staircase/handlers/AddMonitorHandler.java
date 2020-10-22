@@ -185,9 +185,13 @@ public class AddMonitorHandler extends AadlHandler {
 //				return null;
 //			}
 
-			// Figure out component type by looking at the component type of the destination component
-			ComponentCategory compCategory = ((Subcomponent) selectedConnection.getDestination().getContext())
-					.getCategory();
+			// Figure out component type by looking at the component type of the source or destination component
+			// Note that the context could be null if the connection end is the containing component
+			Subcomponent context = (Subcomponent) selectedConnection.getDestination().getContext();
+			if (context == null) {
+				context = (Subcomponent) selectedConnection.getSource().getContext();
+			}
+			ComponentCategory compCategory = context.getCategory();
 
 			// If the component type is a process, we will need to put a single thread inside.
 			// Per convention, we will attach all properties and contracts to the thread.
@@ -590,8 +594,15 @@ public class AddMonitorHandler extends AadlHandler {
 			if (!monitorRequirement.isEmpty()) {
 				CyberRequirement req = RequirementsManager.getInstance().getRequirement(monitorRequirement);
 				if (observationGate) {
-					return new AddMonitorClaim(req.getContext(), monitorSubcomp,
-							selectedConnection.getDestination().getContext().getName(),
+//					ConnectedElement gateConnElement = selectedConnection.getDestination();
+					String gateContextName = "";
+//					if (gateConnElement != null) {
+					if (selectedConnection.getDestination() != null
+							&& selectedConnection.getDestination().getContext() != null) {
+						gateContextName = selectedConnection.getDestination().getContext().getName();
+					}
+					return new AddMonitorClaim(req.getContext(), monitorSubcomp, gateContextName,
+//							selectedConnection.getDestination().getContext().getName(),
 						observedDataFeatureClassifier);
 				} else {
 					return new AddMonitorClaim(req.getContext(), monitorSubcomp);

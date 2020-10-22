@@ -43,7 +43,11 @@ public class AddMonitorClaim extends BuiltInClaim {
 		callArgs.add(Create.THIS(this.reqContext));
 		callArgs.add(Create.THIS(qualifiedName, this.monitor));
 		if (this.monitorType == ADD_MONITOR_GATE) {
-			callArgs.add(Create.THIS(qualifiedName + "." + this.gateContext));
+			if (gateContext.isEmpty()) {
+				callArgs.add(Create.THIS());
+			} else {
+				callArgs.add(Create.THIS(qualifiedName + "." + this.gateContext));
+			}
 			callArgs.add(Create.id(this.msgType));
 		}
 		return callArgs;
@@ -55,7 +59,12 @@ public class AddMonitorClaim extends BuiltInClaim {
 		defParams.add(Create.arg("comp_context", Create.baseType("component")));
 		defParams.add(Create.arg("monitor", Create.baseType("component")));
 		if (this.monitorType == ADD_MONITOR_GATE) {
-			defParams.add(Create.arg("gate_context", Create.baseType("component")));
+			String compContext = this.reqContext.substring(this.reqContext.lastIndexOf(".") + 1);
+			if (compContext.equalsIgnoreCase(this.gateContext)) {
+				defParams.add(Create.arg("comp_context", Create.baseType("component")));
+			} else {
+				defParams.add(Create.arg("gate_context", Create.baseType("component")));
+			}
 			defParams.add(Create.arg("message_type", Create.baseType("data")));
 		}
 		return defParams;

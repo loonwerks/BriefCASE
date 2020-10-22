@@ -55,7 +55,6 @@ public class AddFilterDialog extends TitleAreaDialog {
 	private Subcomponent compoundFilter = null;
 	private Text txtFilterComponentName;
 	private Text txtFilterSubcomponentName;
-//	private Text txtFilterImplementationLanguage;
 	private List<Button> btnDispatchProtocol = new ArrayList<>();
 	private Label lblPeriodField;
 	private Text txtPeriod;
@@ -63,9 +62,7 @@ public class AddFilterDialog extends TitleAreaDialog {
 	private Text txtOutputPortName;
 	private List<Button> btnLogPortType = new ArrayList<>();
 	private Combo cboFilterRequirement;
-	private Text txtAgreeProperty;
-	private List<Button> btnPropagateGuarantees = new ArrayList<>();
-//	private String filterImplementationLanguage = "";
+	private Text txtPolicy;
 	private String filterComponentName = "";
 	private String filterSubcomponentName = "";
 	private String filterDispatchProtocol = "";
@@ -74,13 +71,9 @@ public class AddFilterDialog extends TitleAreaDialog {
 	private String filterOutputPortName = "";
 	private PortCategory logPortType = null;
 	private String filterRequirement = "";
-	private String agreeProperty = "";
-	private String sourceName = "";
-	private List<String> sourceGuarantees = new ArrayList<>();
-	private List<String> propagateGuarantees = new ArrayList<>();
+	private String policy = "";
 	private List<String> requirements = new ArrayList<>();
 
-//	private static final String DEFAULT_IMPL_LANGUAGE = "CakeML";
 	private static final String NO_REQUIREMENT_SELECTED = "<No requirement selected>";
 
 	public AddFilterDialog(Shell parentShell) {
@@ -120,21 +113,14 @@ public class AddFilterDialog extends TitleAreaDialog {
 		// Add filter information fields
 		createFilterComponentNameField(container);
 		createFilterSubcomponentNameField(container);
-//		createImplementationLanguageField(container);
 		// Only display dispatch protocol if filter is a thread
 		if (context instanceof ProcessImplementation || context instanceof ThreadGroupImplementation) {
 			createDispatchProtocolField(container);
 		}
 		createPortNamesField(container);
 		createLogPortField(container);
-
 		createRequirementField(container);
-		if (compoundFilter == null) {
-			// Don't show the propagate guarantees field if we're adding a spec to an existing filter.
-			// Too complicated to figure out at this time
-			createGuaranteeSelectionField(container);
-		}
-		createAgreeField(container);
+		createPolicyField(container);
 
 		// set focus
 		parent.forceFocus();
@@ -186,34 +172,6 @@ public class AddFilterDialog extends TitleAreaDialog {
 		}
 	}
 
-//	/**
-//	 * Creates the input text field for specifying the filter implementation language
-//	 * @param container
-//	 */
-//	private void createImplementationLanguageField(Composite container) {
-//		Label lblImplLangField = new Label(container, SWT.NONE);
-//		lblImplLangField.setText("Filter implementation language");
-//
-//		GridData dataInfoField = new GridData();
-//		dataInfoField.grabExcessHorizontalSpace = true;
-//		dataInfoField.horizontalAlignment = SWT.FILL;
-//		txtFilterImplementationLanguage = new Text(container, SWT.BORDER);
-//		txtFilterImplementationLanguage.setLayoutData(dataInfoField);
-//		if (compoundFilter != null) {
-//			ComponentImplementation ci = compoundFilter.getComponentImplementation();
-//			EList<PropertyExpression> propVals = ci.getPropertyValues(CaseUtils.CASE_PROPSET_NAME, "COMP_IMPL");
-//			if (!propVals.isEmpty()) {
-//				// There should be only one property value
-//				PropertyExpression expr = propVals.get(0);
-//				if (expr instanceof StringLiteral) {
-//					txtFilterImplementationLanguage.setText(((StringLiteral) expr).getValue());
-//				}
-//			}
-//			txtFilterImplementationLanguage.setEnabled(false);
-//		} else {
-//			txtFilterImplementationLanguage.setText(DEFAULT_IMPL_LANGUAGE);
-//		}
-//	}
 
 	/**
 	 * Creates the input field for selecting the dispatch protocol
@@ -453,59 +411,16 @@ public class AddFilterDialog extends TitleAreaDialog {
 	 * Creates the input text field for specifying the filter agree property
 	 * @param container
 	 */
-	private void createAgreeField(Composite container) {
-		Label lblAgreeField = new Label(container, SWT.NONE);
-		lblAgreeField.setText("Filter AGREE contract");
+	private void createPolicyField(Composite container) {
+		Label lblPolicyField = new Label(container, SWT.NONE);
+		lblPolicyField.setText("Filter Policy");
 
 		GridData dataInfoField = new GridData(SWT.FILL, SWT.FILL, true, false);
-		txtAgreeProperty = new Text(container, SWT.BORDER);
-		txtAgreeProperty.setLayoutData(dataInfoField);
+		txtPolicy = new Text(container, SWT.BORDER);
+		txtPolicy.setLayoutData(dataInfoField);
 
 	}
 
-	/**
-	 * Creates the input text field for specifying the guarantees to propagate
-	 * @param container
-	 */
-	private void createGuaranteeSelectionField(Composite container) {
-
-		// Only create this field if there are guarantees in the source
-		// component to propagate
-		if (sourceGuarantees.size() > 0) {
-
-			Label lblSelectionField = new Label(container, SWT.NONE);
-			lblSelectionField.setText("Preserve Guarantees from " + sourceName);
-			lblSelectionField.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-
-			GridData selectionFieldLayoutData = new GridData(SWT.FILL, SWT.FILL, true, false);
-
-			Composite selectionField = new Composite(container, SWT.BORDER);
-			GridLayout layout = new GridLayout(1, true);
-			selectionField.setLayout(layout);
-			selectionField.setLayoutData(selectionFieldLayoutData);
-
-			btnPropagateGuarantees.clear();
-			for (String guarantee : sourceGuarantees) {
-				Button selectGuarantee = new Button(selectionField, SWT.CHECK);
-				String formattedGuarantee = guarantee.trim();
-				// Parse the requirement ID (could be empty)
-				formattedGuarantee = formattedGuarantee
-						.substring("guarantee ".length(), formattedGuarantee.indexOf("\"")).trim();
-				if (formattedGuarantee.isEmpty()) {
-//					formattedGuarantee = formattedGuarantee
-//						.substring(formattedGuarantee.indexOf("\"") + 1, formattedGuarantee.lastIndexOf("\""));
-					formattedGuarantee = "<unnamed guarantee>";
-				}
-				selectGuarantee.setToolTipText(guarantee.trim());
-				selectGuarantee.setText(formattedGuarantee.trim());
-				selectGuarantee.setSelection(true);
-				selectGuarantee.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false));
-
-				btnPropagateGuarantees.add(selectGuarantee);
-			}
-
-		}
-	}
 
 	/**
 	 * Saves information entered into the text fields.  This is needed because the
@@ -530,8 +445,6 @@ public class AddFilterDialog extends TitleAreaDialog {
 		} else {
 			filterComponentName = txtFilterComponentName.getText();
 		}
-
-//		filterImplementationLanguage = txtFilterImplementationLanguage.getText();
 
 		// Filter Subcomponent Instance Name
 		if (!txtFilterSubcomponentName.getText().isEmpty()
@@ -607,37 +520,8 @@ public class AddFilterDialog extends TitleAreaDialog {
 		}
 
 		// AGREE Property
-		agreeProperty = txtAgreeProperty.getText();
+		policy = txtPolicy.getText();
 
-		// Propagate Guarantees
-		propagateGuarantees.clear();
-		for (int i = 0; i < btnPropagateGuarantees.size(); i++) {
-			if (btnPropagateGuarantees.get(i).getSelection()) {
-
-				// TODO: Maybe look into passing actual guarantees instead of strings, that way we can parse/unparse it
-//				AgreeAnnexParser parser = new AgreeAnnexParser();
-//				NamedSpecStatement nss = parser.parseNamedSpecStatement(strSourceGuarantees.get(i));
-//				AgreeAnnexUnparser unparser = new AgreeAnnexUnparser();
-//				String expr = unparser.unparseExpr(nss.getExpr(), "").trim();
-//				String desc = nss.getStr().trim();
-//				String id = nss.getName();
-				// Parse the guarantee (for now do it the old fashioned way)
-				String guarantee = sourceGuarantees.get(i);
-				String expr = guarantee.substring(guarantee.lastIndexOf(":") + 1, guarantee.lastIndexOf(";")).trim();
-				String desc = guarantee.substring(guarantee.indexOf("\""), guarantee.lastIndexOf("\"") + 1).trim();
-				String id = guarantee.substring(guarantee.toLowerCase().indexOf("guarantee ") + "guarantee ".length(),
-						guarantee.indexOf("\"")).trim();
-
-				// If guarantee has an ID, append a suffix to maintain ID uniqueness
-				if (id.length() > 0) {
-					id = id.concat("_Filter");
-				} else {
-					id = "Filter";
-				}
-				guarantee = "guarantee " + id + " " + desc + " : " + expr + ";";
-				propagateGuarantees.add(guarantee);
-			}
-		}
 		return true;
 	}
 
@@ -681,22 +565,22 @@ public class AddFilterDialog extends TitleAreaDialog {
 		return logPortType;
 	}
 
-	public String getAgreeProperty() {
-		return agreeProperty;
+	public String getPolicy() {
+		return policy;
 	}
 
-	public List<String> getGuaranteeList() {
-		return propagateGuarantees;
-	}
+//	public List<String> getGuaranteeList() {
+//		return propagateGuarantees;
+//	}
 
 	public String getRequirement() {
 		return filterRequirement;
 	}
 
-	public void setGuaranteeList(String sourceName, List<String> guarantees) {
-		this.sourceName = sourceName;
-		this.sourceGuarantees = guarantees;
-	}
+//	public void setGuaranteeList(String sourceName, List<String> guarantees) {
+//		this.sourceName = sourceName;
+//		this.sourceGuarantees = guarantees;
+//	}
 
 	public void setRequirements(List<String> requirements) {
 		this.requirements = requirements;

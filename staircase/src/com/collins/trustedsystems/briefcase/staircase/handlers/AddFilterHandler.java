@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.util.EcoreUtil;
@@ -56,11 +55,6 @@ import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
 import com.collins.trustedsystems.briefcase.staircase.utils.ComponentCreateHelper;
 import com.collins.trustedsystems.briefcase.staircase.utils.ModelTransformUtils;
 import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
-import com.rockwellcollins.atc.agree.agree.AgreeContract;
-import com.rockwellcollins.atc.agree.agree.AgreeContractSubclause;
-import com.rockwellcollins.atc.agree.agree.GuaranteeStatement;
-import com.rockwellcollins.atc.agree.agree.SpecStatement;
-import com.rockwellcollins.atc.agree.unparsing.AgreeAnnexUnparser;
 import com.rockwellcollins.atc.resolute.resolute.FnCallExpr;
 import com.rockwellcollins.atc.resolute.resolute.FunctionDefinition;
 
@@ -75,15 +69,13 @@ public class AddFilterHandler extends AadlHandler {
 
 	private String filterComponentName;
 	private String filterSubcomponentName;
-//	private String filterImplementationLanguage;
 	private String filterDispatchProtocol;
 	private String filterPeriod;
 	private String inputPortName;
 	private String outputPortName;
 	private PortCategory logPortType;
 	private String filterRequirement;
-	private String filterAgreeProperty;
-	private List<String> propagatedGuarantees;
+	private String filterPolicy;
 
 	@Override
 	protected void runCommand(URI uri) {
@@ -160,7 +152,6 @@ public class AddFilterHandler extends AadlHandler {
 		final AddFilterDialog wizard = new AddFilterDialog(
 				PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell());
 
-		wizard.setGuaranteeList(getSourceName(uri), getSourceGuarantees(uri));
 		// Provide list of requirements so the user can choose which requirement is driving this
 		// model transformation.
 		// We only want to list requirements that aren't already associated with a filter transform
@@ -192,7 +183,6 @@ public class AddFilterHandler extends AadlHandler {
 		}
 		wizard.create(selectedConnection.getContainingComponentImpl());
 		if (wizard.open() == Window.OK) {
-//			filterImplementationLanguage = wizard.getFilterImplementationLanguage();
 			filterComponentName = wizard.getFilterComponentName();
 			if (filterComponentName == "") {
 				filterComponentName = FILTER_COMP_TYPE_NAME;
@@ -213,8 +203,7 @@ public class AddFilterHandler extends AadlHandler {
 			}
 			logPortType = wizard.getLogPortType();
 			filterRequirement = wizard.getRequirement();
-			filterAgreeProperty = wizard.getAgreeProperty();
-			propagatedGuarantees = wizard.getGuaranteeList();
+			filterPolicy = wizard.getPolicy();
 		} else {
 			return;
 		}
@@ -349,27 +338,28 @@ public class AddFilterHandler extends AadlHandler {
 			}
 
 			// Add filter properties
-			// CASE::COMP_TYPE Property
+			// CASE::Component_Type Property
 			if (!CasePropertyUtils.setCompType(filterType, "FILTER")) {
 //				return;
 			}
 
-			// CASE::COMP_SPEC property
+			// CASE::Component_Spec property
 			// Parse the ID from the Filter AGREE property
-			String filterPropId = "";
-			try {
-				filterPropId = filterAgreeProperty
-						.substring(filterAgreeProperty.toLowerCase().indexOf("guarantee ") + "guarantee ".length(),
-								filterAgreeProperty.indexOf("\""))
-						.trim();
-
-			} catch (IndexOutOfBoundsException e) {
-				if (!filterAgreeProperty.isEmpty()) {
-					// Agree property is malformed
-					Dialog.showWarning("Add Filter", "Filter AGREE statement is malformed.");
-				}
-//				return;
-			}
+			String filterPropId = "Req_" + filterType.getName();
+//			String filterPropId = "";
+//			try {
+//				filterPropId = filterPolicy
+//						.substring(filterPolicy.toLowerCase().indexOf("guarantee ") + "guarantee ".length(),
+//								filterPolicy.indexOf("\""))
+//						.trim();
+//
+//			} catch (IndexOutOfBoundsException e) {
+//				if (!filterPolicy.isEmpty()) {
+//					// Agree property is malformed
+//					Dialog.showWarning("Add Filter", "Filter AGREE statement is malformed.");
+//				}
+////				return;
+//			}
 
 			if (!filterPropId.isEmpty()) {
 				if (!CasePropertyUtils.setCompSpec(filterType, filterPropId)) {
@@ -389,7 +379,7 @@ public class AddFilterHandler extends AadlHandler {
 			final Realization r = filterImpl.createOwnedRealization();
 			r.setImplemented(filterType);
 
-//			// CASE::COMP_IMPL property
+//			// CASE::Component_Impl property
 //			if (!filterImplementationLanguage.isEmpty()) {
 //				if (!CaseUtils.addCasePropertyAssociation("COMP_IMPL", filterImplementationLanguage, filterImpl)) {
 ////					return;
@@ -455,36 +445,54 @@ public class AddFilterHandler extends AadlHandler {
 			selectedConnection.getDestination().setContext(filterSubcomp);
 			selectedConnection.getDestination().setConnectionEnd(portIn);
 
-			// Propagate Agree Guarantees from source component, if there are any
-			if (filterAgreeProperty.length() > 0 || propagatedGuarantees.size() > 0) {
-				String agreeClauses = "{**" + System.lineSeparator();
+			// AGREE
+			if (filterPolicy.length() > 0) {
 
-				for (String guarantee : propagatedGuarantees) {
-					agreeClauses = agreeClauses + guarantee + System.lineSeparator();
-				}
-
-				// replace source out port name with filter out port name
-				agreeClauses = agreeClauses.replace(selectedConnection.getSource().getConnectionEnd().getName(),
-						outputPortName);
-
-				if (!filterAgreeProperty.isEmpty()) {
-					agreeClauses = agreeClauses + filterAgreeProperty + System.lineSeparator();
-				}
-
-//				// Add message preservation spec
-//				if (filterPropId.isEmpty()) {
-//					filterPropId = "Filter";
+//				// AGREE
+//				String filterPolicyName = filterType.getName() + "_policy";
+//
+//				if (filterPolicy.isEmpty()) {
+//					filterPolicy = "false;";
+//				} else if (!filterPolicy.trim().endsWith(";")) {
+//					filterPolicy = filterPolicy.trim() + ";";
 //				}
-//				agreeClauses = agreeClauses + "guarantee " + filterPropId
-//						+ "_DataPreservation \"Preserve filter input data\" : filter_out = filter_in;"
-//						+ System.lineSeparator();
 
-				agreeClauses = agreeClauses + "**}";
+				StringBuilder agreeClauses = new StringBuilder();
+				agreeClauses.append("{**" + System.lineSeparator());
+
+//				// Filter policy
+//				agreeClauses.append("property " + filterPolicyName + " = " + filterPolicy + System.lineSeparator());
+//
+//				// Filter guarantee
+//				agreeClauses.append("guarantee " + filterPropId + " The filter output shall be well-formed :"
+//						+ System.lineSeparator());
+//
+//				if (portIn instanceof EventDataPort) {
+//					agreeClauses.append("not event(" + portOut.getName() + ") -> if event" + portIn.getName() + ") and "
+//							+ filterPolicyName + " then"
+//							+ System.lineSeparator());
+//					agreeClauses.append("event(" + portOut.getName() + ") and " + portOut.getName() + " = "
+//							+ portIn.getName() + System.lineSeparator());
+//					agreeClauses.append("else" + System.lineSeparator());
+//					agreeClauses.append("not event(" + portOut.getName() + ");" + System.lineSeparator());
+//				} else {
+//					agreeClauses.append("if " + filterPolicyName + " then" + System.lineSeparator());
+//					agreeClauses.append(portOut.getName() + " = " + portIn.getName() + System.lineSeparator());
+//					agreeClauses.append("else" + System.lineSeparator());
+//					// User will need to put an expression after the 'else'
+//					agreeClauses.append(";" + System.lineSeparator());
+//				}
+
+				if (!filterPolicy.isEmpty()) {
+					agreeClauses.append(filterPolicy + System.lineSeparator());
+				}
+
+				agreeClauses.append("**}");
 
 				final DefaultAnnexSubclause annexSubclauseImpl = ComponentCreateHelper
 						.createOwnedAnnexSubclause(filterType);
 				annexSubclauseImpl.setName("agree");
-				annexSubclauseImpl.setSourceText(agreeClauses);
+				annexSubclauseImpl.setSourceText(agreeClauses.toString());
 			}
 
 			if (isProcess) {
@@ -507,52 +515,6 @@ public class AddFilterHandler extends AadlHandler {
 		if (claim != null) {
 			RequirementsManager.getInstance().modifyRequirement(filterRequirement, claim);
 		}
-
-	}
-
-	private String getSourceName(URI uri) {
-		XtextEditor xtextEditor = EditorUtils.getActiveXtextEditor();
-
-		return xtextEditor.getDocument().readOnly(resource -> {
-			final PortConnection selectedConnection = (PortConnection) resource.getEObject(uri.fragment());
-			return selectedConnection.getSource().getConnectionEnd().getContainingClassifier().getName();
-		});
-	}
-
-	private List<String> getSourceGuarantees(URI uri) {
-		XtextEditor xtextEditor = EditorUtils.getActiveXtextEditor();
-
-		return xtextEditor.getDocument().readOnly(resource -> {
-			List<String> guarantees = new ArrayList<>();
-			final PortConnection selectedConnection = (PortConnection) resource.getEObject(uri.fragment());
-			final EList<AnnexSubclause> annexSubclauses = selectedConnection.getSource().getConnectionEnd()
-					.getContainingClassifier().getOwnedAnnexSubclauses();
-			for (AnnexSubclause annexSubclause : annexSubclauses) {
-				// See if there's an agree annex
-				DefaultAnnexSubclause defaultSubclause = (DefaultAnnexSubclause) annexSubclause;
-				if (defaultSubclause.getParsedAnnexSubclause() instanceof AgreeContractSubclause) {
-					// See if the agree annex contains guarantee statements
-					AgreeContractSubclause agreeSubclause = (AgreeContractSubclause) defaultSubclause
-							.getParsedAnnexSubclause();
-					AgreeAnnexUnparser unparser = new AgreeAnnexUnparser();
-					AgreeContract agreeContract = (AgreeContract) agreeSubclause.getContract();
-					for (SpecStatement ss : agreeContract.getSpecs()) {
-						if (ss instanceof GuaranteeStatement) {
-							GuaranteeStatement gs = (GuaranteeStatement) ss;
-							String guarantee = "guarantee ";
-							if (gs.getName() != null) {
-								guarantee += gs.getName().trim();
-							}
-							guarantee += " \"" + gs.getStr().trim() + "\" : "
-									+ unparser.unparseExpr(gs.getExpr(), "").trim() + ";";
-							guarantees.add(guarantee);
-						}
-					}
-					break;
-				}
-			}
-			return guarantees;
-		});
 
 	}
 
@@ -584,9 +546,9 @@ public class AddFilterHandler extends AadlHandler {
 
 			String filterPropId = "";
 			try {
-				filterPropId = filterAgreeProperty
-						.substring(filterAgreeProperty.toLowerCase().indexOf("guarantee ") + "guarantee ".length(),
-								filterAgreeProperty.indexOf("\""))
+				filterPropId = filterPolicy
+						.substring(filterPolicy.toLowerCase().indexOf("guarantee ") + "guarantee ".length(),
+								filterPolicy.indexOf("\""))
 						.trim();
 
 			} catch (IndexOutOfBoundsException e) {
@@ -624,7 +586,7 @@ public class AddFilterHandler extends AadlHandler {
 					break;
 				}
 			}
-			agreeClauses = agreeClauses.replace("**}", filterAgreeProperty + System.lineSeparator() + "**}");
+			agreeClauses = agreeClauses.replace("**}", filterPolicy + System.lineSeparator() + "**}");
 			DefaultAnnexSubclause newSubclause = (DefaultAnnexSubclause) filter
 					.createOwnedAnnexSubclause(Aadl2Package.eINSTANCE.getDefaultAnnexSubclause());
 			newSubclause.setName("agree");
