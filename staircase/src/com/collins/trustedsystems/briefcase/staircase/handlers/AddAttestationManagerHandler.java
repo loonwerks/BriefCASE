@@ -2,6 +2,7 @@ package com.collins.trustedsystems.briefcase.staircase.handlers;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
@@ -29,6 +30,7 @@ import org.osate.aadl2.EnumerationLiteral;
 import org.osate.aadl2.EventDataPort;
 import org.osate.aadl2.EventPort;
 import org.osate.aadl2.Feature;
+import org.osate.aadl2.IntegerLiteral;
 import org.osate.aadl2.NamedElement;
 import org.osate.aadl2.NamedValue;
 import org.osate.aadl2.PackageSection;
@@ -41,10 +43,12 @@ import org.osate.aadl2.PropertyAssociation;
 import org.osate.aadl2.PublicPackageSection;
 import org.osate.aadl2.Realization;
 import org.osate.aadl2.Subcomponent;
+import org.osate.aadl2.UnitLiteral;
 import org.osate.aadl2.modelsupport.scoping.Aadl2GlobalScopeUtil;
 import org.osate.ui.dialogs.Dialog;
 import org.osate.xtext.aadl2.properties.util.GetProperties;
 import org.osate.xtext.aadl2.properties.util.ThreadProperties;
+import org.osate.xtext.aadl2.properties.util.TimingProperties;
 
 import com.collins.trustedsystems.briefcase.staircase.dialogs.AddAttestationManagerDialog;
 import com.collins.trustedsystems.briefcase.staircase.requirements.AddAttestationManagerClaim;
@@ -67,7 +71,7 @@ public class AddAttestationManagerHandler extends AadlHandler {
 	static final String AM_RESPONSE_MSG_IMPL_NAME = "CASE_AttestationResponseMsg.Impl";
 	public static final String AM_COMP_TYPE_NAME = "CASE_AttestationManager";
 	public static final String AG_COMP_TYPE_NAME = "CASE_AttestationGate";
-	public static final String AM_LOG_PORT_NAME = "LogMessage";
+	public static final String LOG_PORT_NAME = "LogMessage";
 	static final String AM_PORT_ATTESTATION_REQUEST_NAME = "AttestationRequest";
 	static final String AM_PORT_ATTESTATION_RESPONSE_NAME = "AttestationResponse";
 	public static final String AM_PORT_TRUSTED_IDS_NAME = "TrustedIds";
@@ -81,16 +85,20 @@ public class AddAttestationManagerHandler extends AadlHandler {
 	private String attestationGateComponentName;
 	private String attestationManagerSubcomponentName;
 	private String attestationGateSubcomponentName;
-//	private String attestationManagerImplLanguage;
-//	private String attestationGateImplLanguage;
-	private String dispatchProtocol;
+	private String attestationManagerDispatchProtocol;
+	private String attestationManagerPeriod;
+	private String attestationGateDispatchProtocol;
+	private String attestationGatePeriod;
 	private long cacheTimeout;
 	private long cacheSize;
 	private String idListDataType;
-	private PortCategory logPortType;
+	private Map<String, List<String>> attestationGatePortNames;
+	private PortCategory attestationManagerLogPortType;
+	private PortCategory attestationGateLogPortType;
 	private String attestationRequirement;
 //	private boolean propagateGuarantees;
-	private String attestationAgreeProperty;
+	private String attestationManagerAgreeProperty;
+	private String attestationGateAgreeProperty;
 
 	@Override
 	protected void runCommand(URI uri) {
@@ -102,7 +110,7 @@ public class AddAttestationManagerHandler extends AadlHandler {
 			selectedSubcomponent = (Subcomponent) eObj;
 		} else {
 			Dialog.showError("Add Attestation",
-					"A communication driver subcomponent must be selected to add an attestation manager.");
+					"A communication driver subcomponent must be selected to add attestation.");
 			return;
 		}
 
@@ -148,16 +156,20 @@ public class AddAttestationManagerHandler extends AadlHandler {
 			if (attestationGateSubcomponentName.isEmpty()) {
 				attestationGateSubcomponentName = AG_SUBCOMP_NAME;
 			}
-//			attestationManagerImplLanguage = wizard.getAttestationManagerImplLanguage();
-//			attestationGateImplLanguage = wizard.getAttestationManagerImplLanguage();
-			dispatchProtocol = wizard.getDispatchProtocol();
+			attestationManagerDispatchProtocol = wizard.getMgrDispatchProtocol();
+			attestationManagerPeriod = wizard.getMgrPeriod();
+			attestationGateDispatchProtocol = wizard.getGateDispatchProtocol();
+			attestationGatePeriod = wizard.getGatePeriod();
 			cacheTimeout = wizard.getCacheTimeout();
 			cacheSize = wizard.getCacheSize();
 			idListDataType = wizard.getIdListDataType();
-			logPortType = wizard.getLogPortType();
+			attestationGatePortNames = wizard.getGatePortNames();
+			attestationManagerLogPortType = wizard.getMgrLogPortType();
+			attestationGateLogPortType = wizard.getGateLogPortType();
 			attestationRequirement = wizard.getRequirement();
 //			propagateGuarantees = wizard.getPropagateGuarantees();
-			attestationAgreeProperty = wizard.getAgreeProperty();
+			attestationManagerAgreeProperty = wizard.getMgrAgreeProperty();
+			attestationGateAgreeProperty = wizard.getGateAgreeProperty();
 		} else {
 			return;
 		}
@@ -479,17 +491,17 @@ public class AddAttestationManagerHandler extends AadlHandler {
 			amId.setOut(true);
 
 			// Create log port, if necessary
-			if (logPortType != null) {
+			if (attestationManagerLogPortType != null) {
 				Port logPort = null;
-				if (logPortType == PortCategory.EVENT) {
+				if (attestationManagerLogPortType == PortCategory.EVENT) {
 					logPort = ComponentCreateHelper.createOwnedEventPort(attestationManagerType);
-				} else if (logPortType == PortCategory.DATA) {
+				} else if (attestationManagerLogPortType == PortCategory.DATA) {
 					logPort = ComponentCreateHelper.createOwnedDataPort(attestationManagerType);
 				} else {
 					logPort = ComponentCreateHelper.createOwnedEventDataPort(attestationManagerType);
 				}
 				logPort.setOut(true);
-				logPort.setName(AM_LOG_PORT_NAME);
+				logPort.setName(LOG_PORT_NAME);
 			}
 
 
@@ -499,25 +511,25 @@ public class AddAttestationManagerHandler extends AadlHandler {
 //				return;
 			}
 
-//			// CASE_Properties::COMP_SPEC property
-//			// Parse the ID from the Attestation Manager AGREE property
-//			String attestationPropId = "";
-//			try {
-//				attestationPropId = attestationAgreeProperty
-//						.substring(attestationAgreeProperty.toLowerCase().indexOf("guarantee ") + "guarantee ".length(),
-//								attestationAgreeProperty.indexOf("\""))
-//						.trim();
-//			} catch (IndexOutOfBoundsException e) {
-//				if (!attestationAgreeProperty.isEmpty()) {
-//					// agree property is malformed, so leave blank
-//					Dialog.showWarning("Add Attestation Manager", "Attestation Manager AGREE statement is malformed.");
-//				}
-//			}
-//			if (!attestationPropId.isEmpty()) {
-//				if (!CasePropertyUtils.setCompSpec(attestationManagerType, attestationPropId)) {
-////					return;
-//				}
-//			}
+			// CASE_Properties::Component_Spec property
+			// Parse the ID from the Attestation Gate AGREE property
+			String attestationManagerPropId = "";
+			try {
+				attestationManagerPropId = attestationManagerAgreeProperty.substring(
+						attestationManagerAgreeProperty.toLowerCase().indexOf("guarantee ") + "guarantee ".length(),
+						attestationManagerAgreeProperty.indexOf("\"")).trim();
+			} catch (IndexOutOfBoundsException e) {
+				if (!attestationManagerAgreeProperty.isEmpty()) {
+					// agree property is malformed, so leave blank
+					Dialog.showWarning("Add Attestation", "Attestation Manager AGREE statement is malformed.");
+				}
+			}
+			if (!attestationManagerPropId.isEmpty()) {
+				if (!CasePropertyUtils.setCompSpec(attestationManagerType, attestationManagerPropId)) {
+//					return;
+				}
+			}
+
 
 			// Move attestation manager to top of file
 			pkgSection.getOwnedClassifiers().move(0, pkgSection.getOwnedClassifiers().size() - 1);
@@ -531,13 +543,6 @@ public class AddAttestationManagerHandler extends AadlHandler {
 
 			// Add it to proper place (just below component type)
 			pkgSection.getOwnedClassifiers().move(1, pkgSection.getOwnedClassifiers().size() - 1);
-
-//			// CASE_Properties::Component_Impl property
-//			if (!attestationManagerImplLanguage.isEmpty()) {
-//				if (!CasePropertyUtils.setCompImpl(attestationManagerImpl, attestationManagerImplLanguage)) {
-////					return;
-//				}
-//			}
 
 			// CASE_Properties::CACHE_TIMEOUT property
 			if (cacheTimeout > 0) {
@@ -554,14 +559,26 @@ public class AddAttestationManagerHandler extends AadlHandler {
 			}
 
 			// Dispatch protocol property
-			if (!dispatchProtocol.isEmpty() && compCategory == ComponentCategory.THREAD) {
+			if (!attestationManagerDispatchProtocol.isEmpty() && compCategory == ComponentCategory.THREAD) {
 				Property dispatchProtocolProp = GetProperties.lookupPropertyDefinition(attestationManagerImpl,
 						ThreadProperties._NAME, ThreadProperties.DISPATCH_PROTOCOL);
 				EnumerationLiteral dispatchProtocolLit = Aadl2Factory.eINSTANCE.createEnumerationLiteral();
-				dispatchProtocolLit.setName(dispatchProtocol);
+				dispatchProtocolLit.setName(attestationManagerDispatchProtocol);
 				NamedValue nv = Aadl2Factory.eINSTANCE.createNamedValue();
 				nv.setNamedValue(dispatchProtocolLit);
 				attestationManagerImpl.setPropertyValue(dispatchProtocolProp, nv);
+			}
+			// Period
+			if (!attestationManagerPeriod.isEmpty() && compCategory == ComponentCategory.THREAD) {
+				Property periodProp = GetProperties.lookupPropertyDefinition(attestationManagerImpl,
+						TimingProperties._NAME, TimingProperties.PERIOD);
+				IntegerLiteral periodLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
+				UnitLiteral unit = Aadl2Factory.eINSTANCE.createUnitLiteral();
+				unit.setName(attestationManagerPeriod.replaceAll("[\\d]", "").trim());
+				periodLit.setBase(0);
+				periodLit.setValue(Long.parseLong(attestationManagerPeriod.replaceAll("[\\D]", "").trim()));
+				periodLit.setUnit(unit);
+				attestationManagerImpl.setPropertyValue(periodProp, periodLit);
 			}
 
 			// Replace the comm driver with the extended comm driver
@@ -622,10 +639,16 @@ public class AddAttestationManagerHandler extends AadlHandler {
 					}
 
 					portIn.setIn(true);
-					portIn.setName(commPort.getName() + "_in");
-
 					portOut.setOut(true);
-					portOut.setName(commPort.getName() + "_out");
+
+					List<String> names = attestationGatePortNames.get(commPort.getName());
+					if (names != null) {
+						portIn.setName(names.get(0));
+						portOut.setName(names.get(1));
+					} else {
+						portIn.setName(commPort.getName() + "_in");
+						portOut.setName(commPort.getName() + "_out");
+					}
 
 					agPortNames.add(commPort.getName());
 					agPortTypes.add((DataImplementation) dataFeatureClassifier);
@@ -658,6 +681,20 @@ public class AddAttestationManagerHandler extends AadlHandler {
 			agId.setName(AM_PORT_TRUSTED_IDS_NAME);
 			agId.setIn(true);
 
+			// Create log port, if necessary
+			if (attestationGateLogPortType != null) {
+				Port logPort = null;
+				if (attestationGateLogPortType == PortCategory.EVENT) {
+					logPort = ComponentCreateHelper.createOwnedEventPort(attestationGateType);
+				} else if (attestationGateLogPortType == PortCategory.DATA) {
+					logPort = ComponentCreateHelper.createOwnedDataPort(attestationGateType);
+				} else {
+					logPort = ComponentCreateHelper.createOwnedEventDataPort(attestationGateType);
+				}
+				logPort.setOut(true);
+				logPort.setName(LOG_PORT_NAME);
+			}
+
 			// Add Attestation Gate properties
 			// CASE_Properties::Component_Type Property
 			if (!CasePropertyUtils.setCompType(attestationGateType, "SWITCH")) {
@@ -666,20 +703,20 @@ public class AddAttestationManagerHandler extends AadlHandler {
 
 			// CASE_Properties::Component_Spec property
 			// Parse the ID from the Attestation Gate AGREE property
-			String attestationPropId = "";
+			String attestationGatePropId = "";
 			try {
-				attestationPropId = attestationAgreeProperty
-						.substring(attestationAgreeProperty.toLowerCase().indexOf("guarantee ") + "guarantee ".length(),
-								attestationAgreeProperty.indexOf("\""))
+				attestationGatePropId = attestationGateAgreeProperty
+						.substring(attestationGateAgreeProperty.toLowerCase().indexOf("guarantee ")
+								+ "guarantee ".length(), attestationGateAgreeProperty.indexOf("\""))
 						.trim();
 			} catch (IndexOutOfBoundsException e) {
-				if (!attestationAgreeProperty.isEmpty()) {
+				if (!attestationGateAgreeProperty.isEmpty()) {
 					// agree property is malformed, so leave blank
-					Dialog.showWarning("Add Attestation", "Attestation AGREE statement is malformed.");
+					Dialog.showWarning("Add Attestation", "Attestation Gate AGREE statement is malformed.");
 				}
 			}
-			if (!attestationPropId.isEmpty()) {
-				if (!CasePropertyUtils.setCompSpec(attestationGateType, attestationPropId)) {
+			if (!attestationGatePropId.isEmpty()) {
+				if (!CasePropertyUtils.setCompSpec(attestationGateType, attestationGatePropId)) {
 //					return;
 				}
 			}
@@ -697,22 +734,27 @@ public class AddAttestationManagerHandler extends AadlHandler {
 			// Add it to proper place (just below component type)
 			pkgSection.getOwnedClassifiers().move(1, pkgSection.getOwnedClassifiers().size() - 1);
 
-//			// CASE_Properties::Component_Impl property
-//			if (!attestationGateImplLanguage.isEmpty()) {
-//				if (!CasePropertyUtils.setCompImpl(attestationGateImpl, attestationGateImplLanguage)) {
-////					return;
-//				}
-//			}
-
 			// Dispatch protocol property
-			if (!dispatchProtocol.isEmpty() && compCategory == ComponentCategory.THREAD) {
+			if (!attestationGateDispatchProtocol.isEmpty() && compCategory == ComponentCategory.THREAD) {
 				Property dispatchProtocolProp = GetProperties.lookupPropertyDefinition(attestationGateImpl,
 						ThreadProperties._NAME, ThreadProperties.DISPATCH_PROTOCOL);
 				EnumerationLiteral dispatchProtocolLit = Aadl2Factory.eINSTANCE.createEnumerationLiteral();
-				dispatchProtocolLit.setName(dispatchProtocol);
+				dispatchProtocolLit.setName(attestationGateDispatchProtocol);
 				NamedValue nv = Aadl2Factory.eINSTANCE.createNamedValue();
 				nv.setNamedValue(dispatchProtocolLit);
 				attestationGateImpl.setPropertyValue(dispatchProtocolProp, nv);
+			}
+			// Period
+			if (!attestationGatePeriod.isEmpty() && compCategory == ComponentCategory.THREAD) {
+				Property periodProp = GetProperties.lookupPropertyDefinition(attestationGateImpl,
+						TimingProperties._NAME, TimingProperties.PERIOD);
+				IntegerLiteral periodLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
+				UnitLiteral unit = Aadl2Factory.eINSTANCE.createUnitLiteral();
+				unit.setName(attestationGatePeriod.replaceAll("[\\d]", "").trim());
+				periodLit.setBase(0);
+				periodLit.setValue(Long.parseLong(attestationGatePeriod.replaceAll("[\\D]", "").trim()));
+				periodLit.setUnit(unit);
+				attestationGateImpl.setPropertyValue(periodProp, periodLit);
 			}
 
 			// Insert attestation gate in component implementation
@@ -826,8 +868,26 @@ public class AddAttestationManagerHandler extends AadlHandler {
 				idxOffset++;
 			}
 
-			// Propagate Agree Guarantees from comm driver, if there are any
-			if (attestationAgreeProperty.length() > 0) {
+			// Add AGREE statements
+			if (attestationManagerAgreeProperty.length() > 0) {
+				String agreeClauses = "{**" + System.lineSeparator();
+
+				if (!attestationManagerAgreeProperty.isEmpty()) {
+					agreeClauses += attestationManagerAgreeProperty + System.lineSeparator();
+				}
+
+				agreeClauses += "**}";
+
+				// If agreeClauses is not an empty annex, print it
+				if (attestationManagerAgreeProperty.length() > 0) {
+					final DefaultAnnexSubclause annexSubclauseImpl = ComponentCreateHelper
+							.createOwnedAnnexSubclause(attestationManagerType);
+					annexSubclauseImpl.setName("agree");
+					annexSubclauseImpl.setSourceText(agreeClauses);
+				}
+			}
+
+			if (attestationGateAgreeProperty.length() > 0) {
 //			if (attestationAgreeProperty.length() > 0 || propagateGuarantees) {
 
 				String agreeClauses = "{**" + System.lineSeparator();
@@ -885,15 +945,15 @@ public class AddAttestationManagerHandler extends AadlHandler {
 //					agreeClauses += guarantee + System.lineSeparator();
 //				}
 
-				if (!attestationAgreeProperty.isEmpty()) {
-					agreeClauses += attestationAgreeProperty + System.lineSeparator();
+				if (!attestationGateAgreeProperty.isEmpty()) {
+					agreeClauses += attestationGateAgreeProperty + System.lineSeparator();
 				}
 
 				agreeClauses += "**}";
 
 				// If agreeClauses is not an empty annex, print it
 //				if (attestationAgreeProperty.length() > 0 || guarantees.size() > 0) {
-				if (attestationAgreeProperty.length() > 0) {
+				if (attestationGateAgreeProperty.length() > 0) {
 					final DefaultAnnexSubclause annexSubclauseImpl = ComponentCreateHelper
 							.createOwnedAnnexSubclause(attestationGateType);
 					annexSubclauseImpl.setName("agree");
