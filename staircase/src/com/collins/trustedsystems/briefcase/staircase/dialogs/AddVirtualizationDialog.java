@@ -22,6 +22,7 @@ import org.osate.aadl2.Subcomponent;
 import org.osate.aadl2.modelsupport.util.AadlUtil;
 import org.osate.ui.dialogs.Dialog;
 
+import com.collins.trustedsystems.briefcase.staircase.dialogs.SubcomponentSelector.CheckStyle;
 import com.collins.trustedsystems.briefcase.staircase.handlers.AddVirtualizationHandler;
 import com.collins.trustedsystems.briefcase.staircase.utils.ModelTransformUtils;
 
@@ -157,7 +158,7 @@ public class AddVirtualizationDialog extends TitleAreaDialog {
 		lblComponentSelectionField.setText("Components in VM");
 		lblComponentSelectionField.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, true));
 
-		subcomponentSelector = new SubcomponentSelector(container, this.subcomponent);
+		subcomponentSelector = new SubcomponentSelector(container, this.subcomponent, CheckStyle.MULTIPLE);
 
 	}
 

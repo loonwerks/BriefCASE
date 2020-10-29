@@ -398,7 +398,7 @@ public class AddAttestationManagerHandler extends AadlHandler {
 
 							specStatements.add(newSpec);
 						} else if (!spec.trim().isEmpty()) {
-							specStatements.add(spec + ";");
+							specStatements.add(spec.trim() + ";");
 						}
 					}
 					String agreeClauses = "{**" + System.lineSeparator();
@@ -470,21 +470,24 @@ public class AddAttestationManagerHandler extends AadlHandler {
 
 			// Create Trusted ID list port
 			final EventDataPort amId = ComponentCreateHelper.createOwnedEventDataPort(attestationManagerType);
+			DataSubcomponentType idDataFeatureClassifier = null;
 			if (!idListDataType.isEmpty()) {
-				DataSubcomponentType dataFeatureClassifier = Aadl2GlobalScopeUtil.get(ci,
+				idDataFeatureClassifier = Aadl2GlobalScopeUtil.get(ci,
 						Aadl2Package.eINSTANCE.getDataSubcomponentType(), idListDataType);
-				if (dataFeatureClassifier == null) {
+				if (idDataFeatureClassifier == null) {
 					// Aadl2GlobalScopeUtil.get() doesn't seem to find elements in current package
 					for (Classifier c : pkgSection.getOwnedClassifiers()) {
 						if (c.getQualifiedName().equalsIgnoreCase(idListDataType)
 								&& c instanceof DataSubcomponentType) {
-							dataFeatureClassifier = (DataSubcomponentType) c;
+							idDataFeatureClassifier = (DataSubcomponentType) c;
 							break;
 						}
 					}
+				} else {
+					importContainingPackage(idDataFeatureClassifier, pkgSection);
 				}
-				if (dataFeatureClassifier != null) {
-					amId.setDataFeatureClassifier(dataFeatureClassifier);
+				if (idDataFeatureClassifier != null) {
+					amId.setDataFeatureClassifier(idDataFeatureClassifier);
 				}
 			}
 			amId.setName(AM_PORT_TRUSTED_IDS_NAME);
@@ -661,22 +664,8 @@ public class AddAttestationManagerHandler extends AadlHandler {
 			}
 			// Create Trusted ID List port
 			final EventDataPort agId = ComponentCreateHelper.createOwnedEventDataPort(attestationGateType);
-			if (!idListDataType.isEmpty()) {
-				DataSubcomponentType dataFeatureClassifier = Aadl2GlobalScopeUtil.get(ci,
-						Aadl2Package.eINSTANCE.getDataSubcomponentType(), idListDataType);
-				if (dataFeatureClassifier == null) {
-					// Aadl2GlobalScopeUtil.get() doesn't seem to find elements in current package
-					for (Classifier c : pkgSection.getOwnedClassifiers()) {
-						if (c.getQualifiedName().equalsIgnoreCase(idListDataType)
-								&& c instanceof DataSubcomponentType) {
-							dataFeatureClassifier = (DataSubcomponentType) c;
-							break;
-						}
-					}
-				}
-				if (dataFeatureClassifier != null) {
-					agId.setDataFeatureClassifier(dataFeatureClassifier);
-				}
+			if (!idListDataType.isEmpty() && idDataFeatureClassifier != null) {
+				agId.setDataFeatureClassifier(idDataFeatureClassifier);
 			}
 			agId.setName(AM_PORT_TRUSTED_IDS_NAME);
 			agId.setIn(true);
