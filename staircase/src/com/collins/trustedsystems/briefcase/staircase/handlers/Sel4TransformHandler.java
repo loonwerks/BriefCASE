@@ -99,6 +99,8 @@ public class Sel4TransformHandler extends AadlHandler {
 			return;
 		}
 
+		SystemImplementation si = (SystemImplementation) selectedSubcomponent.getContainingComponentImpl();
+
 //		// Get processor bindings for all software subcomponent descendants of selected system implementation
 //		// Neither the processor or the process need to be immediate subcomponents of the selected system (they can be nested descendants)
 //		processorBindings = getProcessorBindings(
@@ -135,7 +137,7 @@ public class Sel4TransformHandler extends AadlHandler {
 		// Each thread group becomes a system
 		// Re-wire everything appropriately
 
-		Subcomponent sub = getSubcomponentFromPath(selectedSubcomponent.getContainingComponentImpl(), sel4Subcomponent);
+		Subcomponent sub = getSubcomponentFromPath(si, sel4Subcomponent);
 		if (sub == null) {
 			Dialog.showError("seL4 Transform", "Selected subcomponent " + sel4Subcomponent + " cannot be found.");
 			return;
@@ -165,10 +167,9 @@ public class Sel4TransformHandler extends AadlHandler {
 		if (!sel4Requirement.isEmpty()) {
 			CyberRequirement req = RequirementsManager.getInstance().getRequirement(sel4Requirement);
 			Sel4TransformClaim claim = new Sel4TransformClaim(req.getContext(),
-					selectedSubcomponent.getContainingComponentImpl(), sel4Subcomponent);
+					si, sel4Subcomponent);
 //			Sel4TransformClaim claim = new Sel4TransformClaim(req.getContext(),
-//					selectedSubcomponent.getContainingComponentImpl(),
-//					sel4Processor, sel4Subcomponent);
+//					si, sel4Processor, sel4Subcomponent);
 			RequirementsManager.getInstance().modifyRequirement(sel4Requirement, claim);
 		}
 
