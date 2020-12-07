@@ -44,6 +44,7 @@ import com.collins.trustedsystems.briefcase.staircase.requirements.AddMonitorCla
 import com.collins.trustedsystems.briefcase.staircase.requirements.CyberRequirement;
 import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsManager;
 import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
+import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils.MITIGATION_TYPE;
 import com.collins.trustedsystems.briefcase.staircase.utils.ComponentCreateHelper;
 import com.collins.trustedsystems.briefcase.staircase.utils.ModelTransformUtils;
 import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
@@ -327,7 +328,8 @@ public class AddMonitorHandler extends AadlHandler {
 
 			// Add monitor properties
 			// CASE_Properties::Component_Type Property
-			if (!CasePropertyUtils.setCompType(monitorType, "MONITOR")) {
+//			if (!CasePropertyUtils.setCompType(monitorType, "MONITOR")) {
+			if (!CasePropertyUtils.setMitigationType(monitorType, MITIGATION_TYPE.MONITOR)) {
 //				return null;
 			}
 

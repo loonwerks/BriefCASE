@@ -55,6 +55,7 @@ import com.collins.trustedsystems.briefcase.staircase.requirements.AddAttestatio
 import com.collins.trustedsystems.briefcase.staircase.requirements.CyberRequirement;
 import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsManager;
 import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
+import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils.MITIGATION_TYPE;
 import com.collins.trustedsystems.briefcase.staircase.utils.CaseUtils;
 import com.collins.trustedsystems.briefcase.staircase.utils.ComponentCreateHelper;
 import com.collins.trustedsystems.briefcase.staircase.utils.ModelTransformUtils;
@@ -115,7 +116,8 @@ public class AddAttestationManagerHandler extends AadlHandler {
 		}
 
 		// Check if selected subcomponent is a comm driver
-		if (!CasePropertyUtils.isCompType(selectedSubcomponent.getClassifier(), "COMM_DRIVER")) {
+//		if (!CasePropertyUtils.isCompType(selectedSubcomponent.getClassifier(), "COMM_DRIVER")) {
+		if (!CasePropertyUtils.isCommDriver(selectedSubcomponent.getClassifier())) {
 			Dialog.showError("Add Attestation",
 					"A communication driver subcomponent must be selected to add attestation.");
 			return;
@@ -510,7 +512,8 @@ public class AddAttestationManagerHandler extends AadlHandler {
 
 			// Add Attestation Manager properties
 			// CASE_Properties::Component_Type Property
-			if (!CasePropertyUtils.setCompType(attestationManagerType, "ATTESTATION")) {
+//			if (!CasePropertyUtils.setCompType(attestationManagerType, "ATTESTATION")) {
+			if (!CasePropertyUtils.setMitigationType(attestationManagerType, MITIGATION_TYPE.ATTESTATION)) {
 //				return;
 			}
 
@@ -686,7 +689,8 @@ public class AddAttestationManagerHandler extends AadlHandler {
 
 			// Add Attestation Gate properties
 			// CASE_Properties::Component_Type Property
-			if (!CasePropertyUtils.setCompType(attestationGateType, "SWITCH")) {
+//			if (!CasePropertyUtils.setCompType(attestationGateType, "SWITCH")) {
+			if (!CasePropertyUtils.setMitigationType(attestationGateType, MITIGATION_TYPE.GATE)) {
 //				return;
 			}
 
@@ -990,7 +994,8 @@ public class AddAttestationManagerHandler extends AadlHandler {
 				if (ne instanceof Subcomponent) {
 					dst = (Subcomponent) ne;
 					// Check if it's an attestation manager
-					if (CasePropertyUtils.isCompType(dst.getClassifier(), "ATTESTATION")) {
+//					if (CasePropertyUtils.isCompType(dst.getClassifier(), "ATTESTATION")) {
+					if (CasePropertyUtils.hasMitigationType(dst.getClassifier(), MITIGATION_TYPE.ATTESTATION)) {
 						return dst;
 					}
 				}
@@ -1015,7 +1020,8 @@ public class AddAttestationManagerHandler extends AadlHandler {
 				if (ne instanceof Subcomponent) {
 					dst = (Subcomponent) ne;
 					// Check if it's a switch
-					if (CasePropertyUtils.isCompType(dst.getClassifier(), "SWITCH")) {
+//					if (CasePropertyUtils.isCompType(dst.getClassifier(), "SWITCH")) {
+					if (CasePropertyUtils.hasMitigationType(dst.getClassifier(), MITIGATION_TYPE.GATE)) {
 						return dst;
 					}
 				}

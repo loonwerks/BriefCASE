@@ -52,6 +52,7 @@ import com.collins.trustedsystems.briefcase.staircase.requirements.AddFilterClai
 import com.collins.trustedsystems.briefcase.staircase.requirements.CyberRequirement;
 import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsManager;
 import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
+import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils.MITIGATION_TYPE;
 import com.collins.trustedsystems.briefcase.staircase.utils.ComponentCreateHelper;
 import com.collins.trustedsystems.briefcase.staircase.utils.ModelTransformUtils;
 import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
@@ -108,7 +109,8 @@ public class AddFilterHandler extends AadlHandler {
 
 		boolean createCompoundFilter = false;
 		PortConnection filterOutConn = null;
-		if (CasePropertyUtils.isCompType(subcomponent.getClassifier(), "FILTER")) {
+//		if (CasePropertyUtils.isCompType(subcomponent.getClassifier(), "FILTER")) {
+		if (CasePropertyUtils.hasMitigationType(subcomponent.getClassifier(), MITIGATION_TYPE.FILTER)) {
 			if (Dialog.askQuestion("Add Filter",
 					"A CASE Filter cannot be inserted next to another CASE Filter.  Would you like to add a new filter specification to the existing filter instead?")) {
 
@@ -136,7 +138,8 @@ public class AddFilterHandler extends AadlHandler {
 
 			subcomponent = (Subcomponent) selectedConnection.getSource().getContext();
 			if (subcomponent != null) {
-				if (CasePropertyUtils.isCompType(subcomponent.getClassifier(), "FILTER")) {
+//				if (CasePropertyUtils.isCompType(subcomponent.getClassifier(), "FILTER")) {
+				if (CasePropertyUtils.hasMitigationType(subcomponent.getClassifier(), MITIGATION_TYPE.FILTER)) {
 					if (Dialog.askQuestion("Add Filter",
 							"A CASE Filter cannot be inserted next to another CASE Filter.  Would you like to add a new filter specification to the existing filter instead?")) {
 						createCompoundFilter = true;
@@ -339,7 +342,8 @@ public class AddFilterHandler extends AadlHandler {
 
 			// Add filter properties
 			// CASE::Component_Type Property
-			if (!CasePropertyUtils.setCompType(filterType, "FILTER")) {
+//			if (!CasePropertyUtils.setCompType(filterType, "FILTER")) {
+			if (!CasePropertyUtils.setMitigationType(filterType, MITIGATION_TYPE.FILTER)) {
 //				return;
 			}
 

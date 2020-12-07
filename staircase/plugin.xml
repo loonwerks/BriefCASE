@@ -466,12 +466,14 @@
    </extension>
    <extension
          point="org.osate.pluginsupport.aadlcontribution">
-<!--
       <aadlcontribution
             file="resources/CASE_Properties.aadl"
             id="com.collins.trustedsystems.briefcase.staircase.aadlcontribution.casepropset">
       </aadlcontribution>
--->
+      <aadlcontribution
+            file="resources/CASE_Model_Transformations.aadl"
+            id="com.collins.trustedsystems.briefcase.staircase.aadlcontribution.casemodeltransformations">
+      </aadlcontribution>
    </extension>
 
 </plugin>

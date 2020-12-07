@@ -1,85 +1,295 @@
 property set CASE_Properties is
 
-	-- CASE MODEL TRANSFORMATION TYPE
-	COMP_TYPE: enumeration (FILTER, ATTESTATION, MONITOR, VIRTUAL_MACHINE, COMM_DRIVER, SEL4, SWITCH, SAFETY_CONTROLLER) applies to (system, process, thread, device, abstract, virtual processor);
-	-- IMPLEMENTATION LANGUAGE OF THIS COMPONENT (eg CakeML)
-	COMP_IMPL: aadlstring applies to (system, process, thread, abstract);
-	-- ID OF THE AGREE CONTRACT THAT SPECIFIES THIS COMPONENT
-	COMP_SPEC: list of aadlstring applies to (system, process, thread, abstract);
+	-- Implementation language for this component (eg c, CakeML)
+	Component_Impl: aadlstring applies to (thread, thread group, process, system);
 	
-	-- REMOTE ATTESTATION
-	CACHE_TIMEOUT: aadlinteger applies to (system, process, thread, device, abstract);
-	CACHE_SIZE: aadlinteger applies to (system, process, thread, device, abstract);
+	-- ID of the AGREE CONTRACT that specifies the behavior of this component
+	Component_Spec: list of aadlstring applies to (thread, thread group, process, system);
 	
-	-- COMMUNICATION MODALITY
-	COMM_MODALITY: enumeration (RF, WIFI, WIRED_ETHERNET, SERIAL, BT) applies to (bus);
+	-- Remote Attestation
+	Cache_Timeout: time applies to (thread, thread group, process, system);
+	
+	-- Future iterations of this property set will likely change this property (The name or removed entirely)
+	Cache_Size: aadlinteger applies to (thread, thread group, process, system);
+	
+	-- Communication Driver
+	Comm_Driver: aadlboolean applies to (thread, thread group, process, system);
+	
+	-- Communication Modality
+	Comm_Modality: inherit enumeration (RF, WIFI, WIRED_ETHERNET, SERIAL, BT, 
+		NFC) applies to (bus, virtual bus);
 
-	-- Runtime
-	OS: aadlstring applies to (processor, virtual processor);
-
---TO DO:  Need additional pattern types such as clearing keys or erasing the directory of a file system
-	-- A system has the potential to have multiple subcomponents that require to be zeroized,
-	-- each with different hold up and pattern requirements to accomplish the sanitization of memory in a device
-	Zeroize_Pattern_Type : type enumeration (overwrite_zeros, NIST_800_88_clear, NIST_800_88_purge, other);
-
-	Zeroize_Enabled_Type : type record (
-   		Holdup_Required  : time;
-   		Zeroize_Pattern : CASE_Properties::Zeroize_Pattern_Type;
-   		Implemented : aadlboolean;);
-
-	Element_Zeroized : CASE_Properties::Zeroize_Enabled_Type applies to (memory, system, processor, device);
+	-- Operating system being used
+	OS: enumeration(seL4, Linux, Android, LynxOS, other) applies to (processor, 
+		virtual processor);
 	
-	-- BOUNDARY INDICATIONS
-	
-	-- BOUNDARY is deprecated (see TRUST_BOUNDARY and SECURITY_PERIMETER)
-	BOUNDARY: list of enumeration(TRUSTED, SECURE, PHYSICAL, UNCONTROLLED) applies to (system, abstract, thread, thread group, process, sub program, sub program group, processor, virtual processor, memory, bus, virtual bus, device);
-	
-	--Apply the trust boundary at the edge a system, device, or process should treat as 
-	--having an untrusted system, device, or process interfacing to it.  A trust boundary
-	--may or may not align with the security perimeter.  The security perimeter defines
-	--the physical security boundaries of the system
-	TRUST_BOUNDARY: aadlboolean applies to (system, abstract, thread, thread group, process, sub program, sub program group, processor, virtual processor, memory, bus, virtual bus, device, data);
-	SECURITY_PERIMETER: aadlboolean applies to (system, abstract, thread, thread group, process, sub program, sub program group, processor, virtual processor, memory, bus, virtual bus, device, data);
-	
-	-- CIA
-	CONFIDENTIALITY: enumeration (HIGH, MEDIUM, LOW) applies to (system, process, thread, device, abstract, virtual processor);
-	INTEGRITY: enumeration (HIGH, MEDIUM, LOW) applies to (system, process, thread, device, abstract, virtual processor);
-	AVAILABILITY: enumeration (HIGH, MEDIUM, LOW) applies to  (system, process, thread, device, abstract, virtual processor);
+	-- Monitor
+	Monitor_Latched: aadlboolean applies to (system, process, thread, 
+		thread group, device, abstract);
 
---	--IDENTIFICATION OF ASSET BEING PROTECTED
---	--Identification of components requiring or providing protection
-	Protection_Level_Type : type enumeration (MINIMAL, NOMINAL, ROBUST);
-	Protection_Type : type enumeration (INFOSEC, PHYS_ACCESS, TECHNOLOGY);
-	Protection_Tactic_Type: type enumeration (DESTRUCTIVE, ENCRYPTION, MILS_SEPARATION, MLS_SEPARATION,GUARD,other);
+	-------------------------------------------------------------
+	-------------------------------------------------------------
+	-------------Trust level properties -------------------------
+	-------------------------------------------------------------
+	
+	-- Expect this property to be deprecated and replaced by the "CIA" trust 
+	-- levels below in the future.
+	Trust_Level: aadlinteger 0 .. 100 applies to (subcomponent, connection, 
+		port, feature, System, Thread, Thread Group, Process, Subprogram, 
+		processor, virtual processor, Memory, device, bus, virtual bus); 
+	
+	-------------------------------------------------------------	
+	-- Trust levels are divided into 3 sub-categories (Confidentiality, Integrity and Availability)
+	
+	-- For all the following trust levels, 0 indicates "no trust" (or unknown), 
+	-- and 100 indicates "complete trust". Omitting a trust_level will 
+	-- implicitly indicate an unknown trust level (which is the same as no trust)
+	-- There is no implied inheritance of trust between a subcomponent and its 
+	-- parent component or vice versa. (A subcomponent could have more or less 
+	-- trust than the parent.)
+
+    --------------------------------------
+	---- Confidentiality Trust Levels ----
+	--------------------------------------
+	
+	-- Trust_Level_Confidentiality:
+	--
+	-- For a trust level (Confidentiality) on a component (subcomponent, 
+	-- System, Thread, Thread Group,  Process, Subprogram, processor, 
+	-- virtual processor, Memory, device):
+	
+	-- '100' indicates gaining access to the component would not threaten 
+	-- confidentiality of data contained within that component. Also indicates
+	-- data confidentiality is protected between a component's input features 
+	-- to its output features.  
+	-- '0' indicates no trust that the component would maintain the 
+	-- confidentiality of data contained within it, should an attacker gain 
+	-- access to the component
+	
+	-- For a trust level (Confidentiality) on a Bus (Bus, Virtual Bus):
+	
+	-- '100' indicates gaining physical access to the bus would not threaten 
+	-- confidentiality of data on that bus.  Data confidentiality is maintained
+	-- in transit on that bus
+	-- '0' indicates no trust that data in transit on the bus would maintain 
+	-- any confidentiality should an attacker gain access to the bus.	
+	Trust_Level_Confidentiality: aadlinteger 0 .. 100 applies to (subcomponent, 
+		System, Thread, Thread Group, Process, Subprogram, processor, 
+		virtual processor, Memory, device, bus, virtual bus);
+
+	-- Requires_Data_Confidentiality:
+	
+	-- Indicates if a component/bus/connection *requires* data confidentiality.
+	-- Used in combination with the 'Trust_Level_Confidentiality' property.
+	-- Not all components require confidentiality, so this property should be 
+	-- used to indicate where components require confidentiality. Unlike the 
+	-- Trust_Level_Confidentiality property, "Connection" is included in this 
+	-- property.  As a connection is generally a logical element, including 
+	-- 'Connection' allows the system modeler to enter in the "intent" of the 
+	-- design i.e. This connection "should" be confidential.  Expectation is
+	-- that this property is used in combination with the binding of a 
+	-- connection to a bus (which would have a trust level associated with 
+	-- confidentiality) and would generate any relevant cyber requirements 
+	-- accordingly.
 		
-	Asset_Record_Type : type record (
-		Asset : reference (system, device, process, bus, processor, memory);
-		Asset_Name : aadlstring;
-		Protection_Level : CASE_Properties::Protection_Level_Type;
-		Protection : CASE_Properties::Protection_Type;
-		Protection_Tactic: CASE_Properties::Protection_Tactic_Type;
-		Classified: aadlboolean;);
-
---TO DO:  decide if a list of assets is needed
-	Asset_List : list of CASE_Properties::Asset_Record_Type applies to (system, device, process, bus);
-	Asset_Description : CASE_Properties::Asset_Record_Type applies to (system, device, process, bus);
-
-	--DEPENDENCIES on the underlying system in support of a function
-	Data_Classification_Type : type enumeration (Top_Secret, Secret, Confidential, FOUO, Time_Sensitive);
-	Dependencies_Type : type record (
-		Data_Handling : CASE_Properties::Data_Classification_Type;
-		Classified_Processing : aadlboolean;
-	);
+	-- '100' indicates an element requires total confidentiality
+	-- '0' indicates an element does not requires any confidentiality 
+	Requires_Data_Confidentiality: aadlinteger 0 .. 100 applies to (subcomponent, 
+		System, Thread, Thread Group, Process, Subprogram, processor, 
+		virtual processor, Memory, device, bus, virtual bus, connection);
 	
-	Dependencies : CASE_Properties::Dependencies_Type applies to (process, thread);
+    --------------------------------------
+	-------Integrity Trust Levels --------
+	--------------------------------------
 	
-	STPA_Flow_Type : type enumeration (Control_Action, Feedback);
+	-- Trust_Level_Integrity:
 	
-	STPA_Flow : type record (
-		STPA_Flow_Ref : reference (flow, end to end flow);
-		STPA_Type : CASE_Properties::STPA_Flow_Type;
-		STPA_Hazard_Name : aadlstring;);
+	-- For a Trust Level (Integrity) on a component (subcomponent, System, 
+	-- Thread, Thread Group,  Process, Subprogram, processor, virtual processor, 
+	-- Memory, device):
+	-- Used to indicate the level of trust a component of a component to ensure 
+	-- data integrity to avoid unauthorized data changed within its physical 
+	-- boundary. 
+	
+	-- '100' indicates total trust that any data contained within this 
+	-- component is resilient to potential corruption of data consistency and 
+	-- accuracy.  	
+	-- '0' indicates no trust (or unknown) in the integrity of the data 
+	-- contained within the component as well as its accuracy or well-formedness.
+	
+	-- For a Trust Level (Integrity) on a Bus (Bus, Virtual Bus):
+	--
+    -- Indicates that a bus has some characteristic which provides data integrity.
+    -- Ethernet 802.3 would be an example that provides twisted pair Ethernet 
+    -- which bit-level integrity up to 100 meters. In this context, annotating 
+    -- a bus with a trust level of '100' for integrity would indicate that the 
+    -- physical bus itself provides a fully trusted data transmission medium 
+    -- for accuracy, and cannot be altered in transit. 
+	
+	-- '100' indicates gaining physical access to the bus would not threaten 
+	-- confidentiality of data on that bus.  Data confidentiality is maintained 
+	-- in transit on that bus
+	-- '0' indicates no trust that data in transit on the bus would maintain 
+	-- any confidentiality should an attacker gain access to the bus.	
+	Trust_Level_Integrity: aadlinteger 0 .. 100 applies to (subcomponent, 
+		System, Thread, Thread Group, Process, Subprogram, processor, 
+		virtual processor, Memory, device, bus, virtual bus);
+		
+	-- Requires_Data_Integrity:
+	
+	-- Used to indicate if a component, bus or connection requires data 
+	-- integrity.  Used in conjunction with Trust_Level_Integrity.
+	-- Some data paths may not require strong integrity (real-time video can 
+	-- have corrupted pixels and still be useful for instance)
+	-- 'Connection' element is included to allow the system designer to 
+	-- annotate the 'intent' of a connection.  The "actual" integrity will 
+	-- depend on a particular connection's binding to a bus  
+	-- '100' indicates an element requires maximum integrity
+	-- '0' indicates an element does not requires any integrity 
+	Requires_Data_Integrity: aadlinteger 0 .. 100 applies to (subcomponent, 
+		System, Thread, Thread Group, Process, Subprogram, processor, 
+		virtual processor, Memory, device, bus, virtual bus, connection);
+	
+	-----------------------------------------
+	-------Availability Trust Levels --------
+	-----------------------------------------
+	
+	-- Trust_Level_Availability:
+	--
+	-- For a Trust Level (Availability) on a component (subcomponent, System, 
+	-- Thread, Thread Group, Process, Subprogram, processor, virtual processor,
+	-- Memory, device):
+	
+	-- Used to indicate the trust level associated with a component's ability 
+	-- to meet data rate and timing requirements.
+	-- '100' indicates that that component's output features can be fully 
+	-- trusted to output their data and meet timing requirements.
+	-- '0' indicates that a component's output features cannot be trusted to 
+	-- output their data or meet timing requirements
+	Trust_Level_Availability: aadlinteger 0 .. 100 applies to (subcomponent, 
+		System, Thread, Thread Group, Process, Subprogram, processor, 
+		virtual processor, Memory, device, bus, virtual bus);
+	
+	-- For a Trust Level (Availability) on a Bus (Bus, Virtual Bus):
+	-- '100' indicates a completely trusted bus for reliability and not 
+	-- susceptible to an arbitrary number of physical hardware failures which 
+	-- would result in the availability of the bus to facilitate data 
+	-- transmission to fail.  
+	-- '0' indicates no trust of the reliability of the bus hardware. No 
+	-- redundancy or protection against physical attacks.
+	
+	-- A value of 100 in a virtual bus would not degrade the availability of 
+	-- the bus it is a subcomponent of.  A value of 0 has no availability 
+	-- assurance.
+	
+	-- Requires_Data_Availability:
+	--
+	-- Used to indicate if a component, bus or connection requires data 
+	-- availability.  Used in conjunction with Trust_Level_Availability
+	-- 'Connection' element is included to allow the system designer to 
+	-- annotate the 'intent' of a connection.  The "actual" Availability will 
+	-- depend on a particular connection's binding to a bus  
+	-- '100' indicates an element requires maximum Availability
+	-- '0' indicates an element does not require any Availability (is completely optional)
+	Requires_Data_Availbility: aadlinteger 0 .. 100 applies to (subcomponent, 
+		System, Thread, Thread Group, Process, Subprogram, processor, 
+		virtual processor, Memory, device, bus, virtual bus, connection);
+			
+	-------------------------------------------------------------
+	-------------------------------------------------------------
+	-------------------------------------------------------------
+	-------------------------------------------------------------
+	-------------------------------------------------------------
+			
+	-----------------------------------------
+	---------- Control Level ----------------
+	-----------------------------------------
+	
+	-- Control level of a connection or component.
+	-- 0 <= Control_Level <= 100.
+	-- 0 indicates that a component cannot be altered in any way (i.e. "no control"),
+	-- and 100 indicates "complete control".
+	-- Essentially this is an indicator of how difficult it is for the system
+	-- Designer to make a change to a particular component.
+	-- Intended to be used for optimized requirements generated by a cyber requirement
+	-- tool.  Components with a lower control_level value should be prioritized lower
+	-- than components with a higher control level for requirement generation purposes. 
+	-- Previously, the annotation UNCONTROLLED was used to denote Control_Level 0.
+	
+	-- All subcomponents will inherit the control level of the parent component by default
+	-- Can be overridden by subcomponents
+	-- Unspecified control levels will implicitly be considered control level 
+	-- 100 unless there is an ancestor component	
+	Control_Level: inherit aadlinteger 0 .. 100 applies to (feature, connection, classifier, subcomponent);
 
-	STPA_Flow_Description : CASE_Properties::STPA_Flow applies to (end to end flow, flow);	
+	
+	-----------------------------------------
+	---------- Security Functions -----------
+	-----------------------------------------	
+	
+	-- The following properties describe the security function of a component. 
+	-- These functions correspond to the trusted build transform components 
+	-- implemented by the CASE toolset.  These properties are to be used in 
+	-- conjunction with cyber-security analysis to address cyber requirements 
+	-- generated in a system model.
+	
+	-- Indicates this component provides filtering functionality with respect 
+	-- to well-formedness of messages.  
+	-- '100' indicates the component was implemented using a trusted build / formal 
+	-- method process by the CASE toolset
+	Filtering: aadlinteger 0 .. 100 applies to (thread, thread group, process, system, subcomponent);
+	
+	-- Indicates this component provides attestation functionality  
+	-- '100' indicates the component was implemented using a trusted build / formal 
+	-- method process by the CASE toolset
+	Attesting: aadlinteger 0 .. 100 applies to (thread, thread group, process, system, subcomponent);
+	
+	-- Indicates this component provides isolation (virtualization) functionality
+	-- '100' indicates the component was implemented using a trusted build / formal 
+	-- method process by the CASE toolset
+	Isolating: aadlinteger 0 .. 100 applies to (thread, thread group, process, system, processor, virtual processor, subcomponent);	
+
+	-- Indicates this component provides run-time monitoring functionality
+	-- ' 100' indicates the component was implemented using a trusted build / formal 
+	-- method process by the CASE toolset
+	-- TODO: Further refinement of the definition of "Monitoring" is required.
+	Monitoring: aadlinteger 0 .. 100 applies to (thread, thread group, process, system, subcomponent);
+
+	-- Indicates this component provides switching/gating functionality
+	-- ' 100' indicates the component was implemented using a trusted build / formal 
+	-- method process by the CASE toolset
+	-- TODO: Further refinement of the definition of "Switch/Gate" is required.
+	Gating: aadlinteger 0 .. 100 applies to (thread, thread group, process, system, subcomponent);		
+	
+	-- Indicates this component provides authentication of messages. 
+	-- ' 100' indicates the component has the maximum level of authenticating 
+	-- functionality
+	-- Note: There is currently no trusted build transform for authenticating 
+	-- from the CASE toolset
+	Authenticating: aadlinteger 0 .. 100 applies to (thread, thread group, process, system, subcomponent);		
+	
+	-- Indicates this component provides encrypting functionality. 
+	-- ' 100' indicates the component has the maximum level of encryption as 
+	-- determined by the system modeler
+	-- Note: There is currently no trusted build transform for encryption from 
+	-- the CASE toolset
+	Encrypting: aadlinteger 0 .. 100 applies to (thread, thread group, process, system, subcomponent);
+	
+	------------------------------------------
+	---------- Security Attributes -----------
+	------------------------------------------
+	
+	-- TODO: consider adding "filtered, monitored, attested, etc." to explicitly 
+	-- state which connection out of a component is filtered, monitored, etc.
+	
+	--Indicates the connection is an authenticated communication channel
+	Authenticated: aadlinteger 0 .. 100 applies to (connection);
+	
+	-- Indicates a bus virtual bus is an encrypted channel, or that data is encrypted
+	Encrypted: aadlinteger 0 .. 100 applies to (bus, virtual bus, data);
+	
+	-- The following properties (attributes) describe static features of a 
+	-- component -- inherent properties as opposed to an active
+	-- function are included in this category.
 
 end CASE_Properties;

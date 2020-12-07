@@ -48,6 +48,7 @@ import com.collins.trustedsystems.briefcase.staircase.dialogs.AddVirtualizationD
 import com.collins.trustedsystems.briefcase.staircase.requirements.AddVirtualizationClaim;
 import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsManager;
 import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
+import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils.MITIGATION_TYPE;
 import com.collins.trustedsystems.briefcase.staircase.utils.ComponentCreateHelper;
 import com.collins.trustedsystems.briefcase.staircase.utils.ModelTransformUtils;
 import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
@@ -255,7 +256,8 @@ public class AddVirtualizationHandler extends AadlHandler {
 						pkgSection.getOwnedClassifiers().size() - 1);
 
 				// CASE::COMP_TYPE Property
-				if (!CasePropertyUtils.setCompType(vpType, "VIRTUAL_MACHINE")) {
+//				if (!CasePropertyUtils.setCompType(vpType, "VIRTUAL_MACHINE")) {
+				if (!CasePropertyUtils.setMitigationType(vpType, MITIGATION_TYPE.VIRTUALIZATION)) {
 //					return;
 				}
 

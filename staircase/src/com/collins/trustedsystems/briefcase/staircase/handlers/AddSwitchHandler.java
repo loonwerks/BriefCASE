@@ -45,6 +45,7 @@ import com.collins.trustedsystems.briefcase.staircase.requirements.AddSwitchClai
 import com.collins.trustedsystems.briefcase.staircase.requirements.CyberRequirement;
 import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsManager;
 import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
+import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils.MITIGATION_TYPE;
 import com.collins.trustedsystems.briefcase.staircase.utils.ComponentCreateHelper;
 import com.collins.trustedsystems.briefcase.staircase.utils.ModelTransformUtils;
 import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
@@ -334,8 +335,8 @@ public class AddSwitchHandler extends AadlHandler {
 
 		// Add switch properties
 		// CASE::COMP_TYPE Property
-		if (!CasePropertyUtils.setCompType(switchType, "SWITCH")) {
-//		if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.COMP_TYPE, "SWITCH", switchType)) {
+//		if (!CasePropertyUtils.setCompType(switchType, "SWITCH"))
+		if (!CasePropertyUtils.setMitigationType(switchType, MITIGATION_TYPE.GATE)) {
 //				return;
 		}
 

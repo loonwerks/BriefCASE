@@ -13,7 +13,6 @@ import org.osate.aadl2.Aadl2Package;
 import org.osate.aadl2.AadlBoolean;
 import org.osate.aadl2.AadlInteger;
 import org.osate.aadl2.AadlString;
-import org.osate.aadl2.AbstractNamedValue;
 import org.osate.aadl2.BooleanLiteral;
 import org.osate.aadl2.Classifier;
 import org.osate.aadl2.EnumerationLiteral;
@@ -43,7 +42,13 @@ public class CasePropertyUtils {
 	public static final String CASE_PROPSET_NAME = "CASE_Properties";
 	public static final String CASE_PROPSET_FILE = "CASE_Properties.aadl";
 
-	public static final String COMP_TYPE = "Component_Type";
+//	public static final String COMP_TYPE = "Component_Type";
+	public static final String ATTESTING = "Attesting";
+	public static final String FILTERING = "Filtering";
+	public static final String MONITORING = "Monitoring";
+	public static final String GATING = "Gating";
+	public static final String ISOLATING = "Isolating";
+
 	public static final String COMP_IMPL = "Component_Impl";
 	public static final String COMP_SPEC = "Component_Spec";
 
@@ -55,6 +60,10 @@ public class CasePropertyUtils {
 	public static final String OS = "OS";
 
 	public static final String MONITOR_LATCHED = "Monitor_Latched";
+
+	public static enum MITIGATION_TYPE {
+		ATTESTATION, FILTER, MONITOR, GATE, VIRTUALIZATION, SAFETY_CONTROLLER
+	};
 
 	/**
 	 * Adds the CASE_Properties file to the list of imported model units via the 'with' statement
@@ -247,15 +256,53 @@ public class CasePropertyUtils {
 		return true;
 	}
 
-	public static boolean setCompType(Classifier comp, String compType) {
+//	public static boolean setCompType(Classifier comp, String compType) {
+//		try {
+//			Property prop = Aadl2GlobalScopeUtil.get(comp, Aadl2Package.eINSTANCE.getProperty(),
+//					CASE_PROPSET_NAME + "::" + COMP_TYPE);
+//			EnumerationLiteral enumLit = Aadl2Factory.eINSTANCE.createEnumerationLiteral();
+//			enumLit.setName(compType);
+//			NamedValue namedVal = Aadl2Factory.eINSTANCE.createNamedValue();
+//			namedVal.setNamedValue(enumLit);
+//			comp.setPropertyValue(prop, namedVal);
+//		} catch (PropertyDoesNotApplyToHolderException e) {
+//			return false;
+//		}
+//		return true;
+//	}
+
+	public static boolean setMitigationType(Classifier comp, MITIGATION_TYPE mitigationType) {
 		try {
-			Property prop = Aadl2GlobalScopeUtil.get(comp, Aadl2Package.eINSTANCE.getProperty(),
-					CASE_PROPSET_NAME + "::" + COMP_TYPE);
-			EnumerationLiteral enumLit = Aadl2Factory.eINSTANCE.createEnumerationLiteral();
-			enumLit.setName(compType);
-			NamedValue namedVal = Aadl2Factory.eINSTANCE.createNamedValue();
-			namedVal.setNamedValue(enumLit);
-			comp.setPropertyValue(prop, namedVal);
+			Property prop = null;
+			switch (mitigationType) {
+			case ATTESTATION:
+				prop = Aadl2GlobalScopeUtil.get(comp, Aadl2Package.eINSTANCE.getProperty(),
+						CASE_PROPSET_NAME + "::" + ATTESTING);
+				break;
+			case FILTER:
+				prop = Aadl2GlobalScopeUtil.get(comp, Aadl2Package.eINSTANCE.getProperty(),
+						CASE_PROPSET_NAME + "::" + FILTERING);
+				break;
+			case MONITOR:
+				prop = Aadl2GlobalScopeUtil.get(comp, Aadl2Package.eINSTANCE.getProperty(),
+						CASE_PROPSET_NAME + "::" + MONITORING);
+				break;
+			case GATE:
+				prop = Aadl2GlobalScopeUtil.get(comp, Aadl2Package.eINSTANCE.getProperty(),
+						CASE_PROPSET_NAME + "::" + GATING);
+				break;
+			case VIRTUALIZATION:
+				prop = Aadl2GlobalScopeUtil.get(comp, Aadl2Package.eINSTANCE.getProperty(),
+						CASE_PROPSET_NAME + "::" + ISOLATING);
+				break;
+			default:
+				return false;
+			}
+
+			IntegerLiteral intLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
+			intLit.setValue(100);
+			comp.setPropertyValue(prop, intLit);
+
 		} catch (PropertyDoesNotApplyToHolderException e) {
 			return false;
 		}
@@ -328,9 +375,14 @@ public class CasePropertyUtils {
 		try {
 			Property prop = Aadl2GlobalScopeUtil.get(comp, Aadl2Package.eINSTANCE.getProperty(),
 					CASE_PROPSET_NAME + "::" + OS);
-			StringLiteral strLit = Aadl2Factory.eINSTANCE.createStringLiteral();
-			strLit.setValue(os);
-			comp.setPropertyValue(prop, strLit);
+//			StringLiteral strLit = Aadl2Factory.eINSTANCE.createStringLiteral();
+//			strLit.setValue(os);
+//			comp.setPropertyValue(prop, strLit);
+			EnumerationLiteral enumLit = Aadl2Factory.eINSTANCE.createEnumerationLiteral();
+			enumLit.setName(os);
+			NamedValue namedVal = Aadl2Factory.eINSTANCE.createNamedValue();
+			namedVal.setNamedValue(enumLit);
+			comp.setPropertyValue(prop, namedVal);
 		} catch (PropertyDoesNotApplyToHolderException e) {
 			return false;
 		}
@@ -350,25 +402,92 @@ public class CasePropertyUtils {
 		return true;
 	}
 
-	public static boolean isCompType(Classifier comp, String compType) {
+//	public static boolean isCompType(Classifier comp, String compType) {
+//
+//		try {
+//
+//			Property prop = Aadl2GlobalScopeUtil.get(comp, Aadl2Package.eINSTANCE.getProperty(),
+//					CASE_PROPSET_NAME + "::" + COMP_TYPE);
+//			List<? extends PropertyExpression> propVal = comp.getPropertyValueList(prop);
+//
+//			if (propVal != null) {
+//				for (PropertyExpression expr : propVal) {
+//					if (expr instanceof NamedValue) {
+//						NamedValue namedVal = (NamedValue) expr;
+//						AbstractNamedValue absVal = namedVal.getNamedValue();
+//						if (absVal instanceof EnumerationLiteral) {
+//							EnumerationLiteral enVal = (EnumerationLiteral) absVal;
+//							if (enVal.getName().equalsIgnoreCase(compType)) {
+//								return true;
+//							}
+//						}
+//					}
+//				}
+//			}
+//		} catch (PropertyDoesNotApplyToHolderException e) {
+//			return false;
+//		}
+//		return false;
+//	}
+
+	public static boolean hasMitigationType(Classifier comp, MITIGATION_TYPE mitigationType) {
 
 		try {
 
-			Property prop = Aadl2GlobalScopeUtil.get(comp, Aadl2Package.eINSTANCE.getProperty(),
-					CASE_PROPSET_NAME + "::" + COMP_TYPE);
+			Property prop = null;
+			switch (mitigationType) {
+			case ATTESTATION:
+				prop = Aadl2GlobalScopeUtil.get(comp, Aadl2Package.eINSTANCE.getProperty(),
+						CASE_PROPSET_NAME + "::" + ATTESTING);
+				break;
+			case FILTER:
+				prop = Aadl2GlobalScopeUtil.get(comp, Aadl2Package.eINSTANCE.getProperty(),
+						CASE_PROPSET_NAME + "::" + FILTERING);
+				break;
+			case MONITOR:
+				prop = Aadl2GlobalScopeUtil.get(comp, Aadl2Package.eINSTANCE.getProperty(),
+						CASE_PROPSET_NAME + "::" + MONITORING);
+				break;
+			case GATE:
+				prop = Aadl2GlobalScopeUtil.get(comp, Aadl2Package.eINSTANCE.getProperty(),
+						CASE_PROPSET_NAME + "::" + GATING);
+				break;
+			case VIRTUALIZATION:
+				prop = Aadl2GlobalScopeUtil.get(comp, Aadl2Package.eINSTANCE.getProperty(),
+						CASE_PROPSET_NAME + "::" + ISOLATING);
+				break;
+			default:
+				return false;
+			}
+
 			List<? extends PropertyExpression> propVal = comp.getPropertyValueList(prop);
 
 			if (propVal != null) {
 				for (PropertyExpression expr : propVal) {
-					if (expr instanceof NamedValue) {
-						NamedValue namedVal = (NamedValue) expr;
-						AbstractNamedValue absVal = namedVal.getNamedValue();
-						if (absVal instanceof EnumerationLiteral) {
-							EnumerationLiteral enVal = (EnumerationLiteral) absVal;
-							if (enVal.getName().equalsIgnoreCase(compType)) {
-								return true;
-							}
+					if (expr instanceof IntegerLiteral) {
+						IntegerLiteral intLit = (IntegerLiteral) expr;
+						if (intLit.getValue() == 100) {
+							return true;
 						}
+					}
+				}
+			}
+		} catch (PropertyDoesNotApplyToHolderException e) {
+			return false;
+		}
+		return false;
+	}
+
+	public static boolean isCommDriver(Classifier comp) {
+		try {
+			Property prop = Aadl2GlobalScopeUtil.get(comp, Aadl2Package.eINSTANCE.getProperty(),
+					CASE_PROPSET_NAME + "::" + "Comm_Driver");
+			List<? extends PropertyExpression> propVal = comp.getPropertyValueList(prop);
+			if (propVal != null) {
+				for (PropertyExpression expr : propVal) {
+					if (expr instanceof BooleanLiteral) {
+						BooleanLiteral boolLit = (BooleanLiteral) expr;
+						return boolLit.getValue();
 					}
 				}
 			}
