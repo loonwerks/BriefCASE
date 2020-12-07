@@ -97,17 +97,20 @@ public
 		-- Top-level claim for proper insertion of a monitor
 		add_monitor(comp_context : component, monitor : component) <=
 			** "Monitor " monitor " is properly added to " comp_context **
-			component_exists(monitor, "MONITOR") and alert_connected(monitor) and independent_reset(monitor, comp_context) and component_implemented(monitor)
+--			component_exists(monitor, "MONITOR") and alert_connected(monitor) and independent_reset(monitor, comp_context) and component_implemented(monitor)
+			component_exists(monitor, CASE_Properties::Monitoring) and alert_connected(monitor) and independent_reset(monitor, comp_context) and component_implemented(monitor)
 
 		-- Top-level claim for proper insertion of a monitor with a gate
 		add_monitor_gate(comp_context : component, monitor : component, gate_context : component, message_type : data) <=
 			** "Monitor " monitor " is properly added to " comp_context **
-			component_exists(monitor, "MONITOR") and alert_connected(monitor) and independent_reset(monitor, comp_context) and component_not_bypassed(monitor, gate_context, message_type) and component_implemented(monitor)
+--			component_exists(monitor, "MONITOR") and alert_connected(monitor) and independent_reset(monitor, comp_context) and component_not_bypassed(monitor, gate_context, message_type) and 
+			component_exists(monitor, CASE_Properties::Monitoring) and alert_connected(monitor) and independent_reset(monitor, comp_context) and component_not_bypassed(monitor, gate_context, message_type) and component_implemented(monitor)
 
 		-- Top-level claim for proper insertion of a switch
 		add_switch(comp_context : component, switch : component, message_type : data) <=
 			** "Switch inserted after " comp_context **
-			component_exists(switch, "SWITCH") and component_not_bypassed(switch, comp_context, message_type) and component_implemented(switch)
+--			component_exists(switch, "SWITCH") and component_not_bypassed(switch, comp_context, message_type) and component_implemented(switch)
+			component_exists(switch, CASE_Properties::Gating) and component_not_bypassed(switch, comp_context, message_type) and component_implemented(switch)
 		
 		-- Top-level claim for proper transformation of model for seL4 build
 		sel4_transform(comp_context : component, transformed_component : component) <=
@@ -140,12 +143,16 @@ public
 		filter_exists(filter : component, comp_context : component, conn : connection) <=
 			** "A CASE_Filter " filter " is connected to component " comp_context " by connection " conn **
 			let conns : {connection} = {c for (c : connections(comp_context)) | destination_component(c) = comp_context and source_component(c) = filter};
-			is_of_case_type(filter, "FILTER") and exists(c : conns) . c = conn
+--			is_of_case_type(filter, "FILTER") and exists(c : conns) . c = conn
+			has_mitigation_type(filter, CASE_Properties::Filtering) and exists(c : conns) . c = conn
 						
 		-- Check to see if the specified component exists
-		component_exists(comp : component, case_type : string) <=
+--		component_exists(comp : component, case_type : string) <=
+		component_exists(comp : component, mitigation_type : property) <=
 			** comp " exists in the model" **
-			is_of_case_type(comp, case_type) and exists(m : component) . m = comp
+--			is_of_case_type(comp, case_type) and exists(m : component) . m = comp
+			has_mitigation_type(comp, mitigation_type) and exists(m : component) . m = comp
+			
 
 		-- Make sure there is no communication pathway that avoids the component
 		component_not_bypassed(comp : component, comp_context : component, msg_type : data) <=
@@ -166,8 +173,14 @@ public
 			** "Component proof checked" **
 			is_seL4_component(comp) => analysis("ToolCheck", "SPLAT")
 			
-		is_of_case_type(comp : component, type_name : string) : bool =
-			has_property(comp, CASE_Properties::Component_Type) and property(comp, CASE_Properties::Component_Type) = type_name
+--		is_of_case_type(comp : component, type_name : string) : bool =
+--			has_property(comp, CASE_Properties::Component_Type) and property(comp, CASE_Properties::Component_Type) = type_name
+			
+		has_mitigation_type(comp : component, mitigation_type : property) : bool =
+			has_property(comp, mitigation_type) and property(comp, mitigation_type) = 100
+			
+		is_comm_driver(comp : component) : bool =
+			has_property(comp, CASE_Properties::Comm_Driver) and property(comp, CASE_Properties::Comm_Driver) = true
 			
 --		-- Returns the set of components that are ancestors of a target component through communication pathways that don't pass through a filter
 --		get_non_filter_sources(target : component, filter : component, msg_type : data) : {component} = 
@@ -210,7 +223,8 @@ public
 		attestation_manager_exists(comm_driver : component, attestation_manager : component) <=
 			** "An attestation manager on " comm_driver " exists" **
 			-- check that the attestation manager only has attestation request/response connections to the comm driver
-			is_of_case_type(comm_driver, "COMM_DRIVER") and is_of_case_type(attestation_manager, "ATTESTATION") and
+--			is_of_case_type(comm_driver, "COMM_DRIVER") and is_of_case_type(attestation_manager, "ATTESTATION") and
+			is_comm_driver(comm_driver) and has_mitigation_type(attestation_manager, CASE_Properties::Attesting) and
 			forall (conn : connections(attestation_manager)) . 
 					(has_type(conn) and name(type(conn)) = "CASE_AttestationRequestMsg.Impl") => destination_component(conn) = comm_driver and
 					(has_type(conn) and name(type(conn)) = "CASE_AttestationResponseMsg.Impl") => source_component(conn) = comm_driver
@@ -235,7 +249,8 @@ public
 		-- Checks if the specified virtual processor is a CASE Virtualization and is bound to a processor
 		vm_bound_to_processor(virtual_machine : component) <=
 			** virtual_machine " is bound to a processor" **
-			is_of_case_type(virtual_machine, "VIRTUAL_MACHINE") and exists(p : processor) . is_bound_to(virtual_machine, p)
+--			is_of_case_type(virtual_machine, "VIRTUAL_MACHINE") and exists(p : processor) . is_bound_to(virtual_machine, p)
+			has_mitigation_type(virtual_machine, CASE_Properties::Isolating) and exists(p : processor) . is_bound_to(virtual_machine, p)
 					
 		-- Checks that bindings exist between specified virtualized components and virtual processor
 		components_bound_to_vm(bound_components : {component}, virtual_machine : component) <=
