@@ -30,6 +30,7 @@ import org.osate.aadl2.PropertyExpression;
 import org.osate.aadl2.PropertySet;
 import org.osate.aadl2.PropertyType;
 import org.osate.aadl2.StringLiteral;
+import org.osate.aadl2.UnitLiteral;
 import org.osate.aadl2.modelsupport.scoping.Aadl2GlobalScopeUtil;
 import org.osate.aadl2.properties.PropertyDoesNotApplyToHolderException;
 import org.osate.ui.dialogs.Dialog;
@@ -364,6 +365,9 @@ public class CasePropertyUtils {
 					CASE_PROPSET_NAME + "::" + CACHE_TIMEOUT);
 			IntegerLiteral intLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
 			intLit.setValue(cacheTimeout);
+			UnitLiteral unitLit = Aadl2Factory.eINSTANCE.createUnitLiteral();
+			unitLit.setName("min");
+			intLit.setUnit(unitLit);
 			comp.setPropertyValue(prop, intLit);
 		} catch (PropertyDoesNotApplyToHolderException e) {
 			return false;
