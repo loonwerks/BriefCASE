@@ -349,21 +349,21 @@ public class AddFilterHandler extends AadlHandler {
 
 			// CASE::Component_Spec property
 			// Parse the ID from the Filter AGREE property
-			String filterPropId = "Req_" + filterType.getName();
-//			String filterPropId = "";
-//			try {
-//				filterPropId = filterPolicy
-//						.substring(filterPolicy.toLowerCase().indexOf("guarantee ") + "guarantee ".length(),
-//								filterPolicy.indexOf("\""))
-//						.trim();
-//
-//			} catch (IndexOutOfBoundsException e) {
-//				if (!filterPolicy.isEmpty()) {
-//					// Agree property is malformed
-//					Dialog.showWarning("Add Filter", "Filter AGREE statement is malformed.");
-//				}
-////				return;
-//			}
+//			String filterPropId = "Req_" + filterType.getName();
+			String filterPropId = "";
+			try {
+				filterPropId = filterPolicy
+						.substring(filterPolicy.toLowerCase().indexOf("guarantee ") + "guarantee ".length(),
+								filterPolicy.indexOf("\""))
+						.trim();
+
+			} catch (IndexOutOfBoundsException e) {
+				if (!filterPolicy.isEmpty()) {
+					// Agree property is malformed
+					Dialog.showWarning("Add Filter", "Filter AGREE statement is malformed.");
+				}
+//				return;
+			}
 
 			if (!filterPropId.isEmpty()) {
 				if (!CasePropertyUtils.setCompSpec(filterType, filterPropId)) {
