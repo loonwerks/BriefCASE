@@ -21,18 +21,22 @@ import org.osate.aadl2.ComponentImplementation;
 import org.osate.aadl2.ComponentType;
 import org.osate.aadl2.ConnectedElement;
 import org.osate.aadl2.Connection;
+import org.osate.aadl2.ConnectionEnd;
 import org.osate.aadl2.DataPort;
 import org.osate.aadl2.DataSubcomponentType;
 import org.osate.aadl2.DefaultAnnexSubclause;
+import org.osate.aadl2.DirectedFeature;
 import org.osate.aadl2.EnumerationLiteral;
 import org.osate.aadl2.EventDataPort;
 import org.osate.aadl2.EventPort;
+import org.osate.aadl2.FeatureGroup;
+import org.osate.aadl2.FeatureGroupType;
 import org.osate.aadl2.IntegerLiteral;
+import org.osate.aadl2.NamedElement;
 import org.osate.aadl2.NamedValue;
 import org.osate.aadl2.PackageSection;
 import org.osate.aadl2.Port;
 import org.osate.aadl2.PortCategory;
-import org.osate.aadl2.PortConnection;
 import org.osate.aadl2.PrivatePackageSection;
 import org.osate.aadl2.Property;
 import org.osate.aadl2.PropertyExpression;
@@ -83,7 +87,8 @@ public class AddFilterHandler extends AadlHandler {
 
 		// Check if it is a connection
 		final EObject eObj = getEObject(uri);
-		if (!(eObj instanceof PortConnection)) {
+//		if (!(eObj instanceof PortConnection)) {
+		if (!(eObj instanceof Connection)) {
 			Dialog.showError("Add Filter",
 					"A connection between two components must be selected to add a filter.");
 			return;
@@ -91,7 +96,8 @@ public class AddFilterHandler extends AadlHandler {
 
 		// Make sure the source and destination components are not filters.
 		// If one (or both) is, they will need to be combined, so alert the user
-		final PortConnection selectedConnection = (PortConnection) eObj;
+//		final PortConnection selectedConnection = (PortConnection) eObj;
+		final Connection selectedConnection = (Connection) eObj;
 		Subcomponent subcomponent = (Subcomponent) selectedConnection.getDestination().getContext();
 
 		if (subcomponent == null) {
@@ -108,7 +114,8 @@ public class AddFilterHandler extends AadlHandler {
 		}
 
 		boolean createCompoundFilter = false;
-		PortConnection filterOutConn = null;
+//		PortConnection filterOutConn = null;
+		Connection filterOutConn = null;
 //		if (CasePropertyUtils.isCompType(subcomponent.getClassifier(), "FILTER")) {
 		if (CasePropertyUtils.hasMitigationType(subcomponent.getClassifier(), MITIGATION_TYPE.FILTER)) {
 			if (Dialog.askQuestion("Add Filter",
@@ -120,7 +127,8 @@ public class AddFilterHandler extends AadlHandler {
 				for (Connection conn : ci.getOwnedConnections()) {
 					Subcomponent src = (Subcomponent) conn.getSource().getContext();
 					if (src != null && src.getName().equalsIgnoreCase(subcomponent.getName())) {
-						filterOutConn = (PortConnection) conn;
+//						filterOutConn = (PortConnection) conn;
+						filterOutConn = conn;
 						break;
 					}
 				}
@@ -241,7 +249,8 @@ public class AddFilterHandler extends AadlHandler {
 		AddFilterClaim claim = xtextEditor.getDocument().modify(resource -> {
 
 			// Retrieve the model object to modify
-			PortConnection selectedConnection = (PortConnection) resource.getEObject(uri.fragment());
+//			PortConnection selectedConnection = (PortConnection) resource.getEObject(uri.fragment());
+			Connection selectedConnection = (Connection) resource.getEObject(uri.fragment());
 			final AadlPackage aadlPkg = (AadlPackage) resource.getContents().get(0);
 			PackageSection pkgSection = null;
 			// Figure out if the selected connection is in the public or private section
@@ -292,39 +301,80 @@ public class AddFilterHandler extends AadlHandler {
 					ModelTransformUtils.getUniqueName(filterComponentName, true, pkgSection.getOwnedClassifiers()));
 
 			// Create filter ports
-			final Port port = (Port) selectedConnection.getDestination().getConnectionEnd();
-			Port portIn = null;
-			Port portOut = null;
-			DataSubcomponentType dataFeatureClassifier = null;
-			if (port instanceof EventDataPort) {
-				portIn = ComponentCreateHelper.createOwnedEventDataPort(filterType);
-				dataFeatureClassifier = ((EventDataPort) port).getDataFeatureClassifier();
-				((EventDataPort) portIn).setDataFeatureClassifier(dataFeatureClassifier);
-				portOut = ComponentCreateHelper.createOwnedEventDataPort(filterType);
-				((EventDataPort) portOut).setDataFeatureClassifier(dataFeatureClassifier);
-			} else if (port instanceof DataPort) {
-				portIn = ComponentCreateHelper.createOwnedDataPort(filterType);
-				dataFeatureClassifier = ((DataPort) port).getDataFeatureClassifier();
-				((DataPort) portIn).setDataFeatureClassifier(dataFeatureClassifier);
-				portOut = ComponentCreateHelper.createOwnedDataPort(filterType);
-				((DataPort) portOut).setDataFeatureClassifier(dataFeatureClassifier);
-			} else if (port instanceof EventPort) {
+//			final Port port = (Port) selectedConnection.getDestination().getConnectionEnd();
+			final ConnectionEnd connectionEnd = selectedConnection.getDestination().getConnectionEnd();
+//			Port portIn = null;
+//			Port portOut = null;
+			ConnectionEnd connEndIn = null;
+			ConnectionEnd connEndOut = null;
+//			DataSubcomponentType dataFeatureClassifier = null;
+//			EObject featureClassifier = null;
+			NamedElement featureClassifier = null;
+//			if (port instanceof EventDataPort) {
+//				portIn = ComponentCreateHelper.createOwnedEventDataPort(filterType);
+//				dataFeatureClassifier = ((EventDataPort) port).getDataFeatureClassifier();
+//				((EventDataPort) portIn).setDataFeatureClassifier(dataFeatureClassifier);
+//				portOut = ComponentCreateHelper.createOwnedEventDataPort(filterType);
+//				((EventDataPort) portOut).setDataFeatureClassifier(dataFeatureClassifier);
+//			} else if (port instanceof DataPort) {
+//				portIn = ComponentCreateHelper.createOwnedDataPort(filterType);
+//				dataFeatureClassifier = ((DataPort) port).getDataFeatureClassifier();
+//				((DataPort) portIn).setDataFeatureClassifier(dataFeatureClassifier);
+//				portOut = ComponentCreateHelper.createOwnedDataPort(filterType);
+//				((DataPort) portOut).setDataFeatureClassifier(dataFeatureClassifier);
+//			} else if (port instanceof EventPort) {
+//				Dialog.showError("Add Filter", "Cannot connect a filter to a non-data port.");
+//				return null;
+//			} else {
+//				Dialog.showError("Add Filter", "Could not determine the port type of the destination component.");
+//				return null;
+//			}
+			if (connectionEnd instanceof EventDataPort) {
+				connEndIn = ComponentCreateHelper.createOwnedEventDataPort(filterType);
+				featureClassifier = ((EventDataPort) connectionEnd).getDataFeatureClassifier();
+				((EventDataPort) connEndIn).setDataFeatureClassifier((DataSubcomponentType) featureClassifier);
+				connEndOut = ComponentCreateHelper.createOwnedEventDataPort(filterType);
+				((EventDataPort) connEndOut).setDataFeatureClassifier((DataSubcomponentType) featureClassifier);
+			} else if (connectionEnd instanceof DataPort) {
+				connEndIn = ComponentCreateHelper.createOwnedDataPort(filterType);
+				featureClassifier = ((DataPort) connectionEnd).getDataFeatureClassifier();
+				((DataPort) connEndIn).setDataFeatureClassifier((DataSubcomponentType) featureClassifier);
+				connEndOut = ComponentCreateHelper.createOwnedDataPort(filterType);
+				((DataPort) connEndOut).setDataFeatureClassifier((DataSubcomponentType) featureClassifier);
+			} else if (connectionEnd instanceof EventPort) {
 				Dialog.showError("Add Filter", "Cannot connect a filter to a non-data port.");
 				return null;
+			} else if (connectionEnd instanceof FeatureGroup) {
+				connEndIn = filterType.createOwnedFeatureGroup();
+				featureClassifier = ((FeatureGroup) connectionEnd).getFeatureGroupType();
+				((FeatureGroup) connEndIn).setFeatureType((FeatureGroupType) featureClassifier);
+				FeatureGroupType featureClassifierOut = ((FeatureGroup) selectedConnection.getSource()
+						.getConnectionEnd())
+						.getFeatureGroupType();
+				connEndOut = filterType.createOwnedFeatureGroup();
+				((FeatureGroup) connEndOut).setFeatureType(featureClassifierOut);
+				ModelTransformUtils.importContainingPackage(featureClassifierOut, pkgSection);
 			} else {
 				Dialog.showError("Add Filter", "Could not determine the port type of the destination component.");
 				return null;
 			}
 
-			portIn.setIn(true);
-			portIn.setName(inputPortName);
+			connEndIn.setName(inputPortName);
+			connEndOut.setName(outputPortName);
 
-			portOut.setOut(true);
-			portOut.setName(outputPortName);
+			((DirectedFeature) connEndIn).setIn(true);
+			((DirectedFeature) connEndOut).setOut(true);
+
+//			portIn.setIn(true);
+//			portIn.setName(inputPortName);
+
+//			portOut.setOut(true);
+//			portOut.setName(outputPortName);
 
 			// The data subcomponent type could be in a different package.
 			// Make sure to include it in the with clause
-			importContainingPackage(dataFeatureClassifier, pkgSection);
+//			importContainingPackage(dataFeatureClassifier, pkgSection);
+			ModelTransformUtils.importContainingPackage(featureClassifier, pkgSection);
 
 			// Create log port, if necessary
 			if (logPortType != null) {
@@ -427,27 +477,46 @@ public class AddFilterHandler extends AadlHandler {
 			ComponentCreateHelper.setSubcomponentType(filterSubcomp, filterImpl);
 
 			// Create connection from filter to connection destination
-			final PortConnection portConnOut = containingImpl.createOwnedPortConnection();
+//			final PortConnection portConnOut = containingImpl.createOwnedPortConnection();
+//			// Give it a unique name
+//			portConnOut.setName(ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false,
+//					containingImpl.getOwnedPortConnections()));
+//			portConnOut.setBidirectional(false);
+//			final ConnectedElement filterOutSrc = portConnOut.createSource();
+//			filterOutSrc.setContext(filterSubcomp);
+////			filterOutSrc.setConnectionEnd(portOut);
+//			filterOutSrc.setConnectionEnd(connEndOut);
+//			final ConnectedElement filterOutDst = portConnOut.createDestination();
+//			filterOutDst.setContext(selectedConnection.getDestination().getContext());
+//			filterOutDst.setConnectionEnd(selectedConnection.getDestination().getConnectionEnd());
+
+			final Connection connOut = ComponentCreateHelper.createOwnedConnection(containingImpl, selectedConnection);
 			// Give it a unique name
-			portConnOut.setName(ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false,
-					containingImpl.getOwnedPortConnections()));
-			portConnOut.setBidirectional(false);
-			final ConnectedElement filterOutSrc = portConnOut.createSource();
+//			connOut.setName(ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false,
+//					containingImpl.getOwnedPortConnections()));
+			connOut.setName(ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false,
+					containingImpl.getOwnedConnections()));
+			connOut.setBidirectional(false);
+			final ConnectedElement filterOutSrc = connOut.createSource();
 			filterOutSrc.setContext(filterSubcomp);
-			filterOutSrc.setConnectionEnd(portOut);
-			final ConnectedElement filterOutDst = portConnOut.createDestination();
+//			filterOutSrc.setConnectionEnd(portOut);
+			filterOutSrc.setConnectionEnd(connEndOut);
+			final ConnectedElement filterOutDst = connOut.createDestination();
 			filterOutDst.setContext(selectedConnection.getDestination().getContext());
 			filterOutDst.setConnectionEnd(selectedConnection.getDestination().getConnectionEnd());
 
 			// Put portConnOut in right place (after portConnIn)
 			String destName = selectedConnection.getName();
-			containingImpl.getOwnedPortConnections().move(
-					getIndex(destName, containingImpl.getOwnedPortConnections()) + 1,
-					containingImpl.getOwnedPortConnections().size() - 1);
+//			containingImpl.getOwnedPortConnections().move(
+//					getIndex(destName, containingImpl.getOwnedPortConnections()) + 1,
+//					containingImpl.getOwnedPortConnections().size() - 1);
+			containingImpl.getOwnedConnections().move(getIndex(destName, containingImpl.getOwnedConnections()) + 1,
+					containingImpl.getOwnedConnections().size() - 1);
 
 			// Rewire selected connection so the filter is the destination
 			selectedConnection.getDestination().setContext(filterSubcomp);
-			selectedConnection.getDestination().setConnectionEnd(portIn);
+//			selectedConnection.getDestination().setConnectionEnd(portIn);
+			selectedConnection.getDestination().setConnectionEnd(connEndIn);
 
 			// AGREE
 			if (filterPolicy.length() > 0) {
@@ -509,8 +578,10 @@ public class AddFilterHandler extends AadlHandler {
 			// Add add_filter claims to resolute prove statement, if applicable
 			if (!filterRequirement.isEmpty()) {
 				CyberRequirement req = RequirementsManager.getInstance().getRequirement(filterRequirement);
+//				return new AddFilterClaim(
+//						req.getContext(), filterSubcomp, portConnOut, dataFeatureClassifier);
 				return new AddFilterClaim(
-						req.getContext(), filterSubcomp, portConnOut, dataFeatureClassifier);
+						req.getContext(), filterSubcomp, connOut, featureClassifier);
 			}
 
 			return null;
@@ -536,13 +607,20 @@ public class AddFilterHandler extends AadlHandler {
 			Subcomponent subcomponent = (Subcomponent) resource.getEObject(subURI.fragment());
 			ComponentType filter = subcomponent.getComponentType();
 
-			PortConnection connection = (PortConnection) resource.getEObject(connURI.fragment());
-			Port port = (Port) connection.getDestination().getConnectionEnd();
-			DataSubcomponentType dataFeatureClassifier = null;
-			if (port instanceof EventDataPort) {
-				dataFeatureClassifier = ((EventDataPort) port).getDataFeatureClassifier();
-			} else if (port instanceof DataPort) {
-				dataFeatureClassifier = ((DataPort) port).getDataFeatureClassifier();
+//			PortConnection connection = (PortConnection) resource.getEObject(connURI.fragment());
+			Connection connection = (Connection) resource.getEObject(connURI.fragment());
+//			Port port = (Port) connection.getDestination().getConnectionEnd();
+			ConnectionEnd connectionEnd = connection.getDestination().getConnectionEnd();
+//			DataSubcomponentType dataFeatureClassifier = null;
+			NamedElement featureClassifier = null;
+			if (connectionEnd instanceof EventDataPort) {
+//				dataFeatureClassifier = ((EventDataPort) port).getDataFeatureClassifier();
+				featureClassifier = ((EventDataPort) connectionEnd).getDataFeatureClassifier();
+			} else if (connectionEnd instanceof DataPort) {
+//				dataFeatureClassifier = ((DataPort) port).getDataFeatureClassifier();
+				featureClassifier = ((DataPort) connectionEnd).getDataFeatureClassifier();
+			} else if (connectionEnd instanceof FeatureGroup) {
+				featureClassifier = ((FeatureGroup) connectionEnd).getFeatureGroupType();
 			} else {
 				Dialog.showError("Add Filter", "Could not determine the port type of the filter.");
 				return null;
@@ -621,7 +699,8 @@ public class AddFilterHandler extends AadlHandler {
 			// Add add_filter claims to resolute prove statement, if applicable
 			if (!filterRequirement.isEmpty()) {
 				CyberRequirement req = RequirementsManager.getInstance().getRequirement(filterRequirement);
-				return new AddFilterClaim(req.getContext(), subcomponent, connection, dataFeatureClassifier);
+//				return new AddFilterClaim(req.getContext(), subcomponent, connection, dataFeatureClassifier);
+				return new AddFilterClaim(req.getContext(), subcomponent, connection, featureClassifier);
 			}
 			return null;
 		});

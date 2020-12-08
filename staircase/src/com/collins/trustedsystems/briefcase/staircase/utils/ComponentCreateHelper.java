@@ -1,6 +1,7 @@
 package com.collins.trustedsystems.briefcase.staircase.utils;
 
 import org.eclipse.emf.ecore.EClass;
+import org.eclipse.emf.ecore.EObject;
 import org.osate.aadl2.Aadl2Package;
 import org.osate.aadl2.AbstractImplementation;
 import org.osate.aadl2.AbstractSubcomponent;
@@ -9,11 +10,14 @@ import org.osate.aadl2.Classifier;
 import org.osate.aadl2.ComponentCategory;
 import org.osate.aadl2.ComponentImplementation;
 import org.osate.aadl2.ComponentType;
+import org.osate.aadl2.Connection;
 import org.osate.aadl2.DataAccess;
 import org.osate.aadl2.DataPort;
 import org.osate.aadl2.DefaultAnnexSubclause;
 import org.osate.aadl2.EventDataPort;
 import org.osate.aadl2.EventPort;
+import org.osate.aadl2.FeatureGroupConnection;
+import org.osate.aadl2.PortConnection;
 import org.osate.aadl2.ProcessImplementation;
 import org.osate.aadl2.ProcessSubcomponent;
 import org.osate.aadl2.ProcessType;
@@ -201,6 +205,16 @@ public class ComponentCreateHelper {
 			((ThreadGroupType) compType).getOwnedEventPorts().add(port);
 		} else {
 			return;
+		}
+	}
+
+	public static Connection createOwnedConnection(ComponentImplementation compImpl, EObject context) {
+		if (context instanceof PortConnection) {
+			return compImpl.createOwnedPortConnection();
+		} else if (context instanceof FeatureGroupConnection) {
+			return compImpl.createOwnedFeatureGroupConnection();
+		} else {
+			return null;
 		}
 	}
 

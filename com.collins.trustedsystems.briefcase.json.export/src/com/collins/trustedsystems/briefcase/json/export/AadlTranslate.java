@@ -39,6 +39,7 @@ import org.osate.aadl2.EventDataPort;
 import org.osate.aadl2.EventPort;
 import org.osate.aadl2.Feature;
 import org.osate.aadl2.FeatureGroup;
+import org.osate.aadl2.FeatureGroupType;
 import org.osate.aadl2.FlowEnd;
 import org.osate.aadl2.FlowSpecification;
 import org.osate.aadl2.ImplementationExtension;
@@ -476,7 +477,40 @@ public class AadlTranslate extends Aadl2Switch<JsonElement> {
 		JsonObject result = new JsonObject();
 		result.add("name", new JsonPrimitive(featureGroup.getName()));
 		result.add("kind", new JsonPrimitive("FeatureGroup"));
-		result.add("direction", new JsonPrimitive(getInOutString(featureGroup.isIn(), featureGroup.isOut())));
+		String direction = getInOutString(featureGroup.isIn(), featureGroup.isOut());
+		if (!direction.isEmpty()) {
+			result.add("direction", new JsonPrimitive(getInOutString(featureGroup.isIn(), featureGroup.isOut())));
+		}
+		FeatureGroupType featureGroupType = featureGroup.getFeatureGroupType();
+		result.add("featureGroupType", new JsonPrimitive(featureGroupType.getName()));
+
+		return result;
+	}
+
+	@Override
+	public JsonElement caseFeatureGroupType(FeatureGroupType featureGroupType) {
+		JsonObject result = new JsonObject();
+		result.add("name", new JsonPrimitive(featureGroupType.getName()));
+		result.add("kind", new JsonPrimitive("FeatureGroupType"));
+		FeatureGroupType inverse = featureGroupType.getInverse();
+		if (inverse != null) {
+			result.add("inverse", new JsonPrimitive(inverse.getQualifiedName()));
+		}
+		JsonArray features = new JsonArray();
+		for (Feature feature : featureGroupType.getOwnedFeatures()) {
+			features.add(doSwitch(feature));
+		}
+		if (features.size() > 0) {
+			result.add("features", features);
+		}
+
+		JsonArray properties = new JsonArray();
+		for (PropertyAssociation pa : featureGroupType.getOwnedPropertyAssociations()) {
+			properties.add(doSwitch(pa));
+		}
+		if (properties.size() > 0) {
+			result.add("properties", properties);
+		}
 
 		return result;
 	}

@@ -24,13 +24,13 @@ import org.osate.aadl2.Classifier;
 import org.osate.aadl2.ComponentImplementation;
 import org.osate.aadl2.ComponentType;
 import org.osate.aadl2.DataPort;
+import org.osate.aadl2.DirectedFeature;
 import org.osate.aadl2.EnumerationLiteral;
 import org.osate.aadl2.EventDataPort;
 import org.osate.aadl2.EventPort;
 import org.osate.aadl2.Feature;
 import org.osate.aadl2.IntegerLiteral;
 import org.osate.aadl2.NamedValue;
-import org.osate.aadl2.Port;
 import org.osate.aadl2.PortCategory;
 import org.osate.aadl2.ProcessImplementation;
 import org.osate.aadl2.Property;
@@ -309,12 +309,12 @@ public class AddFilterDialog extends TitleAreaDialog {
 			txtOutputPortName.setText(AddFilterHandler.FILTER_PORT_OUT_NAME);
 		} else {
 			for (Feature f : compoundFilter.getComponentType().getOwnedFeatures()) {
-				if (f instanceof Port) {
-					Port p = (Port) f;
-					if (p.isIn()) {
-						txtInputPortName.setText(p.getName());
-					} else if (p.isOut()) {
-						txtOutputPortName.setText(p.getName());
+				if (f instanceof DirectedFeature) {
+					DirectedFeature df = (DirectedFeature) f;
+					if (df.isIn()) {
+						txtInputPortName.setText(df.getName());
+					} else if (df.isOut()) {
+						txtOutputPortName.setText(df.getName());
 					}
 				}
 			}

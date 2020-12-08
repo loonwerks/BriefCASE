@@ -80,7 +80,7 @@ public
 		---------------------------
 		
 		-- Top-level claim for proper insertion of a filter
-		add_filter(comp_context : component, filter : component, conn : connection, msg_type : data) <=
+		add_filter(comp_context : component, filter : component, conn : connection, msg_type : aadl) <=
 			** "Filter " filter " is properly added to component " comp_context **
 			filter_exists(filter, comp_context, conn) and component_not_bypassed(filter, comp_context, msg_type) and component_implemented(filter)
 			
@@ -155,7 +155,7 @@ public
 			
 
 		-- Make sure there is no communication pathway that avoids the component
-		component_not_bypassed(comp : component, comp_context : component, msg_type : data) <=
+		component_not_bypassed(comp : component, comp_context : component, msg_type : aadl) <=
 			** "Component " comp " cannot be bypassed" **
 			let comp_srcs : {component} = get_filter_sources(comp_context, comp, msg_type); 
 			let non_comp_srcs : {component} = get_non_filter_sources(comp_context, comp, msg_type); 
@@ -183,17 +183,17 @@ public
 			has_property(comp, CASE_Properties::Comm_Driver) and property(comp, CASE_Properties::Comm_Driver) = true
 			
 --		-- Returns the set of components that are ancestors of a target component through communication pathways that don't pass through a filter
---		get_non_filter_sources(target : component, filter : component, msg_type : data) : {component} = 
+--		get_non_filter_sources(target : component, filter : component, msg_type : aadl) : {component} = 
 --			let srcs : {component} = {c for (conn : connections (target)) (c : source_component(conn)) | has_type(conn) and type(conn) = msg_type and not (name(source_component(conn)) = name (filter))}; 
 --			recursive_backwards_reach(srcs)
 			
 		-- Returns the set of components that are ancestors of a target component through communication pathways that don't pass through a filter
-		get_non_filter_sources(target : component, filter : component, msg_type : data) : {component} = 
+		get_non_filter_sources(target : component, filter : component, msg_type : aadl) : {component} = 
 			let srcs : {component} = {c for (conn : connections (target)) (c : source_component(conn)) | has_type(conn) and type(conn) = msg_type and not (source_component(conn) = filter) and not (source_component(conn) = target)}; 
 			recursive_backwards_reach(srcs)
 		
 		-- Returns the set of components that are ancestors of the filter on a target component
-		get_filter_sources(target : component, filter : component, msg_type : data) : {component} = 
+		get_filter_sources(target : component, filter : component, msg_type : aadl) : {component} = 
 			let srcs : {component} = {c for (conn : connections(target)) (c : source_component(conn)) | has_type(conn) and type(conn) = msg_type and name(source_component(conn)) = name(filter)};
 			prev_reach(srcs)
 		

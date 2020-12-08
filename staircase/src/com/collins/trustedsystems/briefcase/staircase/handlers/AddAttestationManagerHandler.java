@@ -1,6 +1,7 @@
 package com.collins.trustedsystems.briefcase.staircase.handlers;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -26,10 +27,14 @@ import org.osate.aadl2.DataImplementation;
 import org.osate.aadl2.DataPort;
 import org.osate.aadl2.DataSubcomponentType;
 import org.osate.aadl2.DefaultAnnexSubclause;
+import org.osate.aadl2.DirectedFeature;
 import org.osate.aadl2.EnumerationLiteral;
 import org.osate.aadl2.EventDataPort;
 import org.osate.aadl2.EventPort;
 import org.osate.aadl2.Feature;
+import org.osate.aadl2.FeatureGroup;
+import org.osate.aadl2.FeatureGroupConnection;
+import org.osate.aadl2.FeatureGroupType;
 import org.osate.aadl2.IntegerLiteral;
 import org.osate.aadl2.NamedElement;
 import org.osate.aadl2.NamedValue;
@@ -309,6 +314,12 @@ public class AddAttestationManagerHandler extends AadlHandler {
 					p.setName(f.getName());
 					p.setIn(((EventPort) f).isIn());
 					p.setOut(((EventPort) f).isOut());
+				} else if (f instanceof FeatureGroup) {
+					FeatureGroup fg = commDriverType.createOwnedFeatureGroup();
+					fg.setName(f.getName());
+					fg.setIn(((FeatureGroup) f).isIn());
+					fg.setOut(((FeatureGroup) f).isOut());
+					fg.setFeatureType(((FeatureGroup) f).getFeatureGroupType());
 				}
 			}
 
@@ -486,7 +497,7 @@ public class AddAttestationManagerHandler extends AadlHandler {
 						}
 					}
 				} else {
-					importContainingPackage(idDataFeatureClassifier, pkgSection);
+					ModelTransformUtils.importContainingPackage(idDataFeatureClassifier, pkgSection);
 				}
 				if (idDataFeatureClassifier != null) {
 					amId.setDataFeatureClassifier(idDataFeatureClassifier);
@@ -620,48 +631,73 @@ public class AddAttestationManagerHandler extends AadlHandler {
 			// We also only want to consider a connection once (in the case of fan out)
 			// Also, save the port names, for use later
 			List<String> agPortNames = new ArrayList<>();
-			List<DataImplementation> agPortTypes = new ArrayList<>();
-			for (PortConnection conn : ci.getOwnedPortConnections()) {
+//			List<DataImplementation> agPortTypes = new ArrayList<>();
+//			for (PortConnection conn : ci.getOwnedPortConnections()) {
+			for (Connection conn : ci.getOwnedConnections()) {
 				if (conn.getSource().getContext() == commDriver && conn.getDestination().getContext() != null) {
-					final Port commPort = (Port) conn.getSource().getConnectionEnd();
+//					final Port commPort = (Port) conn.getSource().getConnectionEnd();
+					final ConnectionEnd commPort = conn.getSource().getConnectionEnd();
 					if (agPortNames.contains(commPort.getName())) {
 						continue;
 					}
-					Port portIn = null;
-					Port portOut = null;
-					DataSubcomponentType dataFeatureClassifier = null;
+//					Port portIn = null;
+//					Port portOut = null;
+					ConnectionEnd connEndIn = null;
+					ConnectionEnd connEndOut = null;
+//					DataSubcomponentType dataFeatureClassifier = null;
+					NamedElement featureClassifier = null;
 					if (commPort instanceof EventDataPort) {
-						portIn = ComponentCreateHelper.createOwnedEventDataPort(attestationGateType);
-						dataFeatureClassifier = ((EventDataPort) commPort).getDataFeatureClassifier();
-						((EventDataPort) portIn).setDataFeatureClassifier(dataFeatureClassifier);
-						portOut = ComponentCreateHelper.createOwnedEventDataPort(attestationGateType);
-						((EventDataPort) portOut).setDataFeatureClassifier(dataFeatureClassifier);
+						connEndIn = ComponentCreateHelper.createOwnedEventDataPort(attestationGateType);
+//						dataFeatureClassifier = ((EventDataPort) commPort).getDataFeatureClassifier();
+						featureClassifier = ((EventDataPort) commPort).getDataFeatureClassifier();
+//						((EventDataPort) connEndIn).setDataFeatureClassifier(dataFeatureClassifier);
+						((EventDataPort) connEndIn).setDataFeatureClassifier((DataSubcomponentType) featureClassifier);
+						connEndOut = ComponentCreateHelper.createOwnedEventDataPort(attestationGateType);
+//						((EventDataPort) connEndOut).setDataFeatureClassifier(dataFeatureClassifier);
+						((EventDataPort) connEndOut).setDataFeatureClassifier((DataSubcomponentType) featureClassifier);
 					} else if (commPort instanceof DataPort) {
-						portIn = ComponentCreateHelper.createOwnedDataPort(attestationGateType);
-						dataFeatureClassifier = ((DataPort) commPort).getDataFeatureClassifier();
-						((DataPort) portIn).setDataFeatureClassifier(dataFeatureClassifier);
-						portOut = ComponentCreateHelper.createOwnedDataPort(attestationGateType);
-						((DataPort) portOut).setDataFeatureClassifier(dataFeatureClassifier);
+						connEndIn = ComponentCreateHelper.createOwnedDataPort(attestationGateType);
+//						dataFeatureClassifier = ((DataPort) commPort).getDataFeatureClassifier();
+						featureClassifier = ((DataPort) commPort).getDataFeatureClassifier();
+//						((DataPort) connEndIn).setDataFeatureClassifier(dataFeatureClassifier);
+						((DataPort) connEndIn).setDataFeatureClassifier((DataSubcomponentType) featureClassifier);
+						connEndOut = ComponentCreateHelper.createOwnedDataPort(attestationGateType);
+//						((DataPort) connEndOut).setDataFeatureClassifier(dataFeatureClassifier);
+						((DataPort) connEndOut).setDataFeatureClassifier((DataSubcomponentType) featureClassifier);
+					} else if (commPort instanceof EventPort) {
+						// TODO
+					} else if (commPort instanceof FeatureGroup) {
+						FeatureGroupType featureClassifierIn = ((FeatureGroup) conn.getDestination().getConnectionEnd())
+								.getFeatureGroupType();
+						connEndIn = attestationGateType.createOwnedFeatureGroup();
+						((FeatureGroup) connEndIn).setFeatureType(featureClassifierIn);
+						ModelTransformUtils.importContainingPackage(featureClassifierIn, pkgSection);
+						featureClassifier = ((FeatureGroup) commPort).getFeatureGroupType();
+						connEndOut = attestationGateType.createOwnedFeatureGroup();
+						((FeatureGroup) connEndOut).setFeatureType((FeatureGroupType) featureClassifier);
 					}
 
-					portIn.setIn(true);
-					portOut.setOut(true);
+//					portIn.setIn(true);
+//					portOut.setOut(true);
+					((DirectedFeature) connEndIn).setIn(true);
+					((DirectedFeature) connEndOut).setOut(true);
 
 					List<String> names = attestationGatePortNames.get(commPort.getName());
 					if (names != null) {
-						portIn.setName(names.get(0));
-						portOut.setName(names.get(1));
+						connEndIn.setName(names.get(0));
+						connEndOut.setName(names.get(1));
 					} else {
-						portIn.setName(commPort.getName() + "_in");
-						portOut.setName(commPort.getName() + "_out");
+						connEndIn.setName(commPort.getName() + "_in");
+						connEndOut.setName(commPort.getName() + "_out");
 					}
 
 					agPortNames.add(commPort.getName());
-					agPortTypes.add((DataImplementation) dataFeatureClassifier);
+//					agPortTypes.add((DataImplementation) dataFeatureClassifier);
 
 					// The data subcomponent type could be in a different package.
 					// Make sure to include it in the with clause
-					importContainingPackage(dataFeatureClassifier, pkgSection);
+//					ModelTransformUtils.importContainingPackage(dataFeatureClassifier, pkgSection);
+					ModelTransformUtils.importContainingPackage(featureClassifier, pkgSection);
 
 				}
 			}
@@ -760,11 +796,14 @@ public class AddAttestationManagerHandler extends AadlHandler {
 			// Assign implementation
 			ComponentCreateHelper.setSubcomponentType(attestationGateSubcomp, attestationGateImpl);
 
-			List<PortConnection> newPortConns = new ArrayList<>();
+//			List<PortConnection> newPortConns = new ArrayList<>();
+			List<Connection> newConns = new ArrayList<>();
 			// Create new connections between comm driver / attestation gate / destination components
 			int connIdx = -1;
-			for (int i = 0; i < ci.getOwnedPortConnections().size(); i++) {
-				PortConnection conn = ci.getOwnedPortConnections().get(i);
+//			for (int i = 0; i < ci.getOwnedPortConnections().size(); i++) {
+			for (int i = 0; i < ci.getOwnedConnections().size(); i++) {
+//				PortConnection conn = ci.getOwnedPortConnections().get(i);
+				Connection conn = ci.getOwnedConnections().get(i);
 				// Ignore bus connections (destination context not null)
 				if (conn.getSource().getContext() == commDriver && conn.getDestination().getContext() != null) {
 
@@ -774,12 +813,15 @@ public class AddAttestationManagerHandler extends AadlHandler {
 						connIdx = i;
 					}
 
-					// Rewire existing connection sources to be attestation gate
+					// Rewire existing connection sources to be the attestation gate
 					String featureName = conn.getSource().getConnectionEnd().getName();
 					ConnectionEnd connEnd = conn.getSource().getConnectionEnd();
 					conn.getSource().setContext(attestationGateSubcomp);
-					for (Feature feature : attestationGateType.getAllFeatures()) {
-						if (feature.getName().equalsIgnoreCase(featureName + "_out")) {
+					List<String> featureNames = attestationGatePortNames.getOrDefault(featureName,
+							new ArrayList<>(Arrays.asList(featureName + "_in", featureName + "_out")));
+					for (Feature feature : attestationGateType.getOwnedFeatures()) {
+//						if (feature.getName().equalsIgnoreCase(featureName + "_out")) {
+						if (feature.getName().equalsIgnoreCase(featureNames.get(1))) {
 							conn.getSource().setConnectionEnd(feature);
 							break;
 						}
@@ -788,8 +830,10 @@ public class AddAttestationManagerHandler extends AadlHandler {
 					// Create connections from comm driver to attestation manager
 					// Don't create extra connections if a comm driver feature is fan out
 					boolean connExists = false;
-					for (PortConnection pc : newPortConns) {
-						if (pc.getSource().getConnectionEnd().getName().equalsIgnoreCase(featureName)) {
+//					for (PortConnection pc : newPortConns) {
+					for (Connection c : newConns) {
+//						if (pc.getSource().getConnectionEnd().getName().equalsIgnoreCase(featureName)) {
+						if (c.getSource().getConnectionEnd().getName().equalsIgnoreCase(featureName)) {
 							connExists = true;
 							break;
 						}
@@ -798,22 +842,37 @@ public class AddAttestationManagerHandler extends AadlHandler {
 						continue;
 					}
 
-					final PortConnection portConnOut = Aadl2Factory.eINSTANCE.createPortConnection();
-					portConnOut.setBidirectional(false);
-					final ConnectedElement connSrc = portConnOut.createSource();
+//					final PortConnection portConnOut = Aadl2Factory.eINSTANCE.createPortConnection();
+//					portConnOut.setBidirectional(false);
+//					final ConnectedElement connSrc = portConnOut.createSource();
+					// TODO: Make this a generic connection
+					Connection connOut = null;
+					if (conn instanceof PortConnection) {
+						connOut = Aadl2Factory.eINSTANCE.createPortConnection();
+					} else if (conn instanceof FeatureGroupConnection) {
+						connOut = Aadl2Factory.eINSTANCE.createFeatureGroupConnection();
+					} else {
+						// TODO: Handle this
+						continue;
+					}
+					connOut.setBidirectional(false);
+					final ConnectedElement connSrc = connOut.createSource();
 					connSrc.setContext(commDriver);
 					connSrc.setConnectionEnd(connEnd);
 
-					final ConnectedElement connDst = portConnOut.createDestination();
+//					final ConnectedElement connDst = portConnOut.createDestination();
+					final ConnectedElement connDst = connOut.createDestination();
 					connDst.setContext(attestationGateSubcomp);
-					for (Feature feature : attestationGateType.getAllFeatures()) {
-						if (feature.getName().equalsIgnoreCase(featureName + "_in")) {
+					for (Feature feature : attestationGateType.getOwnedFeatures()) {
+//						if (feature.getName().equalsIgnoreCase(featureName + "_in")) {
+						if (feature.getName().equalsIgnoreCase(featureNames.get(0))) {
 							connDst.setConnectionEnd(feature);
 							break;
 						}
 					}
 
-					newPortConns.add(portConnOut);
+//					newPortConns.add(portConnOut);
+					newConns.add(connOut);
 
 				}
 			}
@@ -827,7 +886,8 @@ public class AddAttestationManagerHandler extends AadlHandler {
 			final ConnectedElement idDst = portConnId.createDestination();
 			idDst.setContext(attestationGateSubcomp);
 			idDst.setConnectionEnd(agId);
-			newPortConns.add(portConnId);
+//			newPortConns.add(portConnId);
+			newConns.add(portConnId);
 
 			// Create attestation request / response connections between comm driver and attestation manager
 			final PortConnection portConnReq = Aadl2Factory.eINSTANCE.createPortConnection();
@@ -838,7 +898,8 @@ public class AddAttestationManagerHandler extends AadlHandler {
 			final ConnectedElement reqDst = portConnReq.createDestination();
 			reqDst.setContext(commDriver);
 			reqDst.setConnectionEnd(commReq);
-			newPortConns.add(portConnReq);
+//			newPortConns.add(portConnReq);
+			newConns.add(portConnReq);
 
 			final PortConnection portConnRes = Aadl2Factory.eINSTANCE.createPortConnection();
 			portConnRes.setBidirectional(false);
@@ -848,16 +909,22 @@ public class AddAttestationManagerHandler extends AadlHandler {
 			final ConnectedElement resDst = portConnRes.createDestination();
 			resDst.setContext(attestationManagerSubcomp);
 			resDst.setConnectionEnd(commRes);
-			newPortConns.add(portConnRes);
+//			newPortConns.add(portConnRes);
+			newConns.add(portConnRes);
 
 			int idxOffset = 0;
-			for (PortConnection newPortConn : newPortConns) {
+//			for (PortConnection newPortConn : newPortConns) {
+			for (Connection newConn : newConns) {
 				// Make sure each new connection has a unique name
-				newPortConn.setName(
-						ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false, ci.getOwnedPortConnections()));
-				ci.getOwnedPortConnections().add(newPortConn);
+//				newPortConn.setName(
+//						ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false, ci.getOwnedPortConnections()));
+//				ci.getOwnedPortConnections().add(newPortConn);
+				newConn.setName(
+						ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false, ci.getOwnedConnections()));
+				ci.getOwnedConnections().add(newConn);
 				// Move to right place
-				ci.getOwnedPortConnections().move(connIdx + idxOffset, ci.getOwnedPortConnections().size() - 1);
+//				ci.getOwnedPortConnections().move(connIdx + idxOffset, ci.getOwnedPortConnections().size() - 1);
+				ci.getOwnedConnections().move(connIdx + idxOffset, ci.getOwnedConnections().size() - 1);
 				idxOffset++;
 			}
 
