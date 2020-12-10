@@ -13,29 +13,30 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.xtext.ui.editor.XtextEditor;
 import org.eclipse.xtext.ui.editor.utils.EditorUtils;
 import org.osate.aadl2.Aadl2Factory;
-import org.osate.aadl2.Aadl2Package;
 import org.osate.aadl2.AadlPackage;
 import org.osate.aadl2.ComponentCategory;
 import org.osate.aadl2.ComponentImplementation;
 import org.osate.aadl2.ComponentType;
 import org.osate.aadl2.ConnectedElement;
+import org.osate.aadl2.Connection;
+import org.osate.aadl2.ConnectionEnd;
 import org.osate.aadl2.DataPort;
 import org.osate.aadl2.DataSubcomponentType;
 import org.osate.aadl2.DefaultAnnexSubclause;
+import org.osate.aadl2.DirectedFeature;
 import org.osate.aadl2.EnumerationLiteral;
 import org.osate.aadl2.EventDataPort;
 import org.osate.aadl2.EventPort;
+import org.osate.aadl2.FeatureGroup;
+import org.osate.aadl2.NamedElement;
 import org.osate.aadl2.NamedValue;
 import org.osate.aadl2.PackageSection;
-import org.osate.aadl2.Port;
-import org.osate.aadl2.PortCategory;
 import org.osate.aadl2.PortConnection;
 import org.osate.aadl2.PrivatePackageSection;
 import org.osate.aadl2.Property;
 import org.osate.aadl2.PublicPackageSection;
 import org.osate.aadl2.Realization;
 import org.osate.aadl2.Subcomponent;
-import org.osate.aadl2.modelsupport.scoping.Aadl2GlobalScopeUtil;
 import org.osate.ui.dialogs.Dialog;
 import org.osate.xtext.aadl2.properties.util.GetProperties;
 import org.osate.xtext.aadl2.properties.util.ThreadProperties;
@@ -182,35 +183,20 @@ public class AddSwitchHandler extends AadlHandler {
 			}
 
 			// Add switch
-			Port ctlPort = ModelTransformUtils.getPort(containingImpl, controlPort);
-			DataSubcomponentType ctlPortDataType = null;
-			String ctlPortDataTypeName = null;
-			PortCategory ctlPortCategory = null;
-			if (ctlPort instanceof DataPort) {
-				ctlPortDataType = ((DataPort) ctlPort).getDataFeatureClassifier();
-			} else if (ctlPort instanceof EventDataPort) {
-				ctlPortDataType = ((EventDataPort) ctlPort).getDataFeatureClassifier();
-			}
-			if (ctlPortDataType != null) {
-				ctlPortDataTypeName = ctlPortDataType.getQualifiedName();
-			}
-			if (ctlPort != null) {
-				ctlPortCategory = ctlPort.getCategory();
-			}
-
 			Subcomponent switchSub = insertSwitch(containingImpl, inputPorts, selectedConnection, compCategory,
-					dispatchProtocol, controlPort,
-					ctlPortCategory, ctlPortDataTypeName, switchRequirement, switchAgreeProperty);
+					dispatchProtocol, controlPort, switchRequirement, switchAgreeProperty);
 
 			// Add add_switch claim to resolute prove statement, if applicable
 			if (!switchRequirement.isEmpty()) {
 				CyberRequirement req = RequirementsManager.getInstance().getRequirement(switchRequirement);
-				DataSubcomponentType dataFeatureClassifier = null;
-				Port port = (Port) selectedConnection.getDestination().getConnectionEnd();
+				NamedElement dataFeatureClassifier = null;
+				ConnectionEnd port = selectedConnection.getDestination().getConnectionEnd();
 				if (port instanceof EventDataPort) {
 					dataFeatureClassifier = ((EventDataPort) port).getDataFeatureClassifier();
 				} else if (port instanceof DataPort) {
 					dataFeatureClassifier = ((DataPort) port).getDataFeatureClassifier();
+				} else if (port instanceof FeatureGroup) {
+					dataFeatureClassifier = ((FeatureGroup) port).getAllFeatureGroupType();
 				}
 				// TODO: handle case where selected connection is an event connection, in which case there is no data type
 				return new AddSwitchClaim(req.getContext(), switchSub, dataFeatureClassifier);
@@ -236,17 +222,14 @@ public class AddSwitchHandler extends AadlHandler {
 	 * @param compCategory - The component category of the switch
 	 * @param dispatchProtocol - The dispatch protocol (sporadic, periodic) for thread components
 	 * @param controlSrcPort - External connection end to connect with control port (can be null)
-	 * @param controlPortType - The port type (event, event data, data) of the control port
-	 * @param controlPortDataType - Data type of control port
 	 * @param switchRequirement - The requirement that drives this transform
 	 * @param switchAgreeProperty - The spec that defines the behavior of this switch
 	 * @return The newly created switch subcomponent
 	 */
 	public static Subcomponent insertSwitch(ComponentImplementation compImpl,
-			Map<String, String> inPortMap, PortConnection outConn,
+			Map<String, String> inPortMap, Connection outConn,
 			ComponentCategory compCategory, String dispatchProtocol, String controlSrcPort,
-			PortCategory controlPortType,
-			String controlPortDataType, String switchRequirement, String switchAgreeProperty) {
+			String switchRequirement, String switchAgreeProperty) {
 
 		PackageSection pkgSection = (PackageSection) compImpl.eContainer();
 
@@ -258,15 +241,15 @@ public class AddSwitchHandler extends AadlHandler {
 				ModelTransformUtils.getUniqueName(SWITCH_COMP_TYPE_NAME, true, pkgSection.getOwnedClassifiers()));
 
 		// Create switch input port(s)
-		Map<String, Port> inPorts = new HashMap<>();
+		Map<String, ConnectionEnd> inPorts = new HashMap<>();
 		for (Map.Entry<String, String> inPort : inPortMap.entrySet()) {
 
 			if (inPort.getKey().isEmpty()) {
 				continue;
 			}
 
-			Port srcPort = ModelTransformUtils.getPort(compImpl, inPort.getValue());
-			Port portIn = null;
+			ConnectionEnd srcPort = ModelTransformUtils.getPort(compImpl, inPort.getValue());
+			ConnectionEnd portIn = null;
 			DataSubcomponentType dataFeatureClassifier = null;
 			if (srcPort instanceof EventDataPort) {
 				dataFeatureClassifier = ((EventDataPort) srcPort).getDataFeatureClassifier();
@@ -279,19 +262,22 @@ public class AddSwitchHandler extends AadlHandler {
 			} else if (srcPort instanceof EventPort) {
 				portIn = ComponentCreateHelper.createOwnedEventPort(switchType);
 				return null;
+			} else if (srcPort instanceof FeatureGroup) {
+				portIn = switchType.createOwnedFeatureGroup();
+				((FeatureGroup) portIn).setFeatureType(((FeatureGroup) srcPort).getAllFeatureGroupType());
 			} else {
 				Dialog.showError("Add Switch", "Could not determine the port type of the source component.");
 				return null;
 			}
 
-			portIn.setIn(true);
+			((DirectedFeature) portIn).setIn(true);
 			portIn.setName(inPort.getKey());
 			inPorts.put(inPort.getKey(), portIn);
 		}
 
 		// Create switch output port
-		Port port = (Port) outConn.getDestination().getConnectionEnd();
-		Port outPort = null;
+		ConnectionEnd port = outConn.getDestination().getConnectionEnd();
+		ConnectionEnd outPort = null;
 		DataSubcomponentType dataFeatureClassifier = null;
 		if (port instanceof EventDataPort) {
 			dataFeatureClassifier = ((EventDataPort) port).getDataFeatureClassifier();
@@ -304,33 +290,38 @@ public class AddSwitchHandler extends AadlHandler {
 		} else if (port instanceof EventPort) {
 			outPort = ComponentCreateHelper.createOwnedEventPort(switchType);
 			return null;
+		} else if (port instanceof FeatureGroup) {
+			outPort = switchType.createOwnedFeatureGroup();
+			((FeatureGroup) outPort).setFeatureType(((FeatureGroup) port).getAllFeatureGroupType());
 		} else {
 			Dialog.showError("Add Switch", "Could not determine the port type of the destination component.");
 			return null;
 		}
 
-		outPort.setOut(true);
+		((DirectedFeature) outPort).setOut(true);
 		outPort.setName(SWITCH_OUTPUT_PORT_NAME);
 
-		// Create switch control port
-		Port controlPort = null;
 		// If user didn't specify a control port type, make it an event data port
-		if (controlPortType == null) {
+		// Get control port
+		ConnectionEnd ctlSrcPort = ModelTransformUtils.getPort(compImpl, controlSrcPort);
+		ConnectionEnd controlPort = null;
+		if (ctlSrcPort == null) {
 			controlPort = ComponentCreateHelper.createOwnedEventDataPort(switchType);
-		} else if (controlPortType == PortCategory.EVENT_DATA) {
+		} else if (ctlSrcPort instanceof EventDataPort) {
 			controlPort = ComponentCreateHelper.createOwnedEventDataPort(switchType);
-			dataFeatureClassifier = Aadl2GlobalScopeUtil.get(pkgSection, Aadl2Package.eINSTANCE.getDataClassifier(),
-					controlPortDataType);
+			dataFeatureClassifier = ((EventDataPort) ctlSrcPort).getDataFeatureClassifier();
 			((EventDataPort) controlPort).setDataFeatureClassifier(dataFeatureClassifier);
-		} else if (controlPortType == PortCategory.DATA) {
+		} else if (ctlSrcPort instanceof DataPort) {
 			controlPort = ComponentCreateHelper.createOwnedDataPort(switchType);
-			dataFeatureClassifier = Aadl2GlobalScopeUtil.get(pkgSection, Aadl2Package.eINSTANCE.getDataClassifier(),
-					controlPortDataType);
+			dataFeatureClassifier = ((DataPort) ctlSrcPort).getDataFeatureClassifier();
 			((DataPort) controlPort).setDataFeatureClassifier(dataFeatureClassifier);
-		} else if (controlPortType == PortCategory.EVENT) {
+		} else if (ctlSrcPort instanceof EventPort) {
 			controlPort = ComponentCreateHelper.createOwnedEventPort(switchType);
+		} else if (ctlSrcPort instanceof FeatureGroup) {
+			controlPort = switchType.createOwnedFeatureGroup();
+			((FeatureGroup) controlPort).setFeatureType(((FeatureGroup) ctlSrcPort).getAllFeatureGroupType());
 		}
-		controlPort.setIn(true);
+		((DirectedFeature) controlPort).setIn(true);
 		controlPort.setName(SWITCH_CONTROL_PORT_NAME);
 
 		// Add switch properties
@@ -397,8 +388,8 @@ public class AddSwitchHandler extends AadlHandler {
 				continue;
 			}
 
-			Port p = ModelTransformUtils.getPort(compImpl, inPort.getValue());
-			final PortConnection portConnInput = compImpl.createOwnedPortConnection();
+			ConnectionEnd p = ModelTransformUtils.getPort(compImpl, inPort.getValue());
+			final Connection portConnInput = ComponentCreateHelper.createOwnedConnection(compImpl, p);
 			// Give it a unique name
 			portConnInput.setName(
 					ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false, compImpl.getOwnedPortConnections()));
@@ -412,8 +403,8 @@ public class AddSwitchHandler extends AadlHandler {
 		}
 
 		// Create control connection
-		if (controlSrcPort != null && !controlSrcPort.isEmpty()) {
-			final PortConnection portConnControl = compImpl.createOwnedPortConnection();
+		if (controlSrcPort != null) {
+			final Connection portConnControl = ComponentCreateHelper.createOwnedConnection(compImpl, controlPort);
 			// Give it a unique name
 			portConnControl.setName(
 					ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false, compImpl.getOwnedPortConnections()));

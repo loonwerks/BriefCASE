@@ -17,17 +17,21 @@ import org.osate.aadl2.ComponentCategory;
 import org.osate.aadl2.ComponentImplementation;
 import org.osate.aadl2.ComponentType;
 import org.osate.aadl2.ConnectedElement;
+import org.osate.aadl2.Connection;
+import org.osate.aadl2.ConnectionEnd;
 import org.osate.aadl2.DataPort;
 import org.osate.aadl2.DataSubcomponentType;
 import org.osate.aadl2.DefaultAnnexSubclause;
+import org.osate.aadl2.DirectedFeature;
 import org.osate.aadl2.EnumerationLiteral;
 import org.osate.aadl2.EventDataPort;
 import org.osate.aadl2.EventPort;
+import org.osate.aadl2.FeatureGroup;
 import org.osate.aadl2.IntegerLiteral;
+import org.osate.aadl2.NamedElement;
 import org.osate.aadl2.NamedValue;
 import org.osate.aadl2.PackageSection;
 import org.osate.aadl2.Port;
-import org.osate.aadl2.PortConnection;
 import org.osate.aadl2.PrivatePackageSection;
 import org.osate.aadl2.Property;
 import org.osate.aadl2.PublicPackageSection;
@@ -77,12 +81,14 @@ public class AddMonitorHandler extends AadlHandler {
 
 		// Check if it is a connection
 		final EObject eObj = getEObject(uri);
-		if (!(eObj instanceof PortConnection)) {
+//		if (!(eObj instanceof PortConnection)) {
+		if (!(eObj instanceof Connection)) {
 			Dialog.showError("Add Monitor",
 					"A connection between two components must be selected to add a monitor.");
 			return;
 		}
-		final PortConnection selectedConnection = (PortConnection) eObj;
+//		final PortConnection selectedConnection = (PortConnection) eObj;
+		final Connection selectedConnection = (Connection) eObj;
 		ComponentImplementation ci = selectedConnection.getContainingComponentImpl();
 
 		// TODO: Check if monitor is being placed after a filter. If so, filter requirement claim needs
@@ -153,7 +159,8 @@ public class AddMonitorHandler extends AadlHandler {
 		AddMonitorClaim claim = xtextEditor.getDocument().modify(resource -> {
 
 			// Retrieve the model object to modify
-			PortConnection selectedConnection = (PortConnection) resource.getEObject(uri.fragment());
+//			PortConnection selectedConnection = (PortConnection) resource.getEObject(uri.fragment());
+			Connection selectedConnection = (Connection) resource.getEObject(uri.fragment());
 			final ComponentImplementation containingImpl = selectedConnection.getContainingComponentImpl();
 			final AadlPackage aadlPkg = (AadlPackage) resource.getContents().get(0);
 			PackageSection pkgSection = null;
@@ -213,34 +220,44 @@ public class AddMonitorHandler extends AadlHandler {
 					ModelTransformUtils.getUniqueName(monitorComponentName, true, pkgSection.getOwnedClassifiers()));
 
 			// Create monitor observed port
-			Port portSrc = (Port) selectedConnection.getSource().getConnectionEnd();
-			Port portObserved = null;
-			DataSubcomponentType observedDataFeatureClassifier = null;
+//			Port portSrc = (Port) selectedConnection.getSource().getConnectionEnd();
+//			Port portObserved = null;
+			ConnectionEnd portSrc = selectedConnection.getSource().getConnectionEnd();
+			ConnectionEnd portObserved = null;
+//			DataSubcomponentType observedDataFeatureClassifier = null;
+			NamedElement observedDataFeatureClassifier = null;
 			if (portSrc instanceof EventDataPort) {
 				observedDataFeatureClassifier = ((EventDataPort) portSrc).getDataFeatureClassifier();
 				portObserved = ComponentCreateHelper.createOwnedEventDataPort(monitorType);
-				((EventDataPort) portObserved).setDataFeatureClassifier(observedDataFeatureClassifier);
+				((EventDataPort) portObserved)
+						.setDataFeatureClassifier((DataSubcomponentType) observedDataFeatureClassifier);
 			} else if (portSrc instanceof DataPort) {
 				observedDataFeatureClassifier = ((DataPort) portSrc).getDataFeatureClassifier();
 				portObserved = ComponentCreateHelper.createOwnedDataPort(monitorType);
-				((DataPort) portObserved).setDataFeatureClassifier(observedDataFeatureClassifier);
+				((DataPort) portObserved)
+						.setDataFeatureClassifier((DataSubcomponentType) observedDataFeatureClassifier);
 			} else if (portSrc instanceof EventPort) {
 				portObserved = ComponentCreateHelper.createOwnedEventPort(monitorType);
-				return null;
+			} else if (portSrc instanceof FeatureGroup) {
+				portObserved = monitorType.createOwnedFeatureGroup();
+				((FeatureGroup) portObserved).setFeatureType(((FeatureGroup) portSrc).getFeatureGroupType());
 			} else {
 				Dialog.showError("Add Monitor", "Could not determine the port type of the destination component.");
 				return null;
 			}
 
-			portObserved.setIn(true);
+			((DirectedFeature) portObserved).setIn(true);
 			portObserved.setName(MONITOR_OBSERVED_PORT_NAME);
 
 			// Create reference ports
-			Map<Port, Port> monReferencePorts = new HashMap<>();
+//			Map<Port, Port> monReferencePorts = new HashMap<>();
+			Map<ConnectionEnd, ConnectionEnd> monReferencePorts = new HashMap<>();
 			DataSubcomponentType dataFeatureClassifier = null;
 			for (Map.Entry<String, String> refEntry : referencePorts.entrySet()) {
-				Port monRefPort = null;
-				Port srcRefPort = ModelTransformUtils.getPort(containingImpl, refEntry.getValue());
+//				Port monRefPort = null;
+//				Port srcRefPort = ModelTransformUtils.getPort(containingImpl, refEntry.getValue());
+				ConnectionEnd monRefPort = null;
+				ConnectionEnd srcRefPort = ModelTransformUtils.getPort(containingImpl, refEntry.getValue());
 				// If user didn't specify an expected outport, use the same type as the observed port
 				if (srcRefPort == null) {
 					srcRefPort = portObserved;
@@ -255,15 +272,19 @@ public class AddMonitorHandler extends AadlHandler {
 					((DataPort) monRefPort).setDataFeatureClassifier(dataFeatureClassifier);
 				} else if (srcRefPort instanceof EventPort) {
 					monRefPort = ComponentCreateHelper.createOwnedEventPort(monitorType);
+				} else if (srcRefPort instanceof FeatureGroup) {
+					monRefPort = monitorType.createOwnedFeatureGroup();
+					((FeatureGroup) monRefPort).setFeatureType(((FeatureGroup) srcRefPort).getFeatureGroupType());
 				}
-				monRefPort.setIn(true);
+				((DirectedFeature) monRefPort).setIn(true);
 				monRefPort.setName(refEntry.getKey());
 				monReferencePorts.put(srcRefPort, monRefPort);
 			}
 
 			// Create monitor alert port
 			Port monAlertPort = null;
-			final Port dstAlertPort = ModelTransformUtils.getPort(containingImpl, alertPort);
+//			final Port dstAlertPort = ModelTransformUtils.getPort(containingImpl, alertPort);
+			final ConnectionEnd dstAlertPort = ModelTransformUtils.getPort(containingImpl, alertPort);
 			// If user didn't specify an alert inport, make it an event data port with no type
 			if (dstAlertPort == null) {
 				monAlertPort = ComponentCreateHelper.createOwnedEventDataPort(monitorType);
@@ -277,14 +298,19 @@ public class AddMonitorHandler extends AadlHandler {
 				((DataPort) monAlertPort).setDataFeatureClassifier(dataFeatureClassifier);
 			} else if (dstAlertPort instanceof EventPort) {
 				monAlertPort = ComponentCreateHelper.createOwnedEventPort(monitorType);
+			} else if (dstAlertPort instanceof FeatureGroup) {
+				// TODO: Names of all feature group features should be provided so user can pick one
+
 			}
 			monAlertPort.setOut(true);
 			monAlertPort.setName(MONITOR_ALERT_PORT_NAME);
 
 			// Create observation gate output port, if needed
-			Port monGatePort = null;
+//			Port monGatePort = null;
+			ConnectionEnd monGatePort = null;
 			if (observationGate) {
-				final Port dstGatePort = (Port) selectedConnection.getDestination().getConnectionEnd();
+//				final Port dstGatePort = (Port) selectedConnection.getDestination().getConnectionEnd();
+				final ConnectionEnd dstGatePort = selectedConnection.getDestination().getConnectionEnd();
 //				// If user didn't specify a gate inport, make it an event data port
 				if (dstGatePort == null) {
 					monGatePort = ComponentCreateHelper.createOwnedEventDataPort(monitorType);
@@ -296,16 +322,21 @@ public class AddMonitorHandler extends AadlHandler {
 					monGatePort = ComponentCreateHelper.createOwnedDataPort(monitorType);
 					dataFeatureClassifier = ((DataPort) dstGatePort).getDataFeatureClassifier();
 					((DataPort) monGatePort).setDataFeatureClassifier(dataFeatureClassifier);
-				} else if (dstAlertPort instanceof EventPort) {
+				} else if (dstGatePort instanceof EventPort) {
 					monGatePort = ComponentCreateHelper.createOwnedEventPort(monitorType);
+				} else if (dstGatePort instanceof FeatureGroup) {
+					monGatePort = monitorType.createOwnedFeatureGroup();
+					((FeatureGroup) monGatePort).setFeatureType(((FeatureGroup) dstGatePort).getFeatureGroupType());
 				}
-				monGatePort.setOut(true);
+				((DirectedFeature) monGatePort).setOut(true);
 				monGatePort.setName(MONITOR_GATE_PORT_NAME);
 			}
 
 			// Create monitor reset port, if needed
-			Port monResetPort = null;
-			Port srcResetPort = null;
+//			Port monResetPort = null;
+//			Port srcResetPort = null;
+			ConnectionEnd monResetPort = null;
+			ConnectionEnd srcResetPort = null;
 			if (resetPort != null) {
 				srcResetPort = ModelTransformUtils.getPort(containingImpl, resetPort);
 				// If user didn't specify a reset outport, make it an event data port
@@ -321,8 +352,11 @@ public class AddMonitorHandler extends AadlHandler {
 					((DataPort) monResetPort).setDataFeatureClassifier(dataFeatureClassifier);
 				} else if (srcResetPort instanceof EventPort) {
 					monResetPort = ComponentCreateHelper.createOwnedEventPort(monitorType);
+				} else if (srcResetPort instanceof FeatureGroup) {
+					monResetPort = monitorType.createOwnedFeatureGroup();
+					((FeatureGroup) monResetPort).setFeatureType(((FeatureGroup) srcResetPort).getFeatureGroupType());
 				}
-				monResetPort.setIn(true);
+				((DirectedFeature) monResetPort).setIn(true);
 				monResetPort.setName(MONITOR_RESET_PORT_NAME);
 			}
 
@@ -402,23 +436,40 @@ public class AddMonitorHandler extends AadlHandler {
 			ComponentCreateHelper.setSubcomponentType(monitorSubcomp, monitorImpl);
 
 			// Create a connection from selected connection source to monitor observed input
-			final PortConnection portConnObserved = containingImpl.createOwnedPortConnection();
+//			final PortConnection portConnObserved = containingImpl.createOwnedPortConnection();
+//			// Give it a unique name
+//			portConnObserved
+//					.setName(ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false,
+//							containingImpl.getOwnedPortConnections()));
+//			portConnObserved.setBidirectional(false);
+//			final ConnectedElement monitorObservedSrc = portConnObserved.createSource();
+//			monitorObservedSrc.setContext(selectedConnection.getSource().getContext());
+//			monitorObservedSrc.setConnectionEnd(selectedConnection.getSource().getConnectionEnd());
+//			final ConnectedElement monitorObservedDst = portConnObserved.createDestination();
+//			monitorObservedDst.setContext(monitorSubcomp);
+//			monitorObservedDst.setConnectionEnd(portObserved);
+
+			// Create a connection from selected connection source to monitor observed input
+			final Connection connObserved = ComponentCreateHelper.createOwnedConnection(containingImpl,
+					selectedConnection.getSource().getConnectionEnd());
 			// Give it a unique name
-			portConnObserved
+			connObserved
 					.setName(ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false,
-							containingImpl.getOwnedPortConnections()));
-			portConnObserved.setBidirectional(false);
-			final ConnectedElement monitorObservedSrc = portConnObserved.createSource();
+							containingImpl.getOwnedConnections()));
+			connObserved.setBidirectional(false);
+			final ConnectedElement monitorObservedSrc = connObserved.createSource();
 			monitorObservedSrc.setContext(selectedConnection.getSource().getContext());
 			monitorObservedSrc.setConnectionEnd(selectedConnection.getSource().getConnectionEnd());
-			final ConnectedElement monitorObservedDst = portConnObserved.createDestination();
+			final ConnectedElement monitorObservedDst = connObserved.createDestination();
 			monitorObservedDst.setContext(monitorSubcomp);
 			monitorObservedDst.setConnectionEnd(portObserved);
 
 			// Put portConnObserved in right place (after selected connection)
 			String destName = selectedConnection.getName();
-			containingImpl.getOwnedPortConnections().move(
-					getIndex(destName, containingImpl.getOwnedPortConnections()) + 1,
+//			containingImpl.getOwnedPortConnections().move(
+//					getIndex(destName, containingImpl.getOwnedPortConnections()) + 1,
+//					containingImpl.getOwnedPortConnections().size() - 1);
+			containingImpl.getOwnedConnections().move(getIndex(destName, containingImpl.getOwnedConnections()) + 1,
 					containingImpl.getOwnedPortConnections().size() - 1);
 
 			// Change selected connection source to monitor gate output port, if needed
@@ -429,67 +480,120 @@ public class AddMonitorHandler extends AadlHandler {
 
 			// Create Reference port connections, if provided
 			if (!referencePorts.isEmpty()) {
-				for (Map.Entry<Port, Port> portEntry : monReferencePorts.entrySet()) {
-					final PortConnection portConnExpected = containingImpl.createOwnedPortConnection();
-					portConnExpected.setName(
+//				for (Map.Entry<Port, Port> portEntry : monReferencePorts.entrySet()) {
+//					final PortConnection portConnExpected = containingImpl.createOwnedPortConnection();
+//					portConnExpected.setName(
+//							ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false,
+//									containingImpl.getOwnedPortConnections()));
+//					portConnExpected.setBidirectional(false);
+//					final ConnectedElement monitorExpectedSrc = portConnExpected.createSource();
+//					monitorExpectedSrc.setContext(
+//							ModelTransformUtils.getSubcomponent(containingImpl,
+//									referencePorts.get(portEntry.getValue().getName())));
+//					monitorExpectedSrc.setConnectionEnd(portEntry.getKey());
+//					final ConnectedElement monitorExpectedDst = portConnExpected.createDestination();
+//					monitorExpectedDst.setContext(monitorSubcomp);
+//					monitorExpectedDst.setConnectionEnd(portEntry.getValue());
+//					// Put portConnExpected in right place (before portConnObserved)
+//					destName = portConnObserved.getName();
+//					containingImpl.getOwnedPortConnections().move(
+//							getIndex(destName, containingImpl.getOwnedPortConnections()),
+//							containingImpl.getOwnedPortConnections().size() - 1);
+//				}
+				for (Map.Entry<ConnectionEnd, ConnectionEnd> portEntry : monReferencePorts.entrySet()) {
+					final Connection connExpected = ComponentCreateHelper.createOwnedConnection(containingImpl,
+							portEntry.getKey());
+					connExpected.setName(
 							ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false,
-									containingImpl.getOwnedPortConnections()));
-					portConnExpected.setBidirectional(false);
-					final ConnectedElement monitorExpectedSrc = portConnExpected.createSource();
+									containingImpl.getOwnedConnections()));
+					connExpected.setBidirectional(false);
+					final ConnectedElement monitorExpectedSrc = connExpected.createSource();
 					monitorExpectedSrc.setContext(
 							ModelTransformUtils.getSubcomponent(containingImpl,
 									referencePorts.get(portEntry.getValue().getName())));
 					monitorExpectedSrc.setConnectionEnd(portEntry.getKey());
-					final ConnectedElement monitorExpectedDst = portConnExpected.createDestination();
+					final ConnectedElement monitorExpectedDst = connExpected.createDestination();
 					monitorExpectedDst.setContext(monitorSubcomp);
 					monitorExpectedDst.setConnectionEnd(portEntry.getValue());
-					// Put portConnExpected in right place (before portConnObserved)
-					destName = portConnObserved.getName();
-					containingImpl.getOwnedPortConnections().move(
-							getIndex(destName, containingImpl.getOwnedPortConnections()),
-							containingImpl.getOwnedPortConnections().size() - 1);
+					// Put connExpected in right place (before connObserved)
+					destName = connObserved.getName();
+					containingImpl.getOwnedConnections().move(getIndex(destName, containingImpl.getOwnedConnections()),
+							containingImpl.getOwnedConnections().size() - 1);
 				}
 			}
 
 			// Create Alert connection, if provided
-			PortConnection portConnAlert = null;
+//			PortConnection portConnAlert = null;
+//			if (!alertPort.isEmpty()) {
+//				portConnAlert = containingImpl.createOwnedPortConnection();
+//				portConnAlert
+//						.setName(ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false,
+//								containingImpl.getOwnedPortConnections()));
+//				portConnAlert.setBidirectional(false);
+//				final ConnectedElement monitorAlertSrc = portConnAlert.createSource();
+//				monitorAlertSrc.setContext(monitorSubcomp);
+//				monitorAlertSrc.setConnectionEnd(monAlertPort);
+//				final ConnectedElement monitorAlertDst = portConnAlert.createDestination();
+//				monitorAlertDst.setContext(ModelTransformUtils.getSubcomponent(containingImpl, alertPort));
+//				monitorAlertDst.setConnectionEnd(dstAlertPort);
+//				// Put portConnAlert in right place (after portConnObserved)
+//				destName = portConnObserved.getName();
+//				containingImpl.getOwnedPortConnections().move(
+//						getIndex(destName, containingImpl.getOwnedPortConnections()) + 1,
+//						containingImpl.getOwnedPortConnections().size() - 1);
+//			}
+			Connection connAlert = null;
 			if (!alertPort.isEmpty()) {
-				portConnAlert = containingImpl.createOwnedPortConnection();
-				portConnAlert
+				connAlert = ComponentCreateHelper.createOwnedConnection(containingImpl, monAlertPort);
+				connAlert
 						.setName(ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false,
-								containingImpl.getOwnedPortConnections()));
-				portConnAlert.setBidirectional(false);
-				final ConnectedElement monitorAlertSrc = portConnAlert.createSource();
+								containingImpl.getOwnedConnections()));
+				connAlert.setBidirectional(false);
+				final ConnectedElement monitorAlertSrc = connAlert.createSource();
 				monitorAlertSrc.setContext(monitorSubcomp);
 				monitorAlertSrc.setConnectionEnd(monAlertPort);
-				final ConnectedElement monitorAlertDst = portConnAlert.createDestination();
+				final ConnectedElement monitorAlertDst = connAlert.createDestination();
 				monitorAlertDst.setContext(ModelTransformUtils.getSubcomponent(containingImpl, alertPort));
 				monitorAlertDst.setConnectionEnd(dstAlertPort);
-				// Put portConnAlert in right place (after portConnObserved)
-				destName = portConnObserved.getName();
-				containingImpl.getOwnedPortConnections().move(
-						getIndex(destName, containingImpl.getOwnedPortConnections()) + 1,
-						containingImpl.getOwnedPortConnections().size() - 1);
+				// Put connAlert in right place (after connObserved)
+				destName = connObserved.getName();
+				containingImpl.getOwnedConnections().move(getIndex(destName, containingImpl.getOwnedConnections()) + 1,
+						containingImpl.getOwnedConnections().size() - 1);
 			}
 
 			// Create Reset connection, if provided
 			if (resetPort != null && !resetPort.isEmpty()) {
-				final PortConnection portConnReset = containingImpl.createOwnedPortConnection();
-				portConnReset
+//				final PortConnection portConnReset = containingImpl.createOwnedPortConnection();
+//				portConnReset
+//						.setName(ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false,
+//								containingImpl.getOwnedPortConnections()));
+//				portConnReset.setBidirectional(false);
+//				final ConnectedElement monitorResetSrc = portConnReset.createSource();
+//				monitorResetSrc.setContext(ModelTransformUtils.getSubcomponent(containingImpl, resetPort));
+//				monitorResetSrc.setConnectionEnd(srcResetPort);
+//				final ConnectedElement monitorResetDst = portConnReset.createDestination();
+//				monitorResetDst.setContext(monitorSubcomp);
+//				monitorResetDst.setConnectionEnd(monResetPort);
+//				// Put portConnExpected in right place (after alert)
+//				destName = portConnAlert.getName();
+//				containingImpl.getOwnedPortConnections().move(
+//						getIndex(destName, containingImpl.getOwnedPortConnections()) + 1,
+//						containingImpl.getOwnedPortConnections().size() - 1);
+				final Connection connReset = ComponentCreateHelper.createOwnedConnection(containingImpl, monResetPort);
+				connReset
 						.setName(ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false,
-								containingImpl.getOwnedPortConnections()));
-				portConnReset.setBidirectional(false);
-				final ConnectedElement monitorResetSrc = portConnReset.createSource();
+								containingImpl.getOwnedConnections()));
+				connReset.setBidirectional(false);
+				final ConnectedElement monitorResetSrc = connReset.createSource();
 				monitorResetSrc.setContext(ModelTransformUtils.getSubcomponent(containingImpl, resetPort));
 				monitorResetSrc.setConnectionEnd(srcResetPort);
-				final ConnectedElement monitorResetDst = portConnReset.createDestination();
+				final ConnectedElement monitorResetDst = connReset.createDestination();
 				monitorResetDst.setContext(monitorSubcomp);
 				monitorResetDst.setConnectionEnd(monResetPort);
-				// Put portConnExpected in right place (after alert)
-				destName = portConnAlert.getName();
-				containingImpl.getOwnedPortConnections().move(
-						getIndex(destName, containingImpl.getOwnedPortConnections()) + 1,
-						containingImpl.getOwnedPortConnections().size() - 1);
+				// Put connExpected in right place (after alert)
+				destName = connAlert.getName();
+				containingImpl.getOwnedConnections().move(getIndex(destName, containingImpl.getOwnedConnections()) + 1,
+						containingImpl.getOwnedConnections().size() - 1);
 			}
 
 			// AGREE

@@ -490,7 +490,7 @@ public class AddFilterHandler extends AadlHandler {
 //			filterOutDst.setContext(selectedConnection.getDestination().getContext());
 //			filterOutDst.setConnectionEnd(selectedConnection.getDestination().getConnectionEnd());
 
-			final Connection connOut = ComponentCreateHelper.createOwnedConnection(containingImpl, selectedConnection);
+			final Connection connOut = ComponentCreateHelper.createOwnedConnection(containingImpl, connEndOut);
 			// Give it a unique name
 //			connOut.setName(ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false,
 //					containingImpl.getOwnedPortConnections()));
