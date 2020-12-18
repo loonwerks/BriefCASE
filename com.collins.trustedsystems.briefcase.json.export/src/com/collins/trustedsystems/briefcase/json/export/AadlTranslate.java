@@ -53,6 +53,7 @@ import org.osate.aadl2.NamedValue;
 import org.osate.aadl2.NumberType;
 import org.osate.aadl2.PackageRename;
 import org.osate.aadl2.PackageSection;
+import org.osate.aadl2.Parameter;
 import org.osate.aadl2.PortConnection;
 import org.osate.aadl2.Property;
 import org.osate.aadl2.PropertyAssociation;
@@ -69,6 +70,8 @@ import org.osate.aadl2.ReferenceType;
 import org.osate.aadl2.ReferenceValue;
 import org.osate.aadl2.StringLiteral;
 import org.osate.aadl2.Subcomponent;
+import org.osate.aadl2.SubprogramAccess;
+import org.osate.aadl2.SubprogramSubcomponentType;
 import org.osate.aadl2.TypeExtension;
 import org.osate.aadl2.util.Aadl2Switch;
 
@@ -434,6 +437,11 @@ public class AadlTranslate extends Aadl2Switch<JsonElement> {
 	}
 
 	@Override
+	public JsonElement caseParameter(Parameter param) {
+		return buildPort(param.getName(), "Parameter", param.getClassifier(), param.isIn(), param.isOut());
+	}
+
+	@Override
 	public JsonElement caseBusAccess(BusAccess access) {
 
 		JsonObject result = new JsonObject();
@@ -467,6 +475,23 @@ public class AadlTranslate extends Aadl2Switch<JsonElement> {
 
 		if (!data.isEmpty()) {
 			result.add("data", new JsonPrimitive(data));
+		}
+
+		return result;
+	}
+
+	@Override
+	public JsonElement caseSubprogramAccess(SubprogramAccess access) {
+		JsonObject result = new JsonObject();
+		result.add("name", new JsonPrimitive(access.getName()));
+		result.add("kind", new JsonPrimitive("SubprogramAccess"));
+		result.add("accessType", new JsonPrimitive(access.getKind().getName()));
+
+		SubprogramSubcomponentType classifier = access.getSubprogramFeatureClassifier();
+		String subprogram = classifier.getQualifiedName();
+
+		if (!subprogram.isEmpty()) {
+			result.add("subprogram", new JsonPrimitive(subprogram));
 		}
 
 		return result;
