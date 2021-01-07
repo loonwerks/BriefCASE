@@ -48,6 +48,7 @@ import com.collins.trustedsystems.briefcase.staircase.dialogs.AddVirtualizationD
 import com.collins.trustedsystems.briefcase.staircase.requirements.AddVirtualizationClaim;
 import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsManager;
 import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
+import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils.MITIGATION_TYPE;
 import com.collins.trustedsystems.briefcase.staircase.utils.ComponentCreateHelper;
 import com.collins.trustedsystems.briefcase.staircase.utils.ModelTransformUtils;
 import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
@@ -104,7 +105,9 @@ public class AddVirtualizationHandler extends AadlHandler {
 
 		// Check if this subcomponent is bound to a processor
 		// ASSUMPTION: processor binding will be specified in model for selected subcomponent, or its subcomponents
+		explicitProcessorBindings = new HashMap<>();
 		getExplicitProcessorBindings(selectedSub);
+		implicitProcessorBindings = new HashMap<>();
 		getImplicitProcessorBindings(selectedSub, "");
 		// TODO: Remove this restriction and present user with list of processors and virtual processors to choose from
 		// TODO: May need to look at Available_Processor_Bindings property to do this
@@ -141,6 +144,7 @@ public class AddVirtualizationHandler extends AadlHandler {
 		}
 
 		// Get the subcomponent objects corresponding to the selected name
+		virtualizationSubNameMap = new HashMap<>();
 		for (String vComp : virtualizationComponents) {
 			Subcomponent currentSub = selectedSub;
 			for (String subName : vComp.split("\\.")) {
@@ -157,6 +161,7 @@ public class AddVirtualizationHandler extends AadlHandler {
 		// Check that all of the selected subcomponents are bound to a processor
 		// If a subcomponent isn't bound to a processor, but it's parent is, then the subcomponent
 		// has the same binding as its parent
+		boundProcessors = new HashSet<>();
 		Set<String> unboundSubcomponents = new HashSet<>();
 		for (String vComp : virtualizationComponents) {
 			if (!explicitProcessorBindings.containsKey(vComp) && implicitProcessorBindings.get(vComp) == null) {
@@ -251,7 +256,8 @@ public class AddVirtualizationHandler extends AadlHandler {
 						pkgSection.getOwnedClassifiers().size() - 1);
 
 				// CASE::COMP_TYPE Property
-				if (!CasePropertyUtils.setCompType(vpType, "VIRTUAL_MACHINE")) {
+//				if (!CasePropertyUtils.setCompType(vpType, "VIRTUAL_MACHINE")) {
+				if (!CasePropertyUtils.setMitigationType(vpType, MITIGATION_TYPE.VIRTUALIZATION)) {
 //					return;
 				}
 

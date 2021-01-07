@@ -93,7 +93,7 @@
                   <command
                         commandId="com.collins.trustedsystems.briefcase.staircase.commands.Sel4Transform"
                         id="com.collins.trustedsystems.briefcase.menus.outline.resiliency.transformations.Sel4Transform"
-                        label="Transform for seL4 build"
+                        label="Transform for seL4 build..."
                         style="push">
                   </command>
                </menu>
@@ -199,7 +199,7 @@
                   <command
                         commandId="com.collins.trustedsystems.briefcase.staircase.commands.Sel4Transform"
                         id="com.collins.trustedsystems.briefcase.menus.menubar.resiliency.transformations.Sel4Transform"
-                        label="Transform for seL4 build"
+                        label="Transform for seL4 build..."
                         style="push">
                   </command>
                </menu>
@@ -325,7 +325,7 @@
                   <command
                         commandId="com.collins.trustedsystems.briefcase.staircase.commands.Sel4Transform"
                         id="com.collins.trustedsystems.briefcase.menus.editor.resiliency.transformations.Sel4Transform"
-                        label="Transform for seL4 build"
+                        label="Transform for seL4 build..."
                         style="push">
                   </command>
                </menu>
@@ -466,12 +466,14 @@
    </extension>
    <extension
          point="org.osate.pluginsupport.aadlcontribution">
-<!--
       <aadlcontribution
             file="resources/CASE_Properties.aadl"
             id="com.collins.trustedsystems.briefcase.staircase.aadlcontribution.casepropset">
       </aadlcontribution>
--->
+      <aadlcontribution
+            file="resources/CASE_Model_Transformations.aadl"
+            id="com.collins.trustedsystems.briefcase.staircase.aadlcontribution.casemodeltransformations">
+      </aadlcontribution>
    </extension>
 
 </plugin>

@@ -188,14 +188,14 @@ public class ModelAnnotationsHandler extends AadlHandler {
 //							return;
 						}
 					}
-					if (addCompType) {
-						if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.COMP_TYPE,
-								compType.toString(), component)) {
-							Dialog.showError("Model Annotations",
-									"Unable to set the COMP_TYPE property for " + component.getName() + ".");
-//							return;
-						}
-					}
+//					if (addCompType) {
+//						if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.COMP_TYPE,
+//								compType.toString(), component)) {
+//							Dialog.showError("Model Annotations",
+//									"Unable to set the COMP_TYPE property for " + component.getName() + ".");
+////							return;
+//						}
+//					}
 					if (addCommModality) {
 						if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.COMM_MODALITY,
 								commModality.toString(),
@@ -254,11 +254,11 @@ public class ModelAnnotationsHandler extends AadlHandler {
 				NamedValue namedVal = (NamedValue) val.getOwnedValue();
 				EnumerationLiteral enumLiteral = (EnumerationLiteral) namedVal.getNamedValue();
 				availability = CIA.valueOf(enumLiteral.getName());
-			} else if (property.getName().equalsIgnoreCase(CasePropertyUtils.COMP_TYPE)) {
-				ModalPropertyValue val = propertyAssociation.getOwnedValues().get(0);
-				NamedValue namedVal = (NamedValue) val.getOwnedValue();
-				EnumerationLiteral enumLiteral = (EnumerationLiteral) namedVal.getNamedValue();
-				compType = COMP_TYPE.valueOf(enumLiteral.getName());
+//			} else if (property.getName().equalsIgnoreCase(CasePropertyUtils.COMP_TYPE)) {
+//				ModalPropertyValue val = propertyAssociation.getOwnedValues().get(0);
+//				NamedValue namedVal = (NamedValue) val.getOwnedValue();
+//				EnumerationLiteral enumLiteral = (EnumerationLiteral) namedVal.getNamedValue();
+//				compType = COMP_TYPE.valueOf(enumLiteral.getName());
 			} else if (property.getName().equalsIgnoreCase(CasePropertyUtils.COMM_MODALITY)) {
 				ModalPropertyValue val = propertyAssociation.getOwnedValues().get(0);
 				NamedValue namedVal = (NamedValue) val.getOwnedValue();

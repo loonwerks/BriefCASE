@@ -9,11 +9,15 @@ import org.osate.aadl2.Classifier;
 import org.osate.aadl2.ComponentCategory;
 import org.osate.aadl2.ComponentImplementation;
 import org.osate.aadl2.ComponentType;
+import org.osate.aadl2.Connection;
+import org.osate.aadl2.ConnectionEnd;
 import org.osate.aadl2.DataAccess;
 import org.osate.aadl2.DataPort;
 import org.osate.aadl2.DefaultAnnexSubclause;
 import org.osate.aadl2.EventDataPort;
 import org.osate.aadl2.EventPort;
+import org.osate.aadl2.FeatureGroup;
+import org.osate.aadl2.Port;
 import org.osate.aadl2.ProcessImplementation;
 import org.osate.aadl2.ProcessSubcomponent;
 import org.osate.aadl2.ProcessType;
@@ -201,6 +205,16 @@ public class ComponentCreateHelper {
 			((ThreadGroupType) compType).getOwnedEventPorts().add(port);
 		} else {
 			return;
+		}
+	}
+
+	public static Connection createOwnedConnection(ComponentImplementation compImpl, ConnectionEnd context) {
+		if (context instanceof Port) {
+			return compImpl.createOwnedPortConnection();
+		} else if (context instanceof FeatureGroup) {
+			return compImpl.createOwnedFeatureGroupConnection();
+		} else {
+			return null;
 		}
 	}
 
