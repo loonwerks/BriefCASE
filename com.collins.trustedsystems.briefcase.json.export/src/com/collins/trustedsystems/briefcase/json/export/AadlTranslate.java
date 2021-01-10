@@ -507,7 +507,9 @@ public class AadlTranslate extends Aadl2Switch<JsonElement> {
 			result.add("direction", new JsonPrimitive(getInOutString(featureGroup.isIn(), featureGroup.isOut())));
 		}
 		FeatureGroupType featureGroupType = featureGroup.getFeatureGroupType();
-		result.add("featureGroupType", new JsonPrimitive(featureGroupType.getName()));
+		if (featureGroupType != null) {
+			result.add("featureGroupType", new JsonPrimitive(featureGroupType.getName()));
+		}
 
 		return result;
 	}

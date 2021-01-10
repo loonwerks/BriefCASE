@@ -71,6 +71,7 @@ public class TranslateHandler extends AbstractHandler {
 			BriefcaseNotifier.notify("Export to JSON", "Export completed successfully.");
 		} catch (Exception e) {
 			Dialog.showError("JSON Generator", "Unable to export model to JSON format");
+			e.printStackTrace();
 			return null;
 		}
 

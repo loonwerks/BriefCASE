@@ -191,7 +191,7 @@ property set CASE_Properties is
 	-- depend on a particular connection's binding to a bus  
 	-- '100' indicates an element requires maximum Availability
 	-- '0' indicates an element does not require any Availability (is completely optional)
-	Requires_Data_Availbility: aadlinteger 0 .. 100 applies to (subcomponent, 
+	Requires_Data_Availability: aadlinteger 0 .. 100 applies to (subcomponent, 
 		System, Thread, Thread Group, Process, Subprogram, processor, 
 		virtual processor, Memory, device, bus, virtual bus, connection);
 			
