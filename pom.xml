@@ -349,6 +349,11 @@
 			<url>${eclipse.mirror}/releases/2020-06/</url>
 		</repository>
 		<repository>
+			<id>Osate2</id>
+			<layout>p2</layout>
+			<url>https://osate-build.sei.cmu.edu/download/osate/stable/2.9.0/updates/</url>
+		</repository>
+		<repository>
 			<id>Formal-Methods-Workbench-Updates</id>
 			<layout>p2</layout>
 			<url>https://raw.githubusercontent.com/loonwerks/formal-methods-workbench-updates/master/</url>
