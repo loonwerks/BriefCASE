@@ -8,7 +8,10 @@ import java.util.TreeSet;
 import org.eclipse.emf.ecore.EObject;
 import org.osate.aadl2.AadlPackage;
 import org.osate.aadl2.ComponentImplementation;
+import org.osate.aadl2.ConnectionEnd;
+import org.osate.aadl2.DirectedFeature;
 import org.osate.aadl2.Feature;
+import org.osate.aadl2.FeatureGroup;
 import org.osate.aadl2.ModelUnit;
 import org.osate.aadl2.NamedElement;
 import org.osate.aadl2.PackageSection;
@@ -27,16 +30,36 @@ public class ModelTransformUtils {
 		List<String> inports = new ArrayList<>();
 		// Get component implementation out ports
 		for (Feature f : ci.getAllFeatures()) {
-			if (f instanceof Port && ((Port) f).isOut()) {
-				inports.add(f.getName());
+			if (f instanceof DirectedFeature && ((DirectedFeature) f).isOut()) {
+				if (f instanceof Port) {
+					inports.add(f.getName());
+				} else if (f instanceof FeatureGroup) {
+					inports.add(f.getName());
+					// TODO: support nested feature groups
+					for (Feature p : ((FeatureGroup) f).getFeatureGroupType().getOwnedFeatures()) {
+						if (p instanceof Port && ((Port) p).isIn()) {
+							inports.add(f.getName() + "[" + p.getName() + "]");
+						}
+					}
+				}
 			}
 		}
 
 		// Get subcomponent in ports
 		for (Subcomponent s : ci.getOwnedSubcomponents()) {
 			for (Feature f : s.getAllFeatures()) {
-				if (f instanceof Port && ((Port) f).isIn()) {
-					inports.add(s.getName() + "." + f.getName());
+				if (f instanceof DirectedFeature && ((DirectedFeature) f).isIn()) {
+					if (f instanceof Port) {
+						inports.add(s.getName() + "." + f.getName());
+					} else if (f instanceof FeatureGroup) {
+						inports.add(s.getName() + "." + f.getName());
+						// TODO: support nested feature groups
+						for (Feature p : ((FeatureGroup) f).getFeatureGroupType().getOwnedFeatures()) {
+							if (p instanceof Port && ((Port) p).isIn()) {
+								inports.add(s.getName() + "." + f.getName() + "[" + p.getName() + "]");
+							}
+						}
+					}
 				}
 			}
 		}
@@ -52,16 +75,36 @@ public class ModelTransformUtils {
 		List<String> outports = new ArrayList<>();
 		// Get component implementation in ports
 		for (Feature f : ci.getAllFeatures()) {
-			if (f instanceof Port && ((Port) f).isIn()) {
-				outports.add(f.getName());
+			if (f instanceof DirectedFeature && ((DirectedFeature) f).isIn()) {
+				if (f instanceof Port) {
+					outports.add(f.getName());
+				} else if (f instanceof FeatureGroup) {
+					outports.add(f.getName());
+					// TODO: support nested feature groups
+					for (Feature p : ((FeatureGroup) f).getFeatureGroupType().getOwnedFeatures()) {
+						if (p instanceof Port && ((Port) p).isIn()) {
+							outports.add(f.getName() + "[" + p.getName() + "]");
+						}
+					}
+				}
 			}
 		}
 
 		// Get subcomponent out ports
 		for (Subcomponent s : ci.getOwnedSubcomponents()) {
 			for (Feature f : s.getAllFeatures()) {
-				if (f instanceof Port && ((Port) f).isOut()) {
-					outports.add(s.getName() + "." + f.getName());
+				if (f instanceof DirectedFeature && ((DirectedFeature) f).isOut()) {
+					if (f instanceof Port) {
+						outports.add(s.getName() + "." + f.getName());
+					} else if (f instanceof FeatureGroup) {
+						outports.add(s.getName() + "." + f.getName());
+						// TODO: support nested feature groups
+						for (Feature p : ((FeatureGroup) f).getFeatureGroupType().getOwnedFeatures()) {
+							if (p instanceof Port && ((Port) p).isIn()) {
+								outports.add(s.getName() + "." + f.getName() + "[" + p.getName() + "]");
+							}
+						}
+					}
 				}
 			}
 		}
@@ -75,13 +118,29 @@ public class ModelTransformUtils {
 	 * @param portName - <subcomponent> . <feature name>
 	 * @return
 	 */
-	public static Port getPort(ComponentImplementation ci, String portName) {
+	public static ConnectionEnd getPort(ComponentImplementation ci, String portName) {
+		String featureName = null;
+		if (portName.contains("[")) {
+			featureName = portName.substring(portName.indexOf('[') + 1, portName.length() - 1);
+			portName = portName.substring(0, portName.indexOf('['));
+		}
 		String[] parts = portName.split("\\.");
 		if (parts.length == 1) {
 			for (Feature f : ci.getAllFeatures()) {
 				if (f.getName().equalsIgnoreCase(portName)) {
 					if (f instanceof Port) {
-						return (Port) f;
+						return f;
+					} else if (f instanceof FeatureGroup) {
+						if (featureName == null) {
+							return f;
+						} else {
+							for (Feature p : ((FeatureGroup) f).getFeatureGroupType().getOwnedFeatures()) {
+								if (p.getName().equalsIgnoreCase(featureName)) {
+									return p;
+								}
+							}
+							return null;
+						}
 					} else {
 						return null;
 					}
@@ -93,7 +152,18 @@ public class ModelTransformUtils {
 					for (Feature f : s.getAllFeatures()) {
 						if (f.getName().equalsIgnoreCase(parts[1])) {
 							if (f instanceof Port) {
-								return (Port) f;
+								return f;
+							} else if (f instanceof FeatureGroup) {
+								if (featureName == null) {
+									return f;
+								} else {
+									for (Feature p : ((FeatureGroup) f).getFeatureGroupType().getOwnedFeatures()) {
+										if (p.getName().equalsIgnoreCase(featureName)) {
+											return p;
+										}
+									}
+									return null;
+								}
 							} else {
 								return null;
 							}

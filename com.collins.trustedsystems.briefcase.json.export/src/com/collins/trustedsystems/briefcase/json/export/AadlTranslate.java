@@ -39,6 +39,7 @@ import org.osate.aadl2.EventDataPort;
 import org.osate.aadl2.EventPort;
 import org.osate.aadl2.Feature;
 import org.osate.aadl2.FeatureGroup;
+import org.osate.aadl2.FeatureGroupType;
 import org.osate.aadl2.FlowEnd;
 import org.osate.aadl2.FlowSpecification;
 import org.osate.aadl2.ImplementationExtension;
@@ -52,6 +53,7 @@ import org.osate.aadl2.NamedValue;
 import org.osate.aadl2.NumberType;
 import org.osate.aadl2.PackageRename;
 import org.osate.aadl2.PackageSection;
+import org.osate.aadl2.Parameter;
 import org.osate.aadl2.PortConnection;
 import org.osate.aadl2.Property;
 import org.osate.aadl2.PropertyAssociation;
@@ -68,6 +70,8 @@ import org.osate.aadl2.ReferenceType;
 import org.osate.aadl2.ReferenceValue;
 import org.osate.aadl2.StringLiteral;
 import org.osate.aadl2.Subcomponent;
+import org.osate.aadl2.SubprogramAccess;
+import org.osate.aadl2.SubprogramSubcomponentType;
 import org.osate.aadl2.TypeExtension;
 import org.osate.aadl2.util.Aadl2Switch;
 
@@ -433,6 +437,11 @@ public class AadlTranslate extends Aadl2Switch<JsonElement> {
 	}
 
 	@Override
+	public JsonElement caseParameter(Parameter param) {
+		return buildPort(param.getName(), "Parameter", param.getClassifier(), param.isIn(), param.isOut());
+	}
+
+	@Override
 	public JsonElement caseBusAccess(BusAccess access) {
 
 		JsonObject result = new JsonObject();
@@ -472,11 +481,63 @@ public class AadlTranslate extends Aadl2Switch<JsonElement> {
 	}
 
 	@Override
+	public JsonElement caseSubprogramAccess(SubprogramAccess access) {
+		JsonObject result = new JsonObject();
+		result.add("name", new JsonPrimitive(access.getName()));
+		result.add("kind", new JsonPrimitive("SubprogramAccess"));
+		result.add("accessType", new JsonPrimitive(access.getKind().getName()));
+
+		SubprogramSubcomponentType classifier = access.getSubprogramFeatureClassifier();
+		String subprogram = classifier.getQualifiedName();
+
+		if (!subprogram.isEmpty()) {
+			result.add("subprogram", new JsonPrimitive(subprogram));
+		}
+
+		return result;
+	}
+
+	@Override
 	public JsonElement caseFeatureGroup(FeatureGroup featureGroup) {
 		JsonObject result = new JsonObject();
 		result.add("name", new JsonPrimitive(featureGroup.getName()));
 		result.add("kind", new JsonPrimitive("FeatureGroup"));
-		result.add("direction", new JsonPrimitive(getInOutString(featureGroup.isIn(), featureGroup.isOut())));
+		String direction = getInOutString(featureGroup.isIn(), featureGroup.isOut());
+		if (!direction.isEmpty()) {
+			result.add("direction", new JsonPrimitive(getInOutString(featureGroup.isIn(), featureGroup.isOut())));
+		}
+		FeatureGroupType featureGroupType = featureGroup.getFeatureGroupType();
+		if (featureGroupType != null) {
+			result.add("featureGroupType", new JsonPrimitive(featureGroupType.getName()));
+		}
+
+		return result;
+	}
+
+	@Override
+	public JsonElement caseFeatureGroupType(FeatureGroupType featureGroupType) {
+		JsonObject result = new JsonObject();
+		result.add("name", new JsonPrimitive(featureGroupType.getName()));
+		result.add("kind", new JsonPrimitive("FeatureGroupType"));
+		FeatureGroupType inverse = featureGroupType.getInverse();
+		if (inverse != null) {
+			result.add("inverse", new JsonPrimitive(inverse.getQualifiedName()));
+		}
+		JsonArray features = new JsonArray();
+		for (Feature feature : featureGroupType.getOwnedFeatures()) {
+			features.add(doSwitch(feature));
+		}
+		if (features.size() > 0) {
+			result.add("features", features);
+		}
+
+		JsonArray properties = new JsonArray();
+		for (PropertyAssociation pa : featureGroupType.getOwnedPropertyAssociations()) {
+			properties.add(doSwitch(pa));
+		}
+		if (properties.size() > 0) {
+			result.add("properties", properties);
+		}
 
 		return result;
 	}

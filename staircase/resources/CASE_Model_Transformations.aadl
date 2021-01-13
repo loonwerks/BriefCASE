@@ -11,8 +11,8 @@ public
 	end CASE_MsgHeader;
 	data implementation CASE_MsgHeader.Impl
 		subcomponents
-			src: data Base_Types::Integer_32;
-			dst: data Base_Types::Integer_32;
+			src: data Base_Types::Integer;--Integer_32;
+			dst: data Base_Types::Integer;--Integer_32;
 			trusted: data Base_Types::Boolean;
 			HMAC: data Base_Types::Boolean;
 	end CASE_MsgHeader.Impl;
@@ -34,7 +34,7 @@ public
 	data implementation CASE_UART_Msg.Impl
 		subcomponents
 			crc: data Base_Types::Boolean;
-			message: data Base_Types::String;
+--			message: data Base_Types::String;
 	end CASE_UART_Msg.Impl;
 	
 	-- WIFI Message structure
@@ -44,7 +44,7 @@ public
 	data implementation CASE_WIFI_Msg.Impl
 		subcomponents
 			crc: data Base_Types::Boolean;
-			message: data Base_Types::String;
+--			message: data Base_Types::String;
 	end CASE_WIFI_Msg.Impl;
 	
 	-- ATTESTATION MANAGER
@@ -71,246 +71,7 @@ public
 			status: data Base_Types::Boolean;
 	end CASE_AttestationResponseMsg.Impl;
 	
-	-- This is the structure of a single entry in the attestation manager cache
-	data CASE_AttestationCacheRecord
-	end CASE_AttestationCacheRecord;
-	
-	data implementation CASE_AttestationCacheRecord.Impl
-		subcomponents
-			src: data Base_Types::Integer_32;
-			trusted: data Base_Types::Integer_32;
-			timeout: data Base_Types::Integer_32;
-	end CASE_AttestationCacheRecord.Impl;
-	
-	
-	-- This is the structure of the Attestation Cache
-	-- It currently has a maximum size of 6, but we expect to 
-	-- replace with a sizeable array in the future
-	data CASE_AttestationCache
-	end CASE_AttestationCache;
-	
-	data implementation CASE_AttestationCache.Impl
-		subcomponents
-			src1: data CASE_AttestationCacheRecord.Impl;
-			src2: data CASE_AttestationCacheRecord.Impl;
-			src3: data CASE_AttestationCacheRecord.Impl;
-			src4: data CASE_AttestationCacheRecord.Impl;
-			src5: data CASE_AttestationCacheRecord.Impl;
-			src6: data CASE_AttestationCacheRecord.Impl;
-	end CASE_AttestationCache.Impl;
-		
-	annex Agree {**	
-		
-		--------------------
-		-- COMMUNICATIONS --
-		--------------------
-		-- Empty message header
-		-- This indicates that the rest of the message can be ignored
-		const NULL_ID : int = 0;
---		const NULL_HEADER : CASE_MsgHeader.Impl = CASE_MsgHeader.Impl {src = NULL_ID; dst = NULL_ID; msg_type = NULL_MSG_TYPE; HMAC = false};
-		const NULL_HEADER : CASE_MsgHeader.Impl = CASE_MsgHeader.Impl {src = NULL_ID; dst = NULL_ID; trusted = false; HMAC = false};
-		fun NULL_MESSAGE(header : CASE_MsgHeader.Impl) : bool = (header = NULL_HEADER);
-	
-		-- CASE message types
-		-- Users will add their own
-		const NULL_MSG_TYPE : int = 0;
-		const AM_REQUEST_MSG_TYPE : int = 1;
-		const AM_RESPONSE_MSG_TYPE : int = 2;
-		const FREE_MSG_TYPE : int = 3;
-	
-		---------------------------
-		-- MODEL TRANSFORMATIONS --
-		---------------------------
-		
-		-- Attestation Manager
-		
-		const NULL_AM_REQUEST_MESSAGE : CASE_AttestationRequestMsg.Impl = CASE_AttestationRequestMsg.Impl {header = NULL_HEADER};
-		const NULL_CACHE : CASE_AttestationCache.Impl = CASE_AttestationCache.Impl {src1 = NULL_RECORD;
-																					src2 = NULL_RECORD;
-																					src3 = NULL_RECORD;
-																					src4 = NULL_RECORD;
-																					src5 = NULL_RECORD;
-																					src6 = NULL_RECORD};
-		
-		const NULL_RECORD : CASE_AttestationCacheRecord.Impl = CASE_AttestationCacheRecord.Impl {src = NULL_ID; trusted = AM_FAIL; timeout = 0};
-		
-		-- This maintains the cache state
-		node CACHE(new_cache : CASE_AttestationCache.Impl) returns (cache : CASE_AttestationCache.Impl);
-		let
-			cache = 
-				if new_cache = NULL_CACHE then
-					NULL_CACHE -> pre(cache)
-				else
-					new_cache;
-		tel;
-		
-		fun TRUSTED(src : Base_Types::Integer_32) : bool = 
-			IN_CACHE(src) and PASS_ATTESTATION(src) and not IS_STALE(src);
 
-		const AM_FAIL : int = 0;
-		const AM_PASS : int = 1;
-		const AM_REQUESTING : int = 2;
---		enum AM_STATUS = {FAIL, PASS, REQUESTING};
-		
-		-- Returns whether the specified node is in the cache
-		node IN_CACHE(src : int) returns (result : bool);
-		let
-			result = not (GET_RECORD_BY_NAME(src) = NULL_RECORD);
-		tel;
-		
-		-- Returns the attestation status of the specified node
-		node GET_STATUS(src : int) returns (result : int);
---		node GET_STATUS(src : int) returns (result : AM_STATUS);
-		var record : CASE_AttestationCacheRecord.Impl;
-		let
-			record = GET_RECORD_BY_NAME(src);
-			result = record.trusted;
-		tel;
-
-		-- Returns whether the specified node has passed attestation
-		node PASS_ATTESTATION(src : int) returns (result : bool);
-		var record : CASE_AttestationCacheRecord.Impl;
-		let
-			record = GET_RECORD_BY_NAME(src);
-			result = (record.trusted = AM_PASS);
-		tel;
-		
-		-- Returns whether the specified node data is old
-		-- For now we are ignoring staleness
-		node IS_STALE(src : int) returns (result : bool);
-		var record : CASE_AttestationCacheRecord.Impl;
-		let
-			record = GET_RECORD_BY_NAME(src);
-			-- for now we are ignoring staleness
-			result = false;
-		tel;
-		
-		-- Creates a new record with the specified values
-		node CREATE_RECORD(new_src : int, new_trusted : int, new_timeout : int) returns (new_record : CASE_AttestationCacheRecord.Impl);
-		let
-			new_record = CASE_AttestationCacheRecord.Impl {src = new_src; trusted = new_trusted; timeout = new_timeout};
-		tel;
-		
-		-- Adds a record to the cache with the specified value
-		-- Record will only be added if there is free space up to an index specified by max_idx
-		node ADD_RECORD(src : int, trusted : int, timeout : int, max_idx : int) returns (success : bool);
-		var free_idx : int;
-		let
-			free_idx = GET_FREE_IDX(max_idx);
-			success = if IN_CACHE(src) then
-						not (WRITE_CACHE(GET_IDX_BY_NAME(src), CREATE_RECORD(src, trusted, timeout)) = NULL_CACHE)
-					else if free_idx > 0 then
-						not (WRITE_CACHE(free_idx, CREATE_RECORD(src, trusted, timeout)) = NULL_CACHE)
-					else
-						false;
-		tel;
-		
-		-- Gets the index of an available record in the cache
-		node GET_FREE_IDX(max : int) returns (idx : int);
-		var c : CASE_AttestationCache.Impl;
-		let
-			c = CACHE(NULL_CACHE);
-			idx = if c.src1 = NULL_RECORD and max >= 1 then 1
-				else if c.src2 = NULL_RECORD and max >= 2 then 2
-				else if c.src3 = NULL_RECORD and max >= 3 then 3
-				else if c.src4 = NULL_RECORD and max >= 4 then 4
-				else if c.src5 = NULL_RECORD and max >= 5 then 5
-				else if c.src6 = NULL_RECORD and max >= 6 then 6
-				else 0;
-		tel;
-		
-		-- Returns a record in the cache at the specified index
-		node GET_RECORD_BY_IDX(idx : int) returns (record : CASE_AttestationCacheRecord.Impl);
-		var c : CASE_AttestationCache.Impl;
-		let
-			c = CACHE(NULL_CACHE);
-			record = if idx = 1 then c.src1
-					else if idx = 2 then c.src2
-					else if idx = 3 then c.src3
-					else if idx = 4 then c.src4
-					else if idx = 5 then c.src5
-					else if idx = 6 then c.src6
-					else NULL_RECORD;
-		tel;
-		
-		-- Returns a record in the cache with the specified ID
-		node GET_RECORD_BY_NAME(src : int) returns (record : CASE_AttestationCacheRecord.Impl);
-		var c : CASE_AttestationCache.Impl;
-		let
-			c = CACHE(NULL_CACHE);
-			record = if c.src1.src = src then c.src1
-					else if c.src2.src = src then c.src2
-					else if c.src3.src = src then c.src3
-					else if c.src4.src = src then c.src4
-					else if c.src5.src = src then c.src5
-					else if c.src6.src = src then c.src6
-					else NULL_RECORD;
-		tel;
-		
-		-- Returns the index of a record in the cache with the specified name
-		node GET_IDX_BY_NAME(src : int) returns (idx : int);
-		var c : CASE_AttestationCache.Impl;
-		let
-			c = CACHE(NULL_CACHE);
-			idx = if c.src1.src = src then 1
-					else if c.src2.src = src then 2
-					else if c.src3.src = src then 3
-					else if c.src4.src = src then 4
-					else if c.src5.src = src then 5
-					else if c.src6.src = src then 6
-					else 0;
-		tel;
-
-		-- Writes a record to the cache
-		node WRITE_CACHE(idx : int, record:CASE_AttestationCacheRecord.Impl) returns (new_cache : CASE_AttestationCache.Impl);
-		let
-			new_cache = if idx = 1 then
-				CACHE(CASE_AttestationCache.Impl {src1 = record;
-											src2 = GET_RECORD_BY_IDX(2);
-											src3 = GET_RECORD_BY_IDX(3);
-											src4 = GET_RECORD_BY_IDX(4);
-											src5 = GET_RECORD_BY_IDX(5);
-											src6 = GET_RECORD_BY_IDX(6)})
-			else if idx = 2 then
-				CACHE(CASE_AttestationCache.Impl {src1 = GET_RECORD_BY_IDX(1);
-											src2 = record;
-											src3 = GET_RECORD_BY_IDX(3);
-											src4 = GET_RECORD_BY_IDX(4);
-											src5 = GET_RECORD_BY_IDX(5);
-											src6 = GET_RECORD_BY_IDX(6)})
-			else if idx = 3 then
-				CACHE(CASE_AttestationCache.Impl {src1 = GET_RECORD_BY_IDX(1);
-											src2 = GET_RECORD_BY_IDX(2);
-											src3 = record;
-											src4 = GET_RECORD_BY_IDX(4);
-											src5 = GET_RECORD_BY_IDX(5);
-											src6 = GET_RECORD_BY_IDX(6)})
-			else if idx = 4 then
-				CACHE(CASE_AttestationCache.Impl {src1 = GET_RECORD_BY_IDX(1);
-											src2 = GET_RECORD_BY_IDX(2);
-											src3 = GET_RECORD_BY_IDX(3);
-											src4 = record;
-											src5 = GET_RECORD_BY_IDX(5);
-											src6 = GET_RECORD_BY_IDX(6)})
-			else if idx = 5 then
-				CACHE(CASE_AttestationCache.Impl {src1 = GET_RECORD_BY_IDX(1);
-											src2 = GET_RECORD_BY_IDX(2);
-											src3 = GET_RECORD_BY_IDX(3);
-											src4 = GET_RECORD_BY_IDX(4);
-											src5 = record;
-											src6 = GET_RECORD_BY_IDX(6)})
-			else if idx = 6 then
-				CACHE(CASE_AttestationCache.Impl {src1 = GET_RECORD_BY_IDX(1);
-											src2 = GET_RECORD_BY_IDX(2);
-											src3 = GET_RECORD_BY_IDX(3);
-											src4 = GET_RECORD_BY_IDX(4);
-											src5 = GET_RECORD_BY_IDX(5);
-											src6 = record})
-			else
-				NULL_CACHE;
-		tel;
-	
-	**};
 	
 	annex Resolute {**
 		
@@ -319,14 +80,14 @@ public
 		---------------------------
 		
 		-- Top-level claim for proper insertion of a filter
-		add_filter(comp_context : component, filter : component, conn : connection, msg_type : data) <=
+		add_filter(comp_context : component, filter : component, conn : connection, msg_type : aadl) <=
 			** "Filter " filter " is properly added to component " comp_context **
 			filter_exists(filter, comp_context, conn) and component_not_bypassed(filter, comp_context, msg_type) and component_implemented(filter)
 			
 		-- Top-level claim for proper insertion of attestation manager
-		add_attestation_manager(comm_driver : component, attestation_manager : component) <=
+		add_attestation_manager(comm_driver : component, attestation_manager : component, attestation_gate : component) <=
 			** "Attestation Manager added for communications driver " comm_driver **
-			attestation_manager_exists(comm_driver, attestation_manager) and attestation_manager_not_bypassed(comm_driver, attestation_manager)	and component_implemented(attestation_manager)
+			attestation_manager_exists(comm_driver, attestation_manager) and attestation_manager_not_bypassed(comm_driver, attestation_manager, attestation_gate) and component_implemented(attestation_manager)
 		
 		-- Top-level claim for proper insertion of virtualization
 		add_virtualization(bound_components : {component}, non_vm_comps : {component}, virtual_machine : component) <=
@@ -336,18 +97,25 @@ public
 		-- Top-level claim for proper insertion of a monitor
 		add_monitor(comp_context : component, monitor : component) <=
 			** "Monitor " monitor " is properly added to " comp_context **
-			component_exists(monitor, "MONITOR") and alert_connected(monitor) and independent_reset(monitor, comp_context) and component_implemented(monitor)
+--			component_exists(monitor, "MONITOR") and alert_connected(monitor) and independent_reset(monitor, comp_context) and component_implemented(monitor)
+			component_exists(monitor, CASE_Properties::Monitoring) and alert_connected(monitor) and independent_reset(monitor, comp_context) and component_implemented(monitor)
 
 		-- Top-level claim for proper insertion of a monitor with a gate
 		add_monitor_gate(comp_context : component, monitor : component, gate_context : component, message_type : data) <=
 			** "Monitor " monitor " is properly added to " comp_context **
-			component_exists(monitor, "MONITOR") and alert_connected(monitor) and independent_reset(monitor, comp_context) and component_not_bypassed(monitor, gate_context, message_type) and component_implemented(monitor)
+--			component_exists(monitor, "MONITOR") and alert_connected(monitor) and independent_reset(monitor, comp_context) and component_not_bypassed(monitor, gate_context, message_type) and 
+			component_exists(monitor, CASE_Properties::Monitoring) and alert_connected(monitor) and independent_reset(monitor, comp_context) and component_not_bypassed(monitor, gate_context, message_type) and component_implemented(monitor)
 
 		-- Top-level claim for proper insertion of a switch
 		add_switch(comp_context : component, switch : component, message_type : data) <=
 			** "Switch inserted after " comp_context **
-			component_exists(switch, "SWITCH") and component_not_bypassed(switch, comp_context, message_type) and component_implemented(switch)
+--			component_exists(switch, "SWITCH") and component_not_bypassed(switch, comp_context, message_type) and component_implemented(switch)
+			component_exists(switch, CASE_Properties::Gating) and component_not_bypassed(switch, comp_context, message_type) and component_implemented(switch)
 		
+		-- Top-level claim for proper transformation of model for seL4 build
+		sel4_transform(comp_context : component, transformed_component : component) <=
+			** "Component " comp_context " transformed for seL4 build" **
+			each_thread_in_separate_process(transformed_component)
 			
 		--------------------------
 		-- PROJECT-LEVEL CLAIMS --
@@ -368,21 +136,26 @@ public
 		-- This connects to evidence that AGREE was previously run on the current version of the design.
 		agree_prop_checked(c : component, property_id : string) <=
 			** "AGREE properties passed" **
-			AgreeLib.hasAgreeProperty(c, property_id) and analysis("AgreeCheck")	
+			AgreeLib.hasAgreeProperty(c, property_id) and analysis("AgreeCheck", type(parent(c)))
 		
 		-- Check to see if there is a filter immediately before 
 		-- the component on the communication pathway.
 		filter_exists(filter : component, comp_context : component, conn : connection) <=
 			** "A CASE_Filter " filter " is connected to component " comp_context " by connection " conn **
-			is_of_case_type(filter, "FILTER") and connected(filter, conn, comp_context)
+			let conns : {connection} = {c for (c : connections(comp_context)) | destination_component(c) = comp_context and source_component(c) = filter};
+--			is_of_case_type(filter, "FILTER") and exists(c : conns) . c = conn
+			has_mitigation_type(filter, CASE_Properties::Filtering) and exists(c : conns) . c = conn
 						
 		-- Check to see if the specified component exists
-		component_exists(comp : component, case_type : string) <=
+--		component_exists(comp : component, case_type : string) <=
+		component_exists(comp : component, mitigation_type : property) <=
 			** comp " exists in the model" **
-			is_of_case_type(comp, case_type) and exists(m : component) . m = comp
+--			is_of_case_type(comp, case_type) and exists(m : component) . m = comp
+			has_mitigation_type(comp, mitigation_type) and exists(m : component) . m = comp
+			
 
 		-- Make sure there is no communication pathway that avoids the component
-		component_not_bypassed(comp : component, comp_context : component, msg_type : data) <=
+		component_not_bypassed(comp : component, comp_context : component, msg_type : aadl) <=
 			** "Component " comp " cannot be bypassed" **
 			let comp_srcs : {component} = get_filter_sources(comp_context, comp, msg_type); 
 			let non_comp_srcs : {component} = get_non_filter_sources(comp_context, comp, msg_type); 
@@ -400,21 +173,27 @@ public
 			** "Component proof checked" **
 			is_seL4_component(comp) => analysis("ToolCheck", "SPLAT")
 			
-		is_of_case_type(comp : component, type_name : string) : bool =
-			has_property(comp, CASE_Properties::Component_Type) and property(comp, CASE_Properties::Component_Type) = type_name
+--		is_of_case_type(comp : component, type_name : string) : bool =
+--			has_property(comp, CASE_Properties::Component_Type) and property(comp, CASE_Properties::Component_Type) = type_name
+			
+		has_mitigation_type(comp : component, mitigation_type : property) : bool =
+			has_property(comp, mitigation_type) and property(comp, mitigation_type) = 100
+			
+		is_comm_driver(comp : component) : bool =
+			has_property(comp, CASE_Properties::Comm_Driver) and property(comp, CASE_Properties::Comm_Driver) = true
 			
 --		-- Returns the set of components that are ancestors of a target component through communication pathways that don't pass through a filter
---		get_non_filter_sources(target : component, filter : component, msg_type : data) : {component} = 
+--		get_non_filter_sources(target : component, filter : component, msg_type : aadl) : {component} = 
 --			let srcs : {component} = {c for (conn : connections (target)) (c : source_component(conn)) | has_type(conn) and type(conn) = msg_type and not (name(source_component(conn)) = name (filter))}; 
 --			recursive_backwards_reach(srcs)
 			
 		-- Returns the set of components that are ancestors of a target component through communication pathways that don't pass through a filter
-		get_non_filter_sources(target : component, filter : component, msg_type : data) : {component} = 
+		get_non_filter_sources(target : component, filter : component, msg_type : aadl) : {component} = 
 			let srcs : {component} = {c for (conn : connections (target)) (c : source_component(conn)) | has_type(conn) and type(conn) = msg_type and not (source_component(conn) = filter) and not (source_component(conn) = target)}; 
 			recursive_backwards_reach(srcs)
 		
 		-- Returns the set of components that are ancestors of the filter on a target component
-		get_filter_sources(target : component, filter : component, msg_type : data) : {component} = 
+		get_filter_sources(target : component, filter : component, msg_type : aadl) : {component} = 
 			let srcs : {component} = {c for (conn : connections(target)) (c : source_component(conn)) | has_type(conn) and type(conn) = msg_type and name(source_component(conn)) = name(filter)};
 			prev_reach(srcs)
 		
@@ -433,7 +212,7 @@ public
 		
 		backwards_reachable_components_via_connection(comp : component, conn : connection) : {component} = 
 			if is_port_connection(conn) then 
-				if destination_component(conn) = comp then 
+				if destination_component(conn) = comp and has_parent(comp) and not (source_component(conn) = parent(comp)) then 
 					{source_component(conn)} 
 				else 
 					{} 
@@ -444,7 +223,8 @@ public
 		attestation_manager_exists(comm_driver : component, attestation_manager : component) <=
 			** "An attestation manager on " comm_driver " exists" **
 			-- check that the attestation manager only has attestation request/response connections to the comm driver
-			is_of_case_type(comm_driver, "COMM_DRIVER") and is_of_case_type(attestation_manager, "ATTESTATION") and
+--			is_of_case_type(comm_driver, "COMM_DRIVER") and is_of_case_type(attestation_manager, "ATTESTATION") and
+			is_comm_driver(comm_driver) and has_mitigation_type(attestation_manager, CASE_Properties::Attesting) and
 			forall (conn : connections(attestation_manager)) . 
 					(has_type(conn) and name(type(conn)) = "CASE_AttestationRequestMsg.Impl") => destination_component(conn) = comm_driver and
 					(has_type(conn) and name(type(conn)) = "CASE_AttestationResponseMsg.Impl") => source_component(conn) = comm_driver
@@ -458,18 +238,19 @@ public
 --			forall(conn : out_conns) . destination_component(conn) = attestation_manager		
 				
 		-- Evidence that communication from the comm driver cannot bypass attestation manager
-		attestation_manager_not_bypassed(comm_driver : component, attestation_manager : component) <=
+		attestation_manager_not_bypassed(comm_driver : component, attestation_manager : component, attestation_gate : component) <=
 			** "Attestation Manager cannot be bypassed" **
 			-- all outgoing connections from the comm driver to components inside the 
-			-- parent of the comm driver connect to the attestation manager
+			-- parent of the comm driver connect to the attestation manager or attestation gate
 			let out_conns : {connection} = {conn for (conn : connections(comm_driver)) | source_component(conn) = comm_driver and not (destination_component(conn) = parent(comm_driver))};
-			forall(conn : out_conns) . (not is_software_component(destination_component(conn)) or destination_component(conn) = attestation_manager)
+			forall(conn : out_conns) . (not is_software_component(destination_component(conn)) or destination_component(conn) = attestation_manager or destination_component(conn) = attestation_gate)
 
 				
 		-- Checks if the specified virtual processor is a CASE Virtualization and is bound to a processor
 		vm_bound_to_processor(virtual_machine : component) <=
 			** virtual_machine " is bound to a processor" **
-			is_of_case_type(virtual_machine, "VIRTUAL_MACHINE") and exists(p : processor) . is_bound_to(virtual_machine, p)
+--			is_of_case_type(virtual_machine, "VIRTUAL_MACHINE") and exists(p : processor) . is_bound_to(virtual_machine, p)
+			has_mitigation_type(virtual_machine, CASE_Properties::Isolating) and exists(p : processor) . is_bound_to(virtual_machine, p)
 					
 		-- Checks that bindings exist between specified virtualized components and virtual processor
 		components_bound_to_vm(bound_components : {component}, virtual_machine : component) <=
@@ -513,17 +294,22 @@ public
 						
 		alert_connected(monitor : component) <=
 			** "Monitor Alert port is connected" **
-			let alert_ports : {feature} = {p for (p : features(monitor)) | name(p) = "alert"};
+			let alert_ports : {feature} = {p for (p : features(monitor)) | name(p) = "Alert"};
 			let alert_conns : {connection} = {c for (p : alert_ports) (c : connection) | source(c) = p};
 			length(alert_conns) > 0
 						
 		independent_reset(monitor : component, comp_context : component) <=
 			** "Monitor reset port cannot be triggered by source of observed signal" **
-			let reset_ancestors : {component} = {comp for (conn : connections(monitor)) (comp : recursive_backwards_reach({source_component(conn)})) | destination_component(conn) = monitor and name(destination(conn)) = "reset"};
+			let reset_ancestors : {component} = {comp for (conn : connections(monitor)) (comp : recursive_backwards_reach({source_component(conn)})) | destination_component(conn) = monitor and name(destination(conn)) = "Reset"};
 			length(intersect(reset_ancestors, {comp_context})) = 0
 			
 		is_software_component(comp : component) : bool =
 			is_process(comp) or is_thread_group(comp) or is_thread(comp)
+			
+		each_thread_in_separate_process(root : component) <=
+			** "Each thread is in a separate process" **
+			let comps : {component} = get_subcomponents({root});
+			forall (c : comps) . ((is_system(c) or is_thread(c) or is_process(c)) and is_process(c) => (length(subcomponents(c)) = 1 and is_thread(head(as_list(subcomponents(c))))))
 		
 	**};
 	

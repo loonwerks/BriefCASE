@@ -418,6 +418,10 @@ public class RequirementsManager {
 
 		// Get the file to insert into
 		IFile file = req.getContainingFile();
+		if (file == null) {
+			throw new RuntimeException(
+					"File referenced by requirement " + req.getId() + " in Req_Component context not found.");
+		}
 		XtextEditor editor = getEditor(file);
 
 		if (editor == null) {

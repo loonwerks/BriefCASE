@@ -70,7 +70,12 @@ public class SubcomponentSelector {
 		}
 	}
 
-	public SubcomponentSelector(Composite parent, Subcomponent sub) {
+	// Enum to represent how many checkboxes can be checked at a time
+	public enum CheckStyle {
+		SINGLE, MULTIPLE;
+	}
+
+	public SubcomponentSelector(Composite parent, Subcomponent sub, CheckStyle checkStyle) {
 
 		// Create structure to map a subcomponent to its parent
 		Map<Subcomponent, Subcomponent> parentMap = new HashMap<>();
@@ -93,7 +98,16 @@ public class SubcomponentSelector {
 		viewer.getTree().setHeaderVisible(false);
 		viewer.getTree().setLinesVisible(false);
 		viewer.getTree().setLayoutData(gridData);
+		viewer.addCheckStateListener(event -> {
+			if (checkStyle == CheckStyle.SINGLE) {
+				viewer.setSubtreeChecked(viewer.getTree().getItem(0).getData(), false);
+				viewer.setChecked(event.getElement(), true);
+			}
+		});
 		viewer.addDoubleClickListener(event -> {
+			if (checkStyle == CheckStyle.SINGLE) {
+				return;
+			}
 			IStructuredSelection thisSelection = (IStructuredSelection) event.getSelection();
 			Object selectedNode = thisSelection.getFirstElement();
 			if (viewer.getChecked(selectedNode)) {

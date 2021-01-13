@@ -24,12 +24,8 @@ import org.eclipse.xtext.resource.EObjectAtOffsetHelper;
 import org.eclipse.xtext.ui.editor.XtextEditor;
 import org.eclipse.xtext.ui.editor.outline.impl.EObjectNode;
 import org.eclipse.xtext.ui.editor.utils.EditorUtils;
-import org.osate.aadl2.AadlPackage;
-import org.osate.aadl2.ModelUnit;
 import org.osate.aadl2.NamedElement;
-import org.osate.aadl2.PackageSection;
 import org.osate.aadl2.Realization;
-import org.osate.aadl2.modelsupport.util.AadlUtil;
 
 public abstract class AadlHandler extends AbstractHandler {
 
@@ -168,32 +164,32 @@ public abstract class AadlHandler extends AbstractHandler {
 	}
 
 
-	/**
-	 * Adds the containing package of the specified object to the specified package section's with clause if it isn't already present
-	 * @param obj - Object whose containing package needs to be imported
-	 * @param pkgSection - Package Section
-	 */
-	protected void importContainingPackage(EObject obj, PackageSection pkgSection) {
-
-		AadlPackage pkg = AadlUtil.getContainingPackage(obj);
-		if (pkg == null) {
-			return;
-		}
-		// Don't add the with clause if it is for the current package
-		AadlPackage thisPkg = AadlUtil.getContainingPackage(pkgSection);
-		if (thisPkg == null || pkg.getName().equalsIgnoreCase(thisPkg.getName())) {
-			return;
-		}
-		boolean pkgFound = false;
-		for (ModelUnit mu : pkgSection.getImportedUnits()) {
-			if (mu.getName().equalsIgnoreCase(pkg.getName())) {
-				pkgFound = true;
-				break;
-			}
-		}
-		if (!pkgFound) {
-			pkgSection.getImportedUnits().add(pkg);
-		}
-	}
+//	/**
+//	 * Adds the containing package of the specified named element to the specified package section's with clause if it isn't already present
+//	 * @param namedElement - Named element whose containing package needs to be imported
+//	 * @param pkgSection - Package Section
+//	 */
+//	protected void importContainingPackage(NamedElement namedElement, PackageSection pkgSection) {
+//
+//		AadlPackage pkg = AadlUtil.getContainingPackage(namedElement);
+//		if (pkg == null) {
+//			return;
+//		}
+//		// Don't add the with clause if it is for the current package
+//		AadlPackage thisPkg = AadlUtil.getContainingPackage(pkgSection);
+//		if (thisPkg == null || pkg.getName().equalsIgnoreCase(thisPkg.getName())) {
+//			return;
+//		}
+//		boolean pkgFound = false;
+//		for (ModelUnit mu : pkgSection.getImportedUnits()) {
+//			if (mu.getName().equalsIgnoreCase(pkg.getName())) {
+//				pkgFound = true;
+//				break;
+//			}
+//		}
+//		if (!pkgFound) {
+//			pkgSection.getImportedUnits().add(pkg);
+//		}
+//	}
 
 }
