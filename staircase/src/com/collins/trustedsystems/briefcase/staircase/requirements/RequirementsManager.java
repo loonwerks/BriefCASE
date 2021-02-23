@@ -13,6 +13,8 @@ import java.util.Set;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.jface.text.source.ISourceViewer;
+import org.eclipse.jface.text.source.SourceViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.ui.IEditorDescriptor;
@@ -459,6 +461,9 @@ public class RequirementsManager {
 
 		editor.forceReconcile();
 
+		// Format
+		((SourceViewer) editor.getInternalSourceViewer()).doOperation(ISourceViewer.FORMAT);
+
 		// Close editor
 		closeEditor(editor, true);
 	}
@@ -480,6 +485,9 @@ public class RequirementsManager {
 		FunctionDefinition fd = editor.getDocument().modify(resource -> {
 			return req.removeClaimDef(resource, claim);
 		});
+
+		// Format
+		((SourceViewer) editor.getInternalSourceViewer()).doOperation(ISourceViewer.FORMAT);
 
 		// Close editor, if necessary
 		closeEditor(editor, true);
@@ -685,6 +693,9 @@ public class RequirementsManager {
 
 				return null;
 			});
+
+			// Format
+			((SourceViewer) editor.getInternalSourceViewer()).doOperation(ISourceViewer.FORMAT);
 
 			// Close editor
 			RequirementsManager.closeEditor(editor, true);

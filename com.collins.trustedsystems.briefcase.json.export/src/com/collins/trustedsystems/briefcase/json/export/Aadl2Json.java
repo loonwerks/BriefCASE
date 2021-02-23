@@ -685,7 +685,8 @@ public class Aadl2Json {
 
 		for (String s : AadlUtil.getPredeclaredPropertySetNames()) {
 
-			final String pathName = "org.osate.workspace/resources/properties/Predeclared_Property_Sets/";
+			// final String pathName = "org.osate.workspace/resources/properties/Predeclared_Property_Sets/";
+			final String pathName = "org.osate.aadl2.contrib/resources/properties/Predeclared_Property_Sets/";
 			final ResourceSet resourceSet = new ResourceSetImpl();
 			String propSetFileName = pathName + s + ".aadl";
 			final Resource r = resourceSet.getResource(URI.createPlatformPluginURI(propSetFileName, true), true);

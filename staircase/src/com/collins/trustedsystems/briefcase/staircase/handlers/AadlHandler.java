@@ -131,14 +131,11 @@ public abstract class AadlHandler extends AbstractHandler {
 		if (prompt && !MessageDialog.openConfirm(window.getShell(), "Save editors", "Save editors and continue?")) {
 			return false;
 		} else {
-//		if (MessageDialog.openConfirm(window.getShell(), "Save editors", "Save editors and continue?")) {
 			NullProgressMonitor monitor = new NullProgressMonitor();
 			for (IEditorPart e : dirtyEditors) {
 				e.doSave(monitor);
 			}
 			return true;
-//		} else {
-//			return false;
 		}
 	}
 
