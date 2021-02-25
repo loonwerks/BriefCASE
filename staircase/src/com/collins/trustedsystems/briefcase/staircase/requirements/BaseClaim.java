@@ -58,7 +58,7 @@ public class BaseClaim extends BuiltInClaim {
 				+ this.requirement.getText();
 
 		builder.addClaimString(claimString);
-		builder.addClaimExpr(Create.FALSE());
+		builder.addClaimExpr(Create.UNDEVELOPED());
 
 		this.claimDef = builder.build();
 

@@ -17,6 +17,7 @@ import com.rockwellcollins.atc.resolute.resolute.DefinitionBody;
 import com.rockwellcollins.atc.resolute.resolute.Expr;
 import com.rockwellcollins.atc.resolute.resolute.FunctionDefinition;
 import com.rockwellcollins.atc.resolute.resolute.ResoluteFactory;
+import com.rockwellcollins.atc.resolute.resolute.UndevelopedExpr;
 
 public class ClaimBuilder {
 
@@ -81,8 +82,8 @@ public class ClaimBuilder {
 	}
 
 	public Expr addClaimExpr(Expr e) {
-		// Remove "true" or "false" claim, if they exist
-		if (this.claimExpr instanceof BoolExpr || this.claimExpr == null) {
+		// Remove "true", "false", or "undeveloped" claim, if they exist
+		if (this.claimExpr instanceof BoolExpr || this.claimExpr instanceof UndevelopedExpr || this.claimExpr == null) {
 			this.claimExpr = e;
 		} else {
 			this.claimExpr = Create.andExpr(this.claimExpr, e);

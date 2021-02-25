@@ -28,6 +28,7 @@ import com.rockwellcollins.atc.resolute.resolute.SetType;
 import com.rockwellcollins.atc.resolute.resolute.StringExpr;
 import com.rockwellcollins.atc.resolute.resolute.ThisExpr;
 import com.rockwellcollins.atc.resolute.resolute.Type;
+import com.rockwellcollins.atc.resolute.resolute.UndevelopedExpr;
 
 public class Create {
 
@@ -166,6 +167,10 @@ public class Create {
 		BoolExpr be = factory.createBoolExpr();
 		be.setVal(falseAADLLiteral());
 		return be;
+	}
+
+	public static UndevelopedExpr UNDEVELOPED() {
+		return factory.createUndevelopedExpr();
 	}
 
 	private static BooleanLiteral trueAADLLiteral() {
