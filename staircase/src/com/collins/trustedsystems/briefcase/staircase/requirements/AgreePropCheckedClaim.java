@@ -8,7 +8,7 @@ import com.rockwellcollins.atc.resolute.resolute.Expr;
 
 public class AgreePropCheckedClaim extends BuiltInClaim {
 
-	private static final String AGREE_PROP_CHECKED = "Agree_Prop_Checked";
+	private static final String AGREE_PROP_CHECKED = "Agree_Property_Checked";
 	private final String reqId;
 	private final String reqContext;
 
