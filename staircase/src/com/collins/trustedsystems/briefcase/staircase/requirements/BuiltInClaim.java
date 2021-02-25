@@ -74,7 +74,10 @@ public abstract class BuiltInClaim {
 	protected ProveStatement buildClaimCall(ProveStatement prove) {
 
 		// Get current claim call for the requirement (could be null if there isn't one)
-		FnCallExpr expr = (FnCallExpr) prove.getExpr();
+		FnCallExpr fnCallExpr = null;
+		if (prove != null && prove.getExpr() instanceof FnCallExpr) {
+			fnCallExpr = (FnCallExpr) prove.getExpr();
+		}
 
 		// Get the required call arguments from the built-in claim
 		List<Expr> callArgs = getCallArgs();
@@ -83,11 +86,13 @@ public abstract class BuiltInClaim {
 
 		for (Expr arg : callArgs) {
 			boolean argFound = false;
-			for (Expr e : expr.getArgs()) {
+			if (fnCallExpr != null) {
+				for (Expr e : fnCallExpr.getArgs()) {
 
-				if (ExprComparator.compare(arg, e)) {
-					argFound = true;
-					break;
+					if (ExprComparator.compare(arg, e)) {
+						argFound = true;
+						break;
+					}
 				}
 			}
 			if (!argFound) {
@@ -105,7 +110,6 @@ public abstract class BuiltInClaim {
 			return null;
 		}
 
-//		AadlPackage contextPkg = AadlUtil.getContainingPackage(reqClaimDef);
 		AadlPackage contextPkg = CaseUtils.getCaseRequirementsPackage();
 		if (contextPkg == null) {
 			throw new RuntimeException("Could not find containing package for " + reqClaimDef.getName());
