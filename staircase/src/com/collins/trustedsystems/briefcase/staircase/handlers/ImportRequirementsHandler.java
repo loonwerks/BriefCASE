@@ -65,7 +65,8 @@ public class ImportRequirementsHandler extends AbstractHandler {
 		}
 
 		ImportRequirementsGUI wizard = new ImportRequirementsGUI(
-				PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell());
+				PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(),
+				importRequirements ? ImportRequirementsGUI.IMPORT : ImportRequirementsGUI.MANAGE);
 		wizard.setRequirements(reqMgr.getRequirements());
 
 		if (wizard.getRequirements().isEmpty()) {

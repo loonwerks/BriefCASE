@@ -39,6 +39,9 @@ import com.collins.trustedsystems.briefcase.staircase.requirements.CyberRequirem
 
 public class ImportRequirementsGUI extends Dialog {
 
+	public final static int IMPORT = 0;
+	public final static int MANAGE = 1;
+
 	private int returnCode = SWT.OK;
 
 	final private List<CyberRequirement> requirements = new ArrayList<CyberRequirement>();
@@ -73,7 +76,11 @@ public class ImportRequirementsGUI extends Dialog {
 		shlReqManager.setMinimumSize(1200, 400);
 		shlReqManager.setSize(1200, 400);
 		shlReqManager.setBackground(SWTResourceManager.getColor(SWT.COLOR_TITLE_INACTIVE_BACKGROUND_GRADIENT));
-		shlReqManager.setText("Import Cyber Security Requirements");
+		if (style == IMPORT) {
+			shlReqManager.setText("Import Cyber Security Requirements");
+		} else {
+			shlReqManager.setText("Manage Cyber Security Requirements");
+		}
 		shlReqManager.setLayout(new GridLayout(1, true));
 
 		Composite cmpReqManager = new Composite(shlReqManager, SWT.NONE);
