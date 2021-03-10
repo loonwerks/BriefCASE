@@ -95,7 +95,7 @@ public class Sel4TransformHandler extends AadlHandler {
 		// Selection must be a software component -- can only be (and contain) system, process, thread group, thread components
 		if (!isSoftwareSubcomponent(selectedSubcomponent)) {
 			Dialog.showError("seL4 Transform",
-					"Selected subcomponent must be a software component (only consist of system, process, thread group, and thread components) to perform the seL4 transform.");
+					"Selected subcomponent must be a software component (only consist of system, process, thread group, and thread component implementations) to perform the seL4 transform.");
 			return;
 		}
 
@@ -996,14 +996,33 @@ public class Sel4TransformHandler extends AadlHandler {
 						return false;
 					}
 				}
+				return true;
 			}
-			return true;
 		} else if (sub instanceof ProcessSubcomponent) {
-			return true;
+			ProcessImplementation processImpl = (ProcessImplementation) sub.getComponentImplementation();
+			if (processImpl != null) {
+				for (Subcomponent processSub : processImpl.getOwnedSubcomponents()) {
+					if (!isSoftwareSubcomponent(processSub)) {
+						return false;
+					}
+				}
+				return true;
+			}
 		} else if (sub instanceof ThreadGroupSubcomponent) {
-			return true;
+			ThreadGroupImplementation threadGroupImpl = (ThreadGroupImplementation) sub.getComponentImplementation();
+			if (threadGroupImpl != null) {
+				for (Subcomponent threadGroupSub : threadGroupImpl.getOwnedSubcomponents()) {
+					if (!isSoftwareSubcomponent(threadGroupSub)) {
+						return false;
+					}
+				}
+				return true;
+			}
 		} else if (sub instanceof ThreadSubcomponent) {
-			return true;
+			ThreadImplementation threadImpl = (ThreadImplementation) sub.getComponentImplementation();
+			if (threadImpl != null) {
+				return true;
+			}
 		}
 		return false;
 	}
