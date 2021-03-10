@@ -18,6 +18,7 @@ import org.osate.aadl2.Aadl2Factory;
 import org.osate.aadl2.Aadl2Package;
 import org.osate.aadl2.AadlPackage;
 import org.osate.aadl2.AnnexSubclause;
+import org.osate.aadl2.ArrayDimension;
 import org.osate.aadl2.ComponentCategory;
 import org.osate.aadl2.ComponentImplementation;
 import org.osate.aadl2.ComponentType;
@@ -305,14 +306,30 @@ public class AddFilterHandler extends AadlHandler {
 				connEndIn = ComponentCreateHelper.createOwnedEventDataPort(filterType);
 				featureClassifier = ((EventDataPort) connectionEnd).getDataFeatureClassifier();
 				((EventDataPort) connEndIn).setDataFeatureClassifier((DataSubcomponentType) featureClassifier);
+				for (ArrayDimension dim : ((EventDataPort) connectionEnd).getArrayDimensions()) {
+					ArrayDimension arrayDimension = ((EventDataPort) connEndIn).createArrayDimension();
+					arrayDimension.setSize(dim.getSize());
+				}
 				connEndOut = ComponentCreateHelper.createOwnedEventDataPort(filterType);
 				((EventDataPort) connEndOut).setDataFeatureClassifier((DataSubcomponentType) featureClassifier);
+				for (ArrayDimension dim : ((EventDataPort) connectionEnd).getArrayDimensions()) {
+					ArrayDimension arrayDimension = ((EventDataPort) connEndOut).createArrayDimension();
+					arrayDimension.setSize(dim.getSize());
+				}
 			} else if (connectionEnd instanceof DataPort) {
 				connEndIn = ComponentCreateHelper.createOwnedDataPort(filterType);
 				featureClassifier = ((DataPort) connectionEnd).getDataFeatureClassifier();
 				((DataPort) connEndIn).setDataFeatureClassifier((DataSubcomponentType) featureClassifier);
+				for (ArrayDimension dim : ((DataPort) connectionEnd).getArrayDimensions()) {
+					ArrayDimension arrayDimension = ((DataPort) connEndIn).createArrayDimension();
+					arrayDimension.setSize(dim.getSize());
+				}
 				connEndOut = ComponentCreateHelper.createOwnedDataPort(filterType);
 				((DataPort) connEndOut).setDataFeatureClassifier((DataSubcomponentType) featureClassifier);
+				for (ArrayDimension dim : ((DataPort) connectionEnd).getArrayDimensions()) {
+					ArrayDimension arrayDimension = ((DataPort) connEndOut).createArrayDimension();
+					arrayDimension.setSize(dim.getSize());
+				}
 			} else if (connectionEnd instanceof EventPort) {
 				Dialog.showError("Add Filter", "Cannot connect a filter to a non-data port.");
 				return null;

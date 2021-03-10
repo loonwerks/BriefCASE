@@ -74,8 +74,8 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 	private List<Button> btnGateLogPortType = new ArrayList<>();
 	private Combo cboRequirement;
 //	private Button btnPropagateGuarantees;
-	private Text txtMgrAgreeProperty;
-	private Text txtGateAgreeProperty;
+//	private Text txtMgrAgreeProperty;
+//	private Text txtGateAgreeProperty;
 	private String attestationManagerComponentName;
 	private String attestationGateComponentName;
 	private String attestationManagerSubcomponentName;
@@ -94,8 +94,8 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 //	private boolean propagateGuarantees;
 	private String commDriver = "";
 	private List<String> requirements = new ArrayList<>();
-	private String mgrAgreeProperty;
-	private String gateAgreeProperty;
+//	private String mgrAgreeProperty;
+//	private String gateAgreeProperty;
 	private Subcomponent attestationManager = null;
 	private Subcomponent attestationGate = null;
 
@@ -185,7 +185,7 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 			createMgrDispatchProtocolField(container);
 		}
 		createMgrLogPortField(container);
-		createMgrAgreePropertyField(container);
+//		createMgrAgreePropertyField(container);
 
 		mgrTab.setControl(container);
 	}
@@ -218,7 +218,7 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 			createGateDispatchProtocolField(miscContainer);
 		}
 		createGateLogPortField(miscContainer);
-		createGateAgreePropertyField(miscContainer);
+//		createGateAgreePropertyField(miscContainer);
 
 		gateTab.setControl(container);
 	}
@@ -727,37 +727,37 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 //
 //	}
 
-	/**
-	 * Creates the input text field for specifying the attestation manager agree property
-	 * @param container
-	 */
-	private void createMgrAgreePropertyField(Composite container) {
-		Label lblAgreeField = new Label(container, SWT.NONE);
-		lblAgreeField.setText("Attestation Manager AGREE contract");
-
-		GridData dataInfoField = new GridData();
-		dataInfoField.grabExcessHorizontalSpace = true;
-		dataInfoField.horizontalAlignment = GridData.FILL;
-		dataInfoField.grabExcessVerticalSpace = false;
-		txtMgrAgreeProperty = new Text(container, SWT.BORDER);
-		txtMgrAgreeProperty.setLayoutData(dataInfoField);
-	}
-
-	/**
-	 * Creates the input text field for specifying the attestation gate agree property
-	 * @param container
-	 */
-	private void createGateAgreePropertyField(Composite container) {
-		Label lblAgreeField = new Label(container, SWT.NONE);
-		lblAgreeField.setText("Attestation Gate AGREE contract");
-
-		GridData dataInfoField = new GridData();
-		dataInfoField.grabExcessHorizontalSpace = true;
-		dataInfoField.horizontalAlignment = GridData.FILL;
-		dataInfoField.grabExcessVerticalSpace = false;
-		txtGateAgreeProperty = new Text(container, SWT.BORDER);
-		txtGateAgreeProperty.setLayoutData(dataInfoField);
-	}
+//	/**
+//	 * Creates the input text field for specifying the attestation manager agree property
+//	 * @param container
+//	 */
+//	private void createMgrAgreePropertyField(Composite container) {
+//		Label lblAgreeField = new Label(container, SWT.NONE);
+//		lblAgreeField.setText("Attestation Manager AGREE contract");
+//
+//		GridData dataInfoField = new GridData();
+//		dataInfoField.grabExcessHorizontalSpace = true;
+//		dataInfoField.horizontalAlignment = GridData.FILL;
+//		dataInfoField.grabExcessVerticalSpace = false;
+//		txtMgrAgreeProperty = new Text(container, SWT.BORDER);
+//		txtMgrAgreeProperty.setLayoutData(dataInfoField);
+//	}
+//
+//	/**
+//	 * Creates the input text field for specifying the attestation gate agree property
+//	 * @param container
+//	 */
+//	private void createGateAgreePropertyField(Composite container) {
+//		Label lblAgreeField = new Label(container, SWT.NONE);
+//		lblAgreeField.setText("Attestation Gate AGREE contract");
+//
+//		GridData dataInfoField = new GridData();
+//		dataInfoField.grabExcessHorizontalSpace = true;
+//		dataInfoField.horizontalAlignment = GridData.FILL;
+//		dataInfoField.grabExcessVerticalSpace = false;
+//		txtGateAgreeProperty = new Text(container, SWT.BORDER);
+//		txtGateAgreeProperty.setLayoutData(dataInfoField);
+//	}
 
 	@Override
 	protected void okPressed() {
@@ -961,12 +961,12 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 			return false;
 		}
 
-		// AGREE
-		if (attestationManager == null) {
-			mgrAgreeProperty = txtMgrAgreeProperty.getText();
-			gateAgreeProperty = txtGateAgreeProperty.getText();
-//			propagateGuarantees = btnPropagateGuarantees.getSelection();
-		}
+//		// AGREE
+//		if (attestationManager == null) {
+//			mgrAgreeProperty = txtMgrAgreeProperty.getText();
+//			gateAgreeProperty = txtGateAgreeProperty.getText();
+////			propagateGuarantees = btnPropagateGuarantees.getSelection();
+//		}
 		return true;
 	}
 
@@ -1034,12 +1034,12 @@ public class AddAttestationManagerDialog extends TitleAreaDialog {
 		return requirement;
 	}
 
-	public String getMgrAgreeProperty() {
-		return mgrAgreeProperty;
-	}
-
-	public String getGateAgreeProperty() {
-		return gateAgreeProperty;
-	}
+//	public String getMgrAgreeProperty() {
+//		return mgrAgreeProperty;
+//	}
+//
+//	public String getGateAgreeProperty() {
+//		return gateAgreeProperty;
+//	}
 
 }
