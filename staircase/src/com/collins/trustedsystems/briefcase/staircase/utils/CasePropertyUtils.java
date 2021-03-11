@@ -43,7 +43,6 @@ public class CasePropertyUtils {
 	public static final String CASE_PROPSET_NAME = "CASE_Properties";
 	public static final String CASE_PROPSET_FILE = "CASE_Properties.aadl";
 
-//	public static final String COMP_TYPE = "Component_Type";
 	public static final String ATTESTING = "Attesting";
 	public static final String FILTERING = "Filtering";
 	public static final String MONITORING = "Monitoring";
@@ -257,21 +256,6 @@ public class CasePropertyUtils {
 		return true;
 	}
 
-//	public static boolean setCompType(Classifier comp, String compType) {
-//		try {
-//			Property prop = Aadl2GlobalScopeUtil.get(comp, Aadl2Package.eINSTANCE.getProperty(),
-//					CASE_PROPSET_NAME + "::" + COMP_TYPE);
-//			EnumerationLiteral enumLit = Aadl2Factory.eINSTANCE.createEnumerationLiteral();
-//			enumLit.setName(compType);
-//			NamedValue namedVal = Aadl2Factory.eINSTANCE.createNamedValue();
-//			namedVal.setNamedValue(enumLit);
-//			comp.setPropertyValue(prop, namedVal);
-//		} catch (PropertyDoesNotApplyToHolderException e) {
-//			return false;
-//		}
-//		return true;
-//	}
-
 	public static boolean setMitigationType(Classifier comp, MITIGATION_TYPE mitigationType) {
 		try {
 			Property prop = null;
@@ -329,14 +313,10 @@ public class CasePropertyUtils {
 			Property prop = Aadl2GlobalScopeUtil.get(comp, Aadl2Package.eINSTANCE.getProperty(),
 					CASE_PROPSET_NAME + "::" + COMP_SPEC);
 			ListValue listVal = Aadl2Factory.eINSTANCE.createListValue();
-//			List<? extends PropertyExpression> listVal = new ArrayList<>();
 			for (String s : elements) {
 				StringLiteral strLit = (StringLiteral) listVal
 						.createOwnedListElement(Aadl2Package.eINSTANCE.getStringLiteral());
 				strLit.setValue(s);
-//				StringLiteral strLit = Aadl2Factory.eINSTANCE.createStringLiteral();
-//				strLit.setValue(s);
-//				listVal.add(strLit);
 			}
 
 			comp.setPropertyValue(prop, listVal.getOwnedListElements());
@@ -379,9 +359,6 @@ public class CasePropertyUtils {
 		try {
 			Property prop = Aadl2GlobalScopeUtil.get(comp, Aadl2Package.eINSTANCE.getProperty(),
 					CASE_PROPSET_NAME + "::" + OS);
-//			StringLiteral strLit = Aadl2Factory.eINSTANCE.createStringLiteral();
-//			strLit.setValue(os);
-//			comp.setPropertyValue(prop, strLit);
 			EnumerationLiteral enumLit = Aadl2Factory.eINSTANCE.createEnumerationLiteral();
 			enumLit.setName(os);
 			NamedValue namedVal = Aadl2Factory.eINSTANCE.createNamedValue();
@@ -405,34 +382,6 @@ public class CasePropertyUtils {
 		}
 		return true;
 	}
-
-//	public static boolean isCompType(Classifier comp, String compType) {
-//
-//		try {
-//
-//			Property prop = Aadl2GlobalScopeUtil.get(comp, Aadl2Package.eINSTANCE.getProperty(),
-//					CASE_PROPSET_NAME + "::" + COMP_TYPE);
-//			List<? extends PropertyExpression> propVal = comp.getPropertyValueList(prop);
-//
-//			if (propVal != null) {
-//				for (PropertyExpression expr : propVal) {
-//					if (expr instanceof NamedValue) {
-//						NamedValue namedVal = (NamedValue) expr;
-//						AbstractNamedValue absVal = namedVal.getNamedValue();
-//						if (absVal instanceof EnumerationLiteral) {
-//							EnumerationLiteral enVal = (EnumerationLiteral) absVal;
-//							if (enVal.getName().equalsIgnoreCase(compType)) {
-//								return true;
-//							}
-//						}
-//					}
-//				}
-//			}
-//		} catch (PropertyDoesNotApplyToHolderException e) {
-//			return false;
-//		}
-//		return false;
-//	}
 
 	public static boolean hasMitigationType(Classifier comp, MITIGATION_TYPE mitigationType) {
 

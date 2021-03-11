@@ -20,6 +20,7 @@ import org.eclipse.emf.transaction.TransactionalCommandStack;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.jface.window.Window;
 import org.eclipse.ui.PlatformUI;
+import org.osate.aadl2.Aadl2Factory;
 import org.osate.aadl2.Aadl2Package;
 import org.osate.aadl2.Access;
 import org.osate.aadl2.AccessConnection;
@@ -30,24 +31,33 @@ import org.osate.aadl2.ComponentType;
 import org.osate.aadl2.ConnectedElement;
 import org.osate.aadl2.Connection;
 import org.osate.aadl2.ConnectionEnd;
+import org.osate.aadl2.ContainedNamedElement;
+import org.osate.aadl2.ContainmentPathElement;
 import org.osate.aadl2.Context;
 import org.osate.aadl2.DataAccess;
 import org.osate.aadl2.DataPort;
 import org.osate.aadl2.DefaultAnnexSubclause;
 import org.osate.aadl2.DirectionType;
+import org.osate.aadl2.EnumerationLiteral;
 import org.osate.aadl2.EventDataPort;
 import org.osate.aadl2.EventPort;
 import org.osate.aadl2.Feature;
+import org.osate.aadl2.ListValue;
+import org.osate.aadl2.ModalPropertyValue;
 import org.osate.aadl2.NamedElement;
+import org.osate.aadl2.NamedValue;
 import org.osate.aadl2.PackageSection;
 import org.osate.aadl2.Port;
 import org.osate.aadl2.PortConnection;
 import org.osate.aadl2.ProcessImplementation;
 import org.osate.aadl2.ProcessSubcomponent;
 import org.osate.aadl2.ProcessType;
+import org.osate.aadl2.ProcessorSubcomponent;
 import org.osate.aadl2.Property;
 import org.osate.aadl2.PropertyAssociation;
+import org.osate.aadl2.PropertyExpression;
 import org.osate.aadl2.Realization;
+import org.osate.aadl2.ReferenceValue;
 import org.osate.aadl2.Subcomponent;
 import org.osate.aadl2.SubprogramAccess;
 import org.osate.aadl2.SystemImplementation;
@@ -57,6 +67,7 @@ import org.osate.aadl2.ThreadGroupImplementation;
 import org.osate.aadl2.ThreadGroupSubcomponent;
 import org.osate.aadl2.ThreadImplementation;
 import org.osate.aadl2.ThreadSubcomponent;
+import org.osate.aadl2.modelsupport.scoping.Aadl2GlobalScopeUtil;
 import org.osate.aadl2.modelsupport.util.AadlUtil;
 import org.osate.ui.dialogs.Dialog;
 
@@ -64,6 +75,7 @@ import com.collins.trustedsystems.briefcase.staircase.dialogs.Sel4TransformDialo
 import com.collins.trustedsystems.briefcase.staircase.requirements.CyberRequirement;
 import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsManager;
 import com.collins.trustedsystems.briefcase.staircase.requirements.Sel4TransformClaim;
+import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
 import com.collins.trustedsystems.briefcase.staircase.utils.ComponentCreateHelper;
 import com.collins.trustedsystems.briefcase.staircase.utils.ModelTransformUtils;
 import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
@@ -124,7 +136,46 @@ public class Sel4TransformHandler extends AadlHandler {
 			return;
 		}
 
-//		// Check that selected subcomponent is bound to a processor
+		Subcomponent sub = getSubcomponentFromPath(si, sel4Subcomponent);
+		if (sub == null) {
+			Dialog.showError("seL4 Transform", "Selected subcomponent " + sel4Subcomponent + " cannot be found.");
+			return;
+		}
+
+		// Check that selected subcomponent is bound to a processor
+		// (could be specified on subcomponent or containing component impl)
+		ContainmentPathElement processor = getProcessor(sub);
+		if (processor == null) {
+			Dialog.showError("seL4 Transform", "Selected subcomponent " + sel4Subcomponent
+					+ " must already be bound to a processor in order to perform the seL4 transform.");
+			return;
+		}
+
+		// Set OS property on containing component impl for processor
+		Resource aadlResource = si.eResource();
+		final TransactionalEditingDomain domain = TransactionalEditingDomain.Registry.INSTANCE
+				.getEditingDomain("org.osate.aadl2.ModelEditingDomain");
+		// We execute this command on the command stack because otherwise, we will not
+		// have write permissions on the editing domain.
+		Command cmd = new RecordingCommand(domain) {
+			@Override
+			protected void doExecute() {
+				setOsProperty(si, processor);
+			}
+		};
+
+		try {
+			((TransactionalCommandStack) domain.getCommandStack()).execute(cmd, null);
+			// We're done: Save the model
+			aadlResource.save(null);
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		} catch (RollbackException e) {
+			e.printStackTrace();
+		}
+
 //		if (!processorBindings.containsKey(sel4Subcomponent)) {
 //			Dialog.showError("seL4 Transform", "Selected subcomponent " + sel4Subcomponent
 //					+ " must already be bound to a processor in order to perform the seL4 transform.");
@@ -136,12 +187,6 @@ public class Sel4TransformHandler extends AadlHandler {
 		// Each thread becomes a process containing the thread
 		// Each thread group becomes a system
 		// Re-wire everything appropriately
-
-		Subcomponent sub = getSubcomponentFromPath(si, sel4Subcomponent);
-		if (sub == null) {
-			Dialog.showError("seL4 Transform", "Selected subcomponent " + sel4Subcomponent + " cannot be found.");
-			return;
-		}
 		if (sub instanceof ProcessSubcomponent) {
 			final Map<String, SystemImplementation> transformedSubs = new HashMap<>();
 			SystemImplementation systemImpl = transformProcess((ProcessSubcomponent) sub);
@@ -153,7 +198,7 @@ public class Sel4TransformHandler extends AadlHandler {
 			transformSystem((SystemSubcomponent) sub);
 		}
 
-//		// Processor binding
+
 //		if (!sel4Processor.isEmpty()) {
 //			// Remove processor bindings of transformed components if they are not the selected processor
 //
@@ -869,123 +914,142 @@ public class Sel4TransformHandler extends AadlHandler {
 		}
 	}
 
-//	private Map<String, Set<String>> getProcessorBindings(SystemImplementation selectedSystem) {
-//
-//		Map<String, Set<String>> processorBindings = new HashMap<>();
-//
-//		// Get explicit processor bindings
-//		getExplicitProcessorBindings(selectedSystem, processorBindings);
-//
-//		// Get implicit processor bindings
-//		for (Subcomponent sub : selectedSystem.getOwnedSubcomponents()) {
-//			if (isSoftwareSubcomponent(sub)) {
-//				getImplicitProcessorBindings(sub, "", processorBindings);
-//			}
-//		}
-//
-//		return processorBindings;
-//	}
-//
-//	private void getExplicitProcessorBindings(SystemImplementation sysImpl,
-//			Map<String, Set<String>> processorBindings) {
-//
-//		// Get processor bindings specified in nested system implementation properties
-//		for (SystemSubcomponent sub : sysImpl.getOwnedSystemSubcomponents()) {
-//			getExplicitProcessorBindings((SystemImplementation) sub.getComponentImplementation(), processorBindings);
-//		}
-//
-//		for (PropertyAssociation pa : sysImpl.getOwnedPropertyAssociations()) {
-//			if (pa.getProperty().getName().equalsIgnoreCase("Actual_Processor_Binding")) {
-//				for (ContainedNamedElement cne : pa.getAppliesTos()) {
-//					ContainmentPathElement cpe = cne.getPath();
-//					String appliesTo = cpe.getNamedElement().getName();
-//					Subcomponent boundSub = (Subcomponent) cpe.getNamedElement();
-//					while (cpe.getPath() != null) {
-//						cpe = cpe.getPath();
-//						appliesTo += "." + cpe.getNamedElement().getName();
-//
-//						for (Subcomponent sub : boundSub.getComponentImplementation().getOwnedSubcomponents()) {
-//							if (sub.getName().equalsIgnoreCase(cpe.getNamedElement().getName())) {
-//								boundSub = sub;
-//								break;
-//							}
-//						}
-//
-//					}
-//
-//					// Get the processor this subcomponent is bound to
-//					for (ModalPropertyValue val : pa.getOwnedValues()) {
-//						ListValue listVal = (ListValue) val.getOwnedValue();
-//						for (PropertyExpression propExpr : listVal.getOwnedListElements()) {
-//							if (propExpr instanceof ReferenceValue) {
-//								ReferenceValue refVal = (ReferenceValue) propExpr;
-//
-//								// TODO: Handle case when processor is in a nested subsystem
-//								if (refVal.getPath().getNamedElement() instanceof ProcessorSubcomponent
-//										|| refVal.getPath().getNamedElement() instanceof VirtualProcessorSubcomponent) {
-//
-//									if (processorBindings.get(appliesTo) == null) {
-//										processorBindings.put(appliesTo, new HashSet<String>(
-//												Arrays.asList(refVal.getPath().getNamedElement().getName())));
-//									} else {
-//										processorBindings.get(appliesTo)
-//												.add(refVal.getPath().getNamedElement().getName());
-//									}
-//
-//								}
-//							}
-//						}
-//					}
-//
-//				}
-//			}
-//		}
-//
-//	}
-//
-//	private void getImplicitProcessorBindings(Subcomponent rootSub, String parentName,
-//			Map<String, Set<String>> processorBindings) {
-//
-//		String qualifiedName = (parentName.isEmpty() ? "" : parentName + ".") + rootSub.getName();
-//
-//		// If the specified subcomponent isn't explicitly bound to a processor,
-//		// check its parents binding
-//		if (processorBindings.get(qualifiedName) == null) {
-//			if (processorBindings.containsKey(parentName)) {
-//				processorBindings.put(qualifiedName, processorBindings.get(parentName));
-//			}
-//		}
-//		for (Subcomponent sub : rootSub.getComponentImplementation().getOwnedSubcomponents()) {
-//			if (isSoftwareSubcomponent(sub)) {
-//				getImplicitProcessorBindings(sub, qualifiedName, processorBindings);
-//			}
-//		}
-//
-//	}
-//
-//	private Set<String> getSel4Processors(SystemImplementation sysImpl) {
-//		Set<String> processors = new HashSet<>();
-//		for (Subcomponent sub : sysImpl.getOwnedSubcomponents()) {
-//			if (sub instanceof ProcessorSubcomponent || sub instanceof VirtualProcessorSubcomponent) {
-//				Property prop = Aadl2GlobalScopeUtil.get(sysImpl, Aadl2Package.eINSTANCE.getProperty(),
-//						CasePropertyUtils.CASE_PROPSET_NAME + "::" + CasePropertyUtils.OS);
-//				PropertyAcc propAcc = sub.getComponentImplementation().getPropertyValue(prop);
-//				PropertyAssociation pa = propAcc.first();
-//				if (pa != null) {
-//					for (ModalPropertyValue propVal : pa.getOwnedValues()) {
-//						PropertyExpression propExpr = propVal.getOwnedValue();
-//						if (propExpr instanceof StringLiteral) {
-//							StringLiteral stringLit = (StringLiteral) propExpr;
-//							if (stringLit.getValue().equalsIgnoreCase(SEL4)) {
-//								processors.add(sub.getName());
-//							}
-//						}
-//					}
-//				}
-//			}
-//		}
-//		return processors;
-//	}
+	private ContainmentPathElement getProcessor(Subcomponent selectedSubcomponent) {
+
+		// Check containing component implementation properties
+		for (PropertyAssociation pa : selectedSubcomponent.getContainingComponentImpl()
+				.getOwnedPropertyAssociations()) {
+			if (pa.getProperty().getName().equalsIgnoreCase("Actual_Processor_Binding")) {
+				for (ContainedNamedElement cne : pa.getAppliesTos()) {
+					ContainmentPathElement cpe = cne.getPath();
+					Subcomponent boundSub = (Subcomponent) cpe.getNamedElement();
+					if (!boundSub.equals(selectedSubcomponent)) {
+						continue;
+					}
+
+					// Get the processor this subcomponent is bound to
+					for (ModalPropertyValue val : pa.getOwnedValues()) {
+						ListValue listVal = (ListValue) val.getOwnedValue();
+						for (PropertyExpression propExpr : listVal.getOwnedListElements()) {
+							if (propExpr instanceof ReferenceValue) {
+								ReferenceValue refVal = (ReferenceValue) propExpr;
+								return refVal.getPath();
+							}
+						}
+					}
+				}
+			}
+		}
+		return null;
+	}
+
+	private void setOsProperty(SystemImplementation systemImpl, ContainmentPathElement cpe) {
+
+		boolean osSet = false;
+		Property prop = Aadl2GlobalScopeUtil.get(systemImpl, Aadl2Package.eINSTANCE.getProperty(),
+				CasePropertyUtils.CASE_PROPSET_NAME + "::" + CasePropertyUtils.OS);
+
+		// Check if processor is a subcomponent of systemImpl, and remove the OS property if it has it
+		if (cpe.getPath() == null && cpe.getNamedElement() instanceof ProcessorSubcomponent) {
+			ProcessorSubcomponent proc = (ProcessorSubcomponent) cpe.getNamedElement();
+			Iterator<PropertyAssociation> paIterator = proc.getOwnedPropertyAssociations().iterator();
+			while (paIterator.hasNext()) {
+				PropertyAssociation pa = paIterator.next();
+				if (pa.getProperty().equals(prop)) {
+					ModalPropertyValue val = pa.getOwnedValues().get(0);
+					NamedValue namedVal = (NamedValue) val.getOwnedValue();
+					EnumerationLiteral enumLiteral = (EnumerationLiteral) namedVal.getNamedValue();
+					if (enumLiteral.getName().equalsIgnoreCase("seL4")) {
+						osSet = true;
+					} else {
+						paIterator.remove();
+					}
+					break;
+				}
+			}
+		}
+
+		// Check containing component implementation properties
+		Iterator<PropertyAssociation> paIterator = systemImpl.getOwnedPropertyAssociations().iterator();
+		while (paIterator.hasNext()) {
+			PropertyAssociation pa = paIterator.next();
+			if (pa.getProperty().equals(prop)) {
+
+				ModalPropertyValue val = pa.getOwnedValues().get(0);
+				NamedValue namedVal = (NamedValue) val.getOwnedValue();
+				EnumerationLiteral enumLiteral = (EnumerationLiteral) namedVal.getNamedValue();
+				boolean isSel4 = enumLiteral.getName().equalsIgnoreCase("seL4");
+
+				// Check if it applies to the processor
+				Iterator<ContainedNamedElement> atIterator = pa.getAppliesTos().iterator();
+				while (atIterator.hasNext()) {
+					ContainedNamedElement cne = atIterator.next();
+					if (equalPaths(cne.getPath(), cpe)) {
+						// If it's seL4, add the processor if it's not already there
+						// If it's not seL4, remove the processor if it's there
+						if (isSel4) {
+							osSet = true;
+						} else {
+							atIterator.remove();
+						}
+						break;
+					}
+				}
+				if (isSel4 && !osSet) {
+					ContainedNamedElement cne = pa.createAppliesTo();
+					cne.setPath(copyPath(cpe));
+					osSet = true;
+				}
+				if (pa.getAppliesTos().isEmpty()) {
+					paIterator.remove();
+				}
+			}
+		}
+		// If the OS of the processor hasn't been set, add the property association
+		if (!osSet) {
+
+			PropertyAssociation pa = Aadl2Factory.eINSTANCE.createPropertyAssociation();
+			ContainedNamedElement cne = pa.createAppliesTo();
+			cne.setPath(copyPath(cpe));
+			pa.setProperty(prop);
+			ModalPropertyValue mpv = pa.createOwnedValue();
+			EnumerationLiteral enumLit = Aadl2Factory.eINSTANCE.createEnumerationLiteral();
+			enumLit.setName("seL4");
+			NamedValue namedVal = (NamedValue) mpv.createOwnedValue(Aadl2Package.eINSTANCE.getNamedValue());
+			namedVal.setNamedValue(enumLit);
+			systemImpl.getOwnedPropertyAssociations().add(pa);
+		}
+
+	}
+
+	private boolean equalPaths(ContainmentPathElement cpe1, ContainmentPathElement cpe2) {
+
+		while (cpe1 != null && cpe2 != null) {
+			if (cpe1.getNamedElement().equals(cpe2.getNamedElement())) {
+				cpe1 = cpe1.getPath();
+				cpe2 = cpe2.getPath();
+			} else {
+				return false;
+			}
+		}
+		if (cpe1 != null || cpe2 != null) {
+			return false;
+		}
+		return true;
+	}
+
+	private ContainmentPathElement copyPath(ContainmentPathElement cpe) {
+		ContainedNamedElement cne = Aadl2Factory.eINSTANCE.createContainedNamedElement();
+		ContainmentPathElement copy = cne.createPath();
+		while (cpe != null) {
+			copy.setNamedElement(cpe.getNamedElement());
+			cpe = cpe.getPath();
+			if (cpe != null) {
+				copy = copy.createPath();
+			}
+		}
+		return cne.getPath();
+	}
 
 	public static boolean isSoftwareSubcomponent(Subcomponent sub) {
 		if (sub instanceof SystemSubcomponent) {
