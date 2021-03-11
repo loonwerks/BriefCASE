@@ -603,8 +603,8 @@ public class AddMonitorHandler extends AadlHandler {
 				final ConnectedElement monitorResetDst = connReset.createDestination();
 				monitorResetDst.setContext(monitorSubcomp);
 				monitorResetDst.setConnectionEnd(monResetPort);
-				// Put connExpected in right place (after alert)
-				destName = connAlert.getName();
+				// Put connExpected in right place (after observed)
+				destName = connObserved.getName();
 				containingImpl.getOwnedConnections().move(getIndex(destName, containingImpl.getOwnedConnections()) + 1,
 						containingImpl.getOwnedConnections().size() - 1);
 			}
