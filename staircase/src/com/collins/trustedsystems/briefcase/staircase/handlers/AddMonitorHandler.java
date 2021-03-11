@@ -12,8 +12,10 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.xtext.ui.editor.XtextEditor;
 import org.eclipse.xtext.ui.editor.utils.EditorUtils;
 import org.osate.aadl2.Aadl2Factory;
+import org.osate.aadl2.Aadl2Package;
 import org.osate.aadl2.AadlPackage;
 import org.osate.aadl2.ArrayDimension;
+import org.osate.aadl2.Classifier;
 import org.osate.aadl2.ComponentCategory;
 import org.osate.aadl2.ComponentImplementation;
 import org.osate.aadl2.ComponentType;
@@ -33,12 +35,14 @@ import org.osate.aadl2.NamedElement;
 import org.osate.aadl2.NamedValue;
 import org.osate.aadl2.PackageSection;
 import org.osate.aadl2.Port;
+import org.osate.aadl2.PortCategory;
 import org.osate.aadl2.PrivatePackageSection;
 import org.osate.aadl2.Property;
 import org.osate.aadl2.PublicPackageSection;
 import org.osate.aadl2.Realization;
 import org.osate.aadl2.Subcomponent;
 import org.osate.aadl2.UnitLiteral;
+import org.osate.aadl2.modelsupport.scoping.Aadl2GlobalScopeUtil;
 import org.osate.ui.dialogs.Dialog;
 import org.osate.xtext.aadl2.properties.util.GetProperties;
 import org.osate.xtext.aadl2.properties.util.ThreadProperties;
@@ -57,22 +61,28 @@ import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
 public class AddMonitorHandler extends AadlHandler {
 
 	public static final String MONITOR_COMP_TYPE_NAME = "CASE_Monitor";
-	static final String MONITOR_OBSERVED_PORT_NAME = "Observed";
-	static final String MONITOR_GATE_PORT_NAME = "Output";
-	static final String MONITOR_ALERT_PORT_NAME = "Alert";
+	public static final String MONITOR_OBSERVED_PORT_NAME = "Observed";
+	public static final String MONITOR_GATE_PORT_NAME = "Output";
+	public static final String MONITOR_ALERT_PORT_NAME = "Alert";
 //	static final String MONITOR_ALERT_PORT_DATA_TYPE = "Base_Types::Boolean";
-	static final String MONITOR_RESET_PORT_NAME = "Reset";
+	public static final String MONITOR_RESET_PORT_NAME = "Reset";
 	public static final String MONITOR_SUBCOMP_NAME = "Monitor";
 	static final String CONNECTION_IMPL_NAME = "c";
 
 	private String monitorComponentName;
 	private String monitorSubcomponentName;
+	private String observationPortName;
+	private String observationGatePortName;
 	private String dispatchProtocol;
 	private String period;
+	private String resetPortName;
 	private String resetPort;
 	private boolean latched;
 	private Map<String, String> referencePorts;
+	private String alertPortName;
 	private String alertPort;
+	private PortCategory alertPortCategory;
+	private String alertPortDataType;
 	private boolean observationGate;
 	private String monitorRequirement;
 	private String monitorAgreeProperty;
@@ -112,19 +122,37 @@ public class AddMonitorHandler extends AadlHandler {
 		wizard.create(selectedConnection.getContainingComponentImpl());
 		if (wizard.open() == Window.OK) {
 			monitorComponentName = wizard.getMonitorComponentName();
-			if (monitorComponentName == "") {
+			if (monitorComponentName.isEmpty()) {
 				monitorComponentName = MONITOR_COMP_TYPE_NAME;
 			}
 			monitorSubcomponentName = wizard.getMonitorSubcomponentName();
-			if (monitorSubcomponentName == "") {
+			if (monitorSubcomponentName.isEmpty()) {
 				monitorSubcomponentName = MONITOR_SUBCOMP_NAME;
+			}
+			observationPortName = wizard.getObservationPortName();
+			if (observationPortName.isEmpty()) {
+				observationPortName = MONITOR_OBSERVED_PORT_NAME;
+			}
+			observationGatePortName = wizard.getObservationGatePortName();
+			if (observationGatePortName.isEmpty()) {
+				observationGatePortName = MONITOR_GATE_PORT_NAME;
+			}
+			resetPortName = wizard.getResetPortName();
+			if (resetPortName.isEmpty()) {
+				resetPortName = MONITOR_RESET_PORT_NAME;
 			}
 			resetPort = wizard.getResetPort();
 			latched = wizard.getLatched();
 			dispatchProtocol = wizard.getDispatchProtocol();
 			period = wizard.getPeriod();
 			referencePorts = wizard.getReferencePorts();
+			alertPortName = wizard.getAlertPortName();
+			if (alertPortName.isEmpty()) {
+				alertPortName = MONITOR_ALERT_PORT_NAME;
+			}
 			alertPort = wizard.getAlertPort();
+			alertPortCategory = wizard.getAlertPortCategory();
+			alertPortDataType = wizard.getAlertPortDataType();
 			observationGate = wizard.getObservationGate();
 			monitorRequirement = wizard.getRequirement();
 			monitorAgreeProperty = wizard.getAgreeProperty();
@@ -250,7 +278,7 @@ public class AddMonitorHandler extends AadlHandler {
 			}
 
 			((DirectedFeature) portObserved).setIn(true);
-			portObserved.setName(MONITOR_OBSERVED_PORT_NAME);
+			portObserved.setName(observationPortName);
 
 			// Create reference ports
 			Map<ConnectionEnd, ConnectionEnd> monReferencePorts = new HashMap<>();
@@ -292,9 +320,45 @@ public class AddMonitorHandler extends AadlHandler {
 			// Create monitor alert port
 			Port monAlertPort = null;
 			final ConnectionEnd dstAlertPort = ModelTransformUtils.getPort(containingImpl, alertPort);
+			DataSubcomponentType alertDataFeatureClassifier = null;
+			if (!alertPortDataType.isEmpty()) {
+				alertDataFeatureClassifier = Aadl2GlobalScopeUtil.get(containingImpl,
+						Aadl2Package.eINSTANCE.getDataSubcomponentType(), alertPortDataType);
+				if (alertDataFeatureClassifier == null) {
+					// Aadl2GlobalScopeUtil.get() doesn't seem to find elements in current package
+					for (Classifier c : pkgSection.getOwnedClassifiers()) {
+						if (c.getQualifiedName().equalsIgnoreCase(alertPortDataType)
+								&& c instanceof DataSubcomponentType) {
+							alertDataFeatureClassifier = (DataSubcomponentType) c;
+							break;
+						}
+					}
+				} else {
+					ModelTransformUtils.importContainingPackage(alertDataFeatureClassifier, pkgSection);
+				}
+			}
 			// If user didn't specify an alert inport, make it an event data port with no type
 			if (dstAlertPort == null) {
-				monAlertPort = ComponentCreateHelper.createOwnedEventDataPort(monitorType);
+				if (alertPortCategory != null) {
+					if (alertPortCategory == PortCategory.DATA) {
+						monAlertPort = ComponentCreateHelper.createOwnedDataPort(monitorType);
+						if (alertDataFeatureClassifier != null) {
+							((DataPort) monAlertPort).setDataFeatureClassifier(alertDataFeatureClassifier);
+						}
+					} else if (alertPortCategory == PortCategory.EVENT) {
+						monAlertPort = ComponentCreateHelper.createOwnedEventPort(monitorType);
+					} else {
+						monAlertPort = ComponentCreateHelper.createOwnedEventDataPort(monitorType);
+						if (alertDataFeatureClassifier != null) {
+							((EventDataPort) monAlertPort).setDataFeatureClassifier(alertDataFeatureClassifier);
+						}
+					}
+				} else {
+					monAlertPort = ComponentCreateHelper.createOwnedEventDataPort(monitorType);
+					if (alertDataFeatureClassifier != null) {
+						((EventDataPort) monAlertPort).setDataFeatureClassifier(alertDataFeatureClassifier);
+					}
+				}
 			} else if (dstAlertPort instanceof EventDataPort) {
 				monAlertPort = ComponentCreateHelper.createOwnedEventDataPort(monitorType);
 				dataFeatureClassifier = ((EventDataPort) dstAlertPort).getDataFeatureClassifier();
@@ -318,7 +382,7 @@ public class AddMonitorHandler extends AadlHandler {
 
 			}
 			monAlertPort.setOut(true);
-			monAlertPort.setName(MONITOR_ALERT_PORT_NAME);
+			monAlertPort.setName(alertPortName);
 
 			// Create observation gate output port, if needed
 			ConnectionEnd monGatePort = null;
@@ -350,7 +414,7 @@ public class AddMonitorHandler extends AadlHandler {
 					((FeatureGroup) monGatePort).setFeatureType(((FeatureGroup) dstGatePort).getFeatureGroupType());
 				}
 				((DirectedFeature) monGatePort).setOut(true);
-				monGatePort.setName(MONITOR_GATE_PORT_NAME);
+				monGatePort.setName(observationGatePortName);
 			}
 
 			// Create monitor reset port, if needed
@@ -384,7 +448,7 @@ public class AddMonitorHandler extends AadlHandler {
 					((FeatureGroup) monResetPort).setFeatureType(((FeatureGroup) srcResetPort).getFeatureGroupType());
 				}
 				((DirectedFeature) monResetPort).setIn(true);
-				monResetPort.setName(MONITOR_RESET_PORT_NAME);
+				monResetPort.setName(resetPortName);
 			}
 
 			// Add monitor properties
@@ -394,10 +458,10 @@ public class AddMonitorHandler extends AadlHandler {
 			}
 
 			// CASE_Properties::Component_Spec property
-			String monitorAlertPropId = monitorType.getName() + "_" + MONITOR_ALERT_PORT_NAME;
+			String monitorAlertPropId = monitorType.getName() + "_" + alertPortName;
 			String monitorGatePropId = "";
 			if (observationGate) {
-				monitorGatePropId += monitorType.getName() + "_" + MONITOR_GATE_PORT_NAME;
+				monitorGatePropId += monitorType.getName() + "_" + observationGatePortName;
 			}
 			if (!CasePropertyUtils.setCompSpec(monitorType,
 					monitorAlertPropId + (monitorGatePropId.isEmpty() ? "" : "," + monitorGatePropId))) {
@@ -557,9 +621,9 @@ public class AddMonitorHandler extends AadlHandler {
 			String resetString = "";
 			if (resetPort != null) {
 				if (monResetPort instanceof EventPort || monResetPort instanceof EventDataPort) {
-					resetString = "not event(" + MONITOR_RESET_PORT_NAME + ") and ";
+					resetString = "not event(" + resetPortName + ") and ";
 				} else {
-					resetString = "not " + MONITOR_RESET_PORT_NAME + " and ";
+					resetString = "not " + resetPortName + " and ";
 				}
 			}
 
@@ -575,13 +639,13 @@ public class AddMonitorHandler extends AadlHandler {
 			agreeClauses.append("property alerted = (not " + monitorPolicyName + ") -> ((" + resetString
 					+ "is_latched and pre(alerted)) or (");
 			if (portObserved instanceof EventPort || portObserved instanceof EventDataPort) {
-				agreeClauses.append("event(" + MONITOR_OBSERVED_PORT_NAME + ") and ");
+				agreeClauses.append("event(" + observationPortName + ") and ");
 			}
 			agreeClauses.append("not " + monitorPolicyName + "));" + System.lineSeparator());
 
 			String alertExpr = "";
 			if (monAlertPort instanceof EventPort || monAlertPort instanceof EventDataPort) {
-				alertExpr = "alerted <=> event(" + MONITOR_ALERT_PORT_NAME + ")";
+				alertExpr = "alerted <=> event(" + alertPortName + ")";
 			}
 			if (alertExpr.isEmpty()) {
 				alertExpr = "false";
@@ -594,9 +658,9 @@ public class AddMonitorHandler extends AadlHandler {
 			if (observationGate) {
 				String gateExpr = "";
 				if (monGatePort instanceof EventPort || monGatePort instanceof EventDataPort) {
-					gateExpr = "if alerted then not event(" + MONITOR_GATE_PORT_NAME + ") else event("
-							+ MONITOR_GATE_PORT_NAME + ") and " + MONITOR_GATE_PORT_NAME + " = "
-							+ MONITOR_OBSERVED_PORT_NAME;
+					gateExpr = "if alerted then not event(" + observationGatePortName + ") else event("
+							+ observationGatePortName + ") and " + observationGatePortName + " = "
+							+ observationPortName;
 				} else {
 					gateExpr = "false";
 					agreeClauses.append("-- GUARANTEE EXPRESSION INCOMPLETE" + System.lineSeparator());
