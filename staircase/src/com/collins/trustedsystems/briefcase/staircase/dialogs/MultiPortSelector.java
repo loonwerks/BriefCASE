@@ -74,20 +74,20 @@ public class MultiPortSelector {
 			this.basePortName = basePortName;
 		}
 
-		GridData gridData = new GridData();
+		final GridData gridData = new GridData();
 		gridData.verticalAlignment = GridData.FILL;
 		gridData.grabExcessHorizontalSpace = true;
 		gridData.grabExcessVerticalSpace = true;
 		gridData.horizontalAlignment = GridData.FILL;
 
-		Composite baseComposite = new Composite(parent, SWT.BORDER);
+		final Composite baseComposite = new Composite(parent, SWT.BORDER);
 		baseComposite.setLayoutData(gridData);
 		baseComposite.setLayout(new GridLayout(1, true));
 
-		Composite tableComposite = new Composite(baseComposite, SWT.NONE);
+		final Composite tableComposite = new Composite(baseComposite, SWT.NONE);
 		gridData.heightHint = 120;
 		tableComposite.setLayoutData(gridData);
-		TableColumnLayout tableColumnLayout = new TableColumnLayout();
+		final TableColumnLayout tableColumnLayout = new TableColumnLayout();
 		tableComposite.setLayout(tableColumnLayout);
 
 		tblPorts = new TableViewer(tableComposite, SWT.NO_SCROLL | SWT.V_SCROLL | SWT.FULL_SELECTION | SWT.BORDER);
@@ -158,15 +158,15 @@ public class MultiPortSelector {
 		tableColumnLayout.setColumnData(colConnectionEnd.getColumn(), new ColumnWeightData(55, 100, true));
 
 		// Add / Remove buttons
-		Composite btnComposite = new Composite(baseComposite, SWT.NONE);
+		final Composite btnComposite = new Composite(baseComposite, SWT.NONE);
 		btnComposite.setLayoutData(new GridData(SWT.RIGHT, SWT.FILL, true, false));
 		btnComposite.setLayout(new GridLayout(2, true));
 
-		Button btnAdd = new Button(btnComposite, SWT.PUSH);
+		final Button btnAdd = new Button(btnComposite, SWT.PUSH);
 		btnAdd.setText("Add port");
 		btnAdd.addListener(SWT.Selection, e -> {
 			if (e.type == SWT.Selection) {
-				int i = tblPorts.getTable().getItemCount() + 1;
+				final int i = tblPorts.getTable().getItemCount() + 1;
 				PortConnectionItems.INSTANCE.getPorts()
 						.add(new PortConnectionItem(this.basePortName + "_" + i, NO_PORT_SELECTED));
 				tblPorts.refresh();
@@ -174,13 +174,13 @@ public class MultiPortSelector {
 		});
 		btnAdd.setLayoutData(new GridData(SWT.RIGHT, SWT.FILL, false, false));
 
-		Button btnRemove = new Button(btnComposite, SWT.PUSH);
+		final Button btnRemove = new Button(btnComposite, SWT.PUSH);
 		btnRemove.setText("Remove port");
 		btnRemove.addListener(SWT.Selection, e -> {
 			if (e.type == SWT.Selection) {
-				IStructuredSelection selection = tblPorts.getStructuredSelection();
+				final IStructuredSelection selection = tblPorts.getStructuredSelection();
 				@SuppressWarnings("unchecked")
-				Iterator<PortConnectionItem> iterator = selection.iterator();
+				final Iterator<PortConnectionItem> iterator = selection.iterator();
 				while (iterator.hasNext()) {
 					PortConnectionItem port = iterator.next();
 					PortConnectionItems.INSTANCE.getPorts().remove(port);
@@ -204,7 +204,7 @@ public class MultiPortSelector {
 	}
 
 	public Map<String, String> getContents() {
-		Map<String, String> contents = new HashMap<>();
+		final Map<String, String> contents = new HashMap<>();
 		PortConnectionItems.INSTANCE.getPorts().forEach(p -> contents.put(p.getPortName(), p.getConnectionEnd()));
 		return contents;
 	}
@@ -310,7 +310,7 @@ public class MultiPortSelector {
 
 		@Override
 		protected Object getValue(Object element) {
-			PortConnectionItem p = (PortConnectionItem) element;
+			final PortConnectionItem p = (PortConnectionItem) element;
 			int idx = connectionEnds.indexOf(p.getConnectionEnd());
 			if (idx < 0) {
 				idx = 0;
@@ -320,7 +320,7 @@ public class MultiPortSelector {
 
 		@Override
 		protected void setValue(Object element, Object value) {
-			PortConnectionItem p = (PortConnectionItem) element;
+			final PortConnectionItem p = (PortConnectionItem) element;
 			int idx = (Integer) value;
 			if (idx < 0) {
 				idx = 0;

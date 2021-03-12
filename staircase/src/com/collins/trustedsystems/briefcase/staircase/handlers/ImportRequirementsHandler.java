@@ -32,7 +32,7 @@ public class ImportRequirementsHandler extends AbstractHandler {
 	public Object run(final boolean importRequirements, final String filename) {
 
 		// Get the current project
-		IProject project = TraverseProject.getCurrentProject();
+		final IProject project = TraverseProject.getCurrentProject();
 		if (project == null) {
 			Dialog.showError("Requirements Manager",
 					"Unable to determine current project.  Open a project file in the editor.");
@@ -58,13 +58,13 @@ public class ImportRequirementsHandler extends AbstractHandler {
 		 * (8) "ToDo" and "Omit" requirements stay in the requirements database, "Add" and "Add+Agree" go into the AADL model.
 		 */
 
-		RequirementsManager reqMgr = RequirementsManager.getInstance();
+		final RequirementsManager reqMgr = RequirementsManager.getInstance();
 		if (!reqMgr.readRequirementFiles(importRequirements, filename)) {
 			// No requirement files were read
 			return null;
 		}
 
-		ImportRequirementsGUI wizard = new ImportRequirementsGUI(
+		final ImportRequirementsGUI wizard = new ImportRequirementsGUI(
 				PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(),
 				importRequirements ? ImportRequirementsGUI.IMPORT : ImportRequirementsGUI.MANAGE);
 		wizard.setRequirements(reqMgr.getRequirements());
@@ -72,7 +72,7 @@ public class ImportRequirementsHandler extends AbstractHandler {
 		if (wizard.getRequirements().isEmpty()) {
 			Dialog.showInfo("Requirements Manager", "No requirements found in model.");
 		} else if (wizard.open() == SWT.OK) {
-			List<CyberRequirement> updatedReqs = wizard.getRequirements();
+			final List<CyberRequirement> updatedReqs = wizard.getRequirements();
 			reqMgr.updateRequirements(updatedReqs);
 			BriefcaseNotifier.notify("Requirements Manager", "Requirements import complete.");
 		}

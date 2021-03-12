@@ -18,7 +18,8 @@ public class ModifyUtils {
 
 		if (file.exists()) {
 			page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
-			IEditorDescriptor desc = PlatformUI.getWorkbench().getEditorRegistry().getDefaultEditor(file.getName());
+			final IEditorDescriptor desc = PlatformUI.getWorkbench().getEditorRegistry()
+					.getDefaultEditor(file.getName());
 			try {
 				part = page.openEditor(new FileEditorInput(file), desc.getId());
 			} catch (PartInitException e) {
@@ -41,7 +42,7 @@ public class ModifyUtils {
 	}
 
 	public static void closeEditor(XtextEditor editor, boolean save) {
-		IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
+		final IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
 		if (save) {
 			page.saveEditor(editor, false);
 		}

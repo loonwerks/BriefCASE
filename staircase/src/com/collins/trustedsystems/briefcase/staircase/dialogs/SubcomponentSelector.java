@@ -41,7 +41,7 @@ public class SubcomponentSelector {
 
 		@Override
 		public boolean hasChildren(Object element) {
-			Subcomponent sub = (Subcomponent) element;
+			final Subcomponent sub = (Subcomponent) element;
 			if (sub.getClassifier() instanceof SystemImplementation) {
 				return sub.getComponentImplementation().getOwnedSubcomponents().size() > 0;
 			}
@@ -50,8 +50,7 @@ public class SubcomponentSelector {
 
 		@Override
 		public Object getParent(Object element) {
-			Subcomponent sub = (Subcomponent) element;
-			return parentMap.get(sub);
+			return parentMap.get(element);
 		}
 
 		@Override
@@ -61,9 +60,9 @@ public class SubcomponentSelector {
 
 		@Override
 		public Object[] getChildren(Object parentElement) {
-			Subcomponent sub = (Subcomponent) parentElement;
+			final Subcomponent sub = (Subcomponent) parentElement;
 			if (sub.getClassifier() instanceof SystemImplementation) {
-				ComponentImplementation compImpl = sub.getComponentImplementation();
+				final ComponentImplementation compImpl = sub.getComponentImplementation();
 				return compImpl.getOwnedSubcomponents().toArray();
 			}
 			return new Object[0];
@@ -78,17 +77,17 @@ public class SubcomponentSelector {
 	public SubcomponentSelector(Composite parent, Subcomponent sub, CheckStyle checkStyle) {
 
 		// Create structure to map a subcomponent to its parent
-		Map<Subcomponent, Subcomponent> parentMap = new HashMap<>();
+		final Map<Subcomponent, Subcomponent> parentMap = new HashMap<>();
 		populateParentMap(sub, parentMap);
 
-		GridData gridData = new GridData();
+		final GridData gridData = new GridData();
 		gridData.verticalAlignment = SWT.FILL;
 		gridData.grabExcessHorizontalSpace = true;
 		gridData.grabExcessVerticalSpace = false;
 		gridData.horizontalAlignment = SWT.FILL;
 		gridData.heightHint = 100;
 
-		Composite baseComposite = new Composite(parent, SWT.BORDER);
+		final Composite baseComposite = new Composite(parent, SWT.BORDER);
 		baseComposite.setLayoutData(gridData);
 		baseComposite.setLayout(new GridLayout(1, true));
 
@@ -108,8 +107,8 @@ public class SubcomponentSelector {
 			if (checkStyle == CheckStyle.SINGLE) {
 				return;
 			}
-			IStructuredSelection thisSelection = (IStructuredSelection) event.getSelection();
-			Object selectedNode = thisSelection.getFirstElement();
+			final IStructuredSelection thisSelection = (IStructuredSelection) event.getSelection();
+			final Object selectedNode = thisSelection.getFirstElement();
 			if (viewer.getChecked(selectedNode)) {
 				viewer.setSubtreeChecked(selectedNode, true);
 			} else {
@@ -119,28 +118,28 @@ public class SubcomponentSelector {
 
 		baseComposite.setBackground(viewer.getTree().getBackground());
 
-		TreeViewerColumn viewerColumn = new TreeViewerColumn(viewer, SWT.NONE);
+		final TreeViewerColumn viewerColumn = new TreeViewerColumn(viewer, SWT.NONE);
 		viewerColumn.getColumn().setWidth(300);
 		viewerColumn.getColumn().setText("");
 		viewerColumn.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
-				Subcomponent sub = (Subcomponent) element;
+				final Subcomponent sub = (Subcomponent) element;
 				if (sub != null) {
 					return sub.getName();
 				}
 				return "";
 			}
 		});
-		Subcomponent[] subs = { sub };
+		final Subcomponent[] subs = { sub };
 		viewer.setInput(subs);
 		viewer.expandAll();
 
 	}
 
 	public List<String> getContents() {
-		List<String> contents = new ArrayList<>();
-		Subcomponent root = (Subcomponent) viewer.getTree().getItem(0).getData();
+		final List<String> contents = new ArrayList<>();
+		final Subcomponent root = (Subcomponent) viewer.getTree().getItem(0).getData();
 		getSelectedSubcomponents(root, contents);
 		return contents;
 	}
@@ -155,7 +154,7 @@ public class SubcomponentSelector {
 	}
 
 	private void getSelectedSubcomponents(Subcomponent sub, List<String> selectedSubs) {
-		SubcomponentSelectorContentProvider contentProvider = (SubcomponentSelectorContentProvider) viewer
+		final SubcomponentSelectorContentProvider contentProvider = (SubcomponentSelectorContentProvider) viewer
 				.getContentProvider();
 
 		if (viewer.getChecked(sub)) {
@@ -168,7 +167,7 @@ public class SubcomponentSelector {
 
 	private String getQualifiedSubcomponentName(Subcomponent sub) {
 		String name = sub.getName();
-		SubcomponentSelectorContentProvider contentProvider = (SubcomponentSelectorContentProvider) viewer
+		final SubcomponentSelectorContentProvider contentProvider = (SubcomponentSelectorContentProvider) viewer
 				.getContentProvider();
 		Subcomponent current = sub;
 		while (contentProvider.getParent(current) != null) {

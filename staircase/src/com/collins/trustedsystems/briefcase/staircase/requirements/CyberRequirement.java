@@ -193,13 +193,13 @@ public class CyberRequirement {
 //
 	public FunctionDefinition getResoluteClaim() {
 		// Get AADL Package
-		AadlPackage aadlPkg = CaseUtils.getCaseRequirementsPackage();
+		final AadlPackage aadlPkg = CaseUtils.getCaseRequirementsPackage();
 		if (aadlPkg == null) {
 			return null;
 		}
 
 		// Get private section
-		PrivatePackageSection privateSection = aadlPkg.getOwnedPrivateSection();
+		final PrivatePackageSection privateSection = aadlPkg.getOwnedPrivateSection();
 		if (privateSection == null) {
 			return null;
 		}
@@ -208,8 +208,8 @@ public class CyberRequirement {
 		FunctionDefinition fnDef = null;
 		for (AnnexLibrary annexLib : privateSection.getOwnedAnnexLibraries()) {
 			if (annexLib instanceof DefaultAnnexLibrary && annexLib.getName().equalsIgnoreCase("resolute")) {
-				DefaultAnnexLibrary defaultLib = (DefaultAnnexLibrary) annexLib;
-				ResoluteLibrary resLib = (ResoluteLibrary) defaultLib.getParsedAnnexLibrary();
+				final DefaultAnnexLibrary defaultLib = (DefaultAnnexLibrary) annexLib;
+				final ResoluteLibrary resLib = (ResoluteLibrary) defaultLib.getParsedAnnexLibrary();
 				// Iterate over requirements
 				for (Definition def : resLib.getDefinitions()) {
 					if (def instanceof FunctionDefinition && def.getName().equalsIgnoreCase(id)) {
@@ -406,12 +406,12 @@ public class CyberRequirement {
 
 	public static void sortClaimDefinitions(Resource resource) {
 		// Get modification context
-		AadlPackage pkg = getClaimDefinitionPackage(resource);
+		final AadlPackage pkg = getClaimDefinitionPackage(resource);
 		if (pkg == null) {
 			return;
 		}
 
-		PrivatePackageSection priv8 = pkg.getOwnedPrivateSection();
+		final PrivatePackageSection priv8 = pkg.getOwnedPrivateSection();
 		if (priv8 == null) {
 			return;
 		}
@@ -430,8 +430,8 @@ public class CyberRequirement {
 			return;
 		}
 
-		Comparator<Definition> cyreqComp = (o1, o2) -> o1.getName().compareTo(o2.getName());
-		List<Definition> list = new ArrayList<Definition>();
+		final Comparator<Definition> cyreqComp = (o1, o2) -> o1.getName().compareTo(o2.getName());
+		final List<Definition> list = new ArrayList<Definition>();
 		list.addAll(resLib.getDefinitions());
 		list.sort(cyreqComp);
 		resLib.getDefinitions().clear();
@@ -447,7 +447,7 @@ public class CyberRequirement {
 			}
 
 			// Get modification context
-			AadlPackage pkg = getClaimDefinitionPackage(resource);
+			final AadlPackage pkg = getClaimDefinitionPackage(resource);
 
 			FunctionDefinition currentClaimDefinition = getClaimDefinition(pkg);
 			currentClaimDefinition = claim.buildClaimDefinition(currentClaimDefinition);
@@ -458,7 +458,7 @@ public class CyberRequirement {
 			}
 
 			if (claim instanceof BaseClaim || claim instanceof AgreePropCheckedClaim) {
-				ClaimBody claimBody = (ClaimBody) currentClaimDefinition.getBody();
+				final ClaimBody claimBody = (ClaimBody) currentClaimDefinition.getBody();
 				setClaimContexts(claimBody);
 			}
 
@@ -515,7 +515,7 @@ public class CyberRequirement {
 	//		}
 
 			for (Iterator<Definition> i = resLib.getDefinitions().iterator(); i.hasNext();) {
-				Definition def = i.next();
+				final Definition def = i.next();
 				if (def != null && def instanceof FunctionDefinition && def.hasName()
 						&& def.getName().equalsIgnoreCase(currentClaimDefinition.getName())) {
 					i.remove();
@@ -532,7 +532,7 @@ public class CyberRequirement {
 			return;
 		}
 
-		Classifier modificationContext = getClaimCallModificationContext(resource);
+		final Classifier modificationContext = getClaimCallModificationContext(resource);
 
 		DefaultAnnexSubclause subclause = null;
 		for (AnnexSubclause sc : modificationContext.getOwnedAnnexSubclauses()) {
@@ -550,7 +550,7 @@ public class CyberRequirement {
 			subclause.setParsedAnnexSubclause(ResoluteFactory.eINSTANCE.createResoluteSubclause());
 		}
 
-		ResoluteSubclause resclause = EcoreUtil.copy((ResoluteSubclause) subclause.getParsedAnnexSubclause());
+		final ResoluteSubclause resclause = EcoreUtil.copy((ResoluteSubclause) subclause.getParsedAnnexSubclause());
 
 		final boolean debug = true;
 
@@ -561,12 +561,12 @@ public class CyberRequirement {
 		// If the prove statement already exists, remove it
 		ProveStatement oldClaimCall = null;
 		for (Iterator<AnalysisStatement> i = resclause.getProves().iterator(); i.hasNext();) {
-			AnalysisStatement as = i.next();
+			final AnalysisStatement as = i.next();
 			System.out.println(as);
 			if (as instanceof ProveStatement) {
-				Expr expr = ((ProveStatement) as).getExpr();
+				final Expr expr = ((ProveStatement) as).getExpr();
 				if (expr instanceof FnCallExpr) {
-					FunctionDefinition fd = ((FnCallExpr) expr).getFn();
+					final FunctionDefinition fd = ((FnCallExpr) expr).getFn();
 					if (debug) {
 						System.out.println(fd.toString());
 					}
@@ -581,7 +581,7 @@ public class CyberRequirement {
 		}
 
 		// Build Claim Call
-		ProveStatement newClaimCall = claim.buildClaimCall(oldClaimCall);
+		final ProveStatement newClaimCall = claim.buildClaimCall(oldClaimCall);
 
 		if (newClaimCall == null) {
 			throw new RuntimeException("Unable to generate the claim call.");
@@ -596,12 +596,12 @@ public class CyberRequirement {
 		if (debug) {
 			System.out.println("Statements in resclause after changes: " + resclause);
 			for (Iterator<AnalysisStatement> i = resclause.getProves().iterator(); i.hasNext();) {
-				AnalysisStatement as = i.next();
+				final AnalysisStatement as = i.next();
 				System.out.println(as);
 				if (as instanceof ProveStatement) {
-					Expr expr = ((ProveStatement) as).getExpr();
+					final Expr expr = ((ProveStatement) as).getExpr();
 					if (expr instanceof FnCallExpr) {
-						FunctionDefinition fd = ((FnCallExpr) expr).getFn();
+						final FunctionDefinition fd = ((FnCallExpr) expr).getFn();
 						System.out.println(fd.toString());
 					}
 				}
@@ -615,7 +615,7 @@ public class CyberRequirement {
 
 	public void insertAgree(Resource resource, String qualifiedComponentName) {
 
-		Classifier modificationContext = getModificationContext(resource, qualifiedComponentName);
+		final Classifier modificationContext = getModificationContext(resource, qualifiedComponentName);
 		if (modificationContext == null) {
 			throw new RuntimeException("Unable to determine requirement context.");
 		}
@@ -655,8 +655,8 @@ public class CyberRequirement {
 			assume += id + " ";
 		}
 		assume += "\"" + text + "\" : false;";
-		AgreeAnnexParser parser = new AgreeAnnexParser();
-		NamedSpecStatement agreeSpec = parser.parseNamedSpecStatement(assume);
+		final AgreeAnnexParser parser = new AgreeAnnexParser();
+		final NamedSpecStatement agreeSpec = parser.parseNamedSpecStatement(assume);
 
 		AgreeContract contract = (AgreeContract) agreeSubclause.getContract();
 		if (contract == null) {
@@ -679,7 +679,7 @@ public class CyberRequirement {
 		}
 
 		// Get modification context
-		AadlPackage aadlPkg = getResoluteModificationContext(resource, CaseUtils.CASE_REQUIREMENTS_NAME);
+		final AadlPackage aadlPkg = getResoluteModificationContext(resource, CaseUtils.CASE_REQUIREMENTS_NAME);
 		if (aadlPkg == null) {
 			throw new RuntimeException("Unable to determine requirement context.");
 		}
@@ -701,11 +701,11 @@ public class CyberRequirement {
 			}
 
 			// Get modification context
-			Classifier implementationContext = getImplementationClassifier(getContext());
+			final Classifier implementationContext = getImplementationClassifier(getContext());
 			if (implementationContext == null) {
 				throw new RuntimeException("Unable to determine requirement context.");
 			}
-			Classifier claimCallModificationContext = getModificationContext(resource,
+			final Classifier claimCallModificationContext = getModificationContext(resource,
 					implementationContext.getQualifiedName());
 			if (claimCallModificationContext == null) {
 				throw new RuntimeException("Unable to determine requirement context.");
@@ -728,11 +728,11 @@ public class CyberRequirement {
 			// If the prove statement already exists, remove it
 			boolean updated = false; // tracks if the list of prove statements has been modified
 			for (Iterator<AnalysisStatement> i = resclause.getProves().iterator(); i.hasNext();) {
-				AnalysisStatement as = i.next();
+				final AnalysisStatement as = i.next();
 				if (as instanceof ProveStatement) {
-					Expr expr = ((ProveStatement) as).getExpr();
+					final Expr expr = ((ProveStatement) as).getExpr();
 					if (expr instanceof FnCallExpr) {
-						FunctionDefinition fd = ((FnCallExpr) expr).getFn();
+						final FunctionDefinition fd = ((FnCallExpr) expr).getFn();
 						if (fd != null && fd.getName() != null && fd.getName().equalsIgnoreCase(getId())) {
 							i.remove();
 							updated = true;
@@ -778,7 +778,7 @@ public class CyberRequirement {
 
 	public boolean removeAgree(Resource resource, String qualifiedComponentName) {
 
-		Classifier modificationContext = getModificationContext(resource, qualifiedComponentName);
+		final Classifier modificationContext = getModificationContext(resource, qualifiedComponentName);
 		if (modificationContext == null) {
 			throw new RuntimeException("Unable to determine requirement context.");
 		}
@@ -797,7 +797,7 @@ public class CyberRequirement {
 			// If an agree statement with this id already exists, remove it
 			for (ListIterator<SpecStatement> iterator = ((AgreeContract) agreeSubclause.getContract()).getSpecs()
 					.listIterator(); iterator.hasNext();) {
-				SpecStatement spec = iterator.next();
+				final SpecStatement spec = iterator.next();
 				if (spec instanceof NamedSpecStatement) {
 					if (((NamedSpecStatement) spec).getName().equalsIgnoreCase(id)) {
 						// found; remove and return
@@ -812,11 +812,11 @@ public class CyberRequirement {
 	}
 
 	private ClaimContext createResoluteContext(String contextName, String contextValue) {
-		ClaimContext context = ResoluteFactory.eINSTANCE.createClaimContext();
+		final ClaimContext context = ResoluteFactory.eINSTANCE.createClaimContext();
 		context.setName(contextName);
-		StringLiteral stringLiteral = Aadl2Factory.eINSTANCE.createStringLiteral();
+		final StringLiteral stringLiteral = Aadl2Factory.eINSTANCE.createStringLiteral();
 		stringLiteral.setValue(getStringLiteral(contextValue));
-		StringExpr stringExpr = ResoluteFactory.eINSTANCE.createStringExpr();
+		final StringExpr stringExpr = ResoluteFactory.eINSTANCE.createStringExpr();
 		stringExpr.setVal(stringLiteral);
 		context.setExpr(stringExpr);
 		return context;
@@ -824,11 +824,11 @@ public class CyberRequirement {
 
 	private Classifier getClaimCallModificationContext(Resource resource) {
 		// Get modification context
-		Classifier implementationContext = getImplementationClassifier(context);
+		final Classifier implementationContext = getImplementationClassifier(context);
 		if (implementationContext == null) {
 			throw new RuntimeException("Unable to determine requirement context.");
 		}
-		Classifier claimCallModificationContext = getModificationContext(resource,
+		final Classifier claimCallModificationContext = getModificationContext(resource,
 				implementationContext.getQualifiedName());
 		if (claimCallModificationContext == null) {
 			throw new RuntimeException("Unable to determine requirement context.");
@@ -837,13 +837,13 @@ public class CyberRequirement {
 	}
 
 	private FunctionDefinition getClaimDefinition(AadlPackage modificationContext) {
-		ResoluteLibrary resLib = getResoluteLibrary(modificationContext);
+		final ResoluteLibrary resLib = getResoluteLibrary(modificationContext);
 		if (resLib == null) {
 			throw new RuntimeException("Could not find resolute library for " + modificationContext);
 		}
 
 		// If this function definition already exists, remove it
-		Iterator<Definition> i = resLib.getDefinitions().iterator();
+		final Iterator<Definition> i = resLib.getDefinitions().iterator();
 		while (i.hasNext()) {
 			Definition def = i.next();
 			if (def instanceof FunctionDefinition && def.getName().equalsIgnoreCase(getId())) {
@@ -855,8 +855,7 @@ public class CyberRequirement {
 	}
 
 	private static AadlPackage getClaimDefinitionPackage(Resource resource) {
-		AadlPackage claimsPackage;
-		claimsPackage = getResoluteModificationContext(resource, CaseUtils.CASE_REQUIREMENTS_NAME);
+		final AadlPackage claimsPackage = getResoluteModificationContext(resource, CaseUtils.CASE_REQUIREMENTS_NAME);
 		if (claimsPackage == null) {
 			throw new RuntimeException("Unable to determine claims definitions resolute package.");
 		}
@@ -864,20 +863,20 @@ public class CyberRequirement {
 	}
 
 	private FunctionDefinition removeBaseClaimDefinition(AadlPackage pkg) {
-		DefaultAnnexLibrary defResLib = getResoluteDefaultAnnexLibrary(pkg);
+		final DefaultAnnexLibrary defResLib = getResoluteDefaultAnnexLibrary(pkg);
 		if (defResLib == null) {
 			throw new RuntimeException("Could not find resolute library for " + pkg);
 		}
 
-		ResoluteLibrary resLib = getResoluteLibrary(defResLib, true);
+		final ResoluteLibrary resLib = getResoluteLibrary(defResLib, true);
 		if (resLib == null) {
 			throw new RuntimeException("Could not find resolute library for " + pkg);
 		}
 
 		// If this function definition already exists, remove it
-		Iterator<Definition> i = resLib.getDefinitions().iterator();
+		final Iterator<Definition> i = resLib.getDefinitions().iterator();
 		while (i.hasNext()) {
-			Definition def = i.next();
+			final Definition def = i.next();
 			if (def instanceof FunctionDefinition && def.getName().equalsIgnoreCase(getId())) {
 				i.remove();
 				defResLib.setParsedAnnexLibrary(resLib);
@@ -888,34 +887,34 @@ public class CyberRequirement {
 	}
 
 	private boolean removeBuiltInClaimDefinition(AadlPackage pkg, BuiltInClaim claim) {
-		DefaultAnnexLibrary defResLib = getResoluteDefaultAnnexLibrary(pkg);
+		final DefaultAnnexLibrary defResLib = getResoluteDefaultAnnexLibrary(pkg);
 		if (defResLib == null) {
 			throw new RuntimeException("Could not find resolute library for " + pkg);
 		}
 
-		ResoluteLibrary resLib = getResoluteLibrary(defResLib, true);
+		final ResoluteLibrary resLib = getResoluteLibrary(defResLib, true);
 		if (resLib == null) {
 			throw new RuntimeException("Could not find resolute library for " + pkg);
 		}
 
 		// If this function definition already exists, remove it
-		Iterator<Definition> i = resLib.getDefinitions().iterator();
+		final Iterator<Definition> i = resLib.getDefinitions().iterator();
 		while (i.hasNext()) {
-			Definition def = i.next();
+			final Definition def = i.next();
 			if (def instanceof FunctionDefinition && def.getName().equalsIgnoreCase(getId())) {
-				FunctionDefinition fd = (FunctionDefinition) def;
-				DefinitionBody body = fd.getBody();
-				Expr expr = removeClaim(body.getExpr(), claim.getName());
+				final FunctionDefinition fd = (FunctionDefinition) def;
+				final DefinitionBody body = fd.getBody();
+				final Expr expr = removeClaim(body.getExpr(), claim.getName());
 				body.setExpr(expr == null ? Create.FALSE() : expr);
 				if (body instanceof ClaimBody) {
-					ClaimBody claimBody = (ClaimBody) body;
+					final ClaimBody claimBody = (ClaimBody) body;
 					for (NamedElement claimAttribute : claimBody.getAttributes()) {
 						if (claimAttribute instanceof ClaimContext) {
-							ClaimContext claimContext = (ClaimContext) claimAttribute;
+							final ClaimContext claimContext = (ClaimContext) claimAttribute;
 							if (claimContext.getName().equalsIgnoreCase(formalized())) {
-								StringLiteral stringLiteral = Aadl2Factory.eINSTANCE.createStringLiteral();
+								final StringLiteral stringLiteral = Aadl2Factory.eINSTANCE.createStringLiteral();
 								stringLiteral.setValue(getStringLiteral(False()));
-								StringExpr stringExpr = ResoluteFactory.eINSTANCE.createStringExpr();
+								final StringExpr stringExpr = ResoluteFactory.eINSTANCE.createStringExpr();
 								stringExpr.setVal(stringLiteral);
 								claimContext.setExpr(stringExpr);
 								break;
@@ -941,15 +940,15 @@ public class CyberRequirement {
 	 */
 	private Expr removeClaim(Expr expr, String name) {
 		if (expr instanceof FnCallExpr) {
-			FnCallExpr fnCallExpr = (FnCallExpr) expr;
+			final FnCallExpr fnCallExpr = (FnCallExpr) expr;
 			if (fnCallExpr.getFn().getName().equalsIgnoreCase(name)) {
 				// found name
 				expr = null;
 			}
 		} else if (expr instanceof BinaryExpr) {
-			BinaryExpr binaryExpr = (BinaryExpr) expr;
-			Expr left = removeClaim(binaryExpr.getLeft(), name);
-			Expr right = removeClaim(binaryExpr.getRight(), name);
+			final BinaryExpr binaryExpr = (BinaryExpr) expr;
+			final Expr left = removeClaim(binaryExpr.getLeft(), name);
+			final Expr right = removeClaim(binaryExpr.getRight(), name);
 			if (left == null) {
 				// left side is name
 				expr = right;
@@ -977,10 +976,10 @@ public class CyberRequirement {
 		if (claimBody != null) {
 			for (NamedElement claimAttribute : claimBody.getAttributes()) {
 				if (claimAttribute instanceof ClaimContext) {
-					ClaimContext claimContext = (ClaimContext) claimAttribute;
+					final ClaimContext claimContext = (ClaimContext) claimAttribute;
 					if (claimContext.getName().equalsIgnoreCase(context)) {
 						if (claimContext.getExpr() instanceof StringExpr) {
-							String val = ((StringExpr) claimContext.getExpr()).getVal().getValue();
+							final String val = ((StringExpr) claimContext.getExpr()).getVal().getValue();
 							if (addQuotes) {
 								return val.substring(1, val.length() - 1);
 							} else {
@@ -996,7 +995,7 @@ public class CyberRequirement {
 
 	private void setClaimContexts(final ClaimBody claimBody) {
 		// Annotate claim with requirement information
-		EList<NamedElement> claimAttributes = claimBody.getAttributes();
+		final EList<NamedElement> claimAttributes = claimBody.getAttributes();
 		claimAttributes.clear();
 		claimAttributes.add(createResoluteContext(generatedBy(), getTool()));
 		claimAttributes.add(
@@ -1008,7 +1007,7 @@ public class CyberRequirement {
 	}
 
 	public static IFile getContainingFile(String context) {
-		Classifier classifier = getImplementationClassifier(context);
+		final Classifier classifier = getImplementationClassifier(context);
 		if (classifier == null) {
 			return null;
 		}
@@ -1020,13 +1019,13 @@ public class CyberRequirement {
 		if (!qualifiedName.contains("::")) {
 			return null;
 		}
-		String pkgName = Aadl2Util.getPackageName(qualifiedName);
+		final String pkgName = Aadl2Util.getPackageName(qualifiedName);
 
-		String[] parts = qualifiedName.split("\\.");
+		final String[] parts = qualifiedName.split("\\.");
 		if (parts.length <= 1) {
 			return null;
 		}
-		String compName = parts[0] + "." + parts[1];
+		final String compName = parts[0] + "." + parts[1];
 
 		for (AadlPackage pkg : TraverseProject.getPackagesInProject(TraverseProject.getCurrentProject())) {
 			if (pkg.getName().equalsIgnoreCase(pkgName)) {
@@ -1075,7 +1074,7 @@ public class CyberRequirement {
 		if (!qualifiedName.contains("::")) {
 			return null;
 		}
-		String pkgName = Aadl2Util.getPackageName(qualifiedName);
+		final String pkgName = Aadl2Util.getPackageName(qualifiedName);
 
 		// The qualified name should either refer to a component implementation
 		// or a component implementation's subcomponent or connection
@@ -1084,14 +1083,14 @@ public class CyberRequirement {
 		// Note that there can be multiple nested subcomponents, such as <Package>::<Component Implementation>.<Subcomponent>.<Subcomponent
 		// Since we want to return the component implementation, we want to remove the subcomponent(s) from the qualified name
 
-		String[] parts = qualifiedName.split("\\.");
+		final String[] parts = qualifiedName.split("\\.");
 		// Capture just the implementation name
 		String compImplName = parts[0];
 		if (parts.length > 1) {
 			compImplName += "." + parts[1];
 		}
 
-		List<IProject> projects = new ArrayList<IProject>();
+		final List<IProject> projects = new ArrayList<IProject>();
 		projects.add(TraverseProject.getCurrentProject());
 		try {
 			for (IProject proj : TraverseProject.getCurrentProject().getReferencedProjects()) {
@@ -1126,15 +1125,15 @@ public class CyberRequirement {
 	static Classifier getModificationContext(Resource resource, String qualifiedName) {
 		// Get modification context
 		Classifier modificationContext = null;
-		TreeIterator<EObject> x = EcoreUtil.getAllContents(resource, true);
+		final TreeIterator<EObject> x = EcoreUtil.getAllContents(resource, true);
 		while (x.hasNext()) {
-			EObject next = x.next();
+			final EObject next = x.next();
 			if (next instanceof NamedElement) {
-				NamedElement nextElement = (NamedElement) next;
+				final NamedElement nextElement = (NamedElement) next;
 				if (nextElement.getQualifiedName() != null
 						&& nextElement.getQualifiedName().equalsIgnoreCase(qualifiedName)) {
 					if (nextElement instanceof Subcomponent) {
-						Subcomponent sub = (Subcomponent) nextElement;
+						final Subcomponent sub = (Subcomponent) nextElement;
 						modificationContext = sub.getComponentType();
 					} else {
 						modificationContext = (Classifier) nextElement;
@@ -1150,7 +1149,7 @@ public class CyberRequirement {
 		if (pkg == null) {
 			throw new RuntimeException("Null AADL Package");
 		}
-		PrivatePackageSection priv8 = pkg.getOwnedPrivateSection();
+		final PrivatePackageSection priv8 = pkg.getOwnedPrivateSection();
 		if (priv8 == null) {
 			throw new RuntimeException("Could not find private package section for " + pkg);
 		}
@@ -1176,11 +1175,11 @@ public class CyberRequirement {
 	static AadlPackage getResoluteModificationContext(Resource resource, String qualifiedName) {
 		// Get modification context
 		AadlPackage modificationContext = null;
-		TreeIterator<EObject> x = EcoreUtil.getAllContents(resource, true);
+		final TreeIterator<EObject> x = EcoreUtil.getAllContents(resource, true);
 		while (x.hasNext()) {
-			EObject next = x.next();
+			final EObject next = x.next();
 			if (next instanceof NamedElement) {
-				NamedElement nextElement = (NamedElement) next;
+				final NamedElement nextElement = (NamedElement) next;
 				if (nextElement.getQualifiedName() != null
 						&& nextElement.getQualifiedName().equalsIgnoreCase(qualifiedName)) {
 					if (nextElement instanceof AadlPackage) {
@@ -1206,7 +1205,7 @@ public class CyberRequirement {
 					+ ") (claimBody : " + claimBody + ")");
 		}
 
-		String dateString = getContext(claimBody, generatedOn());
+		final String dateString = getContext(claimBody, generatedOn());
 		long date;
 		try {
 			date = DateFormat.getDateInstance().parse(dateString).getTime() / 1000;
@@ -1216,15 +1215,16 @@ public class CyberRequirement {
 			date = 0L;
 		}
 
-		String tool = getContext(claimBody, generatedBy());
-		String component = getContext(claimBody, reqComponent());
-		String status = getContext(claimBody, formalized()).equalsIgnoreCase(True()) ? CyberRequirement.addPlusAgree
+		final String tool = getContext(claimBody, generatedBy());
+		final String component = getContext(claimBody, reqComponent());
+		final String status = getContext(claimBody, formalized()).equalsIgnoreCase(True())
+				? CyberRequirement.addPlusAgree
 				: CyberRequirement.add;
 
-		int start = claimString.indexOf('[');
-		int end = claimString.indexOf(']');
-		String text = claimString.substring(end + 1).trim();
-		String type = claimString.substring(start + 1, end).trim();
+		final int start = claimString.indexOf('[');
+		final int end = claimString.indexOf(']');
+		final String text = claimString.substring(end + 1).trim();
+		final String type = claimString.substring(start + 1, end).trim();
 
 		return new CyberRequirement(date, tool, status, type, id, text, component, CyberRequirement.notApplicable);
 	}

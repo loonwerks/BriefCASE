@@ -62,7 +62,7 @@ public class RequirementsManager {
 	private static XtextEditor activeEditor = null;
 
 	public static void closeEditor(XtextEditor editor, boolean save) {
-		IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
+		final IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
 		if (save) {
 			page.saveEditor(editor, false);
 		}
@@ -82,7 +82,8 @@ public class RequirementsManager {
 
 		if (file.exists()) {
 			page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
-			IEditorDescriptor desc = PlatformUI.getWorkbench().getEditorRegistry().getDefaultEditor(file.getName());
+			final IEditorDescriptor desc = PlatformUI.getWorkbench().getEditorRegistry()
+					.getDefaultEditor(file.getName());
 			try {
 				part = page.openEditor(new FileEditorInput(file), desc.getId());
 			} catch (PartInitException e) {
@@ -94,10 +95,8 @@ public class RequirementsManager {
 			return null;
 		}
 
-		XtextEditor xedit = null;
-		xedit = (XtextEditor) part;
+		return (XtextEditor) part;
 
-		return xedit;
 	}
 
 	private RequirementsManager() {
@@ -117,7 +116,7 @@ public class RequirementsManager {
 	}
 
 	public boolean formalizeRequirement(String reqId) {
-		CyberRequirement req = getRequirement(reqId);
+		final CyberRequirement req = getRequirement(reqId);
 		if (req == null) {
 			return false;
 		}
@@ -129,7 +128,7 @@ public class RequirementsManager {
 	}
 
 	public boolean unformalizeRequirement(String reqId) {
-		CyberRequirement req = getRequirement(reqId);
+		final CyberRequirement req = getRequirement(reqId);
 		if (req == null) {
 			return false;
 		}
@@ -181,17 +180,17 @@ public class RequirementsManager {
 //	}
 
 	public void modifyRequirement(String reqId, BuiltInClaim claim) {
-		CyberRequirement req = getRequirement(reqId);
+		final CyberRequirement req = getRequirement(reqId);
 		if (req != null) {
 			insertClaim(req, claim);
 		}
 	}
 
 	public void updateRequirements(List<CyberRequirement> updatedReqs) {
-		BatchUpdateHelper helper = new BatchUpdateHelper();
+		final BatchUpdateHelper helper = new BatchUpdateHelper();
 
 		for (CyberRequirement r : updatedReqs) {
-			CyberRequirement existing = reqDb.get(r);
+			final CyberRequirement existing = reqDb.get(r);
 			if (existing == null) {
 				// not possible; signal error
 				throw new RuntimeException("Updated requirement not found in requirements database : " + r);
@@ -264,7 +263,7 @@ public class RequirementsManager {
 
 	public boolean readRequirementFiles(boolean importRequirements, String filename) {
 		final List<CyberRequirement> existing = findImportedRequirements();
-		Set<String> reqIds = new HashSet<String>();
+		final Set<String> reqIds = new HashSet<String>();
 		for (CyberRequirement r : existing) {
 			if (r.getId() != null && !r.getId().isEmpty() && !reqIds.add(r.getId())) {
 				Dialog.showError("Error in Claims file",
@@ -289,40 +288,41 @@ public class RequirementsManager {
 
 	protected List<CyberRequirement> findImportedRequirements() {
 
-		IFile file = CaseUtils.getCaseRequirementsFile();
-		XtextEditor editor = getEditor(file);
+		final IFile file = CaseUtils.getCaseRequirementsFile();
+		final XtextEditor editor = getEditor(file);
 
 		if (editor != null) {
-			List<CyberRequirement> embeddedRequirements = editor.getDocument().readOnly(resource -> {
+			final List<CyberRequirement> embeddedRequirements = editor.getDocument().readOnly(resource -> {
 
 				// Get modification context
-				AadlPackage aadlPkg = CyberRequirement.getResoluteModificationContext(resource,
+				final AadlPackage aadlPkg = CyberRequirement.getResoluteModificationContext(resource,
 						CaseUtils.CASE_REQUIREMENTS_NAME);
 				if (aadlPkg == null) {
 					return Collections.emptyList();
 				}
 
-				ResoluteLibrary resLib = CyberRequirement.getResoluteLibrary(aadlPkg);
+				final ResoluteLibrary resLib = CyberRequirement.getResoluteLibrary(aadlPkg);
 				if (resLib == null) {
 					return Collections.emptyList();
 				}
 
 				// If this function definition already exists, remove it
-				List<CyberRequirement> resoluteClauses = new ArrayList<>();
+				final List<CyberRequirement> resoluteClauses = new ArrayList<>();
 				for (Definition def : resLib.getDefinitions()) {
 					if (def instanceof FunctionDefinition) {
-						FunctionDefinition fd = (FunctionDefinition) def;
-						DefinitionBody db = fd.getBody();
+						final FunctionDefinition fd = (FunctionDefinition) def;
+						final DefinitionBody db = fd.getBody();
 						if (db instanceof ClaimBody) {
 							String reqClaimString = "";
-							ClaimBody cb = (ClaimBody) db;
+							final ClaimBody cb = (ClaimBody) db;
 							for (ClaimText ct : cb.getClaim()) {
 								if (ct instanceof ClaimString) {
 									reqClaimString += ((ClaimString) ct).getStr();
 								}
 							}
 							// Annotate claim with requirement information
-							CyberRequirement r = CyberRequirement.parseClaimString(fd.getName(), reqClaimString, cb);
+							final CyberRequirement r = CyberRequirement.parseClaimString(fd.getName(), reqClaimString,
+									cb);
 							if (r != null) {
 								resoluteClauses.add(r);
 							}
@@ -365,7 +365,7 @@ public class RequirementsManager {
 			return;
 		}
 
-		String compQualifiedName = editor.getDocument().readOnly(resource -> {
+		final String compQualifiedName = editor.getDocument().readOnly(resource -> {
 			return CyberRequirement.getModificationContext(resource, req.getContext()).getQualifiedName();
 		});
 
@@ -419,12 +419,12 @@ public class RequirementsManager {
 		}
 
 		// Get the file to insert into
-		IFile file = req.getContainingFile();
+		final IFile file = req.getContainingFile();
 		if (file == null) {
 			throw new RuntimeException(
 					"File referenced by requirement " + req.getId() + " in Req_Component context not found.");
 		}
-		XtextEditor editor = getEditor(file);
+		final XtextEditor editor = getEditor(file);
 
 		if (editor == null) {
 			return;
@@ -447,8 +447,8 @@ public class RequirementsManager {
 		}
 
 		// Get the file to insert into
-		IFile file = CaseUtils.getCaseRequirementsFile();
-		XtextEditor editor = getEditor(file);
+		final IFile file = CaseUtils.getCaseRequirementsFile();
+		final XtextEditor editor = getEditor(file);
 
 		if (editor == null) {
 			throw new RuntimeException("Cannot open claim definition file: " + file);
@@ -475,14 +475,14 @@ public class RequirementsManager {
 		}
 
 		// Get the file to insert into
-		IFile file = CaseUtils.getCaseRequirementsFile();
-		XtextEditor editor = getEditor(file);
+		final IFile file = CaseUtils.getCaseRequirementsFile();
+		final XtextEditor editor = getEditor(file);
 
 		if (editor == null) {
 			return null;
 		}
 
-		FunctionDefinition fd = editor.getDocument().modify(resource -> {
+		final FunctionDefinition fd = editor.getDocument().modify(resource -> {
 			return req.removeClaimDef(resource, claim);
 		});
 
@@ -501,14 +501,14 @@ public class RequirementsManager {
 		}
 
 		// Get the file to insert into
-		IFile file = req.getContainingFile();
-		XtextEditor editor = getEditor(file);
+		final IFile file = req.getContainingFile();
+		final XtextEditor editor = getEditor(file);
 
 		if (editor == null) {
 			return false;
 		}
 
-		boolean success = editor.getDocument().modify(resource -> {
+		final boolean success = editor.getDocument().modify(resource -> {
 			return req.removeClaimCall(resource);
 		});
 
@@ -519,14 +519,15 @@ public class RequirementsManager {
 	}
 
 	protected List<JsonRequirementsFile> readInputFiles(String filename) {
-		List<JsonRequirementsFile> reqs = new ArrayList<>();
-		List<String> filenames = new ArrayList<String>();
+		final List<JsonRequirementsFile> reqs = new ArrayList<>();
+		final List<String> filenames = new ArrayList<String>();
 		String filterPath = null;
 
 		// If a filename was passed to this command, open the file.
 		// Otherwise, prompt the user for the file
 		if (filename == null || filename.isEmpty()) {
-			FileDialog dlgReqFile = new FileDialog(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(),
+			final FileDialog dlgReqFile = new FileDialog(
+					PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(),
 					SWT.MULTI);
 			dlgReqFile.setText("Select requirements file to import.");
 			dlgReqFile.open();
@@ -539,13 +540,13 @@ public class RequirementsManager {
 		}
 
 		for (String fn : filenames) {
-			File reqFile = new File(filterPath, fn);
+			final File reqFile = new File(filterPath, fn);
 			if (!reqFile.exists()) {
 				Dialog.showError("File not found",
 						"Cannot find the requirements file " + reqFile.getAbsolutePath() + ".");
 				continue;
 			}
-			JsonRequirementsFile jsonFile = new JsonRequirementsFile();
+			final JsonRequirementsFile jsonFile = new JsonRequirementsFile();
 			if (!jsonFile.importFile(reqFile)) {
 				Dialog.showError("Problem with " + reqFile.getName(),
 						"Could not load cyber requirements file " + reqFile.getName() + ".");
@@ -633,7 +634,7 @@ public class RequirementsManager {
 
 		public void commitChanges() {
 			// List of files to be modified
-			Set<IFile> files = new HashSet<IFile>();
+			final Set<IFile> files = new HashSet<IFile>();
 			files.addAll(addBaseClaimProveStatement.keySet());
 			files.addAll(addAgreeCheckClaimProveStatement.keySet());
 			files.addAll(addAgreeAssumption.keySet());
@@ -660,8 +661,8 @@ public class RequirementsManager {
 
 		private void commitChangesToClaimsFile() {
 			// Get the file to insert into
-			IFile file = CaseUtils.getCaseRequirementsFile();
-			XtextEditor editor = RequirementsManager.getEditor(file);
+			final IFile file = CaseUtils.getCaseRequirementsFile();
+			final XtextEditor editor = RequirementsManager.getEditor(file);
 
 			if (editor == null) {
 				throw new RuntimeException("Cannot open claim definition file: " + file);
@@ -669,13 +670,13 @@ public class RequirementsManager {
 
 			editor.getDocument().modify(resource -> {
 				for (CyberRequirement req : addBaseClaimDefinition) {
-					BaseClaim c = new BaseClaim(req);
+					final BaseClaim c = new BaseClaim(req);
 					req.insertClaimDef(resource, c);
 					baseClaims.put(req, c);
 				}
 
 				for (CyberRequirement req : addAgreeCheckClaimDefinition) {
-					AgreePropCheckedClaim c = new AgreePropCheckedClaim(req.getId(), req.getContext());
+					final AgreePropCheckedClaim c = new AgreePropCheckedClaim(req.getId(), req.getContext());
 					req.insertClaimDef(resource, c);
 					agreePropCheckedClaims.put(req, c);
 				}
@@ -706,7 +707,7 @@ public class RequirementsManager {
 			// to avoid null cross references.
 
 			// Get the file to insert into
-			XtextEditor editor = RequirementsManager.getEditor(file);
+			final XtextEditor editor = RequirementsManager.getEditor(file);
 
 			if (editor == null) {
 				throw new RuntimeException("Cannot open claim definition file: " + file);
@@ -728,7 +729,7 @@ public class RequirementsManager {
 
 		private void commitChangestoFile(IFile file) {
 			// Get the file to insert into
-			XtextEditor editor = RequirementsManager.getEditor(file);
+			final XtextEditor editor = RequirementsManager.getEditor(file);
 
 			if (editor == null) {
 				throw new RuntimeException("Cannot open claim definition file: " + file);
@@ -737,14 +738,14 @@ public class RequirementsManager {
 			editor.getDocument().modify(resource -> {
 				if (addBaseClaimProveStatement.containsKey(file)) {
 					for (CyberRequirement req : addBaseClaimProveStatement.get(file)) {
-						BaseClaim c = baseClaims.get(req);
+						final BaseClaim c = baseClaims.get(req);
 						req.insertClaimCall(resource, c);
 					}
 				}
 
 				if (addAgreeCheckClaimProveStatement.containsKey(file)) {
 					for (CyberRequirement req : addAgreeCheckClaimProveStatement.get(file)) {
-						AgreePropCheckedClaim c = agreePropCheckedClaims.get(req);
+						final AgreePropCheckedClaim c = agreePropCheckedClaims.get(req);
 						req.insertClaimCall(resource, c);
 					}
 				}
@@ -818,7 +819,7 @@ public class RequirementsManager {
 			if (reqFilePath != null) {
 				reqFile = reqFilePath.toFile();
 			}
-			JsonRequirementsFile jsonReqFile = new JsonRequirementsFile();
+			final JsonRequirementsFile jsonReqFile = new JsonRequirementsFile();
 			if (!reqFile.exists() || !jsonReqFile.importFile(reqFile)) {
 //				Dialog.showInfo("Missing requirements database",
 //						"No requirements database found. Starting a new database.");
@@ -840,7 +841,7 @@ public class RequirementsManager {
 			if (reqFilePath != null) {
 				reqFile = reqFilePath.toFile();
 			}
-			JsonRequirementsFile jsonReqFile = new JsonRequirementsFile(CyberRequirement.notApplicable,
+			final JsonRequirementsFile jsonReqFile = new JsonRequirementsFile(CyberRequirement.notApplicable,
 					new Date().getTime(), CyberRequirement.notApplicable, CyberRequirement.notApplicable,
 					getRequirements());
 			if (!jsonReqFile.exportFile(reqFile)) {
@@ -857,14 +858,14 @@ public class RequirementsManager {
 			// before calling importRequirements
 
 			// Make changes to the requirements' contexts
-			List<CyberRequirement> reqs = reqFile.getRequirements();
-			ComponentImplementation ci = getComponentImplementationInCurrentEditor(reqFile.getImplementation());
+			final List<CyberRequirement> reqs = reqFile.getRequirements();
+			final ComponentImplementation ci = getComponentImplementationInCurrentEditor(reqFile.getImplementation());
 			if (ci == null) {
 				throw new RuntimeException(
 				"Unknown top-level component implementation referred by import requirements file: " + reqFile.getImplementation());
 			}
-			String ciQualifiedName = ci.getQualifiedName();
-			reqs.forEach(e -> e.setContext(ciQualifiedName + "." + e.getContext()));
+
+			reqs.forEach(e -> e.setContext(ci.getQualifiedName() + "." + e.getContext()));
 
 			// Import requirements
 			importRequirements(reqs);
@@ -879,14 +880,14 @@ public class RequirementsManager {
 		public ComponentImplementation getComponentImplementationInCurrentEditor(String implInstanceName) {
 			// implInstanceName example:
 			// topLevelImplementation_Impl_Instance
-			String[] tokens = implInstanceName.split("_");
+			final String[] tokens = implInstanceName.split("_");
 			assert (tokens.length == 3);
-			String topLevelImplName = tokens[0] + "." + tokens[1];
+			final String topLevelImplName = tokens[0] + "." + tokens[1];
 
-			XtextEditor editor = (XtextEditor) TraverseProject.getCurrentEditor();
+			final XtextEditor editor = (XtextEditor) TraverseProject.getCurrentEditor();
 			if (editor != null) {
-				IFile file = (IFile) editor.getResource();
-				AadlPackage pkg = TraverseProject.getPackageInFile(file);
+				final IFile file = (IFile) editor.getResource();
+				final AadlPackage pkg = TraverseProject.getPackageInFile(file);
 				for (NamedElement e : pkg.getOwnedPublicSection().getOwnedMembers()) {
 					if (e instanceof ComponentImplementation && e.getName().equalsIgnoreCase(topLevelImplName)) {
 						System.out.println("Found complement implementation: " + e.getQualifiedName());
@@ -948,13 +949,13 @@ public class RequirementsManager {
 		}
 
 		public List<CyberRequirement> getRequirements() {
-			List<CyberRequirement> list = new ArrayList<CyberRequirement>();
+			final List<CyberRequirement> list = new ArrayList<CyberRequirement>();
 			requirements.values().forEach(e -> list.add(new CyberRequirement(e)));
 			return list;
 		}
 
 		private List<CyberRequirement> getRequirements(final String filterString) {
-			List<CyberRequirement> list = new ArrayList<CyberRequirement>();
+			final List<CyberRequirement> list = new ArrayList<CyberRequirement>();
 			requirements.values().forEach(r -> {
 				// Using "==" instead of equals because filterString is one of four constants
 				if (r.getStatus() == filterString) {
@@ -981,7 +982,7 @@ public class RequirementsManager {
 		}
 
 		public List<CyberRequirement> getImportedRequirements() {
-			List<CyberRequirement> list = getAddRequirements();
+			final List<CyberRequirement> list = getAddRequirements();
 			list.addAll(getAddPlusAgreeRequirements());
 			return list;
 		}

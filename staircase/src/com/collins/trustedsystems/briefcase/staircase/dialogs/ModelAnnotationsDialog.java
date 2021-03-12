@@ -117,10 +117,10 @@ public class ModelAnnotationsDialog extends TitleAreaDialog {
 
 	@Override
 	protected Control createDialogArea(Composite parent) {
-		Composite area = (Composite) super.createDialogArea(parent);
-		Composite container = new Composite(area, SWT.NONE);
+		final Composite area = (Composite) super.createDialogArea(parent);
+		final Composite container = new Composite(area, SWT.NONE);
 		container.setLayoutData(new GridData(SWT.FILL, SWT.TOP, false, false));
-		GridLayout layout = new GridLayout(2, false);
+		final GridLayout layout = new GridLayout(2, false);
 		layout.horizontalSpacing = convertWidthInCharsToPixels(5);
 		layout.marginLeft = convertWidthInCharsToPixels(2);
 		layout.marginRight = convertWidthInCharsToPixels(2);
@@ -142,21 +142,22 @@ public class ModelAnnotationsDialog extends TitleAreaDialog {
 
 	private void createConfidentialityField(Composite container) {
 
-		Label lblConfidentialityField = new Label(container, SWT.NONE);
+		final Label lblConfidentialityField = new Label(container, SWT.NONE);
 		lblConfidentialityField.setText("Confidentiality");
 
-		FontData fontData = lblConfidentialityField.getFont().getFontData()[0];
-		Font font = new Font(container.getDisplay(), new FontData(fontData.getName(), fontData.getHeight(), SWT.BOLD));
+		final FontData fontData = lblConfidentialityField.getFont().getFontData()[0];
+		final Font font = new Font(container.getDisplay(),
+				new FontData(fontData.getName(), fontData.getHeight(), SWT.BOLD));
 		lblConfidentialityField.setFont(font);
 
 		// Create a group to contain CIA options
-		Group ciaGroup = new Group(container, SWT.NONE);
+		final Group ciaGroup = new Group(container, SWT.NONE);
 		ciaGroup.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 		ciaGroup.setLayout(new RowLayout(SWT.HORIZONTAL));
 
 		btnConfidentiality.clear();
 		for (CIA cia : CIA.values()) {
-			Button option = new Button(ciaGroup, SWT.RADIO);
+			final Button option = new Button(ciaGroup, SWT.RADIO);
 			option.setText(prettyName.getOrDefault(cia.toString(), cia.toString()));
 			if (cia == confidentiality) {
 				option.setSelection(true);
@@ -167,21 +168,22 @@ public class ModelAnnotationsDialog extends TitleAreaDialog {
 	}
 
 	private void createIntegrityField(Composite container) {
-		Label lblIntegrityField = new Label(container, SWT.NONE);
+		final Label lblIntegrityField = new Label(container, SWT.NONE);
 		lblIntegrityField.setText("Integrity");
 
-		FontData fontData = lblIntegrityField.getFont().getFontData()[0];
-		Font font = new Font(container.getDisplay(), new FontData(fontData.getName(), fontData.getHeight(), SWT.BOLD));
+		final FontData fontData = lblIntegrityField.getFont().getFontData()[0];
+		final Font font = new Font(container.getDisplay(),
+				new FontData(fontData.getName(), fontData.getHeight(), SWT.BOLD));
 		lblIntegrityField.setFont(font);
 
 		// Create a group to contain CIA options
-		Group ciaGroup = new Group(container, SWT.NONE);
+		final Group ciaGroup = new Group(container, SWT.NONE);
 		ciaGroup.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 		ciaGroup.setLayout(new RowLayout(SWT.HORIZONTAL));
 
 		btnIntegrity.clear();
 		for (CIA cia : CIA.values()) {
-			Button option = new Button(ciaGroup, SWT.RADIO);
+			final Button option = new Button(ciaGroup, SWT.RADIO);
 			option.setText(prettyName.getOrDefault(cia.toString(), cia.toString()));
 			if (cia == integrity) {
 				option.setSelection(true);
@@ -192,21 +194,22 @@ public class ModelAnnotationsDialog extends TitleAreaDialog {
 	}
 
 	private void createAvailabilityField(Composite container) {
-		Label lblAvailabilityField = new Label(container, SWT.NONE);
+		final Label lblAvailabilityField = new Label(container, SWT.NONE);
 		lblAvailabilityField.setText("Availability");
 
-		FontData fontData = lblAvailabilityField.getFont().getFontData()[0];
-		Font font = new Font(container.getDisplay(), new FontData(fontData.getName(), fontData.getHeight(), SWT.BOLD));
+		final FontData fontData = lblAvailabilityField.getFont().getFontData()[0];
+		final Font font = new Font(container.getDisplay(),
+				new FontData(fontData.getName(), fontData.getHeight(), SWT.BOLD));
 		lblAvailabilityField.setFont(font);
 
 		// Create a group to contain CIA options
-		Group ciaGroup = new Group(container, SWT.NONE);
+		final Group ciaGroup = new Group(container, SWT.NONE);
 		ciaGroup.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 		ciaGroup.setLayout(new RowLayout(SWT.HORIZONTAL));
 
 		btnAvailability.clear();
 		for (CIA cia : CIA.values()) {
-			Button option = new Button(ciaGroup, SWT.RADIO);
+			final Button option = new Button(ciaGroup, SWT.RADIO);
 			option.setText(prettyName.getOrDefault(cia.toString(), cia.toString()));
 			if (cia == availability) {
 				option.setSelection(true);
@@ -217,22 +220,23 @@ public class ModelAnnotationsDialog extends TitleAreaDialog {
 	}
 
 	private void createCompTypeField(Composite container) {
-		Label lblCompTypeField = new Label(container, SWT.NONE);
+		final Label lblCompTypeField = new Label(container, SWT.NONE);
 		lblCompTypeField.setText("Component Type");
 
-		FontData fontData = lblCompTypeField.getFont().getFontData()[0];
-		Font font = new Font(container.getDisplay(), new FontData(fontData.getName(), fontData.getHeight(), SWT.BOLD));
+		final FontData fontData = lblCompTypeField.getFont().getFontData()[0];
+		final Font font = new Font(container.getDisplay(),
+				new FontData(fontData.getName(), fontData.getHeight(), SWT.BOLD));
 		lblCompTypeField.setFont(font);
 
 
 		// Create a group to contain COMP_TYPE options
-		Group compTypeGroup = new Group(container, SWT.NONE);
+		final Group compTypeGroup = new Group(container, SWT.NONE);
 		compTypeGroup.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 		compTypeGroup.setLayout(new GridLayout(3, true));
 
 		btnCompType.clear();
 		for (COMP_TYPE ct : COMP_TYPE.values()) {
-			Button option = new Button(compTypeGroup, SWT.RADIO);
+			final Button option = new Button(compTypeGroup, SWT.RADIO);
 			option.setText(ct.toString().equalsIgnoreCase("NULL") ? "Other"
 					: prettyName.getOrDefault(ct.toString(), ct.toString()));
 			if (ct == compType) {
@@ -244,21 +248,22 @@ public class ModelAnnotationsDialog extends TitleAreaDialog {
 	}
 
 	private void createCommModalityField(Composite container) {
-		Label lblCommModalityField = new Label(container, SWT.NONE);
+		final Label lblCommModalityField = new Label(container, SWT.NONE);
 		lblCommModalityField.setText("Communication Modality");
 
-		FontData fontData = lblCommModalityField.getFont().getFontData()[0];
-		Font font = new Font(container.getDisplay(), new FontData(fontData.getName(), fontData.getHeight(), SWT.BOLD));
+		final FontData fontData = lblCommModalityField.getFont().getFontData()[0];
+		final Font font = new Font(container.getDisplay(),
+				new FontData(fontData.getName(), fontData.getHeight(), SWT.BOLD));
 		lblCommModalityField.setFont(font);
 
 		// Create a group to contain COMM_MODALITY options
-		Group commModalityGroup = new Group(container, SWT.NONE);
+		final Group commModalityGroup = new Group(container, SWT.NONE);
 		commModalityGroup.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 		commModalityGroup.setLayout(new GridLayout(3, true));
 
 		btnCommModality.clear();
 		for (COMM_MODALITY cm : COMM_MODALITY.values()) {
-			Button option = new Button(commModalityGroup, SWT.RADIO);
+			final Button option = new Button(commModalityGroup, SWT.RADIO);
 			option.setText(prettyName.getOrDefault(cm.toString(), cm.toString()));
 			if (cm == commModality) {
 				option.setSelection(true);
@@ -268,15 +273,16 @@ public class ModelAnnotationsDialog extends TitleAreaDialog {
 	}
 
 	private void createBoundaryField(Composite container) {
-		Label lblBoundaryField = new Label(container, SWT.NONE);
+		final Label lblBoundaryField = new Label(container, SWT.NONE);
 		lblBoundaryField.setText("Boundary");
 
-		FontData fontData = lblBoundaryField.getFont().getFontData()[0];
-		Font font = new Font(container.getDisplay(), new FontData(fontData.getName(), fontData.getHeight(), SWT.BOLD));
+		final FontData fontData = lblBoundaryField.getFont().getFontData()[0];
+		final Font font = new Font(container.getDisplay(),
+				new FontData(fontData.getName(), fontData.getHeight(), SWT.BOLD));
 		lblBoundaryField.setFont(font);
 
 		// Create a composite to contain BOUNDARY options
-		Group selectionField = new Group(container, SWT.NO_RADIO_GROUP);
+		final Group selectionField = new Group(container, SWT.NO_RADIO_GROUP);
 		selectionField.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 		selectionField.setLayout(new RowLayout(SWT.HORIZONTAL));
 
@@ -285,7 +291,7 @@ public class ModelAnnotationsDialog extends TitleAreaDialog {
 			if (b == BOUNDARY.NULL) {
 				continue;
 			}
-			Button option = new Button(selectionField, SWT.CHECK);
+			final Button option = new Button(selectionField, SWT.CHECK);
 			option.setText(prettyName.getOrDefault(b.toString(), b.toString()));
 			if (boundary.contains(b)) {
 				option.setSelection(true);

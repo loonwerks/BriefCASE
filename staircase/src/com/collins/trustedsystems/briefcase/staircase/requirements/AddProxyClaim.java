@@ -17,13 +17,13 @@ public class AddProxyClaim extends BuiltInClaim {
 
 	@Override
 	public List<Expr> getCallArgs() {
-		List<Expr> callArgs = new ArrayList<>();
+		final List<Expr> callArgs = new ArrayList<>();
 		return callArgs;
 	}
 
 	@Override
 	public List<Arg> getDefinitionParams() {
-		List<Arg> defParams = new ArrayList<>();
+		final List<Arg> defParams = new ArrayList<>();
 		return defParams;
 	}
 

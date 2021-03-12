@@ -51,18 +51,18 @@ public abstract class AadlHandler extends AbstractHandler {
 
 		// Get the current selection
 		ISelection selection = null;
-		IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
-		IViewPart viewPart = page.findView(OUTLINE_VIEW_PART_ID);
+		final IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
+		final IViewPart viewPart = page.findView(OUTLINE_VIEW_PART_ID);
 		if (viewPart == null) {
 			selection = HandlerUtil.getCurrentSelection(event);
 		} else {
-			IViewSite viewSite = viewPart.getViewSite();
-			ISelectionProvider selectionProvider = viewSite.getSelectionProvider();
+			final IViewSite viewSite = viewPart.getViewSite();
+			final ISelectionProvider selectionProvider = viewSite.getSelectionProvider();
 			selection = selectionProvider.getSelection();
 		}
 
 		// TODO: Handle same functionality in the Graphical Editor?
-		URI uri = getSelectionURI(selection);
+		final URI uri = getSelectionURI(selection);
 		if (uri == null) {
 			return null;
 		}
@@ -79,7 +79,7 @@ public abstract class AadlHandler extends AbstractHandler {
 	 * @return EObject
 	 */
 	protected EObject getEObject(URI uri) {
-		XtextEditor xtextEditor = EditorUtils.getActiveXtextEditor();
+		final XtextEditor xtextEditor = EditorUtils.getActiveXtextEditor();
 		return xtextEditor.getDocument().readOnly(resource -> {
 			return resource.getResourceSet().getEObject(uri, true);
 		});
@@ -107,8 +107,8 @@ public abstract class AadlHandler extends AbstractHandler {
 			}
 		} else if (currentSelection instanceof TextSelection) {
 			// Selection may be stale, get latest from editor
-			XtextEditor xtextEditor = EditorUtils.getActiveXtextEditor();
-			TextSelection ts = (TextSelection) xtextEditor.getSelectionProvider().getSelection();
+			final XtextEditor xtextEditor = EditorUtils.getActiveXtextEditor();
+			final TextSelection ts = (TextSelection) xtextEditor.getSelectionProvider().getSelection();
 			return xtextEditor.getDocument().readOnly(resource -> {
 				EObject e = new EObjectAtOffsetHelper().resolveContainedElementAt(resource, ts.getOffset());
 				if (e instanceof Realization) {
@@ -122,7 +122,7 @@ public abstract class AadlHandler extends AbstractHandler {
 
 	protected boolean saveChanges(boolean prompt) {
 
-		IEditorPart[] dirtyEditors = window.getActivePage().getDirtyEditors();
+		final IEditorPart[] dirtyEditors = window.getActivePage().getDirtyEditors();
 
 		if (dirtyEditors.length == 0) {
 			return true;
@@ -159,34 +159,5 @@ public abstract class AadlHandler extends AbstractHandler {
 		}
 		return idx;
 	}
-
-
-//	/**
-//	 * Adds the containing package of the specified named element to the specified package section's with clause if it isn't already present
-//	 * @param namedElement - Named element whose containing package needs to be imported
-//	 * @param pkgSection - Package Section
-//	 */
-//	protected void importContainingPackage(NamedElement namedElement, PackageSection pkgSection) {
-//
-//		AadlPackage pkg = AadlUtil.getContainingPackage(namedElement);
-//		if (pkg == null) {
-//			return;
-//		}
-//		// Don't add the with clause if it is for the current package
-//		AadlPackage thisPkg = AadlUtil.getContainingPackage(pkgSection);
-//		if (thisPkg == null || pkg.getName().equalsIgnoreCase(thisPkg.getName())) {
-//			return;
-//		}
-//		boolean pkgFound = false;
-//		for (ModelUnit mu : pkgSection.getImportedUnits()) {
-//			if (mu.getName().equalsIgnoreCase(pkg.getName())) {
-//				pkgFound = true;
-//				break;
-//			}
-//		}
-//		if (!pkgFound) {
-//			pkgSection.getImportedUnits().add(pkg);
-//		}
-//	}
 
 }

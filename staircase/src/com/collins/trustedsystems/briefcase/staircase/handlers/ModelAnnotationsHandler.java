@@ -76,7 +76,7 @@ public class ModelAnnotationsHandler extends AadlHandler {
 		// Get the current CASE annotations for the selected component
 		getCurrentAnnotations(component);
 
-		ModelAnnotationsDialog wizard = new ModelAnnotationsDialog(
+		final ModelAnnotationsDialog wizard = new ModelAnnotationsDialog(
 				PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell());
 		wizard.setComponentAnnotations(component, confidentiality, integrity, availability, compType, commModality,
 				boundary);
@@ -115,9 +115,9 @@ public class ModelAnnotationsHandler extends AadlHandler {
 				boolean addCompType = (compType != COMP_TYPE.NULL);
 				boolean addCommModality = (commModality != COMM_MODALITY.NULL);
 				boolean addBoundary = !boundary.isEmpty();
-				Iterator<PropertyAssociation> prop = component.getOwnedPropertyAssociations().iterator();
+				final Iterator<PropertyAssociation> prop = component.getOwnedPropertyAssociations().iterator();
 				while (prop.hasNext()) {
-					String propName = prop.next().getProperty().getName();
+					final String propName = prop.next().getProperty().getName();
 					if (propName.equalsIgnoreCase("CONFIDENTIALITY")) {
 						prop.remove();
 					} else if (propName.equalsIgnoreCase("INTEGRITY")) {
@@ -238,21 +238,21 @@ public class ModelAnnotationsHandler extends AadlHandler {
 		reset();
 
 		for (PropertyAssociation propertyAssociation : component.getOwnedPropertyAssociations()) {
-			Property property = propertyAssociation.getProperty();
+			final Property property = propertyAssociation.getProperty();
 			if (property.getName().equalsIgnoreCase("Confidentiality")) {
-				ModalPropertyValue val = propertyAssociation.getOwnedValues().get(0);
-				NamedValue namedVal = (NamedValue) val.getOwnedValue();
-				EnumerationLiteral enumLiteral = (EnumerationLiteral) namedVal.getNamedValue();
+				final ModalPropertyValue val = propertyAssociation.getOwnedValues().get(0);
+				final NamedValue namedVal = (NamedValue) val.getOwnedValue();
+				final EnumerationLiteral enumLiteral = (EnumerationLiteral) namedVal.getNamedValue();
 				confidentiality = CIA.valueOf(enumLiteral.getName());
 			} else if (property.getName().equalsIgnoreCase("Integrity")) {
-				ModalPropertyValue val = propertyAssociation.getOwnedValues().get(0);
-				NamedValue namedVal = (NamedValue) val.getOwnedValue();
-				EnumerationLiteral enumLiteral = (EnumerationLiteral) namedVal.getNamedValue();
+				final ModalPropertyValue val = propertyAssociation.getOwnedValues().get(0);
+				final NamedValue namedVal = (NamedValue) val.getOwnedValue();
+				final EnumerationLiteral enumLiteral = (EnumerationLiteral) namedVal.getNamedValue();
 				integrity = CIA.valueOf(enumLiteral.getName());
 			} else if (property.getName().equalsIgnoreCase("Availability")) {
-				ModalPropertyValue val = propertyAssociation.getOwnedValues().get(0);
-				NamedValue namedVal = (NamedValue) val.getOwnedValue();
-				EnumerationLiteral enumLiteral = (EnumerationLiteral) namedVal.getNamedValue();
+				final ModalPropertyValue val = propertyAssociation.getOwnedValues().get(0);
+				final NamedValue namedVal = (NamedValue) val.getOwnedValue();
+				final EnumerationLiteral enumLiteral = (EnumerationLiteral) namedVal.getNamedValue();
 				availability = CIA.valueOf(enumLiteral.getName());
 //			} else if (property.getName().equalsIgnoreCase(CasePropertyUtils.COMP_TYPE)) {
 //				ModalPropertyValue val = propertyAssociation.getOwnedValues().get(0);
@@ -260,16 +260,16 @@ public class ModelAnnotationsHandler extends AadlHandler {
 //				EnumerationLiteral enumLiteral = (EnumerationLiteral) namedVal.getNamedValue();
 //				compType = COMP_TYPE.valueOf(enumLiteral.getName());
 			} else if (property.getName().equalsIgnoreCase(CasePropertyUtils.COMM_MODALITY)) {
-				ModalPropertyValue val = propertyAssociation.getOwnedValues().get(0);
-				NamedValue namedVal = (NamedValue) val.getOwnedValue();
-				EnumerationLiteral enumLiteral = (EnumerationLiteral) namedVal.getNamedValue();
+				final ModalPropertyValue val = propertyAssociation.getOwnedValues().get(0);
+				final NamedValue namedVal = (NamedValue) val.getOwnedValue();
+				final EnumerationLiteral enumLiteral = (EnumerationLiteral) namedVal.getNamedValue();
 				commModality = COMM_MODALITY.valueOf(enumLiteral.getName());
 			} else if (property.getName().equalsIgnoreCase("Boundary")) {
-				ModalPropertyValue val = propertyAssociation.getOwnedValues().get(0);
-				ListValue listVal = (ListValue) val.getOwnedValue();
+				final ModalPropertyValue val = propertyAssociation.getOwnedValues().get(0);
+				final ListValue listVal = (ListValue) val.getOwnedValue();
 				for (PropertyExpression propertyExpression : listVal.getOwnedListElements()) {
-					NamedValue namedVal = (NamedValue) propertyExpression;
-					EnumerationLiteral enumLiteral = (EnumerationLiteral) namedVal.getNamedValue();
+					final NamedValue namedVal = (NamedValue) propertyExpression;
+					final EnumerationLiteral enumLiteral = (EnumerationLiteral) namedVal.getNamedValue();
 					boundary.add(BOUNDARY.valueOf(enumLiteral.getName()));
 				}
 			}

@@ -27,7 +27,7 @@ public class ModelTransformUtils {
 	 * @return list of in port names
 	 */
 	public static List<String> getInports(ComponentImplementation ci) {
-		List<String> inports = new ArrayList<>();
+		final List<String> inports = new ArrayList<>();
 		// Get component implementation out ports
 		for (Feature f : ci.getAllFeatures()) {
 			if (f instanceof DirectedFeature && ((DirectedFeature) f).isOut()) {
@@ -72,7 +72,7 @@ public class ModelTransformUtils {
 	 * @return list of out port names
 	 */
 	public static List<String> getOutports(ComponentImplementation ci) {
-		List<String> outports = new ArrayList<>();
+		final List<String> outports = new ArrayList<>();
 		// Get component implementation in ports
 		for (Feature f : ci.getAllFeatures()) {
 			if (f instanceof DirectedFeature && ((DirectedFeature) f).isIn()) {
@@ -124,7 +124,7 @@ public class ModelTransformUtils {
 			featureName = portName.substring(portName.indexOf('[') + 1, portName.length() - 1);
 			portName = portName.substring(0, portName.indexOf('['));
 		}
-		String[] parts = portName.split("\\.");
+		final String[] parts = portName.split("\\.");
 		if (parts.length == 1) {
 			for (Feature f : ci.getAllFeatures()) {
 				if (f.getName().equalsIgnoreCase(portName)) {
@@ -176,7 +176,7 @@ public class ModelTransformUtils {
 	}
 
 	public static Subcomponent getSubcomponent(ComponentImplementation ci, String portName) {
-		String[] parts = portName.split("\\.");
+		final String[] parts = portName.split("\\.");
 		if (parts.length == 2) {
 			for (Subcomponent s : ci.getOwnedSubcomponents()) {
 				if (s.getName().equalsIgnoreCase(parts[0])) {
@@ -203,7 +203,7 @@ public class ModelTransformUtils {
 			final Collection<? extends NamedElement> elements) {
 
 		// Sort names list alphabetically
-		TreeSet<String> names = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
+		final TreeSet<String> names = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
 		elements.forEach(n -> {
 			if (n.getName() != null) {
 				names.add(n.getName());
@@ -240,12 +240,12 @@ public class ModelTransformUtils {
 	 */
 	public static void importContainingPackage(EObject obj, PackageSection pkgSection) {
 
-		AadlPackage pkg = AadlUtil.getContainingPackage(obj);
+		final AadlPackage pkg = AadlUtil.getContainingPackage(obj);
 		if (pkg == null) {
 			return;
 		}
 		// Don't add the with clause if it is for the current package
-		AadlPackage thisPkg = AadlUtil.getContainingPackage(pkgSection);
+		final AadlPackage thisPkg = AadlUtil.getContainingPackage(pkgSection);
 		if (thisPkg == null || pkg.getName().equalsIgnoreCase(thisPkg.getName())) {
 			return;
 		}

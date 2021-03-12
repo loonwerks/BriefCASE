@@ -23,10 +23,11 @@ import org.osate.aadl2.modelsupport.util.AadlUtil;
 import org.osate.ui.dialogs.Dialog;
 
 import com.collins.trustedsystems.briefcase.staircase.dialogs.SubcomponentSelector.CheckStyle;
-import com.collins.trustedsystems.briefcase.staircase.handlers.AddVirtualizationHandler;
+import com.collins.trustedsystems.briefcase.staircase.handlers.VirtualizationTransformHandler;
+import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsManager;
 import com.collins.trustedsystems.briefcase.staircase.utils.ModelTransformUtils;
 
-public class AddVirtualizationDialog extends TitleAreaDialog {
+public class VirtualizationTransformDialog extends TitleAreaDialog {
 
 	private ComponentImplementation context;
 	private Text txtVirtualProcessorComponentName;
@@ -47,7 +48,7 @@ public class AddVirtualizationDialog extends TitleAreaDialog {
 	private static final String DEFAULT_OS = "Linux";
 	private static final String NO_REQUIREMENT_SELECTED = "<No requirement selected>";
 
-	public AddVirtualizationDialog(Shell parentShell) {
+	public VirtualizationTransformDialog(Shell parentShell) {
 		super(parentShell);
 		setHelpAvailable(false);
 	}
@@ -55,7 +56,7 @@ public class AddVirtualizationDialog extends TitleAreaDialog {
 	@Override
 	public void create() {
 		super.create();
-		setTitle("Add Virtualization");
+		setTitle("Virtualization Transform");
 		setMessage(
 				"Enter virtualization details.  You may optionally leave these fields empty and manually edit the AADL virtualization component once it is added to the model.",
 				IMessageProvider.NONE);
@@ -64,6 +65,9 @@ public class AddVirtualizationDialog extends TitleAreaDialog {
 	public void create(Subcomponent subcomponent) {
 		this.context = subcomponent.getContainingComponentImpl();
 		this.subcomponent = subcomponent;
+		// Populate requirements list
+		RequirementsManager.getInstance().getImportedRequirements().forEach(r -> requirements.add(r.getId()));
+
 		create();
 	}
 
@@ -76,10 +80,10 @@ public class AddVirtualizationDialog extends TitleAreaDialog {
 
 	@Override
 	protected Control createDialogArea(Composite parent) {
-		Composite area = (Composite) super.createDialogArea(parent);
-		Composite container = new Composite(area, SWT.NONE);
+		final Composite area = (Composite) super.createDialogArea(parent);
+		final Composite container = new Composite(area, SWT.NONE);
 		container.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
-		GridLayout layout = new GridLayout(2, false);
+		final GridLayout layout = new GridLayout(2, false);
 		container.setLayout(layout);
 
 		// Add virtualization information fields
@@ -97,15 +101,15 @@ public class AddVirtualizationDialog extends TitleAreaDialog {
 	 * @param container
 	 */
 	private void createVirtualProcessorComponentNameField(Composite container) {
-		Label lblVirtualProcessorNameField = new Label(container, SWT.NONE);
+		final Label lblVirtualProcessorNameField = new Label(container, SWT.NONE);
 		lblVirtualProcessorNameField.setText("Virtual Processor component name");
 
-		GridData dataInfoField = new GridData();
+		final GridData dataInfoField = new GridData();
 		dataInfoField.grabExcessHorizontalSpace = true;
 		dataInfoField.horizontalAlignment = SWT.FILL;
 		txtVirtualProcessorComponentName = new Text(container, SWT.BORDER);
 		txtVirtualProcessorComponentName.setLayoutData(dataInfoField);
-		txtVirtualProcessorComponentName.setText(AddVirtualizationHandler.VIRTUAL_PROCESSOR_COMP_TYPE_NAME);
+		txtVirtualProcessorComponentName.setText(VirtualizationTransformHandler.VIRTUAL_PROCESSOR_COMP_TYPE_NAME);
 	}
 
 	/**
@@ -113,15 +117,15 @@ public class AddVirtualizationDialog extends TitleAreaDialog {
 	 * @param container
 	 */
 	private void createVirtualProcessorSubcomponentNameField(Composite container) {
-		Label lblVirtualProcessorNameField = new Label(container, SWT.NONE);
+		final Label lblVirtualProcessorNameField = new Label(container, SWT.NONE);
 		lblVirtualProcessorNameField.setText("Virtual Processor subcomponent name");
 
-		GridData dataInfoField = new GridData();
+		final GridData dataInfoField = new GridData();
 		dataInfoField.grabExcessHorizontalSpace = true;
 		dataInfoField.horizontalAlignment = SWT.FILL;
 		txtVirtualProcessorSubcomponentName = new Text(container, SWT.BORDER);
 		txtVirtualProcessorSubcomponentName.setLayoutData(dataInfoField);
-		txtVirtualProcessorSubcomponentName.setText(AddVirtualizationHandler.VIRTUAL_PROCESSOR_SUBCOMP_NAME);
+		txtVirtualProcessorSubcomponentName.setText(VirtualizationTransformHandler.VIRTUAL_PROCESSOR_SUBCOMP_NAME);
 	}
 
 	/**
@@ -129,10 +133,10 @@ public class AddVirtualizationDialog extends TitleAreaDialog {
 	 * @param container
 	 */
 	private void createOSField(Composite container) {
-		Label lblOSField = new Label(container, SWT.NONE);
+		final Label lblOSField = new Label(container, SWT.NONE);
 		lblOSField.setText("Virtual machine OS");
 
-		GridData dataInfoField = new GridData();
+		final GridData dataInfoField = new GridData();
 		dataInfoField.grabExcessHorizontalSpace = true;
 		dataInfoField.horizontalAlignment = SWT.FILL;
 		txtVirtualMachineOS = new Text(container, SWT.BORDER);
@@ -154,7 +158,7 @@ public class AddVirtualizationDialog extends TitleAreaDialog {
 			return;
 		}
 
-		Label lblComponentSelectionField = new Label(container, SWT.NONE);
+		final Label lblComponentSelectionField = new Label(container, SWT.NONE);
 		lblComponentSelectionField.setText("Components in VM");
 		lblComponentSelectionField.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, true));
 
@@ -169,10 +173,10 @@ public class AddVirtualizationDialog extends TitleAreaDialog {
 	 * @param container
 	 */
 	private void createRequirementField(Composite container) {
-		Label lblResoluteField = new Label(container, SWT.NONE);
+		final Label lblResoluteField = new Label(container, SWT.NONE);
 		lblResoluteField.setText("Requirement");
 
-		GridData dataInfoField = new GridData();
+		final GridData dataInfoField = new GridData();
 		dataInfoField.grabExcessHorizontalSpace = true;
 		dataInfoField.horizontalAlignment = GridData.FILL;
 		cboVirtualizationRequirement = new Combo(container, SWT.BORDER);
@@ -197,18 +201,19 @@ public class AddVirtualizationDialog extends TitleAreaDialog {
 	 */
 	private boolean saveInput() {
 
-		List<Classifier> componentsInPackage = AadlUtil.getContainingPackageSection(context).getOwnedClassifiers();
+		final List<Classifier> componentsInPackage = AadlUtil.getContainingPackageSection(context)
+				.getOwnedClassifiers();
 
 		// VirtualProcessor Component Name
 		if (!txtVirtualProcessorComponentName.getText().isEmpty()
 				&& !ModelTransformUtils.isValidName(txtVirtualProcessorComponentName.getText())) {
-			Dialog.showError("Add Virtualization",
+			Dialog.showError("Virtualization Transform",
 					"VirtualProcessor component name " + txtVirtualProcessorComponentName.getText()
 							+ " contains invalid characters. Only 'A..Z', 'a..z', '0..9', and '_' are permitted");
 			return false;
 		} else if (AadlUtil.findNamedElementInList(componentsInPackage,
 				txtVirtualProcessorComponentName.getText()) != null) {
-			Dialog.showError("Add Virtualization", "Component " + txtVirtualProcessorComponentName.getText()
+			Dialog.showError("Virtualization Transform", "Component " + txtVirtualProcessorComponentName.getText()
 					+ " already exists in model. Use the suggested name or enter a new one.");
 			txtVirtualProcessorComponentName.setText(ModelTransformUtils
 					.getUniqueName(txtVirtualProcessorComponentName.getText(), true, componentsInPackage));
@@ -220,13 +225,13 @@ public class AddVirtualizationDialog extends TitleAreaDialog {
 		// VirtualProcessor Subcomponent Instance Name
 		if (!txtVirtualProcessorSubcomponentName.getText().isEmpty()
 				&& !ModelTransformUtils.isValidName(txtVirtualProcessorSubcomponentName.getText())) {
-			Dialog.showError("Add VirtualProcessor",
+			Dialog.showError("Virtualization Transform",
 					"Virtual Processor subcomponent instance name " + txtVirtualProcessorSubcomponentName.getText()
 							+ " contains invalid characters. Only 'A..Z', 'a..z', '0..9', and '_' are permitted");
 			return false;
 		} else if (AadlUtil.findNamedElementInList(context.getOwnedSubcomponents(),
 				txtVirtualProcessorSubcomponentName.getText()) != null) {
-			Dialog.showError("Add Virtualization", "Subcomponent " + txtVirtualProcessorSubcomponentName.getText()
+			Dialog.showError("Virtualization Transform", "Subcomponent " + txtVirtualProcessorSubcomponentName.getText()
 					+ " already exists in model. Use the suggested name or enter a new one.");
 			txtVirtualProcessorSubcomponentName.setText(ModelTransformUtils.getUniqueName(
 					txtVirtualProcessorSubcomponentName.getText(), true, context.getOwnedSubcomponents()));
@@ -245,7 +250,7 @@ public class AddVirtualizationDialog extends TitleAreaDialog {
 		} else {
 			subcomponents = subcomponentSelector.getContents();
 			if (subcomponents.isEmpty()) {
-				Dialog.showError("Add Virtualization", "No subcomponents have been selected to virtualize.");
+				Dialog.showError("Virtualization Transform", "No subcomponents have been selected to virtualize.");
 				return false;
 			}
 		}
@@ -255,7 +260,7 @@ public class AddVirtualizationDialog extends TitleAreaDialog {
 		if (virtualizationRequirement.equals(NO_REQUIREMENT_SELECTED)) {
 			virtualizationRequirement = "";
 		} else if (!requirements.contains(virtualizationRequirement)) {
-			Dialog.showError("Add Virtualization", "Virtualization requirement " + virtualizationRequirement
+			Dialog.showError("Virtualization Transform", "Virtualization requirement " + virtualizationRequirement
 							+ " does not exist in the model.  Select a requirement from the list, or choose "
 							+ NO_REQUIREMENT_SELECTED + ".");
 			return false;
@@ -282,14 +287,6 @@ public class AddVirtualizationDialog extends TitleAreaDialog {
 
 	public String getRequirement() {
 		return virtualizationRequirement;
-	}
-
-//	public void setSelectedSubcomponent(Subcomponent subcomponent) {
-//		this.subcomponent = subcomponent;
-//	}
-
-	public void setRequirements(List<String> requirements) {
-		this.requirements = requirements;
 	}
 
 }

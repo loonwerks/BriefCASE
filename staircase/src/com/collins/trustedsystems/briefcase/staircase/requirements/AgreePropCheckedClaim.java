@@ -20,7 +20,7 @@ public class AgreePropCheckedClaim extends BuiltInClaim {
 
 	@Override
 	public List<Arg> getDefinitionParams() {
-		List<Arg> defParams = new ArrayList<>();
+		final List<Arg> defParams = new ArrayList<>();
 		defParams.add(Create.arg("comp_context", Create.baseType("component")));
 		defParams.add(Create.arg("property_id", Create.baseType("string")));
 		return defParams;
@@ -28,7 +28,7 @@ public class AgreePropCheckedClaim extends BuiltInClaim {
 
 	@Override
 	public List<Expr> getCallArgs() {
-		List<Expr> callArgs = new ArrayList<>();
+		final List<Expr> callArgs = new ArrayList<>();
 		callArgs.add(Create.THIS(this.reqContext));
 		callArgs.add(Create.stringExpr(this.reqId));
 		return callArgs;

@@ -53,33 +53,35 @@ public class PortNamesControl {
 	public PortNamesControl(Composite parent, String keyName, List<String> keyPorts, List<String> inputPorts,
 			List<String> outputPorts, String targetComponentName) {
 
-		GridData gridData = new GridData();
+		final GridData gridData = new GridData();
 		gridData.verticalAlignment = SWT.TOP;
 		gridData.grabExcessHorizontalSpace = true;
 		gridData.grabExcessVerticalSpace = true;
 		gridData.horizontalAlignment = SWT.FILL;
 
-		Composite baseComposite = new Composite(parent, SWT.BORDER);
+		final Composite baseComposite = new Composite(parent, SWT.BORDER);
 		baseComposite.setLayoutData(gridData);
 		baseComposite.setLayout(new GridLayout(1, true));
 
-		Composite tableComposite = new Composite(baseComposite, SWT.NONE);
+		final Composite tableComposite = new Composite(baseComposite, SWT.NONE);
 		gridData.heightHint = 120;
 		tableComposite.setLayoutData(gridData);
-		TableColumnLayout tableColumnLayout = new TableColumnLayout();
+		final TableColumnLayout tableColumnLayout = new TableColumnLayout();
 		tableComposite.setLayout(tableColumnLayout);
 
 		tblPorts = new TableViewer(tableComposite, SWT.NO_SCROLL | SWT.V_SCROLL | SWT.FULL_SELECTION | SWT.BORDER);
 
-		TableViewerColumn colKeyName = createTableViewerColumn(keyName, 100);
-		TableViewerColumn colInputPortName = createTableViewerColumn(targetComponentName + " Input Port Name", 100);
-		TableViewerColumn colOutputPortName = createTableViewerColumn(targetComponentName + " Output Port Name", 100);
+		final TableViewerColumn colKeyName = createTableViewerColumn(keyName, 100);
+		final TableViewerColumn colInputPortName = createTableViewerColumn(targetComponentName + " Input Port Name",
+				100);
+		final TableViewerColumn colOutputPortName = createTableViewerColumn(targetComponentName + " Output Port Name",
+				100);
 
 		// Add the key port column
 		colKeyName.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
-				PortNameItem p = (PortNameItem) element;
+				final PortNameItem p = (PortNameItem) element;
 				return p.getKeyPortName();
 			}
 		});
@@ -137,7 +139,7 @@ public class PortNamesControl {
 	}
 
 	public Map<String, List<String>> getContents() {
-		Map<String, List<String>> contents = new HashMap<>();
+		final Map<String, List<String>> contents = new HashMap<>();
 		PortNameItems.INSTANCE.getPortNames().forEach(
 				p -> contents.put(p.getKeyPortName(),
 						new ArrayList<String>(Arrays.asList(p.getInputPortName(), p.getOutputPortName()))));

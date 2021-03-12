@@ -29,9 +29,9 @@ public class Sel4TransformClaim extends BuiltInClaim {
 
 	@Override
 	public List<Expr> getCallArgs() {
-		List<Expr> callArgs = new ArrayList<>();
+		final List<Expr> callArgs = new ArrayList<>();
 
-		String rootQualName = rootImpl.getQualifiedName() + ".";
+		final String rootQualName = rootImpl.getQualifiedName() + ".";
 		callArgs.add(Create.THIS(this.reqContext));
 //		callArgs.add(Create.stringExpr(this.processor));
 		callArgs.add(Create.THIS(rootQualName + this.transformedComponent));
@@ -41,7 +41,7 @@ public class Sel4TransformClaim extends BuiltInClaim {
 
 	@Override
 	public List<Arg> getDefinitionParams() {
-		List<Arg> defParams = new ArrayList<>();
+		final List<Arg> defParams = new ArrayList<>();
 		defParams.add(Create.arg("comp_context", Create.baseType("component")));
 //		defParams.add(Create.arg("processor_name", Create.baseType("string")));
 		defParams.add(Create.arg("transformed_component", Create.baseType("component")));

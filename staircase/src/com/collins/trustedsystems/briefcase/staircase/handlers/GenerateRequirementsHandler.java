@@ -31,7 +31,7 @@ public class GenerateRequirementsHandler extends AadlHandler {
 
 		final ComponentImplementation ci = (ComponentImplementation) eObj;
 
-		IProject project = TraverseProject.getCurrentProject();
+		final IProject project = TraverseProject.getCurrentProject();
 		if (project == null) {
 			Dialog.showError("Generate Cyber Requirements",
 					"Unable to determine current AADL project name.  Make sure the top-level system implementation is open in the text editor.");
@@ -46,13 +46,13 @@ public class GenerateRequirementsHandler extends AadlHandler {
 			return;
 		}
 
-		JsonObject header = new JsonObject();
+		final JsonObject header = new JsonObject();
 		header.addProperty("project", project.getName());
 		header.addProperty("implementation", ci.getQualifiedName());
 		header.addProperty("date", System.currentTimeMillis());
 		header.addProperty("hash", hashcode);
 
-		String tool = this.executionEvent.getParameter(GENERATE_REQUIREMENTS_TOOL_COMMAND);
+		final String tool = this.executionEvent.getParameter(GENERATE_REQUIREMENTS_TOOL_COMMAND);
 		switch (tool.toLowerCase()) {
 
 		case "gearcase": // CRA
@@ -63,7 +63,7 @@ public class GenerateRequirementsHandler extends AadlHandler {
 
 			try {
 				// Generate json
-				URI jsonURI = Aadl2Json.createJson(header, AgreePrintOption.BOTH);
+				final URI jsonURI = Aadl2Json.createJson(header, AgreePrintOption.BOTH);
 			} catch (Exception e) {
 				Dialog.showError("Generate Cyber Requirements", "Unable to export model to JSON format.");
 				return;
@@ -72,8 +72,8 @@ public class GenerateRequirementsHandler extends AadlHandler {
 			// TODO: Call tool
 			if (Dialog.askQuestion("Generate Cyber Requirements", "DCRYPPS analysis complete.  Import requirements?")) {
 				try {
-					IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindowChecked(this.executionEvent);
-					IHandlerService handlerService = window.getService(IHandlerService.class);
+					final IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindowChecked(this.executionEvent);
+					final IHandlerService handlerService = window.getService(IHandlerService.class);
 					handlerService.executeCommand("com.collins.trustedsystems.briefcase.architecture.commands.ImportRequirements",
 							null);
 				} catch (Exception e) {

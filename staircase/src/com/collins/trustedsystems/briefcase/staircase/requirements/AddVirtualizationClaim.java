@@ -26,10 +26,10 @@ public class AddVirtualizationClaim extends BuiltInClaim {
 
 	@Override
 	public List<Expr> getCallArgs() {
-		List<Expr> callArgs = new ArrayList<>();
-		List<Expr> boundComps = new ArrayList<>();
-		List<Expr> nonVmComps = new ArrayList<>();
-		String sysQualName = virtualProcessor.getContainingClassifier().getQualifiedName() + ".";
+		final List<Expr> callArgs = new ArrayList<>();
+		final List<Expr> boundComps = new ArrayList<>();
+		final List<Expr> nonVmComps = new ArrayList<>();
+		final String sysQualName = virtualProcessor.getContainingClassifier().getQualifiedName() + ".";
 		boundComponents.forEach(c -> boundComps.add(Create.THIS(sysQualName + c)));
 		callArgs.add(Create.setExpr(boundComps));
 		nonVmBoundChildren.forEach(c -> nonVmComps.add(Create.THIS(sysQualName + c)));
@@ -40,7 +40,7 @@ public class AddVirtualizationClaim extends BuiltInClaim {
 
 	@Override
 	public List<Arg> getDefinitionParams() {
-		List<Arg> defParams = new ArrayList<>();
+		final List<Arg> defParams = new ArrayList<>();
 		defParams.add(Create.arg("vm_components", Create.setType(Create.baseType("component"))));
 		defParams.add(Create.arg("non_vm_child_components", Create.setType(Create.baseType("component"))));
 		defParams.add(Create.arg("virtual_machine", Create.baseType("component")));

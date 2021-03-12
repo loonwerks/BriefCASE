@@ -29,7 +29,7 @@ import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils.MI
 import com.collins.trustedsystems.briefcase.staircase.utils.CaseUtils;
 import com.collins.trustedsystems.briefcase.staircase.utils.ModelTransformUtils;
 
-public class AddSimplexHandler extends AadlHandler {
+public class SimplexTransformHandler extends AadlHandler {
 
 	static final String CONNECTION_IMPL_NAME = "c";
 

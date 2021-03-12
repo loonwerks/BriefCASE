@@ -83,19 +83,19 @@ public class ImportRequirementsGUI extends Dialog {
 		}
 		shlReqManager.setLayout(new GridLayout(1, true));
 
-		Composite cmpReqManager = new Composite(shlReqManager, SWT.NONE);
+		final Composite cmpReqManager = new Composite(shlReqManager, SWT.NONE);
 		cmpReqManager.setBackground(SWTResourceManager.getColor(SWT.COLOR_TITLE_INACTIVE_BACKGROUND_GRADIENT));
 		cmpReqManager.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
 		cmpReqManager.setLayout(new FillLayout(SWT.HORIZONTAL));
-		Group grpReqBrowser = new Group(cmpReqManager, SWT.NONE);
+		final Group grpReqBrowser = new Group(cmpReqManager, SWT.NONE);
 		grpReqBrowser.setFont(SWTResourceManager.getFont("Segoe UI", 9, SWT.NORMAL));
 		grpReqBrowser.setBackground(SWTResourceManager.getColor(SWT.COLOR_TITLE_INACTIVE_BACKGROUND_GRADIENT));
 		grpReqBrowser.setText("Requirements Browser");
-		FillLayout fl_grpReqBrowser = new FillLayout(SWT.HORIZONTAL);
+		final FillLayout fl_grpReqBrowser = new FillLayout(SWT.HORIZONTAL);
 		// fl_grpReqBrowser.marginHeight = 10;
 		grpReqBrowser.setLayout(fl_grpReqBrowser);
 
-		ScrolledComposite reqBrowser = new ScrolledComposite(grpReqBrowser, SWT.BORDER);
+		final ScrolledComposite reqBrowser = new ScrolledComposite(grpReqBrowser, SWT.BORDER);
 		reqBrowser.setMinWidth(553);
 		reqBrowser.setBackground(SWTResourceManager.getColor(SWT.COLOR_TITLE_INACTIVE_BACKGROUND_GRADIENT));
 		reqBrowser.setExpandHorizontal(true);
@@ -106,40 +106,40 @@ public class ImportRequirementsGUI extends Dialog {
 		tblReqBrowser.setLinesVisible(true);
 		tblReqBrowser.setHeaderVisible(true);
 
-		TableColumn tblclmnStatus = new TableColumn(tblReqBrowser, SWT.LEFT);
+		final TableColumn tblclmnStatus = new TableColumn(tblReqBrowser, SWT.LEFT);
 		tblclmnStatus.setWidth(45);
 		tblclmnStatus.setText("Status");
 
-		TableColumn tblclmnType = new TableColumn(tblReqBrowser, SWT.LEFT);
+		final TableColumn tblclmnType = new TableColumn(tblReqBrowser, SWT.LEFT);
 		tblclmnType.setWidth(99);
 		tblclmnType.setText("Type");
 
-		TableColumn tblclmnId = new TableColumn(tblReqBrowser, SWT.LEFT);
+		final TableColumn tblclmnId = new TableColumn(tblReqBrowser, SWT.LEFT);
 		tblclmnId.setWidth(100);
 		tblclmnId.setText("ID");
 
-		TableColumn tblclmnShortDesciption = new TableColumn(tblReqBrowser, SWT.LEFT);
+		final TableColumn tblclmnShortDesciption = new TableColumn(tblReqBrowser, SWT.LEFT);
 		tblclmnShortDesciption.setWidth(309);
 		tblclmnShortDesciption.setText("Short Desciption");
 		reqBrowser.setContent(tblReqBrowser);
 
-		Group grpViewEditReq = new Group(cmpReqManager, SWT.NONE);
+		final Group grpViewEditReq = new Group(cmpReqManager, SWT.NONE);
 		grpViewEditReq.setFont(SWTResourceManager.getFont("Segoe UI", 9, SWT.NORMAL));
 		grpViewEditReq.setBackground(SWTResourceManager.getColor(SWT.COLOR_TITLE_INACTIVE_BACKGROUND_GRADIENT));
 		grpViewEditReq.setText("View/Edit Requirement");
 		grpViewEditReq.setLayout(new FillLayout(SWT.HORIZONTAL));
 
-		ScrolledComposite scrolledComposite = new ScrolledComposite(grpViewEditReq,
+		final ScrolledComposite scrolledComposite = new ScrolledComposite(grpViewEditReq,
 				SWT.BORDER);
 		scrolledComposite.setBackground(SWTResourceManager.getColor(SWT.COLOR_TITLE_INACTIVE_BACKGROUND_GRADIENT));
 		scrolledComposite.setExpandHorizontal(true);
 		scrolledComposite.setExpandVertical(true);
 
-		Composite composite = new Composite(scrolledComposite, SWT.NONE);
+		final Composite composite = new Composite(scrolledComposite, SWT.NONE);
 		composite.setBackground(SWTResourceManager.getColor(SWT.COLOR_LIST_BACKGROUND));
 		composite.setLayout(new GridLayout(5, true));
 
-		Label lblStatus = new Label(composite, SWT.NONE);
+		final Label lblStatus = new Label(composite, SWT.NONE);
 		lblStatus.setBackground(SWTResourceManager.getColor(SWT.COLOR_LIST_BACKGROUND));
 		lblStatus.setAlignment(SWT.CENTER);
 		lblStatus.setText("Status");
@@ -151,7 +151,7 @@ public class ImportRequirementsGUI extends Dialog {
 		new Label(composite, SWT.NONE);
 		new Label(composite, SWT.NONE);
 
-		Label lblGenTool = new Label(composite, SWT.CENTER);
+		final Label lblGenTool = new Label(composite, SWT.CENTER);
 		lblGenTool.setBackground(SWTResourceManager.getColor(SWT.COLOR_LIST_BACKGROUND));
 		lblGenTool.setText("Generation Tool");
 
@@ -161,7 +161,7 @@ public class ImportRequirementsGUI extends Dialog {
 
 		scrolledComposite.setContent(composite);
 
-		Label lblType = new Label(composite, SWT.CENTER);
+		final Label lblType = new Label(composite, SWT.CENTER);
 		lblType.setBackground(SWTResourceManager.getColor(SWT.COLOR_LIST_BACKGROUND));
 		lblType.setText("Type");
 
@@ -172,7 +172,7 @@ public class ImportRequirementsGUI extends Dialog {
 		scrolledComposite.setContent(composite);
 		scrolledComposite.setMinSize(new Point(600, 50));
 
-		Label lblID = new Label(composite, SWT.CENTER);
+		final Label lblID = new Label(composite, SWT.CENTER);
 		lblID.setBackground(SWTResourceManager.getColor(SWT.COLOR_LIST_BACKGROUND));
 		lblID.setText("ID");
 
@@ -182,7 +182,7 @@ public class ImportRequirementsGUI extends Dialog {
 		scrolledComposite.setContent(composite);
 		scrolledComposite.setMinSize(composite.computeSize(SWT.DEFAULT, SWT.DEFAULT));
 
-		Label lblDesc = new Label(composite, SWT.CENTER);
+		final Label lblDesc = new Label(composite, SWT.CENTER);
 		lblDesc.setBackground(SWTResourceManager.getColor(SWT.COLOR_LIST_BACKGROUND));
 		lblDesc.setText("Descrption");
 
@@ -195,7 +195,7 @@ public class ImportRequirementsGUI extends Dialog {
 		new Label(composite, SWT.NONE);
 		new Label(composite, SWT.NONE);
 
-		Label lblContext = new Label(composite, SWT.CENTER);
+		final Label lblContext = new Label(composite, SWT.CENTER);
 		lblContext.setBackground(SWTResourceManager.getColor(SWT.COLOR_LIST_BACKGROUND));
 		lblContext.setText("Component");
 
@@ -203,7 +203,7 @@ public class ImportRequirementsGUI extends Dialog {
 		lblContext2.setBackground(SWTResourceManager.getColor(255, 240, 245));
 		lblContext2.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false, 4, 1));
 
-		Label lblReason = new Label(composite, SWT.NONE);
+		final Label lblReason = new Label(composite, SWT.NONE);
 		lblReason.setBackground(SWTResourceManager.getColor(SWT.COLOR_LIST_BACKGROUND));
 		// lblReason.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
 		lblReason.setText("Reason for omission");
@@ -215,9 +215,9 @@ public class ImportRequirementsGUI extends Dialog {
 		scrolledComposite.setContent(composite);
 		scrolledComposite.setMinSize(composite.computeSize(SWT.DEFAULT, SWT.DEFAULT));
 
-		Composite cmpButtonBar = new Composite(shlReqManager, SWT.NONE);
+		final Composite cmpButtonBar = new Composite(shlReqManager, SWT.NONE);
 		cmpButtonBar.setBackground(SWTResourceManager.getColor(SWT.COLOR_TITLE_INACTIVE_BACKGROUND_GRADIENT));
-		FillLayout fl_cmpButtonBar = new FillLayout(SWT.HORIZONTAL);
+		final FillLayout fl_cmpButtonBar = new FillLayout(SWT.HORIZONTAL);
 		fl_cmpButtonBar.spacing = 20;
 		cmpButtonBar.setLayout(fl_cmpButtonBar);
 		cmpButtonBar.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
@@ -278,10 +278,10 @@ public class ImportRequirementsGUI extends Dialog {
 			return true; // nothing selected; therefore, nothing to be saved
 		}
 
-		String newStatus = getStatusString(cmbStatus.getSelectionIndex());
-		String newId = txtID.getText();
-		String newDesc = txtDesc.getText();
-		String newReason = txtReason.getText();
+		final String newStatus = getStatusString(cmbStatus.getSelectionIndex());
+		final String newId = txtID.getText();
+		final String newDesc = txtDesc.getText();
+		final String newReason = txtReason.getText();
 
 		if (newStatus.equalsIgnoreCase(CyberRequirement.omit)
 				&& (newReason.isEmpty() || newReason.equalsIgnoreCase(CyberRequirement.notApplicable))) {
@@ -317,7 +317,7 @@ public class ImportRequirementsGUI extends Dialog {
 			reqIds.add(newId);
 		}
 
-		CyberRequirement req = requirements.get(oldIndex);
+		final CyberRequirement req = requirements.get(oldIndex);
 		req.setStatus(newStatus);
 		req.setId(newId);
 		req.setText(newDesc);
@@ -352,13 +352,13 @@ public class ImportRequirementsGUI extends Dialog {
 	}
 
 	protected Button createButton(Composite parent, int id, String label, boolean defaultButton) {
-		Button button = new Button(parent, SWT.PUSH);
+		final Button button = new Button(parent, SWT.PUSH);
 		button.setText(label);
 		button.setData(Integer.valueOf(id));
 		button.addSelectionListener(
 				widgetSelectedAdapter(event -> buttonPressed(((Integer) event.widget.getData()).intValue())));
 		if (defaultButton) {
-			Shell shell = parent.getShell();
+			final Shell shell = parent.getShell();
 			if (shell != null) {
 				shell.setDefaultButton(button);
 			}
@@ -380,7 +380,7 @@ public class ImportRequirementsGUI extends Dialog {
 		}
 
 		for (CyberRequirement r : requirements) {
-			TableItem tItem = new TableItem(t, SWT.NONE);
+			final TableItem tItem = new TableItem(t, SWT.NONE);
 			if (r.getStatus().isEmpty()) {
 				r.setStatus(CyberRequirement.toDo);
 			}
@@ -420,8 +420,8 @@ public class ImportRequirementsGUI extends Dialog {
 		if (index < 0 || index >= tblReqBrowser.getItemCount()) {
 			return false;
 		}
-		CyberRequirement req = requirements.get(index);
-		TableItem tItem = tblReqBrowser.getItem(index);
+		final CyberRequirement req = requirements.get(index);
+		final TableItem tItem = tblReqBrowser.getItem(index);
 		tItem.setText(new String[] { req.getStatus(), req.getType(), req.getId(), req.getText() });
 		packTable();
 		return true;
@@ -429,13 +429,13 @@ public class ImportRequirementsGUI extends Dialog {
 
 	private boolean saveInput() {
 		for (int i = 0; i < requirements.size(); i++) {
-			CyberRequirement req = requirements.get(i);
+			final CyberRequirement req = requirements.get(i);
 
 			// Check for invalid requirement
 			if (req.getStatus() != CyberRequirement.toDo) {
 
 				// Find the context (component, connection, etc) in the model
-				Classifier contextClassifier = CyberRequirement.getImplementationClassifier(req.getContext());
+				final Classifier contextClassifier = CyberRequirement.getImplementationClassifier(req.getContext());
 				if (!(contextClassifier instanceof ComponentImplementation)) {
 					return false;
 				}
@@ -509,11 +509,11 @@ public class ImportRequirementsGUI extends Dialog {
 
 	private boolean contextExists(String context, ComponentImplementation compImpl) {
 		// context will be in the form of pkg::comp.impl.<subcomp>.<subcomp>...
-		String[] parts = context.split("\\.");
+		final String[] parts = context.split("\\.");
 		if (parts.length <= 1) {
 			return false;
 		}
-		String compName = parts[0] + "." + parts[1];
+		final String compName = parts[0] + "." + parts[1];
 		if (!compName.equalsIgnoreCase(compImpl.getQualifiedName())) {
 			return false;
 		}

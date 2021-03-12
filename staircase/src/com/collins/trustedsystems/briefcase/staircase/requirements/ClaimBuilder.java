@@ -43,9 +43,9 @@ public class ClaimBuilder {
 		}
 		this.name = claim.getName();
 		claim.getArgs().forEach(a -> this.args.add(a));
-		DefinitionBody db = claim.getBody();
+		final DefinitionBody db = claim.getBody();
 		if (db instanceof ClaimBody) {
-			ClaimBody cb = (ClaimBody) db;
+			final ClaimBody cb = (ClaimBody) db;
 			cb.getClaim().forEach(c -> this.claimText.add(c));
 			for (NamedElement claimAttribute : cb.getAttributes()) {
 				if (claimAttribute instanceof ClaimContext) {
@@ -67,14 +67,14 @@ public class ClaimBuilder {
 	}
 
 	public ClaimString addClaimString(String s) {
-		ClaimString claimString = f.createClaimString();
+		final ClaimString claimString = f.createClaimString();
 		claimString.setStr(s);
 		claimText.add(claimString);
 		return claimString;
 	}
 
 	public ClaimArg addClaimArg(Arg a) {
-		ClaimArg claimArg = f.createClaimArg();
+		final ClaimArg claimArg = f.createClaimArg();
 		claimArg.setUnit(null);
 		claimArg.setArg(a);
 		claimText.add(claimArg);
@@ -94,12 +94,12 @@ public class ClaimBuilder {
 
 	public FunctionDefinition build() {
 
-		FunctionDefinition def = f.createFunctionDefinition();
+		final FunctionDefinition def = f.createFunctionDefinition();
 		def.setName(name);
 		def.setClaimType("goal");
 		args.forEach(a -> def.getArgs().add(a));
 
-		ClaimBody body = f.createClaimBody();
+		final ClaimBody body = f.createClaimBody();
 		claimText.forEach(ct -> body.getClaim().add(ct));
 		claimContext.forEach(cc -> body.getAttributes().add(cc));
 		claimAssumptions.forEach(ca -> body.getAttributes().add(ca));

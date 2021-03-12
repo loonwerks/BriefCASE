@@ -26,7 +26,7 @@ public class ClaimCallBuilder {
 			throw new RuntimeException("Claim call cannot be null.");
 		}
 		if (prove.getExpr() instanceof FnCallExpr) {
-			FnCallExpr fnCallExpr = (FnCallExpr) prove.getExpr();
+			final FnCallExpr fnCallExpr = (FnCallExpr) prove.getExpr();
 			this.def = fnCallExpr.getFn();
 			for (Expr expr : fnCallExpr.getArgs()) {
 				this.args.add(expr);
@@ -42,9 +42,9 @@ public class ClaimCallBuilder {
 	}
 
 	public ProveStatement build() {
-		ProveStatement prove = f.createProveStatement();
+		final ProveStatement prove = f.createProveStatement();
 
-		FnCallExpr fn = f.createFnCallExpr();
+		final FnCallExpr fn = f.createFnCallExpr();
 		fn.setFn(this.def);
 		for (Expr expr : this.args) {
 			fn.getArgs().add(expr);

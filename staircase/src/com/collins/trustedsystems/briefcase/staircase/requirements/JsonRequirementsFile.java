@@ -52,8 +52,8 @@ public class JsonRequirementsFile {
 
 	public boolean importFile(File file) {
 		try {
-			JsonUtil<JsonRequirementsFile> json = new JsonUtil<JsonRequirementsFile>(JsonRequirementsFile.class);
-			JsonRequirementsFile req = json.readObject(file);
+			final JsonUtil<JsonRequirementsFile> json = new JsonUtil<JsonRequirementsFile>(JsonRequirementsFile.class);
+			final JsonRequirementsFile req = json.readObject(file);
 			this.tool = req.tool;
 			if (this.tool == null) {
 				this.tool = "";
@@ -80,7 +80,7 @@ public class JsonRequirementsFile {
 
 	public boolean exportFile(File file) {
 		try {
-			JsonUtil<JsonRequirementsFile> json = new JsonUtil<JsonRequirementsFile>(JsonRequirementsFile.class);
+			final JsonUtil<JsonRequirementsFile> json = new JsonUtil<JsonRequirementsFile>(JsonRequirementsFile.class);
 			json.writeObject(this, file);
 		} catch (Exception e) {
 			return false;
@@ -110,7 +110,7 @@ public class JsonRequirementsFile {
 
 	private void removeRequirement(final CyberRequirement req) {
 		for (Iterator<CyberRequirement> reqIter = getRequirements().iterator(); reqIter.hasNext();) {
-			CyberRequirement jsonReq = reqIter.next();
+			final CyberRequirement jsonReq = reqIter.next();
 			if (equals(jsonReq, req)) {
 				reqIter.remove();
 				return;

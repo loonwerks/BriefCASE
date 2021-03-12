@@ -58,10 +58,10 @@ public class ProxyTransformDialog extends TitleAreaDialog {
 
 	@Override
 	protected Control createDialogArea(Composite parent) {
-		Composite area = (Composite) super.createDialogArea(parent);
-		Composite container = new Composite(area, SWT.NONE);
+		final Composite area = (Composite) super.createDialogArea(parent);
+		final Composite container = new Composite(area, SWT.NONE);
 		container.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
-		GridLayout layout = new GridLayout(2, false);
+		final GridLayout layout = new GridLayout(2, false);
 		container.setLayout(layout);
 
 		// Add proxy information fields
@@ -76,10 +76,10 @@ public class ProxyTransformDialog extends TitleAreaDialog {
 	 * @param container
 	 */
 	private void createRequirementField(Composite container) {
-		Label lblResoluteField = new Label(container, SWT.NONE);
+		final Label lblResoluteField = new Label(container, SWT.NONE);
 		lblResoluteField.setText("Requirement");
 
-		GridData dataInfoField = new GridData();
+		final GridData dataInfoField = new GridData();
 		dataInfoField.grabExcessHorizontalSpace = true;
 		dataInfoField.horizontalAlignment = GridData.FILL;
 		cboProxyRequirement = new Combo(container, SWT.BORDER);

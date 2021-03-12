@@ -20,12 +20,15 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.osate.aadl2.ComponentImplementation;
 import org.osate.ui.dialogs.Dialog;
 
 import com.collins.trustedsystems.briefcase.staircase.dialogs.MultiPortSelector.PortDirection;
-import com.collins.trustedsystems.briefcase.staircase.handlers.AddSwitchHandler;
+import com.collins.trustedsystems.briefcase.staircase.handlers.SwitchTransformHandler;
+import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsManager;
+import com.collins.trustedsystems.briefcase.staircase.utils.ModelTransformUtils;
 
-public class AddSwitchDialog extends TitleAreaDialog {
+public class SwitchTransformDialog extends TitleAreaDialog {
 
 	private Text txtSwitchImplementationName;
 	private MultiPortSelector mpsInputPorts;
@@ -43,7 +46,7 @@ public class AddSwitchDialog extends TitleAreaDialog {
 	private String switchRequirement = "";
 	private String agreeProperty = "";
 
-	private List<String> inports = new ArrayList<>();
+//	private List<String> inports = new ArrayList<>();
 	private List<String> outports = new ArrayList<>();
 	private String inConnEnd = "";
 //	private String outConnEnd = "";
@@ -52,7 +55,7 @@ public class AddSwitchDialog extends TitleAreaDialog {
 	private static final String NO_PORT_SELECTED = "<No port selected>";
 	private static final String NO_REQUIREMENT_SELECTED = "<No requirement selected>";
 
-	public AddSwitchDialog(Shell parentShell) {
+	public SwitchTransformDialog(Shell parentShell) {
 		super(parentShell);
 		setHelpAvailable(false);
 	}
@@ -60,10 +63,22 @@ public class AddSwitchDialog extends TitleAreaDialog {
 	@Override
 	public void create() {
 		super.create();
-		setTitle("Add Switch");
+		setTitle("Switch Transform");
 		setMessage(
 				"Enter Switch details.  You may optionally leave these fields empty and manually edit the AADL switch component once it is added to the model.",
 				IMessageProvider.NONE);
+	}
+
+	public void create(ComponentImplementation context, String inConnEnd) {
+		this.inConnEnd = inConnEnd;
+		// Provide list of outports that can be connected to monitor's expected in port
+		this.outports = ModelTransformUtils.getOutports(context);
+//		// Provide list of inports that monitor's alert out port can be connected to
+//		// Currently ignored
+//		inports = ModelTransformUtils.getInports(context);
+		// Populate requirements list
+		RequirementsManager.getInstance().getImportedRequirements().forEach(r -> requirements.add(r.getId()));
+		create();
 	}
 
 	@Override
@@ -75,10 +90,10 @@ public class AddSwitchDialog extends TitleAreaDialog {
 
 	@Override
 	protected Control createDialogArea(Composite parent) {
-		Composite area = (Composite) super.createDialogArea(parent);
-		Composite container = new Composite(area, SWT.NONE);
+		final Composite area = (Composite) super.createDialogArea(parent);
+		final Composite container = new Composite(area, SWT.NONE);
 		container.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		GridLayout layout = new GridLayout(2, false);
+		final GridLayout layout = new GridLayout(2, false);
 		container.setLayout(layout);
 
 		// Add switch information fields
@@ -98,15 +113,15 @@ public class AddSwitchDialog extends TitleAreaDialog {
 	 * @param container
 	 */
 	private void createImplementationNameField(Composite container) {
-		Label lblMonitorImplNameField = new Label(container, SWT.NONE);
+		final Label lblMonitorImplNameField = new Label(container, SWT.NONE);
 		lblMonitorImplNameField.setText("Switch implementation name");
 
-		GridData dataInfoField = new GridData();
+		final GridData dataInfoField = new GridData();
 		dataInfoField.grabExcessHorizontalSpace = true;
 		dataInfoField.horizontalAlignment = GridData.FILL;
 		txtSwitchImplementationName = new Text(container, SWT.BORDER);
 		txtSwitchImplementationName.setLayoutData(dataInfoField);
-		txtSwitchImplementationName.setText(AddSwitchHandler.SWITCH_COMP_IMPL_NAME);
+		txtSwitchImplementationName.setText(SwitchTransformHandler.SWITCH_COMP_IMPL_NAME);
 	}
 
 	/**
@@ -119,7 +134,7 @@ public class AddSwitchDialog extends TitleAreaDialog {
 		lblInputField.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, true));
 
 		// Port selector
-		List<String> connectionEnds = new ArrayList<>();
+		final List<String> connectionEnds = new ArrayList<>();
 		connectionEnds.add(NO_PORT_SELECTED);
 		connectionEnds.addAll(outports);
 		mpsInputPorts = new MultiPortSelector(container, PortDirection.INPUT, connectionEnds, inConnEnd, "input",
@@ -133,11 +148,11 @@ public class AddSwitchDialog extends TitleAreaDialog {
 	 * @param container
 	 */
 	private void createControlPortField(Composite container) {
-		Label lblControlField = new Label(container, SWT.NONE);
+		final Label lblControlField = new Label(container, SWT.NONE);
 		lblControlField.setText("Control port connection");
 		lblControlField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true));
 
-		GridData dataInfoField = new GridData();
+		final GridData dataInfoField = new GridData();
 		dataInfoField.grabExcessHorizontalSpace = true;
 		dataInfoField.horizontalAlignment = GridData.FILL;
 		cboControlPort = new Combo(container, SWT.BORDER);
@@ -153,26 +168,26 @@ public class AddSwitchDialog extends TitleAreaDialog {
 	 * @param container
 	 */
 	private void createDispatchProtocolField(Composite container) {
-		Label lblDispatchProtocolField = new Label(container, SWT.NONE);
+		final Label lblDispatchProtocolField = new Label(container, SWT.NONE);
 		lblDispatchProtocolField.setText("Dispatch protocol");
 		lblDispatchProtocolField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true));
 
 		// Create a group to contain the log port options
-		Group protocolGroup = new Group(container, SWT.NONE);
+		final Group protocolGroup = new Group(container, SWT.NONE);
 		protocolGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		protocolGroup.setLayout(new RowLayout(SWT.HORIZONTAL));
 
 		btnDispatchProtocol.clear();
 
-		Button btnNoProtocol = new Button(protocolGroup, SWT.RADIO);
+		final Button btnNoProtocol = new Button(protocolGroup, SWT.RADIO);
 		btnNoProtocol.setText("None");
 		btnNoProtocol.setSelection(true);
 
-		Button btnPeriodic = new Button(protocolGroup, SWT.RADIO);
+		final Button btnPeriodic = new Button(protocolGroup, SWT.RADIO);
 		btnPeriodic.setText("Periodic");
 		btnPeriodic.setSelection(false);
 
-		Button btnSporadic = new Button(protocolGroup, SWT.RADIO);
+		final Button btnSporadic = new Button(protocolGroup, SWT.RADIO);
 		btnSporadic.setText("Sporadic");
 		btnSporadic.setSelection(false);
 
@@ -188,10 +203,10 @@ public class AddSwitchDialog extends TitleAreaDialog {
 	 * @param container
 	 */
 	private void createRequirementField(Composite container) {
-		Label lblResoluteField = new Label(container, SWT.NONE);
+		final Label lblResoluteField = new Label(container, SWT.NONE);
 		lblResoluteField.setText("Requirement");
 
-		GridData dataInfoField = new GridData();
+		final GridData dataInfoField = new GridData();
 		dataInfoField.grabExcessHorizontalSpace = true;
 		dataInfoField.horizontalAlignment = GridData.FILL;
 		cboSwitchRequirement = new Combo(container, SWT.BORDER);
@@ -207,10 +222,10 @@ public class AddSwitchDialog extends TitleAreaDialog {
 	 * @param container
 	 */
 	private void createAgreeField(Composite container) {
-		Label lblAgreeField = new Label(container, SWT.NONE);
+		final Label lblAgreeField = new Label(container, SWT.NONE);
 		lblAgreeField.setText("Switch AGREE contract");
 
-		GridData dataInfoField = new GridData(SWT.FILL, SWT.FILL, true, false);
+		final GridData dataInfoField = new GridData(SWT.FILL, SWT.FILL, true, false);
 		txtAgreeProperty = new Text(container, SWT.BORDER);
 		txtAgreeProperty.setLayoutData(dataInfoField);
 
@@ -234,12 +249,12 @@ public class AddSwitchDialog extends TitleAreaDialog {
 //		}
 		inputPorts = mpsInputPorts.getContents();
 		if (inputPorts.isEmpty()) {
-			Dialog.showError("Add Switch", "A switch must have at least one input port");
+			Dialog.showError("Switch Transform", "A switch must have at least one input port");
 			return false;
 		}
 		for (Map.Entry<String, String> inPort : inputPorts.entrySet()) {
 			if (inPort.getKey().isEmpty()) {
-				Dialog.showError("Add Switch",
+				Dialog.showError("Switch Transform",
 						"A switch input port name must be specified to establish a connection with " + inPort.getValue()
 								+ ".");
 				return false;
@@ -258,7 +273,7 @@ public class AddSwitchDialog extends TitleAreaDialog {
 		if (controlPort.equals(NO_PORT_SELECTED)) {
 			controlPort = "";
 		} else if (!outports.contains(controlPort)) {
-			Dialog.showError("Add Switch", "Port " + controlPort
+			Dialog.showError("Switch Transform", "Port " + controlPort
 					+ " does not exist in the model.  Select a port from the list to connect the switch's 'control' port to, or choose "
 					+ NO_PORT_SELECTED + ".");
 			return false;
@@ -273,7 +288,7 @@ public class AddSwitchDialog extends TitleAreaDialog {
 		if (switchRequirement.equals(NO_REQUIREMENT_SELECTED)) {
 			switchRequirement = "";
 		} else if (!requirements.contains(switchRequirement)) {
-			Dialog.showError("Add Switch",
+			Dialog.showError("Switch Transform",
 					"Switch requirement " + switchRequirement
 							+ " does not exist in the model.  Select a requirement from the list, or choose "
 							+ NO_REQUIREMENT_SELECTED + ".");
@@ -318,24 +333,6 @@ public class AddSwitchDialog extends TitleAreaDialog {
 
 	public String getRequirement() {
 		return switchRequirement;
-	}
-
-	public void setPorts(List<String> inports, List<String> outports) {
-		this.inports = inports;
-		this.outports = outports;
-	}
-
-//	public void setConnectionEnds(String inConnEnd, String outConnEnd) {
-//		this.inConnEnd = inConnEnd;
-//		this.outConnEnd = outConnEnd;
-//	}
-
-	public void setInportConnectionEnd(String inConnEnd) {
-		this.inConnEnd = inConnEnd;
-	}
-
-	public void setRequirements(List<String> requirements) {
-		this.requirements = requirements;
 	}
 
 }

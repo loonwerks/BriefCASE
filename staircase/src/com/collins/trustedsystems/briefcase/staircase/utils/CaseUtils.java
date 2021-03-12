@@ -113,7 +113,7 @@ public class CaseUtils {
 		for (AadlPackage pkg : TraverseProject.getPackagesInProject(TraverseProject.getCurrentProject())) {
 			if (pkg.getName().equalsIgnoreCase(CASE_REQUIREMENTS_NAME)) {
 				// Make sure resource is refreshed
-				Resource r = pkg.eResource();
+				final Resource r = pkg.eResource();
 				r.unload();
 				try {
 					r.load(null);
@@ -140,7 +140,7 @@ public class CaseUtils {
 		if (!caseReqFile.exists()) {
 
 			// Create Requirements directory, if it doesn't exist
-			IFolder reqFolder = TraverseProject.getCurrentProject().getFolder(CASE_REQUIREMENTS_DIR);
+			final IFolder reqFolder = TraverseProject.getCurrentProject().getFolder(CASE_REQUIREMENTS_DIR);
 			if (!reqFolder.exists()) {
 				try {
 					reqFolder.create(false, true, new NullProgressMonitor());
@@ -151,11 +151,11 @@ public class CaseUtils {
 				}
 			}
 
-			String newline = System.lineSeparator();
-			String tab = "\t";
-			String contents = "package CASE_Requirements" + newline + "private" + newline + tab
+			final String newline = System.lineSeparator();
+			final String tab = "\t";
+			final String contents = "package CASE_Requirements" + newline + "private" + newline + tab
 					+ "annex resolute" + "{** **};" + newline + "end CASE_Requirements;" + newline;
-			InputStream source = new ByteArrayInputStream(contents.getBytes());
+			final InputStream source = new ByteArrayInputStream(contents.getBytes());
 			try {
 				caseReqFile.create(source, false, new NullProgressMonitor());
 			} catch (CoreException e) {

@@ -416,23 +416,23 @@
    <extension
          point="org.eclipse.ui.handlers">
       <handler
-            class="com.collins.trustedsystems.briefcase.staircase.handlers.AddAttestationManagerHandler"
+            class="com.collins.trustedsystems.briefcase.staircase.handlers.AttestationTransformHandler"
             commandId="com.collins.trustedsystems.briefcase.staircase.commands.AddAttestationManager">
       </handler>
       <handler
-            class="com.collins.trustedsystems.briefcase.staircase.handlers.AddFilterHandler"
+            class="com.collins.trustedsystems.briefcase.staircase.handlers.FilterTransformHandler"
             commandId="com.collins.trustedsystems.briefcase.staircase.commands.AddFilter">
       </handler>
       <handler
-            class="com.collins.trustedsystems.briefcase.staircase.handlers.AddVirtualizationHandler"
+            class="com.collins.trustedsystems.briefcase.staircase.handlers.VirtualizationTransformHandler"
             commandId="com.collins.trustedsystems.briefcase.staircase.commands.AddVirtualization">
       </handler>
       <handler
-            class="com.collins.trustedsystems.briefcase.staircase.handlers.AddMonitorHandler"
+            class="com.collins.trustedsystems.briefcase.staircase.handlers.MonitorTransformHandler"
             commandId="com.collins.trustedsystems.briefcase.staircase.commands.AddMonitor">
       </handler>
       <handler
-            class="com.collins.trustedsystems.briefcase.staircase.handlers.AddSwitchHandler"
+            class="com.collins.trustedsystems.briefcase.staircase.handlers.SwitchTransformHandler"
             commandId="com.collins.trustedsystems.briefcase.staircase.commands.AddSwitch">
       </handler>
       <handler

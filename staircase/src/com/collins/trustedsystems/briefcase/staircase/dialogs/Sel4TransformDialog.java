@@ -15,28 +15,23 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.osate.aadl2.ComponentCategory;
-import org.osate.aadl2.ComponentImplementation;
 import org.osate.aadl2.Subcomponent;
 import org.osate.ui.dialogs.Dialog;
 
 import com.collins.trustedsystems.briefcase.staircase.dialogs.SubcomponentSelector.CheckStyle;
 import com.collins.trustedsystems.briefcase.staircase.handlers.Sel4TransformHandler;
+import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsManager;
 
 public class Sel4TransformDialog extends TitleAreaDialog {
 
-	private ComponentImplementation context;
 	private Subcomponent subcomponent = null;
 
 	private SubcomponentSelector subcomponentSelector = null;
-//	private Combo cboSel4Processor;
 	private Combo cboSel4Requirement;
 	private String sel4Subcomponent = "";
-//	private String sel4Processor = "";
 	private String sel4Requirement = "";
-//	List<String> processors = new ArrayList<>();
 	private List<String> requirements = new ArrayList<>();
 
-//	private static final String NO_PROCESSOR_SELECTED = "<no processor selected>";
 	private static final String NO_REQUIREMENT_SELECTED = "<No requirement selected>";
 
 	public Sel4TransformDialog(Shell parentShell) {
@@ -52,8 +47,10 @@ public class Sel4TransformDialog extends TitleAreaDialog {
 	}
 
 	public void create(Subcomponent subcomponent) {
-		this.context = subcomponent.getContainingComponentImpl();
 		this.subcomponent = subcomponent;
+		// Populate requirements list
+		RequirementsManager.getInstance().getImportedRequirements().forEach(r -> requirements.add(r.getId()));
+
 		create();
 	}
 
@@ -66,15 +63,14 @@ public class Sel4TransformDialog extends TitleAreaDialog {
 
 	@Override
 	protected Control createDialogArea(Composite parent) {
-		Composite area = (Composite) super.createDialogArea(parent);
-		Composite container = new Composite(area, SWT.NONE);
+		final Composite area = (Composite) super.createDialogArea(parent);
+		final Composite container = new Composite(area, SWT.NONE);
 		container.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
-		GridLayout layout = new GridLayout(2, false);
+		final GridLayout layout = new GridLayout(2, false);
 		container.setLayout(layout);
 
 		// Add seL4 information fields
 		createComponentSelectionField(container);
-//		createProcessorSelectionField(container);
 		createRequirementField(container);
 
 		return area;
@@ -93,7 +89,7 @@ public class Sel4TransformDialog extends TitleAreaDialog {
 			return;
 		}
 
-		Label lblComponentSelectionField = new Label(container, SWT.NONE);
+		final Label lblComponentSelectionField = new Label(container, SWT.NONE);
 		lblComponentSelectionField.setText("Component to transform for seL4");
 		lblComponentSelectionField.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, true));
 
@@ -101,38 +97,6 @@ public class Sel4TransformDialog extends TitleAreaDialog {
 
 	}
 
-//	/**
-//	 * Creates the input field for selecting the seL4 processor
-//	 * @param container
-//	 */
-//	private void createProcessorSelectionField(Composite container) {
-//		Label lblProcessorField = new Label(container, SWT.NONE);
-//		lblProcessorField.setText("seL4 Processor");
-//
-//		GridData dataInfoField = new GridData();
-//		dataInfoField.grabExcessHorizontalSpace = true;
-//		dataInfoField.horizontalAlignment = GridData.FILL;
-//		cboSel4Processor = new Combo(container, SWT.BORDER);
-//		cboSel4Processor.setLayoutData(dataInfoField);
-//		cboSel4Processor.add(NO_PROCESSOR_SELECTED);
-//
-//		processors = new ArrayList<>();
-//		findProcessors(context);
-//		processors.forEach(p -> cboSel4Processor.add(p));
-//
-//		cboSel4Processor.setText(NO_PROCESSOR_SELECTED);
-//	}
-//
-//	private void findProcessors(ComponentImplementation compImpl) {
-//		for (Subcomponent sub : compImpl.getOwnedSubcomponents()) {
-//			if (sub.getCategory() == ComponentCategory.PROCESSOR
-//					|| sub.getCategory() == ComponentCategory.VIRTUAL_PROCESSOR) {
-//				processors.add(sub.getComponentImplementation().getQualifiedName());
-//			} else if (sub.getCategory() == ComponentCategory.SYSTEM) {
-//				findProcessors(sub.getComponentImplementation());
-//			}
-//		}
-//	}
 
 	/**
 	 * Creates the input field for selecting the resolute clause that drives
@@ -140,10 +104,10 @@ public class Sel4TransformDialog extends TitleAreaDialog {
 	 * @param container
 	 */
 	private void createRequirementField(Composite container) {
-		Label lblResoluteField = new Label(container, SWT.NONE);
+		final Label lblResoluteField = new Label(container, SWT.NONE);
 		lblResoluteField.setText("Requirement");
 
-		GridData dataInfoField = new GridData();
+		final GridData dataInfoField = new GridData();
 		dataInfoField.grabExcessHorizontalSpace = true;
 		dataInfoField.horizontalAlignment = GridData.FILL;
 		cboSel4Requirement = new Combo(container, SWT.BORDER);
@@ -181,17 +145,6 @@ public class Sel4TransformDialog extends TitleAreaDialog {
 			}
 		}
 
-//		// seL4 processor
-//		sel4Processor = cboSel4Processor.getText();
-//		if (sel4Processor.equals(NO_PROCESSOR_SELECTED)) {
-//			sel4Processor = "";
-//		} else if (!processors.contains(sel4Processor)) {
-//			Dialog.showError("seL4 Transform",
-//					"seL4 processor " + sel4Processor
-//							+ " does not exist in the model.  Select a processor from the list, or choose "
-//							+ NO_PROCESSOR_SELECTED + ".");
-//			return false;
-//		}
 
 		// Requirement
 		sel4Requirement = cboSel4Requirement.getText();
@@ -211,16 +164,8 @@ public class Sel4TransformDialog extends TitleAreaDialog {
 		return sel4Subcomponent;
 	}
 
-//	public String getProcessor() {
-//		return sel4Processor;
-//	}
-
 	public String getRequirement() {
 		return sel4Requirement;
-	}
-
-	public void setRequirements(List<String> requirements) {
-		this.requirements = requirements;
 	}
 
 }

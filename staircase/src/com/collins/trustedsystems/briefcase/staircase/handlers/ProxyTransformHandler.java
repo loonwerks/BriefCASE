@@ -63,10 +63,10 @@ public class ProxyTransformHandler extends AadlHandler {
 		// Get the active xtext editor so we can make modifications
 		final XtextEditor xtextEditor = EditorUtils.getActiveXtextEditor();
 
-		AddProxyClaim claim = xtextEditor.getDocument().modify(resource -> {
+		final AddProxyClaim claim = xtextEditor.getDocument().modify(resource -> {
 
 			// Retrieve the model object to modify
-			ComponentImplementation compImpl = (ComponentImplementation) resource.getEObject(uri.fragment());
+			final ComponentImplementation compImpl = (ComponentImplementation) resource.getEObject(uri.fragment());
 
 			final AadlPackage aadlPkg = (AadlPackage) resource.getContents().get(0);
 			PackageSection pkgSection = null;

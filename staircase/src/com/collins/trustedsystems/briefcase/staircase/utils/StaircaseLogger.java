@@ -45,8 +45,8 @@ public class StaircaseLogger {
 	}
 
 	private static MessageConsole findConsole(String name) {
-		ConsolePlugin plugin = ConsolePlugin.getDefault();
-		IConsoleManager conMan = plugin.getConsoleManager();
+		final ConsolePlugin plugin = ConsolePlugin.getDefault();
+		final IConsoleManager conMan = plugin.getConsoleManager();
 
 		for (IConsole con : conMan.getConsoles()) {
 			if (name.contentEquals(con.getName())) {
@@ -54,15 +54,15 @@ public class StaircaseLogger {
 			}
 		}
 		// no console found, so create a new one
-		MessageConsole myConsole = new MessageConsole(name, null);
+		final MessageConsole myConsole = new MessageConsole(name, null);
 		conMan.addConsoles(new IConsole[] { myConsole });
 		return myConsole;
 	}
 
 	private static IConsoleView getConsoleView() {
-		IWorkbench wb = PlatformUI.getWorkbench();
-		IWorkbenchWindow win = wb.getActiveWorkbenchWindow();
-		IWorkbenchPage page = win.getActivePage();
+		final IWorkbench wb = PlatformUI.getWorkbench();
+		final IWorkbenchWindow win = wb.getActiveWorkbenchWindow();
+		final IWorkbenchPage page = win.getActivePage();
 		try {
 			return (IConsoleView) page.showView(IConsoleConstants.ID_CONSOLE_VIEW);
 		} catch (PartInitException e) {

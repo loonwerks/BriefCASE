@@ -141,16 +141,16 @@ public class SelectImplementationHandler extends AadlHandler {
 //					return;
 //				}
 
-				Property sourceTextProp = GetProperties.lookupPropertyDefinition(selectedComponent,
+				final Property sourceTextProp = GetProperties.lookupPropertyDefinition(selectedComponent,
 						ProgrammingProperties._NAME, ProgrammingProperties.SOURCE_TEXT);
-				StringLiteral sourceTextLit = Aadl2Factory.eINSTANCE.createStringLiteral();
+				final StringLiteral sourceTextLit = Aadl2Factory.eINSTANCE.createStringLiteral();
 				sourceTextLit.setValue(legacyComponentImplementationLocation);
-				List<StringLiteral> listVal = new ArrayList<>();
+				final List<StringLiteral> listVal = new ArrayList<>();
 				listVal.add(sourceTextLit);
 				selectedComponent.setPropertyValue(sourceTextProp, listVal);
 
 				// Add Resolute check clause
-				Iterator<AnnexSubclause> subclause = selectedComponent.getOwnedAnnexSubclauses().iterator();
+				final Iterator<AnnexSubclause> subclause = selectedComponent.getOwnedAnnexSubclauses().iterator();
 				DefaultAnnexSubclause annexSubclause = null;
 				String sourceText = "";
 				while (subclause.hasNext()) {
@@ -167,7 +167,7 @@ public class SelectImplementationHandler extends AadlHandler {
 
 				// Delete and re-insert this component from package section
 				// This seems to be the only way to get the formatting (mostly) correct
-				int idx = getIndex(selectedComponent.getName(), pkgSection.getOwnedClassifiers());
+				final int idx = getIndex(selectedComponent.getName(), pkgSection.getOwnedClassifiers());
 				Classifier classifier = pkgSection.getOwnedClassifiers().get(idx);
 				pkgSection.getOwnedClassifiers().remove(idx);
 				pkgSection.getOwnedClassifiers().add(idx, classifier);

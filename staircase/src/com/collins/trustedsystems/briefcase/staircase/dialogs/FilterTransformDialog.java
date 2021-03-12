@@ -20,6 +20,7 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.xtext.EcoreUtil2;
 import org.osate.aadl2.Classifier;
 import org.osate.aadl2.ComponentImplementation;
 import org.osate.aadl2.ComponentType;
@@ -43,13 +44,17 @@ import org.osate.xtext.aadl2.properties.util.GetProperties;
 import org.osate.xtext.aadl2.properties.util.ThreadProperties;
 import org.osate.xtext.aadl2.properties.util.TimingProperties;
 
-import com.collins.trustedsystems.briefcase.staircase.handlers.AddFilterHandler;
+import com.collins.trustedsystems.briefcase.staircase.handlers.FilterTransformHandler;
+import com.collins.trustedsystems.briefcase.staircase.requirements.CyberRequirement;
+import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsManager;
 import com.collins.trustedsystems.briefcase.staircase.utils.ModelTransformUtils;
+import com.rockwellcollins.atc.resolute.resolute.FnCallExpr;
+import com.rockwellcollins.atc.resolute.resolute.FunctionDefinition;
 
 /**
  * This class creates the Add Filter wizard
  */
-public class AddFilterDialog extends TitleAreaDialog {
+public class FilterTransformDialog extends TitleAreaDialog {
 
 	private ComponentImplementation context = null;
 	private Subcomponent compoundFilter = null;
@@ -76,7 +81,7 @@ public class AddFilterDialog extends TitleAreaDialog {
 
 	private static final String NO_REQUIREMENT_SELECTED = "<No requirement selected>";
 
-	public AddFilterDialog(Shell parentShell) {
+	public FilterTransformDialog(Shell parentShell) {
 		super(parentShell);
 		setHelpAvailable(false);
 	}
@@ -84,7 +89,7 @@ public class AddFilterDialog extends TitleAreaDialog {
 	@Override
 	public void create() {
 		super.create();
-		setTitle("Add Filter");
+		setTitle("Filter Transform");
 		setMessage(
 				"Enter Filter details.  You may optionally leave these fields empty and manually edit the AADL filter component once it is added to the model.",
 				IMessageProvider.NONE);
@@ -92,6 +97,31 @@ public class AddFilterDialog extends TitleAreaDialog {
 
 	public void create(ComponentImplementation context) {
 		this.context = context;
+
+		// Provide list of requirements so the user can choose which requirement is driving this
+		// model transformation.
+		// We only want to list requirements that aren't already associated with a filter transform
+		for (CyberRequirement req : RequirementsManager.getInstance().getImportedRequirements()) {
+			boolean addFilterFound = false;
+			try {
+				final FunctionDefinition fd = req.getResoluteClaim();
+				for (FnCallExpr fnCallExpr : EcoreUtil2.getAllContentsOfType(fd.getBody().getExpr(),
+						FnCallExpr.class)) {
+					if (fnCallExpr.getFn().getName().equalsIgnoreCase("add_filter")) {
+						addFilterFound = true;
+						break;
+					}
+				}
+			} catch (NullPointerException e) {
+				addFilterFound = false;
+			}
+
+			if (!addFilterFound) {
+				requirements.add(req.getId());
+			}
+
+		}
+
 		create();
 	}
 
@@ -104,10 +134,10 @@ public class AddFilterDialog extends TitleAreaDialog {
 
 	@Override
 	protected Control createDialogArea(Composite parent) {
-		Composite area = (Composite) super.createDialogArea(parent);
-		Composite container = new Composite(area, SWT.NONE);
+		final Composite area = (Composite) super.createDialogArea(parent);
+		final Composite container = new Composite(area, SWT.NONE);
 		container.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
-		GridLayout layout = new GridLayout(2, false);
+		final GridLayout layout = new GridLayout(2, false);
 		container.setLayout(layout);
 
 		// Add filter information fields
@@ -133,16 +163,16 @@ public class AddFilterDialog extends TitleAreaDialog {
 	 * @param container
 	 */
 	private void createFilterComponentNameField(Composite container) {
-		Label lblFilterCompNameField = new Label(container, SWT.NONE);
+		final Label lblFilterCompNameField = new Label(container, SWT.NONE);
 		lblFilterCompNameField.setText("Filter component name");
 
-		GridData dataInfoField = new GridData();
+		final GridData dataInfoField = new GridData();
 		dataInfoField.grabExcessHorizontalSpace = true;
 		dataInfoField.horizontalAlignment = SWT.FILL;
 		txtFilterComponentName = new Text(container, SWT.BORDER);
 		txtFilterComponentName.setLayoutData(dataInfoField);
 		if (compoundFilter == null) {
-			txtFilterComponentName.setText(ModelTransformUtils.getUniqueName(AddFilterHandler.FILTER_COMP_TYPE_NAME,
+			txtFilterComponentName.setText(ModelTransformUtils.getUniqueName(FilterTransformHandler.FILTER_COMP_TYPE_NAME,
 					true, AadlUtil.getContainingPackageSection(context).getOwnedClassifiers()));
 		} else {
 			txtFilterComponentName.setText(compoundFilter.getComponentType().getName());
@@ -155,16 +185,16 @@ public class AddFilterDialog extends TitleAreaDialog {
 	 * @param container
 	 */
 	private void createFilterSubcomponentNameField(Composite container) {
-		Label lblFilterSubcomponentNameField = new Label(container, SWT.NONE);
+		final Label lblFilterSubcomponentNameField = new Label(container, SWT.NONE);
 		lblFilterSubcomponentNameField.setText("Filter subcomponent instance name");
 
-		GridData dataInfoField = new GridData();
+		final GridData dataInfoField = new GridData();
 		dataInfoField.grabExcessHorizontalSpace = true;
 		dataInfoField.horizontalAlignment = SWT.FILL;
 		txtFilterSubcomponentName = new Text(container, SWT.BORDER);
 		txtFilterSubcomponentName.setLayoutData(dataInfoField);
 		if (compoundFilter == null) {
-			txtFilterSubcomponentName.setText(ModelTransformUtils.getUniqueName(AddFilterHandler.FILTER_SUBCOMP_NAME,
+			txtFilterSubcomponentName.setText(ModelTransformUtils.getUniqueName(FilterTransformHandler.FILTER_SUBCOMP_NAME,
 					true, context.getOwnedSubcomponents()));
 		} else {
 			txtFilterSubcomponentName.setText(compoundFilter.getName());
@@ -178,18 +208,18 @@ public class AddFilterDialog extends TitleAreaDialog {
 	 * @param container
 	 */
 	private void createDispatchProtocolField(Composite container) {
-		Label lblDispatchProtocolField = new Label(container, SWT.NONE);
+		final Label lblDispatchProtocolField = new Label(container, SWT.NONE);
 		lblDispatchProtocolField.setText("Dispatch protocol");
 		lblDispatchProtocolField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true));
 
 		// Create a group to contain the protocol options
-		Group protocolGroup = new Group(container, SWT.NONE);
+		final Group protocolGroup = new Group(container, SWT.NONE);
 		protocolGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		protocolGroup.setLayout(new RowLayout(SWT.HORIZONTAL));
 
 		btnDispatchProtocol.clear();
 
-		Button btnNoProtocol = new Button(protocolGroup, SWT.RADIO);
+		final Button btnNoProtocol = new Button(protocolGroup, SWT.RADIO);
 		btnNoProtocol.setText("None");
 		btnNoProtocol.setSelection(true);
 		btnNoProtocol.addSelectionListener(new SelectionListener() {
@@ -209,11 +239,11 @@ public class AddFilterDialog extends TitleAreaDialog {
 			}
 		});
 
-		Button btnPeriodic = new Button(protocolGroup, SWT.RADIO);
+		final Button btnPeriodic = new Button(protocolGroup, SWT.RADIO);
 		btnPeriodic.setText("Periodic");
 		btnPeriodic.setSelection(false);
 
-		Button btnSporadic = new Button(protocolGroup, SWT.RADIO);
+		final Button btnSporadic = new Button(protocolGroup, SWT.RADIO);
 		btnSporadic.setText("Sporadic");
 		btnSporadic.setSelection(false);
 
@@ -221,7 +251,7 @@ public class AddFilterDialog extends TitleAreaDialog {
 		lblPeriodField.setText("Period");
 		lblPeriodField.setEnabled(false);
 
-		GridData dataInfoField = new GridData();
+		final GridData dataInfoField = new GridData();
 		dataInfoField.grabExcessHorizontalSpace = true;
 		dataInfoField.horizontalAlignment = SWT.FILL;
 		txtPeriod = new Text(container, SWT.BORDER);
@@ -231,11 +261,11 @@ public class AddFilterDialog extends TitleAreaDialog {
 		if (compoundFilter != null) {
 			Property prop = GetProperties.lookupPropertyDefinition(compoundFilter, ThreadProperties._NAME,
 					ThreadProperties.DISPATCH_PROTOCOL);
-			List<? extends PropertyExpression> protocol = compoundFilter.getPropertyValueList(prop);
+			final List<? extends PropertyExpression> protocol = compoundFilter.getPropertyValueList(prop);
 			if (!protocol.isEmpty()) {
-				NamedValue nv = (NamedValue) protocol.get(0);
-				EnumerationLiteral el = (EnumerationLiteral) nv.getNamedValue();
-				String dispatchProtocol = el.getName();
+				final NamedValue nv = (NamedValue) protocol.get(0);
+				final EnumerationLiteral el = (EnumerationLiteral) nv.getNamedValue();
+				final String dispatchProtocol = el.getName();
 				if (dispatchProtocol.equalsIgnoreCase("Periodic")) {
 					btnNoProtocol.setSelection(false);
 					btnPeriodic.setSelection(true);
@@ -253,11 +283,11 @@ public class AddFilterDialog extends TitleAreaDialog {
 
 			prop = GetProperties.lookupPropertyDefinition(compoundFilter, TimingProperties._NAME,
 					TimingProperties.PERIOD);
-			List<? extends PropertyExpression> periodVals = compoundFilter.getPropertyValueList(prop);
+			final List<? extends PropertyExpression> periodVals = compoundFilter.getPropertyValueList(prop);
 			if (!periodVals.isEmpty()) {
 				String period = "";
 				if (periodVals.get(0) instanceof IntegerLiteral) {
-					IntegerLiteral periodVal = (IntegerLiteral) periodVals.get(0);
+					final IntegerLiteral periodVal = (IntegerLiteral) periodVals.get(0);
 					period = Long.toString(periodVal.getValue());
 					if (periodVal.getUnit() != null) {
 						period += periodVal.getUnit().getName();
@@ -280,33 +310,33 @@ public class AddFilterDialog extends TitleAreaDialog {
 	 * @param container
 	 */
 	private void createPortNamesField(Composite container) {
-		Label lblPortNamesField = new Label(container, SWT.NONE);
+		final Label lblPortNamesField = new Label(container, SWT.NONE);
 		lblPortNamesField.setText("Filter Port Names");
 		lblPortNamesField.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, true));
 
-		Composite portNames = new Composite(container, SWT.BORDER);
+		final Composite portNames = new Composite(container, SWT.BORDER);
 		portNames.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 		portNames.setLayout(new GridLayout(2, true));
 
-		GridData dataInfoField = new GridData();
+		final GridData dataInfoField = new GridData();
 		dataInfoField.grabExcessHorizontalSpace = true;
 		dataInfoField.horizontalAlignment = SWT.FILL;
 
-		Label lblInputPortName = new Label(portNames, SWT.NONE);
+		final Label lblInputPortName = new Label(portNames, SWT.NONE);
 		lblInputPortName.setText("Input port name");
 		lblInputPortName.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, true));
 		txtInputPortName = new Text(portNames, SWT.BORDER);
 		txtInputPortName.setLayoutData(dataInfoField);
 
-		Label lblOutputPortName = new Label(portNames, SWT.NONE);
+		final Label lblOutputPortName = new Label(portNames, SWT.NONE);
 		lblOutputPortName.setText("Output port name");
 		lblOutputPortName.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, true));
 		txtOutputPortName = new Text(portNames, SWT.BORDER);
 		txtOutputPortName.setLayoutData(dataInfoField);
 
 		if (compoundFilter == null) {
-			txtInputPortName.setText(AddFilterHandler.FILTER_PORT_IN_NAME);
-			txtOutputPortName.setText(AddFilterHandler.FILTER_PORT_OUT_NAME);
+			txtInputPortName.setText(FilterTransformHandler.FILTER_PORT_IN_NAME);
+			txtOutputPortName.setText(FilterTransformHandler.FILTER_PORT_OUT_NAME);
 		} else {
 			for (Feature f : compoundFilter.getComponentType().getOwnedFeatures()) {
 				if (f instanceof DirectedFeature) {
@@ -332,37 +362,37 @@ public class AddFilterDialog extends TitleAreaDialog {
 	 * @param container
 	 */
 	private void createLogPortField(Composite container) {
-		Label lblLogField = new Label(container, SWT.NONE);
+		final Label lblLogField = new Label(container, SWT.NONE);
 		lblLogField.setText("Create log port");
 		lblLogField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true));
 
 		// Create a group to contain the log port options
-		Group logGroup = new Group(container, SWT.NONE);
+		final Group logGroup = new Group(container, SWT.NONE);
 		logGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		logGroup.setLayout(new RowLayout(SWT.HORIZONTAL));
 
 		btnLogPortType.clear();
 
-		Button btnNoLogPort = new Button(logGroup, SWT.RADIO);
+		final Button btnNoLogPort = new Button(logGroup, SWT.RADIO);
 		btnNoLogPort.setText("None");
 		btnNoLogPort.setSelection(true);
 
-		Button btnEventLogPort = new Button(logGroup, SWT.RADIO);
+		final Button btnEventLogPort = new Button(logGroup, SWT.RADIO);
 		btnEventLogPort.setText("Event");
 		btnEventLogPort.setSelection(false);
 
-		Button btnDataLogPort = new Button(logGroup, SWT.RADIO);
+		final Button btnDataLogPort = new Button(logGroup, SWT.RADIO);
 		btnDataLogPort.setText("Data");
 		btnDataLogPort.setSelection(false);
 
-		Button btnEventDataLogPort = new Button(logGroup, SWT.RADIO);
+		final Button btnEventDataLogPort = new Button(logGroup, SWT.RADIO);
 		btnEventDataLogPort.setText("Event Data");
 		btnEventDataLogPort.setSelection(false);
 
 		if (compoundFilter != null) {
-			ComponentType ct = compoundFilter.getComponentType();
+			final ComponentType ct = compoundFilter.getComponentType();
 			for (Feature f : ct.getOwnedFeatures()) {
-				if (f.getName().equalsIgnoreCase(AddFilterHandler.FILTER_LOG_PORT_NAME)) {
+				if (f.getName().equalsIgnoreCase(FilterTransformHandler.FILTER_LOG_PORT_NAME)) {
 					btnNoLogPort.setSelection(false);
 					if (f instanceof DataPort) {
 						btnDataLogPort.setSelection(true);
@@ -393,10 +423,10 @@ public class AddFilterDialog extends TitleAreaDialog {
 	 * @param container
 	 */
 	private void createRequirementField(Composite container) {
-		Label lblRequirementField = new Label(container, SWT.NONE);
+		final Label lblRequirementField = new Label(container, SWT.NONE);
 		lblRequirementField.setText("Requirement");
 
-		GridData dataInfoField = new GridData();
+		final GridData dataInfoField = new GridData();
 		dataInfoField.grabExcessHorizontalSpace = true;
 		dataInfoField.horizontalAlignment = GridData.FILL;
 		cboFilterRequirement = new Combo(container, SWT.BORDER);
@@ -412,10 +442,10 @@ public class AddFilterDialog extends TitleAreaDialog {
 	 * @param container
 	 */
 	private void createPolicyField(Composite container) {
-		Label lblPolicyField = new Label(container, SWT.NONE);
+		final Label lblPolicyField = new Label(container, SWT.NONE);
 		lblPolicyField.setText("Filter Policy");
 
-		GridData dataInfoField = new GridData(SWT.FILL, SWT.FILL, true, false);
+		final GridData dataInfoField = new GridData(SWT.FILL, SWT.FILL, true, false);
 		txtPolicy = new Text(container, SWT.BORDER);
 		txtPolicy.setLayoutData(dataInfoField);
 
@@ -427,17 +457,18 @@ public class AddFilterDialog extends TitleAreaDialog {
 	 * text fields are disposed when the dialog closes.
 	 */
 	private boolean saveInput() {
-		List<Classifier> componentsInPackage = AadlUtil.getContainingPackageSection(context).getOwnedClassifiers();
+		final List<Classifier> componentsInPackage = AadlUtil.getContainingPackageSection(context)
+				.getOwnedClassifiers();
 
 		// Filter Component Name
 		if (!txtFilterComponentName.getText().isEmpty()
 				&& !ModelTransformUtils.isValidName(txtFilterComponentName.getText())) {
-			Dialog.showError("Add Filter", "Filter component name " + txtFilterComponentName.getText()
+			Dialog.showError("Filter Transform", "Filter component name " + txtFilterComponentName.getText()
 					+ " contains invalid characters. Only 'A..Z', 'a..z', '0..9', and '_' are permitted");
 			return false;
 		} else if (compoundFilter == null
 				&& AadlUtil.findNamedElementInList(componentsInPackage, txtFilterComponentName.getText()) != null) {
-			Dialog.showError("Add Filter", "Component " + txtFilterComponentName.getText()
+			Dialog.showError("Filter Transform", "Component " + txtFilterComponentName.getText()
 					+ " already exists in model. Use the suggested name or enter a new one.");
 			txtFilterComponentName.setText(
 					ModelTransformUtils.getUniqueName(txtFilterComponentName.getText(), true, componentsInPackage));
@@ -449,12 +480,13 @@ public class AddFilterDialog extends TitleAreaDialog {
 		// Filter Subcomponent Instance Name
 		if (!txtFilterSubcomponentName.getText().isEmpty()
 				&& !ModelTransformUtils.isValidName(txtFilterSubcomponentName.getText())) {
-			Dialog.showError("Add Filter", "Filter subcomponent instance name " + txtFilterSubcomponentName.getText()
+			Dialog.showError("Filter Transform",
+					"Filter subcomponent instance name " + txtFilterSubcomponentName.getText()
 					+ " contains invalid characters. Only 'A..Z', 'a..z', '0..9', and '_' are permitted");
 			return false;
 		} else if (compoundFilter == null && AadlUtil.findNamedElementInList(context.getOwnedSubcomponents(),
 				txtFilterSubcomponentName.getText()) != null) {
-			Dialog.showError("Add Filter", "Subcomponent " + txtFilterSubcomponentName.getText()
+			Dialog.showError("Filter Transform", "Subcomponent " + txtFilterSubcomponentName.getText()
 					+ " already exists in model. Use the suggested name or enter a new one.");
 			txtFilterSubcomponentName.setText(ModelTransformUtils.getUniqueName(txtFilterSubcomponentName.getText(),
 					true, context.getOwnedSubcomponents()));
@@ -472,7 +504,7 @@ public class AddFilterDialog extends TitleAreaDialog {
 						|| txtPeriod.getText().matches("((\\d)+(\\s)*(ps|ns|us|ms|sec|min|hr)?)")) {
 					filterPeriod = txtPeriod.getText();
 				} else {
-					Dialog.showError("Add Filter", "Filter period " + txtPeriod.getText()
+					Dialog.showError("Filter Transform", "Filter period " + txtPeriod.getText()
 							+ " is malformed. See the AADL definition of Period in Timing_Properties.aadl.");
 					return false;
 				}
@@ -484,16 +516,21 @@ public class AddFilterDialog extends TitleAreaDialog {
 		if (txtInputPortName.getText().isEmpty() || ModelTransformUtils.isValidName(txtInputPortName.getText())) {
 			filterInputPortName = txtInputPortName.getText();
 		} else {
-			Dialog.showError("Add Filter", "Filter input port name " + txtInputPortName.getText()
+			Dialog.showError("Filter Transform", "Filter input port name " + txtInputPortName.getText()
 					+ " contains invalid characters. Only 'A..Z', 'a..z', '0..9', and '_' are permitted");
 			return false;
 		}
 
 		// Output Port Name
 		if (txtOutputPortName.getText().isEmpty() || ModelTransformUtils.isValidName(txtOutputPortName.getText())) {
+			if (!txtOutputPortName.getText().isEmpty()
+					&& txtOutputPortName.getText().equalsIgnoreCase(txtInputPortName.getText())) {
+				Dialog.showError("Filter Transform", "Filter input and output port names must be different");
+				return false;
+			}
 			filterOutputPortName = txtOutputPortName.getText();
 		} else {
-			Dialog.showError("Add Filter", "Filter output port name " + txtOutputPortName.getText()
+			Dialog.showError("Filter Transform", "Filter output port name " + txtOutputPortName.getText()
 					+ " contains invalid characters. Only 'A..Z', 'a..z', '0..9', and '_' are permitted");
 			return false;
 		}
@@ -512,7 +549,7 @@ public class AddFilterDialog extends TitleAreaDialog {
 		if (filterRequirement.equals(NO_REQUIREMENT_SELECTED)) {
 			filterRequirement = "";
 		} else if (!requirements.contains(filterRequirement)) {
-			Dialog.showError("Add Filter",
+			Dialog.showError("Filter Transform",
 					"Filter requirement " + filterRequirement
 							+ " does not exist in the model.  Select a requirement from the list, or choose "
 							+ NO_REQUIREMENT_SELECTED + ".");
@@ -541,10 +578,6 @@ public class AddFilterDialog extends TitleAreaDialog {
 		return filterSubcomponentName;
 	}
 
-//	public String getFilterImplementationLanguage() {
-//		return filterImplementationLanguage;
-//	}
-
 	public String getDispatchProtocol() {
 		return filterDispatchProtocol;
 	}
@@ -569,21 +602,8 @@ public class AddFilterDialog extends TitleAreaDialog {
 		return policy;
 	}
 
-//	public List<String> getGuaranteeList() {
-//		return propagateGuarantees;
-//	}
-
 	public String getRequirement() {
 		return filterRequirement;
-	}
-
-//	public void setGuaranteeList(String sourceName, List<String> guarantees) {
-//		this.sourceName = sourceName;
-//		this.sourceGuarantees = guarantees;
-//	}
-
-	public void setRequirements(List<String> requirements) {
-		this.requirements = requirements;
 	}
 
 	public void createCompoundFilter(Subcomponent comp) {

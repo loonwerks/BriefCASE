@@ -46,10 +46,10 @@ public class SelectImplementationDialog extends TitleAreaDialog {
 
 	@Override
 	protected Control createDialogArea(Composite parent) {
-		Composite area = (Composite) super.createDialogArea(parent);
-		Composite container = new Composite(area, SWT.NONE);
+		final Composite area = (Composite) super.createDialogArea(parent);
+		final Composite container = new Composite(area, SWT.NONE);
 		container.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		GridLayout layout = new GridLayout(2, false);
+		final GridLayout layout = new GridLayout(2, false);
 		container.setLayout(layout);
 
 		// Add implementation information fields
@@ -86,16 +86,16 @@ public class SelectImplementationDialog extends TitleAreaDialog {
 	 * @param container
 	 */
 	private void createImplementationLocationField(Composite container) {
-		Label lblImplementationLocationField = new Label(container, SWT.NONE);
+		final Label lblImplementationLocationField = new Label(container, SWT.NONE);
 		lblImplementationLocationField.setText("Implementation location:");
 
-		GridData dataInfoField = new GridData();
+		final GridData dataInfoField = new GridData();
 		dataInfoField.grabExcessHorizontalSpace = true;
 		dataInfoField.horizontalAlignment = GridData.FILL;
 
-		Composite dialogField = new Composite(container, SWT.NONE);
+		final Composite dialogField = new Composite(container, SWT.NONE);
 		dialogField.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
-		GridLayout layout = new GridLayout(2, false);
+		final GridLayout layout = new GridLayout(2, false);
 		dialogField.setLayout(layout);
 
 		txtImplementationLocation = new Text(dialogField, SWT.BORDER);
@@ -126,10 +126,10 @@ public class SelectImplementationDialog extends TitleAreaDialog {
 	 * @param container
 	 */
 	private void createImplementationEntryFunctionField(Composite container) {
-		Label lblImplementationEntryFunctionField = new Label(container, SWT.NONE);
+		final Label lblImplementationEntryFunctionField = new Label(container, SWT.NONE);
 		lblImplementationEntryFunctionField.setText("Implementation Entry Function:");
 
-		GridData dataInfoField = new GridData();
+		final GridData dataInfoField = new GridData();
 		dataInfoField.grabExcessHorizontalSpace = true;
 		dataInfoField.horizontalAlignment = GridData.FILL;
 		txtImplementationEntryFunction = new Text(container, SWT.BORDER);

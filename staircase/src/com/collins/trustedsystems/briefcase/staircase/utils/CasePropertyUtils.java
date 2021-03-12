@@ -216,16 +216,16 @@ public class CasePropertyUtils {
 		} else if (prop.getOwnedPropertyType() instanceof ListType) {
 			final ListValue listVal = (ListValue) modalPropVal.createOwnedValue(Aadl2Package.eINSTANCE.getListValue());
 
-			String[] elements = propVal.split(",");
+			final String[] elements = propVal.split(",");
 
 			// TODO: This property could be a list of enums, strings, numbers, lists, etc
 			// TODO: This really needs to be set up in a recursive manner
 			// Figure out which
-			ListType listType = (ListType) prop.getOwnedPropertyType();
-			PropertyType listSubType = listType.getOwnedElementType();
+			final ListType listType = (ListType) prop.getOwnedPropertyType();
+			final PropertyType listSubType = listType.getOwnedElementType();
 			if (listSubType instanceof AadlString) {
 				for (String element : elements) {
-					StringLiteral stringVal = (StringLiteral) listVal
+					final StringLiteral stringVal = (StringLiteral) listVal
 							.createOwnedListElement(Aadl2Package.eINSTANCE.getStringLiteral());
 					stringVal.setValue(element);
 				}
@@ -235,9 +235,9 @@ public class CasePropertyUtils {
 
 			} else if (listSubType instanceof EnumerationType) {
 				for (String element : elements) {
-					NamedValue namedVal = (NamedValue) listVal
+					final NamedValue namedVal = (NamedValue) listVal
 							.createOwnedListElement(Aadl2Package.eINSTANCE.getNamedValue());
-					EnumerationLiteral enumLiteral = Aadl2Factory.eINSTANCE.createEnumerationLiteral();
+					final EnumerationLiteral enumLiteral = Aadl2Factory.eINSTANCE.createEnumerationLiteral();
 					enumLiteral.setName(element);
 					namedVal.setNamedValue(enumLiteral);
 				}
@@ -284,7 +284,7 @@ public class CasePropertyUtils {
 				return false;
 			}
 
-			IntegerLiteral intLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
+			final IntegerLiteral intLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
 			intLit.setValue(100);
 			comp.setPropertyValue(prop, intLit);
 
@@ -296,9 +296,9 @@ public class CasePropertyUtils {
 
 	public static boolean setCompImpl(Classifier comp, String compImpl) {
 		try {
-			Property prop = Aadl2GlobalScopeUtil.get(comp, Aadl2Package.eINSTANCE.getProperty(),
+			final Property prop = Aadl2GlobalScopeUtil.get(comp, Aadl2Package.eINSTANCE.getProperty(),
 					CASE_PROPSET_NAME + "::" + COMP_IMPL);
-			StringLiteral strLit = Aadl2Factory.eINSTANCE.createStringLiteral();
+			final StringLiteral strLit = Aadl2Factory.eINSTANCE.createStringLiteral();
 			strLit.setValue(compImpl);
 			comp.setPropertyValue(prop, strLit);
 		} catch (PropertyDoesNotApplyToHolderException e) {
@@ -309,12 +309,12 @@ public class CasePropertyUtils {
 
 	public static boolean setCompSpec(Classifier comp, String compSpec) {
 		try {
-			String[] elements = compSpec.split(",");
-			Property prop = Aadl2GlobalScopeUtil.get(comp, Aadl2Package.eINSTANCE.getProperty(),
+			final String[] elements = compSpec.split(",");
+			final Property prop = Aadl2GlobalScopeUtil.get(comp, Aadl2Package.eINSTANCE.getProperty(),
 					CASE_PROPSET_NAME + "::" + COMP_SPEC);
-			ListValue listVal = Aadl2Factory.eINSTANCE.createListValue();
+			final ListValue listVal = Aadl2Factory.eINSTANCE.createListValue();
 			for (String s : elements) {
-				StringLiteral strLit = (StringLiteral) listVal
+				final StringLiteral strLit = (StringLiteral) listVal
 						.createOwnedListElement(Aadl2Package.eINSTANCE.getStringLiteral());
 				strLit.setValue(s);
 			}
@@ -328,9 +328,9 @@ public class CasePropertyUtils {
 
 	public static boolean setCacheSize(Classifier comp, long cacheSize) {
 		try {
-			Property prop = Aadl2GlobalScopeUtil.get(comp, Aadl2Package.eINSTANCE.getProperty(),
+			final Property prop = Aadl2GlobalScopeUtil.get(comp, Aadl2Package.eINSTANCE.getProperty(),
 					CASE_PROPSET_NAME + "::" + CACHE_SIZE);
-			IntegerLiteral intLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
+			final IntegerLiteral intLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
 			intLit.setValue(cacheSize);
 			comp.setPropertyValue(prop, intLit);
 		} catch (PropertyDoesNotApplyToHolderException e) {
@@ -341,11 +341,11 @@ public class CasePropertyUtils {
 
 	public static boolean setCacheTimeout(Classifier comp, long cacheTimeout) {
 		try {
-			Property prop = Aadl2GlobalScopeUtil.get(comp, Aadl2Package.eINSTANCE.getProperty(),
+			final Property prop = Aadl2GlobalScopeUtil.get(comp, Aadl2Package.eINSTANCE.getProperty(),
 					CASE_PROPSET_NAME + "::" + CACHE_TIMEOUT);
-			IntegerLiteral intLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
+			final IntegerLiteral intLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
 			intLit.setValue(cacheTimeout);
-			UnitLiteral unitLit = Aadl2Factory.eINSTANCE.createUnitLiteral();
+			final UnitLiteral unitLit = Aadl2Factory.eINSTANCE.createUnitLiteral();
 			unitLit.setName("min");
 			intLit.setUnit(unitLit);
 			comp.setPropertyValue(prop, intLit);
@@ -357,11 +357,11 @@ public class CasePropertyUtils {
 
 	public static boolean setOs(Classifier comp, String os) {
 		try {
-			Property prop = Aadl2GlobalScopeUtil.get(comp, Aadl2Package.eINSTANCE.getProperty(),
+			final Property prop = Aadl2GlobalScopeUtil.get(comp, Aadl2Package.eINSTANCE.getProperty(),
 					CASE_PROPSET_NAME + "::" + OS);
-			EnumerationLiteral enumLit = Aadl2Factory.eINSTANCE.createEnumerationLiteral();
+			final EnumerationLiteral enumLit = Aadl2Factory.eINSTANCE.createEnumerationLiteral();
 			enumLit.setName(os);
-			NamedValue namedVal = Aadl2Factory.eINSTANCE.createNamedValue();
+			final NamedValue namedVal = Aadl2Factory.eINSTANCE.createNamedValue();
 			namedVal.setNamedValue(enumLit);
 			comp.setPropertyValue(prop, namedVal);
 		} catch (PropertyDoesNotApplyToHolderException e) {
@@ -372,9 +372,9 @@ public class CasePropertyUtils {
 
 	public static boolean setMonitorLatched(Classifier comp, boolean latched) {
 		try {
-			Property prop = Aadl2GlobalScopeUtil.get(comp, Aadl2Package.eINSTANCE.getProperty(),
+			final Property prop = Aadl2GlobalScopeUtil.get(comp, Aadl2Package.eINSTANCE.getProperty(),
 					CASE_PROPSET_NAME + "::" + MONITOR_LATCHED);
-			BooleanLiteral boolLit = Aadl2Factory.eINSTANCE.createBooleanLiteral();
+			final BooleanLiteral boolLit = Aadl2Factory.eINSTANCE.createBooleanLiteral();
 			boolLit.setValue(latched);
 			comp.setPropertyValue(prop, boolLit);
 		} catch (PropertyDoesNotApplyToHolderException e) {
@@ -433,13 +433,13 @@ public class CasePropertyUtils {
 
 	public static boolean isCommDriver(Classifier comp) {
 		try {
-			Property prop = Aadl2GlobalScopeUtil.get(comp, Aadl2Package.eINSTANCE.getProperty(),
+			final Property prop = Aadl2GlobalScopeUtil.get(comp, Aadl2Package.eINSTANCE.getProperty(),
 					CASE_PROPSET_NAME + "::" + "Comm_Driver");
-			List<? extends PropertyExpression> propVal = comp.getPropertyValueList(prop);
+			final List<? extends PropertyExpression> propVal = comp.getPropertyValueList(prop);
 			if (propVal != null) {
 				for (PropertyExpression expr : propVal) {
 					if (expr instanceof BooleanLiteral) {
-						BooleanLiteral boolLit = (BooleanLiteral) expr;
+						final BooleanLiteral boolLit = (BooleanLiteral) expr;
 						return boolLit.getValue();
 					}
 				}

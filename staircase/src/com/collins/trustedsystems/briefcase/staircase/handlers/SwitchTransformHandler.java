@@ -1,7 +1,6 @@
 package com.collins.trustedsystems.briefcase.staircase.handlers;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +13,7 @@ import org.eclipse.xtext.ui.editor.XtextEditor;
 import org.eclipse.xtext.ui.editor.utils.EditorUtils;
 import org.osate.aadl2.Aadl2Factory;
 import org.osate.aadl2.AadlPackage;
+import org.osate.aadl2.ArrayDimension;
 import org.osate.aadl2.ComponentCategory;
 import org.osate.aadl2.ComponentImplementation;
 import org.osate.aadl2.ComponentType;
@@ -41,7 +41,7 @@ import org.osate.ui.dialogs.Dialog;
 import org.osate.xtext.aadl2.properties.util.GetProperties;
 import org.osate.xtext.aadl2.properties.util.ThreadProperties;
 
-import com.collins.trustedsystems.briefcase.staircase.dialogs.AddSwitchDialog;
+import com.collins.trustedsystems.briefcase.staircase.dialogs.SwitchTransformDialog;
 import com.collins.trustedsystems.briefcase.staircase.requirements.AddSwitchClaim;
 import com.collins.trustedsystems.briefcase.staircase.requirements.CyberRequirement;
 import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsManager;
@@ -51,10 +51,10 @@ import com.collins.trustedsystems.briefcase.staircase.utils.ComponentCreateHelpe
 import com.collins.trustedsystems.briefcase.staircase.utils.ModelTransformUtils;
 import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
 
-public class AddSwitchHandler extends AadlHandler {
+public class SwitchTransformHandler extends AadlHandler {
 
 	static final String SWITCH_COMP_TYPE_NAME = "CASE_Switch";
-	public static final String SWITCH_COMP_IMPL_NAME = "SWITCH";
+	public static final String SWITCH_COMP_IMPL_NAME = "Switch";
 	public static final String SWITCH_INPUT_PORT_NAME = "input";
 	public static final String SWITCH_OUTPUT_PORT_NAME = "output";
 	public static final String SWITCH_CONTROL_PORT_NAME = "control";
@@ -73,31 +73,27 @@ public class AddSwitchHandler extends AadlHandler {
 		// Check if it is a connection
 		final EObject eObj = getEObject(uri);
 		if (!(eObj instanceof PortConnection)) {
-			Dialog.showError("Add Monitor", "A connection between two components must be selected to add a monitor.");
+			Dialog.showError("Switch Transform",
+					"A connection between two components must be selected to add a monitor.");
 			return;
 		}
 		final PortConnection selectedConnection = (PortConnection) eObj;
 		ComponentImplementation ci = selectedConnection.getContainingComponentImpl();
 
-		// Provide list of source outports that can be connected to switch's in port
-		List<String> outports = ModelTransformUtils.getOutports(ci);
-
 		// Get selected connection ends
-		String inConnEnd = selectedConnection.getSource().getContext().getName() + "."
+		final String inConnEnd = selectedConnection.getSource().getContext().getName() + "."
 				+ selectedConnection.getSource().getConnectionEnd().getName();
 
 		// Provide list of requirements so the user can choose which requirement is driving this
 		// model transformation.
-		List<String> requirements = new ArrayList<>();
+		final List<String> requirements = new ArrayList<>();
 		RequirementsManager.getInstance().getImportedRequirements().forEach(r -> requirements.add(r.getId()));
 
 		// Open wizard to enter switch info
-		AddSwitchDialog wizard = new AddSwitchDialog(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell());
+		final SwitchTransformDialog wizard = new SwitchTransformDialog(
+				PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell());
 
-		wizard.setPorts(Collections.emptyList(), outports);
-		wizard.setInportConnectionEnd(inConnEnd);
-		wizard.setRequirements(requirements);
-		wizard.create();
+		wizard.create(ci, inConnEnd);
 		if (wizard.open() == Window.OK) {
 			switchImplementationName = wizard.getSwitchImplementationName();
 			if (switchImplementationName == "") {
@@ -115,7 +111,7 @@ public class AddSwitchHandler extends AadlHandler {
 		// Insert the switch component
 		insertSwitchComponent(uri);
 
-		BriefcaseNotifier.notify("StairCASE - Switch", "Switch added to model.");
+		BriefcaseNotifier.notify("StairCASE - Switch Transform", "Switch added to model.");
 
 		return;
 
@@ -130,11 +126,10 @@ public class AddSwitchHandler extends AadlHandler {
 		// Get the active xtext editor so we can make modifications
 		final XtextEditor xtextEditor = EditorUtils.getActiveXtextEditor();
 
-		AddSwitchClaim claim = xtextEditor.getDocument().modify(resource -> {
-//		xtextEditor.getDocument().modify(resource -> {
+		final AddSwitchClaim claim = xtextEditor.getDocument().modify(resource -> {
 
 			// Retrieve the model object to modify
-			PortConnection selectedConnection = (PortConnection) resource.getEObject(uri.fragment());
+			final PortConnection selectedConnection = (PortConnection) resource.getEObject(uri.fragment());
 			final ComponentImplementation containingImpl = selectedConnection.getContainingComponentImpl();
 			final AadlPackage aadlPkg = (AadlPackage) resource.getContents().get(0);
 			PackageSection pkgSection = null;
@@ -154,7 +149,7 @@ public class AddSwitchHandler extends AadlHandler {
 
 			if (pkgSection == null) {
 				// Something went wrong
-				Dialog.showError("Add Monitor", "No public or private package sections found.");
+				Dialog.showError("Switch Transform", "No public or private package sections found.");
 				return null;
 			}
 
@@ -183,14 +178,14 @@ public class AddSwitchHandler extends AadlHandler {
 			}
 
 			// Add switch
-			Subcomponent switchSub = insertSwitch(containingImpl, inputPorts, selectedConnection, compCategory,
+			final Subcomponent switchSub = insertSwitch(containingImpl, inputPorts, selectedConnection, compCategory,
 					dispatchProtocol, controlPort, switchRequirement, switchAgreeProperty);
 
 			// Add add_switch claim to resolute prove statement, if applicable
 			if (!switchRequirement.isEmpty()) {
-				CyberRequirement req = RequirementsManager.getInstance().getRequirement(switchRequirement);
+				final CyberRequirement req = RequirementsManager.getInstance().getRequirement(switchRequirement);
 				NamedElement dataFeatureClassifier = null;
-				ConnectionEnd port = selectedConnection.getDestination().getConnectionEnd();
+				final ConnectionEnd port = selectedConnection.getDestination().getConnectionEnd();
 				if (port instanceof EventDataPort) {
 					dataFeatureClassifier = ((EventDataPort) port).getDataFeatureClassifier();
 				} else if (port instanceof DataPort) {
@@ -231,7 +226,7 @@ public class AddSwitchHandler extends AadlHandler {
 			ComponentCategory compCategory, String dispatchProtocol, String controlSrcPort,
 			String switchRequirement, String switchAgreeProperty) {
 
-		PackageSection pkgSection = (PackageSection) compImpl.eContainer();
+		final PackageSection pkgSection = (PackageSection) compImpl.eContainer();
 
 		final ComponentType switchType = (ComponentType) pkgSection
 				.createOwnedClassifier(ComponentCreateHelper.getTypeClass(compCategory));
@@ -241,32 +236,44 @@ public class AddSwitchHandler extends AadlHandler {
 				ModelTransformUtils.getUniqueName(SWITCH_COMP_TYPE_NAME, true, pkgSection.getOwnedClassifiers()));
 
 		// Create switch input port(s)
-		Map<String, ConnectionEnd> inPorts = new HashMap<>();
+		final Map<String, ConnectionEnd> inPorts = new HashMap<>();
 		for (Map.Entry<String, String> inPort : inPortMap.entrySet()) {
 
 			if (inPort.getKey().isEmpty()) {
 				continue;
 			}
 
-			ConnectionEnd srcPort = ModelTransformUtils.getPort(compImpl, inPort.getValue());
+			final ConnectionEnd srcPort = ModelTransformUtils.getPort(compImpl, inPort.getValue());
 			ConnectionEnd portIn = null;
 			DataSubcomponentType dataFeatureClassifier = null;
 			if (srcPort instanceof EventDataPort) {
 				dataFeatureClassifier = ((EventDataPort) srcPort).getDataFeatureClassifier();
 				portIn = ComponentCreateHelper.createOwnedEventDataPort(switchType);
 				((EventDataPort) portIn).setDataFeatureClassifier(dataFeatureClassifier);
+				for (ArrayDimension dim : ((EventDataPort) srcPort).getArrayDimensions()) {
+					final ArrayDimension arrayDimension = ((EventDataPort) portIn).createArrayDimension();
+					arrayDimension.setSize(dim.getSize());
+				}
 			} else if (srcPort instanceof DataPort) {
 				dataFeatureClassifier = ((DataPort) srcPort).getDataFeatureClassifier();
 				portIn = ComponentCreateHelper.createOwnedDataPort(switchType);
 				((DataPort) portIn).setDataFeatureClassifier(dataFeatureClassifier);
+				for (ArrayDimension dim : ((DataPort) srcPort).getArrayDimensions()) {
+					final ArrayDimension arrayDimension = ((DataPort) portIn).createArrayDimension();
+					arrayDimension.setSize(dim.getSize());
+				}
 			} else if (srcPort instanceof EventPort) {
 				portIn = ComponentCreateHelper.createOwnedEventPort(switchType);
-				return null;
+				for (ArrayDimension dim : ((EventPort) srcPort).getArrayDimensions()) {
+					final ArrayDimension arrayDimension = ((EventPort) portIn).createArrayDimension();
+					arrayDimension.setSize(dim.getSize());
+				}
+//				return null;
 			} else if (srcPort instanceof FeatureGroup) {
 				portIn = switchType.createOwnedFeatureGroup();
 				((FeatureGroup) portIn).setFeatureType(((FeatureGroup) srcPort).getAllFeatureGroupType());
 			} else {
-				Dialog.showError("Add Switch", "Could not determine the port type of the source component.");
+				Dialog.showError("Switch Transform", "Could not determine the port type of the source component.");
 				return null;
 			}
 
@@ -276,25 +283,37 @@ public class AddSwitchHandler extends AadlHandler {
 		}
 
 		// Create switch output port
-		ConnectionEnd port = outConn.getDestination().getConnectionEnd();
+		final ConnectionEnd port = outConn.getDestination().getConnectionEnd();
 		ConnectionEnd outPort = null;
 		DataSubcomponentType dataFeatureClassifier = null;
 		if (port instanceof EventDataPort) {
 			dataFeatureClassifier = ((EventDataPort) port).getDataFeatureClassifier();
 			outPort = ComponentCreateHelper.createOwnedEventDataPort(switchType);
 			((EventDataPort) outPort).setDataFeatureClassifier(dataFeatureClassifier);
+			for (ArrayDimension dim : ((EventDataPort) port).getArrayDimensions()) {
+				final ArrayDimension arrayDimension = ((EventDataPort) outPort).createArrayDimension();
+				arrayDimension.setSize(dim.getSize());
+			}
 		} else if (port instanceof DataPort) {
 			dataFeatureClassifier = ((DataPort) port).getDataFeatureClassifier();
 			outPort = ComponentCreateHelper.createOwnedDataPort(switchType);
 			((DataPort) outPort).setDataFeatureClassifier(dataFeatureClassifier);
+			for (ArrayDimension dim : ((DataPort) port).getArrayDimensions()) {
+				final ArrayDimension arrayDimension = ((DataPort) outPort).createArrayDimension();
+				arrayDimension.setSize(dim.getSize());
+			}
 		} else if (port instanceof EventPort) {
 			outPort = ComponentCreateHelper.createOwnedEventPort(switchType);
-			return null;
+			for (ArrayDimension dim : ((EventPort) port).getArrayDimensions()) {
+				final ArrayDimension arrayDimension = ((EventPort) outPort).createArrayDimension();
+				arrayDimension.setSize(dim.getSize());
+			}
+//			return null;
 		} else if (port instanceof FeatureGroup) {
 			outPort = switchType.createOwnedFeatureGroup();
 			((FeatureGroup) outPort).setFeatureType(((FeatureGroup) port).getAllFeatureGroupType());
 		} else {
-			Dialog.showError("Add Switch", "Could not determine the port type of the destination component.");
+			Dialog.showError("Switch Transform", "Could not determine the port type of the destination component.");
 			return null;
 		}
 
@@ -303,7 +322,7 @@ public class AddSwitchHandler extends AadlHandler {
 
 		// If user didn't specify a control port type, make it an event data port
 		// Get control port
-		ConnectionEnd ctlSrcPort = ModelTransformUtils.getPort(compImpl, controlSrcPort);
+		final ConnectionEnd ctlSrcPort = ModelTransformUtils.getPort(compImpl, controlSrcPort);
 		ConnectionEnd controlPort = null;
 		if (ctlSrcPort == null) {
 			controlPort = ComponentCreateHelper.createOwnedEventDataPort(switchType);
@@ -311,12 +330,24 @@ public class AddSwitchHandler extends AadlHandler {
 			controlPort = ComponentCreateHelper.createOwnedEventDataPort(switchType);
 			dataFeatureClassifier = ((EventDataPort) ctlSrcPort).getDataFeatureClassifier();
 			((EventDataPort) controlPort).setDataFeatureClassifier(dataFeatureClassifier);
+			for (ArrayDimension dim : ((EventDataPort) ctlSrcPort).getArrayDimensions()) {
+				final ArrayDimension arrayDimension = ((EventDataPort) controlPort).createArrayDimension();
+				arrayDimension.setSize(dim.getSize());
+			}
 		} else if (ctlSrcPort instanceof DataPort) {
 			controlPort = ComponentCreateHelper.createOwnedDataPort(switchType);
 			dataFeatureClassifier = ((DataPort) ctlSrcPort).getDataFeatureClassifier();
 			((DataPort) controlPort).setDataFeatureClassifier(dataFeatureClassifier);
+			for (ArrayDimension dim : ((DataPort) ctlSrcPort).getArrayDimensions()) {
+				final ArrayDimension arrayDimension = ((DataPort) controlPort).createArrayDimension();
+				arrayDimension.setSize(dim.getSize());
+			}
 		} else if (ctlSrcPort instanceof EventPort) {
 			controlPort = ComponentCreateHelper.createOwnedEventPort(switchType);
+			for (ArrayDimension dim : ((EventPort) ctlSrcPort).getArrayDimensions()) {
+				final ArrayDimension arrayDimension = ((EventPort) controlPort).createArrayDimension();
+				arrayDimension.setSize(dim.getSize());
+			}
 		} else if (ctlSrcPort instanceof FeatureGroup) {
 			controlPort = switchType.createOwnedFeatureGroup();
 			((FeatureGroup) controlPort).setFeatureType(((FeatureGroup) ctlSrcPort).getAllFeatureGroupType());
@@ -326,17 +357,15 @@ public class AddSwitchHandler extends AadlHandler {
 
 		// Add switch properties
 		// CASE::COMP_TYPE Property
-//		if (!CasePropertyUtils.setCompType(switchType, "SWITCH"))
 		if (!CasePropertyUtils.setMitigationType(switchType, MITIGATION_TYPE.GATE)) {
 //				return;
 		}
 
 		// CASE::COMP_SPEC property
-		String switchPropId = switchType.getName() + "_policy";
+		final String switchPropId = switchType.getName() + "_policy";
 
 		if (!switchPropId.isEmpty()) {
 			if (!CasePropertyUtils.setCompSpec(switchType, switchPropId)) {
-//			if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.COMP_SPEC, switchPropId, switchType)) {
 //					return;
 			}
 		}
@@ -354,20 +383,14 @@ public class AddSwitchHandler extends AadlHandler {
 		// Move below component type
 		pkgSection.getOwnedClassifiers().move(1, pkgSection.getOwnedClassifiers().size() - 1);
 
-//		// CASE::COMP_IMPL property
-//		if (!switchImplementationLanguage.isEmpty()) {
-//			if (!CaseUtils.addCasePropertyAssociation("COMP_IMPL", switchImplementationLanguage, switchImpl)) {
-////					return;
-//			}
-//		}
-
 		// Dispatch protocol property
 		if (!dispatchProtocol.isEmpty() && compCategory == ComponentCategory.THREAD) {
-			Property dispatchProtocolProp = GetProperties.lookupPropertyDefinition(switchImpl, ThreadProperties._NAME,
+			final Property dispatchProtocolProp = GetProperties.lookupPropertyDefinition(switchImpl,
+					ThreadProperties._NAME,
 					ThreadProperties.DISPATCH_PROTOCOL);
-			EnumerationLiteral dispatchProtocolLit = Aadl2Factory.eINSTANCE.createEnumerationLiteral();
+			final EnumerationLiteral dispatchProtocolLit = Aadl2Factory.eINSTANCE.createEnumerationLiteral();
 			dispatchProtocolLit.setName(dispatchProtocol);
-			NamedValue nv = Aadl2Factory.eINSTANCE.createNamedValue();
+			final NamedValue nv = Aadl2Factory.eINSTANCE.createNamedValue();
 			nv.setNamedValue(dispatchProtocolLit);
 			switchImpl.setPropertyValue(dispatchProtocolProp, nv);
 		}
@@ -388,7 +411,7 @@ public class AddSwitchHandler extends AadlHandler {
 				continue;
 			}
 
-			ConnectionEnd p = ModelTransformUtils.getPort(compImpl, inPort.getValue());
+			final ConnectionEnd p = ModelTransformUtils.getPort(compImpl, inPort.getValue());
 			final Connection portConnInput = ComponentCreateHelper.createOwnedConnection(compImpl, p);
 			// Give it a unique name
 			portConnInput.setName(

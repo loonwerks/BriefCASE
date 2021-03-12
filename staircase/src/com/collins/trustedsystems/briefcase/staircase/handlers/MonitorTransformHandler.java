@@ -1,8 +1,6 @@
 package com.collins.trustedsystems.briefcase.staircase.handlers;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.eclipse.emf.common.util.URI;
@@ -48,7 +46,7 @@ import org.osate.xtext.aadl2.properties.util.GetProperties;
 import org.osate.xtext.aadl2.properties.util.ThreadProperties;
 import org.osate.xtext.aadl2.properties.util.TimingProperties;
 
-import com.collins.trustedsystems.briefcase.staircase.dialogs.AddMonitorDialog;
+import com.collins.trustedsystems.briefcase.staircase.dialogs.MonitorTransformDialog;
 import com.collins.trustedsystems.briefcase.staircase.requirements.AddMonitorClaim;
 import com.collins.trustedsystems.briefcase.staircase.requirements.CyberRequirement;
 import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsManager;
@@ -58,13 +56,12 @@ import com.collins.trustedsystems.briefcase.staircase.utils.ComponentCreateHelpe
 import com.collins.trustedsystems.briefcase.staircase.utils.ModelTransformUtils;
 import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
 
-public class AddMonitorHandler extends AadlHandler {
+public class MonitorTransformHandler extends AadlHandler {
 
 	public static final String MONITOR_COMP_TYPE_NAME = "CASE_Monitor";
 	public static final String MONITOR_OBSERVED_PORT_NAME = "Observed";
 	public static final String MONITOR_GATE_PORT_NAME = "Output";
 	public static final String MONITOR_ALERT_PORT_NAME = "Alert";
-//	static final String MONITOR_ALERT_PORT_DATA_TYPE = "Base_Types::Boolean";
 	public static final String MONITOR_RESET_PORT_NAME = "Reset";
 	public static final String MONITOR_SUBCOMP_NAME = "Monitor";
 	static final String CONNECTION_IMPL_NAME = "c";
@@ -93,33 +90,20 @@ public class AddMonitorHandler extends AadlHandler {
 		// Check if it is a connection
 		final EObject eObj = getEObject(uri);
 		if (!(eObj instanceof Connection)) {
-			Dialog.showError("Add Monitor",
+			Dialog.showError("Monitor Transform",
 					"A connection between two components must be selected to add a monitor.");
 			return;
 		}
 		final Connection selectedConnection = (Connection) eObj;
-		ComponentImplementation ci = selectedConnection.getContainingComponentImpl();
+		final ComponentImplementation ci = selectedConnection.getContainingComponentImpl();
 
 		// TODO: Check if monitor is being placed after a filter. If so, filter requirement claim needs
 		// to be updated so filter_exists doesn't return false
 
-		// Provide list of outports that can be connected to monitor's expected in port
-		List<String> outports = ModelTransformUtils.getOutports(ci);
-
-		// Provide list of inports that monitor's alert out port can be connected to
-		List<String> inports = ModelTransformUtils.getInports(ci);
-
-		// Provide list of requirements so the user can choose which requirement is driving this
-		// model transformation.
-		List<String> requirements = new ArrayList<>();
-		RequirementsManager.getInstance().getImportedRequirements().forEach(r -> requirements.add(r.getId()));
-
 		// Open wizard to enter monitor info
-		AddMonitorDialog wizard = new AddMonitorDialog(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell());
+		MonitorTransformDialog wizard = new MonitorTransformDialog(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell());
 
-		wizard.setPorts(inports, outports);
-		wizard.setRequirements(requirements);
-		wizard.create(selectedConnection.getContainingComponentImpl());
+		wizard.create(ci);
 		if (wizard.open() == Window.OK) {
 			monitorComponentName = wizard.getMonitorComponentName();
 			if (monitorComponentName.isEmpty()) {
@@ -163,7 +147,7 @@ public class AddMonitorHandler extends AadlHandler {
 		// Insert the monitor component
 		insertMonitor(uri);
 
-		BriefcaseNotifier.notify("StairCASE - Monitor", "Monitor added to model.");
+		BriefcaseNotifier.notify("StairCASE - Monitor Transform", "Monitor added to model.");
 
 		// Save
 		saveChanges(false);
@@ -183,10 +167,10 @@ public class AddMonitorHandler extends AadlHandler {
 		// Get the active xtext editor so we can make modifications
 		final XtextEditor xtextEditor = EditorUtils.getActiveXtextEditor();
 
-		AddMonitorClaim claim = xtextEditor.getDocument().modify(resource -> {
+		final AddMonitorClaim claim = xtextEditor.getDocument().modify(resource -> {
 
 			// Retrieve the model object to modify
-			Connection selectedConnection = (Connection) resource.getEObject(uri.fragment());
+			final Connection selectedConnection = (Connection) resource.getEObject(uri.fragment());
 			final ComponentImplementation containingImpl = selectedConnection.getContainingComponentImpl();
 			final AadlPackage aadlPkg = (AadlPackage) resource.getContents().get(0);
 			PackageSection pkgSection = null;
@@ -206,7 +190,7 @@ public class AddMonitorHandler extends AadlHandler {
 
 			if (pkgSection == null) {
 				// Something went wrong
-				Dialog.showError("Add Monitor", "No public or private package sections found.");
+				Dialog.showError("Monitor Transform", "No public or private package sections found.");
 				return null;
 			}
 
@@ -246,7 +230,7 @@ public class AddMonitorHandler extends AadlHandler {
 					ModelTransformUtils.getUniqueName(monitorComponentName, true, pkgSection.getOwnedClassifiers()));
 
 			// Create monitor observed port
-			ConnectionEnd portSrc = selectedConnection.getSource().getConnectionEnd();
+			final ConnectionEnd portSrc = selectedConnection.getSource().getConnectionEnd();
 			ConnectionEnd portObserved = null;
 			NamedElement observedDataFeatureClassifier = null;
 			if (portSrc instanceof EventDataPort) {
@@ -255,7 +239,7 @@ public class AddMonitorHandler extends AadlHandler {
 				((EventDataPort) portObserved)
 						.setDataFeatureClassifier((DataSubcomponentType) observedDataFeatureClassifier);
 				for (ArrayDimension dim : ((EventDataPort) portSrc).getArrayDimensions()) {
-					ArrayDimension arrayDimension = ((EventDataPort) portObserved).createArrayDimension();
+					final ArrayDimension arrayDimension = ((EventDataPort) portObserved).createArrayDimension();
 					arrayDimension.setSize(dim.getSize());
 				}
 			} else if (portSrc instanceof DataPort) {
@@ -264,7 +248,7 @@ public class AddMonitorHandler extends AadlHandler {
 				((DataPort) portObserved)
 						.setDataFeatureClassifier((DataSubcomponentType) observedDataFeatureClassifier);
 				for (ArrayDimension dim : ((DataPort) portSrc).getArrayDimensions()) {
-					ArrayDimension arrayDimension = ((DataPort) portObserved).createArrayDimension();
+					final ArrayDimension arrayDimension = ((DataPort) portObserved).createArrayDimension();
 					arrayDimension.setSize(dim.getSize());
 				}
 			} else if (portSrc instanceof EventPort) {
@@ -273,7 +257,8 @@ public class AddMonitorHandler extends AadlHandler {
 				portObserved = monitorType.createOwnedFeatureGroup();
 				((FeatureGroup) portObserved).setFeatureType(((FeatureGroup) portSrc).getFeatureGroupType());
 			} else {
-				Dialog.showError("Add Monitor", "Could not determine the port type of the destination component.");
+				Dialog.showError("Monitor Transform",
+						"Could not determine the port type of the destination component.");
 				return null;
 			}
 
@@ -281,7 +266,7 @@ public class AddMonitorHandler extends AadlHandler {
 			portObserved.setName(observationPortName);
 
 			// Create reference ports
-			Map<ConnectionEnd, ConnectionEnd> monReferencePorts = new HashMap<>();
+			final Map<ConnectionEnd, ConnectionEnd> monReferencePorts = new HashMap<>();
 			DataSubcomponentType dataFeatureClassifier = null;
 			for (Map.Entry<String, String> refEntry : referencePorts.entrySet()) {
 				ConnectionEnd monRefPort = null;
@@ -295,7 +280,7 @@ public class AddMonitorHandler extends AadlHandler {
 					dataFeatureClassifier = ((EventDataPort) srcRefPort).getDataFeatureClassifier();
 					((EventDataPort) monRefPort).setDataFeatureClassifier(dataFeatureClassifier);
 					for (ArrayDimension dim : ((EventDataPort) srcRefPort).getArrayDimensions()) {
-						ArrayDimension arrayDimension = ((EventDataPort) monRefPort).createArrayDimension();
+						final ArrayDimension arrayDimension = ((EventDataPort) monRefPort).createArrayDimension();
 						arrayDimension.setSize(dim.getSize());
 					}
 				} else if (srcRefPort instanceof DataPort) {
@@ -303,7 +288,7 @@ public class AddMonitorHandler extends AadlHandler {
 					dataFeatureClassifier = ((DataPort) srcRefPort).getDataFeatureClassifier();
 					((DataPort) monRefPort).setDataFeatureClassifier(dataFeatureClassifier);
 					for (ArrayDimension dim : ((DataPort) srcRefPort).getArrayDimensions()) {
-						ArrayDimension arrayDimension = ((DataPort) monRefPort).createArrayDimension();
+						final ArrayDimension arrayDimension = ((DataPort) monRefPort).createArrayDimension();
 						arrayDimension.setSize(dim.getSize());
 					}
 				} else if (srcRefPort instanceof EventPort) {
@@ -364,7 +349,7 @@ public class AddMonitorHandler extends AadlHandler {
 				dataFeatureClassifier = ((EventDataPort) dstAlertPort).getDataFeatureClassifier();
 				((EventDataPort) monAlertPort).setDataFeatureClassifier(dataFeatureClassifier);
 				for (ArrayDimension dim : ((EventDataPort) dstAlertPort).getArrayDimensions()) {
-					ArrayDimension arrayDimension = ((EventDataPort) monAlertPort).createArrayDimension();
+					final ArrayDimension arrayDimension = ((EventDataPort) monAlertPort).createArrayDimension();
 					arrayDimension.setSize(dim.getSize());
 				}
 			} else if (dstAlertPort instanceof DataPort) {
@@ -372,7 +357,7 @@ public class AddMonitorHandler extends AadlHandler {
 				dataFeatureClassifier = ((DataPort) dstAlertPort).getDataFeatureClassifier();
 				((DataPort) monAlertPort).setDataFeatureClassifier(dataFeatureClassifier);
 				for (ArrayDimension dim : ((DataPort) dstAlertPort).getArrayDimensions()) {
-					ArrayDimension arrayDimension = ((DataPort) monAlertPort).createArrayDimension();
+					final ArrayDimension arrayDimension = ((DataPort) monAlertPort).createArrayDimension();
 					arrayDimension.setSize(dim.getSize());
 				}
 			} else if (dstAlertPort instanceof EventPort) {
@@ -396,7 +381,7 @@ public class AddMonitorHandler extends AadlHandler {
 					dataFeatureClassifier = ((EventDataPort) dstGatePort).getDataFeatureClassifier();
 					((EventDataPort) monGatePort).setDataFeatureClassifier(dataFeatureClassifier);
 					for (ArrayDimension dim : ((EventDataPort) dstGatePort).getArrayDimensions()) {
-						ArrayDimension arrayDimension = ((EventDataPort) monGatePort).createArrayDimension();
+						final ArrayDimension arrayDimension = ((EventDataPort) monGatePort).createArrayDimension();
 						arrayDimension.setSize(dim.getSize());
 					}
 				} else if (dstGatePort instanceof DataPort) {
@@ -404,7 +389,7 @@ public class AddMonitorHandler extends AadlHandler {
 					dataFeatureClassifier = ((DataPort) dstGatePort).getDataFeatureClassifier();
 					((DataPort) monGatePort).setDataFeatureClassifier(dataFeatureClassifier);
 					for (ArrayDimension dim : ((DataPort) dstGatePort).getArrayDimensions()) {
-						ArrayDimension arrayDimension = ((DataPort) monGatePort).createArrayDimension();
+						final ArrayDimension arrayDimension = ((DataPort) monGatePort).createArrayDimension();
 						arrayDimension.setSize(dim.getSize());
 					}
 				} else if (dstGatePort instanceof EventPort) {
@@ -430,7 +415,7 @@ public class AddMonitorHandler extends AadlHandler {
 					dataFeatureClassifier = ((EventDataPort) srcResetPort).getDataFeatureClassifier();
 					((EventDataPort) monResetPort).setDataFeatureClassifier(dataFeatureClassifier);
 					for (ArrayDimension dim : ((EventDataPort) srcResetPort).getArrayDimensions()) {
-						ArrayDimension arrayDimension = ((EventDataPort) monResetPort).createArrayDimension();
+						final ArrayDimension arrayDimension = ((EventDataPort) monResetPort).createArrayDimension();
 						arrayDimension.setSize(dim.getSize());
 					}
 				} else if (srcResetPort instanceof DataPort) {
@@ -438,7 +423,7 @@ public class AddMonitorHandler extends AadlHandler {
 					dataFeatureClassifier = ((DataPort) srcResetPort).getDataFeatureClassifier();
 					((DataPort) monResetPort).setDataFeatureClassifier(dataFeatureClassifier);
 					for (ArrayDimension dim : ((DataPort) srcResetPort).getArrayDimensions()) {
-						ArrayDimension arrayDimension = ((DataPort) monResetPort).createArrayDimension();
+						final ArrayDimension arrayDimension = ((DataPort) monResetPort).createArrayDimension();
 						arrayDimension.setSize(dim.getSize());
 					}
 				} else if (srcResetPort instanceof EventPort) {
@@ -458,7 +443,7 @@ public class AddMonitorHandler extends AadlHandler {
 			}
 
 			// CASE_Properties::Component_Spec property
-			String monitorAlertPropId = monitorType.getName() + "_" + alertPortName;
+			final String monitorAlertPropId = monitorType.getName() + "_" + alertPortName;
 			String monitorGatePropId = "";
 			if (observationGate) {
 				monitorGatePropId += monitorType.getName() + "_" + observationGatePortName;
@@ -488,20 +473,20 @@ public class AddMonitorHandler extends AadlHandler {
 
 			// Dispatch protocol property
 			if (!dispatchProtocol.isEmpty() && compCategory == ComponentCategory.THREAD) {
-				Property dispatchProtocolProp = GetProperties.lookupPropertyDefinition(monitorImpl,
+				final Property dispatchProtocolProp = GetProperties.lookupPropertyDefinition(monitorImpl,
 						ThreadProperties._NAME, ThreadProperties.DISPATCH_PROTOCOL);
-				EnumerationLiteral dispatchProtocolLit = Aadl2Factory.eINSTANCE.createEnumerationLiteral();
+				final EnumerationLiteral dispatchProtocolLit = Aadl2Factory.eINSTANCE.createEnumerationLiteral();
 				dispatchProtocolLit.setName(dispatchProtocol);
-				NamedValue nv = Aadl2Factory.eINSTANCE.createNamedValue();
+				final NamedValue nv = Aadl2Factory.eINSTANCE.createNamedValue();
 				nv.setNamedValue(dispatchProtocolLit);
 				monitorImpl.setPropertyValue(dispatchProtocolProp, nv);
 			}
 			// Period
 			if (!period.isEmpty() && compCategory == ComponentCategory.THREAD) {
-				Property periodProp = GetProperties.lookupPropertyDefinition(monitorImpl, TimingProperties._NAME,
+				final Property periodProp = GetProperties.lookupPropertyDefinition(monitorImpl, TimingProperties._NAME,
 						TimingProperties.PERIOD);
-				IntegerLiteral periodLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
-				UnitLiteral unit = Aadl2Factory.eINSTANCE.createUnitLiteral();
+				final IntegerLiteral periodLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
+				final UnitLiteral unit = Aadl2Factory.eINSTANCE.createUnitLiteral();
 				unit.setName(period.replaceAll("[\\d]", "").trim());
 				periodLit.setBase(0);
 				periodLit.setValue(Long.parseLong(period.replaceAll("[\\D]", "").trim()));
@@ -616,7 +601,7 @@ public class AddMonitorHandler extends AadlHandler {
 				monitorAgreeProperty = monitorAgreeProperty.trim() + ";";
 			}
 
-			String monitorPolicyName = monitorType.getName() + "_policy";
+			final String monitorPolicyName = monitorType.getName() + "_policy";
 
 			String resetString = "";
 			if (resetPort != null) {
@@ -627,7 +612,7 @@ public class AddMonitorHandler extends AadlHandler {
 				}
 			}
 
-			StringBuilder agreeClauses = new StringBuilder();
+			final StringBuilder agreeClauses = new StringBuilder();
 			agreeClauses.append("{**" + System.lineSeparator());
 
 			agreeClauses
@@ -687,7 +672,7 @@ public class AddMonitorHandler extends AadlHandler {
 
 			// Add add_monitor claims to resolute prove statement, if applicable
 			if (!monitorRequirement.isEmpty()) {
-				CyberRequirement req = RequirementsManager.getInstance().getRequirement(monitorRequirement);
+				final CyberRequirement req = RequirementsManager.getInstance().getRequirement(monitorRequirement);
 				if (observationGate) {
 					String gateContextName = "";
 					if (selectedConnection.getDestination() != null

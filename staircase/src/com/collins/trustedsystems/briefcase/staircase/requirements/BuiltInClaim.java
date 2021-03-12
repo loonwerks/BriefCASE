@@ -37,10 +37,10 @@ public abstract class BuiltInClaim {
 
 	protected FunctionDefinition buildClaimDefinition(FunctionDefinition reqClaimDef) {
 
-		List<Arg> defParams = getDefinitionParams();
+		final List<Arg> defParams = getDefinitionParams();
 
-		ClaimBuilder builder = new ClaimBuilder(reqClaimDef);
-		List<Arg> fnCallArgs = new ArrayList<>();
+		final ClaimBuilder builder = new ClaimBuilder(reqClaimDef);
+		final List<Arg> fnCallArgs = new ArrayList<>();
 
 		// If the parameter isn't already in the function definition, add it
 		for (Arg arg : defParams) {
@@ -60,7 +60,7 @@ public abstract class BuiltInClaim {
 		}
 
 		// Add the call to the built-in claim with arguments
-		FnCallExpr fnCallExpr = Create.fnCallExpr(getBuiltInClaimDefinition(reqClaimDef));
+		final FnCallExpr fnCallExpr = Create.fnCallExpr(getBuiltInClaimDefinition(reqClaimDef));
 		for (Arg arg : fnCallArgs) {
 			fnCallExpr.getArgs().add(Create.id(arg));
 		}
@@ -80,9 +80,9 @@ public abstract class BuiltInClaim {
 		}
 
 		// Get the required call arguments from the built-in claim
-		List<Expr> callArgs = getCallArgs();
+		final List<Expr> callArgs = getCallArgs();
 
-		ClaimCallBuilder builder = new ClaimCallBuilder(prove);
+		final ClaimCallBuilder builder = new ClaimCallBuilder(prove);
 
 		for (Expr arg : callArgs) {
 			boolean argFound = false;
@@ -110,7 +110,7 @@ public abstract class BuiltInClaim {
 			return null;
 		}
 
-		AadlPackage contextPkg = CaseUtils.getCaseRequirementsPackage();
+		final AadlPackage contextPkg = CaseUtils.getCaseRequirementsPackage();
 		if (contextPkg == null) {
 			throw new RuntimeException("Could not find containing package for " + reqClaimDef.getName());
 		}
@@ -130,19 +130,19 @@ public abstract class BuiltInClaim {
 
 	protected FunctionDefinition getBuiltInClaimDefinition(FunctionDefinition reqClaimDef) {
 
-		AadlPackage casePkg = importCasePackage(reqClaimDef);
+		final AadlPackage casePkg = importCasePackage(reqClaimDef);
 
 		if (casePkg == null || this.claim == null) {
 			return null;
 		}
-		PublicPackageSection publicSection = casePkg.getOwnedPublicSection();
+		final PublicPackageSection publicSection = casePkg.getOwnedPublicSection();
 		for (AnnexLibrary annexLibrary : publicSection.getOwnedAnnexLibraries()) {
-			DefaultAnnexLibrary defaultLib = (DefaultAnnexLibrary) annexLibrary;
+			final DefaultAnnexLibrary defaultLib = (DefaultAnnexLibrary) annexLibrary;
 			if (defaultLib.getParsedAnnexLibrary() instanceof ResoluteLibrary) {
-				ResoluteLibrary resoluteLib = (ResoluteLibrary) defaultLib.getParsedAnnexLibrary();
+				final ResoluteLibrary resoluteLib = (ResoluteLibrary) defaultLib.getParsedAnnexLibrary();
 				for (Definition def : resoluteLib.getDefinitions()) {
 					if (def instanceof FunctionDefinition) {
-						FunctionDefinition fd = (FunctionDefinition) def;
+						final FunctionDefinition fd = (FunctionDefinition) def;
 						if (fd.getName().equalsIgnoreCase(this.claim)) {
 							return fd;
 						}

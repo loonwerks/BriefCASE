@@ -36,34 +36,34 @@ public class Create {
 	public static Aadl2Factory aadlFactory = Aadl2Factory.eINSTANCE;
 
 	public static IdExpr id(NamedElement element) {
-		IdExpr idExpr = factory.createIdExpr();
+		final IdExpr idExpr = factory.createIdExpr();
 		idExpr.setId(element);
 		return idExpr;
 	}
 
 	public static FnCallExpr fnCallExpr(FunctionDefinition fnDef) {
-		FnCallExpr fnCallExpr = factory.createFnCallExpr();
+		final FnCallExpr fnCallExpr = factory.createFnCallExpr();
 		fnCallExpr.setFn(fnDef);
 		return fnCallExpr;
 	}
 
 	public static Arg arg(String name, Type t) {
-		Arg arg = factory.createArg();
+		final Arg arg = factory.createArg();
 		arg.setName(name);
 		arg.setType(t);
 		return arg;
 	}
 
 	public static StringExpr stringExpr(String val) {
-		StringExpr se = factory.createStringExpr();
-		StringLiteral x = aadlFactory.createStringLiteral();
+		final StringExpr se = factory.createStringExpr();
+		final StringLiteral x = aadlFactory.createStringLiteral();
 		x.setValue("\"" + val + "\"");
 		se.setVal(x);
 		return se;
 	}
 
 	public static BinaryExpr andExpr(Expr left, Expr right) {
-		BinaryExpr expr = factory.createBinaryExpr();
+		final BinaryExpr expr = factory.createBinaryExpr();
 		expr.setLeft(left);
 		expr.setRight(right);
 		expr.setOp("and");
@@ -71,7 +71,7 @@ public class Create {
 	}
 
 	public static BinaryExpr orExpr(Expr left, Expr right) {
-		BinaryExpr expr = factory.createBinaryExpr();
+		final BinaryExpr expr = factory.createBinaryExpr();
 		expr.setLeft(left);
 		expr.setRight(right);
 		expr.setOp("or");
@@ -79,7 +79,7 @@ public class Create {
 	}
 
 	public static BinaryExpr impliesExpr(Expr left, Expr right) {
-		BinaryExpr expr = factory.createBinaryExpr();
+		final BinaryExpr expr = factory.createBinaryExpr();
 		expr.setLeft(left);
 		expr.setRight(right);
 		expr.setOp("=>");
@@ -87,31 +87,31 @@ public class Create {
 	}
 
 	public static SetExpr setExpr(List<Expr> exprs) {
-		SetExpr expr = factory.createSetExpr();
+		final SetExpr expr = factory.createSetExpr();
 		exprs.forEach(e -> expr.getExprs().add(e));
 		return expr;
 	}
 
 	public static ListExpr listExpr(List<Expr> exprs) {
-		ListExpr expr = factory.createListExpr();
+		final ListExpr expr = factory.createListExpr();
 		exprs.forEach(e -> expr.getExprs().add(e));
 		return expr;
 	}
 
 	public static BaseType baseType(String typeString) {
-		BaseType t = factory.createBaseType();
+		final BaseType t = factory.createBaseType();
 		t.setType(typeString);
 		return t;
 	}
 
 	public static SetType setType(Type type) {
-		SetType t = factory.createSetType();
+		final SetType t = factory.createSetType();
 		t.setType(type);
 		return t;
 	}
 
 	public static ListType listType(Type type) {
-		ListType t = factory.createListType();
+		final ListType t = factory.createListType();
 		t.setType(type);
 		return t;
 	}
@@ -121,17 +121,17 @@ public class Create {
 	}
 
 	public static ThisExpr THIS(String qualifiedName) {
-		ThisExpr thisExpr = factory.createThisExpr();
-		NestedDotID id = factory.createNestedDotID();
+		final ThisExpr thisExpr = factory.createThisExpr();
+		final NestedDotID id = factory.createNestedDotID();
 		qualifiedNameToNestedDotID(id, qualifiedName);
 		thisExpr.setSub(id.getSub());
 		return thisExpr;
 	}
 
 	public static ThisExpr THIS(String qualifiedName, NamedElement namedElement) {
-		ThisExpr thisExpr = factory.createThisExpr();
+		final ThisExpr thisExpr = factory.createThisExpr();
 		NestedDotID id = factory.createNestedDotID();
-		NestedDotID sub = factory.createNestedDotID();
+		final NestedDotID sub = factory.createNestedDotID();
 		sub.setBase(namedElement);
 		qualifiedNameToNestedDotID(id, qualifiedName);
 		if (id.getSub() != null) {
@@ -148,7 +148,7 @@ public class Create {
 	}
 
 	public static ThisExpr THIS(NamedElement ne) {
-		ThisExpr thisExpr = factory.createThisExpr();
+		final ThisExpr thisExpr = factory.createThisExpr();
 		if (ne != null) {
 			NestedDotID id = factory.createNestedDotID();
 			id.setBase(ne);
@@ -158,13 +158,13 @@ public class Create {
 	}
 
 	public static BoolExpr TRUE() {
-		BoolExpr be = factory.createBoolExpr();
+		final BoolExpr be = factory.createBoolExpr();
 		be.setVal(trueAADLLiteral());
 		return be;
 	}
 
 	public static BoolExpr FALSE() {
-		BoolExpr be = factory.createBoolExpr();
+		final BoolExpr be = factory.createBoolExpr();
 		be.setVal(falseAADLLiteral());
 		return be;
 	}
@@ -174,13 +174,13 @@ public class Create {
 	}
 
 	private static BooleanLiteral trueAADLLiteral() {
-		BooleanLiteral lit = aadlFactory.createBooleanLiteral();
+		final BooleanLiteral lit = aadlFactory.createBooleanLiteral();
 		lit.setValue(true);
 		return lit;
 	}
 
 	private static BooleanLiteral falseAADLLiteral() {
-		BooleanLiteral lit = aadlFactory.createBooleanLiteral();
+		final BooleanLiteral lit = aadlFactory.createBooleanLiteral();
 		lit.setValue(false);
 		return lit;
 	}
@@ -188,7 +188,7 @@ public class Create {
 	private static void qualifiedNameToNestedDotID(NestedDotID nestedDotID, String qualifiedName) {
 
 		// Get containing classifier (should be component implementation)
-		Classifier classifier = CyberRequirement.getImplementationClassifier(qualifiedName);
+		final Classifier classifier = CyberRequirement.getImplementationClassifier(qualifiedName);
 		if (classifier == null) {
 			return;
 		}
@@ -197,19 +197,19 @@ public class Create {
 			nestedDotID.setBase(classifier);
 		}
 
-		String[] parts = qualifiedName.split("\\.");
+		final String[] parts = qualifiedName.split("\\.");
 		if (parts.length > 2 && classifier instanceof ComponentImplementation) {
 			// parts[0] and parts[1] will be the containing component implementation name
 			// parts[2] and on will refer to a subcomponent or connection
-			ComponentImplementation ci = (ComponentImplementation) classifier;
+			final ComponentImplementation ci = (ComponentImplementation) classifier;
 			for (Element e : ci.getOwnedElements()) {
 				if (e instanceof NamedElement) {
-					NamedElement ne = (NamedElement) e;
+					final NamedElement ne = (NamedElement) e;
 					if (ne.getName().equalsIgnoreCase(parts[2])) {
-						NestedDotID n = factory.createNestedDotID();
+						final NestedDotID n = factory.createNestedDotID();
 						n.setBase(ne);
 						if (parts.length > 3 && ne instanceof Subcomponent) {
-							Subcomponent sub = (Subcomponent) ne;
+							final Subcomponent sub = (Subcomponent) ne;
 							String qName = sub.getClassifier().getQualifiedName();
 							for (int i = 3; i < parts.length; i++) {
 								qName += "." + parts[i];
