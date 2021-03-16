@@ -435,39 +435,39 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 		final Button btnEventPort = new Button(alertPortCategoryGroup, SWT.RADIO);
 		btnEventPort.setText("Event");
 		btnEventPort.setSelection(false);
-		btnEventPort.addListener(SWT.Selection, e -> {
-			if (e.type == SWT.Selection) {
-				if (btnEventPort.getSelection()) {
-					lblAlertPortDataTypeField.setEnabled(false);
-					txtAlertPortDataType.setText("");
-					txtAlertPortDataType.setEnabled(false);
-				}
-			}
-		});
+//		btnEventPort.addListener(SWT.Selection, e -> {
+//			if (e.type == SWT.Selection) {
+//				if (btnEventPort.getSelection()) {
+//					lblAlertPortDataTypeField.setEnabled(false);
+//					txtAlertPortDataType.setText("");
+//					txtAlertPortDataType.setEnabled(false);
+//				}
+//			}
+//		});
 
 		final Button btnDataPort = new Button(alertPortCategoryGroup, SWT.RADIO);
 		btnDataPort.setText("Data");
 		btnDataPort.setSelection(false);
-		btnDataPort.addListener(SWT.Selection, e -> {
-			if (e.type == SWT.Selection) {
-				if (btnDataPort.getSelection()) {
-					lblAlertPortDataTypeField.setEnabled(true);
-					txtAlertPortDataType.setEnabled(true);
-				}
-			}
-		});
+//		btnDataPort.addListener(SWT.Selection, e -> {
+//			if (e.type == SWT.Selection) {
+//				if (btnDataPort.getSelection()) {
+//					lblAlertPortDataTypeField.setEnabled(true);
+//					txtAlertPortDataType.setEnabled(true);
+//				}
+//			}
+//		});
 
 		final Button btnEventDataPort = new Button(alertPortCategoryGroup, SWT.RADIO);
 		btnEventDataPort.setText("Event Data");
 		btnEventDataPort.setSelection(false);
-		btnEventDataPort.addListener(SWT.Selection, e -> {
-			if (e.type == SWT.Selection) {
-				if (btnEventDataPort.getSelection()) {
-					lblAlertPortDataTypeField.setEnabled(true);
-					txtAlertPortDataType.setEnabled(true);
-				}
-			}
-		});
+//		btnEventDataPort.addListener(SWT.Selection, e -> {
+//			if (e.type == SWT.Selection) {
+//				if (btnEventDataPort.getSelection()) {
+//					lblAlertPortDataTypeField.setEnabled(true);
+//					txtAlertPortDataType.setEnabled(true);
+//				}
+//			}
+//		});
 
 		btnAlertPortCategory.add(btnDataPort);
 		btnAlertPortCategory.add(btnEventPort);
@@ -756,9 +756,14 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 			}
 		}
 		// Alert Port Data Type
-		if (!txtAlertPortDataType.getText().isEmpty() && !txtAlertPortDataType.getText().contains("::")) {
+		if (!txtAlertPortDataType.getText().isEmpty() && !txtAlertPortDataType.getText().contains("::")
+				&& !txtAlertPortDataType.getText().startsWith("[")) {
 			// Check if type is defined in current package
-			if (AadlUtil.findNamedElementInList(componentsInPackage, txtAlertPortDataType.getText()) == null) {
+			String dataType = txtAlertPortDataType.getText();
+			if (dataType.contains("[")) {
+				dataType = dataType.substring(0, dataType.indexOf("["));
+			}
+			if (AadlUtil.findNamedElementInList(componentsInPackage, dataType) == null) {
 				Dialog.showError("Monitor Transform",
 						"Alert port data type was not found in package "
 								+ AadlUtil.getContainingPackage(context).getName()
@@ -768,6 +773,16 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 				// Add the package name
 				txtAlertPortDataType.setText(
 						AadlUtil.getContainingPackage(context).getName() + "::" + txtAlertPortDataType.getText());
+			}
+		}
+		if (txtAlertPortDataType.getText().contains("[")) {
+			try {
+				Long.parseLong(txtAlertPortDataType.getText().substring(txtAlertPortDataType.getText().indexOf("[") + 1,
+						txtAlertPortDataType.getText().length() - 1));
+			} catch (NumberFormatException e) {
+				Dialog.showError("Monitor Transform",
+						"The array size specified on the alert port data type is malformed.");
+				return false;
 			}
 		}
 		alertPortDataType = txtAlertPortDataType.getText();

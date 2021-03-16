@@ -13,6 +13,7 @@ import org.osate.aadl2.Aadl2Factory;
 import org.osate.aadl2.Aadl2Package;
 import org.osate.aadl2.AadlPackage;
 import org.osate.aadl2.ArrayDimension;
+import org.osate.aadl2.ArraySize;
 import org.osate.aadl2.Classifier;
 import org.osate.aadl2.ComponentCategory;
 import org.osate.aadl2.ComponentImplementation;
@@ -306,20 +307,27 @@ public class MonitorTransformHandler extends AadlHandler {
 			Port monAlertPort = null;
 			final ConnectionEnd dstAlertPort = ModelTransformUtils.getPort(containingImpl, alertPort);
 			DataSubcomponentType alertDataFeatureClassifier = null;
+			Long dimension = null;
 			if (!alertPortDataType.isEmpty()) {
-				alertDataFeatureClassifier = Aadl2GlobalScopeUtil.get(containingImpl,
-						Aadl2Package.eINSTANCE.getDataSubcomponentType(), alertPortDataType);
-				if (alertDataFeatureClassifier == null) {
-					// Aadl2GlobalScopeUtil.get() doesn't seem to find elements in current package
-					for (Classifier c : pkgSection.getOwnedClassifiers()) {
-						if (c.getQualifiedName().equalsIgnoreCase(alertPortDataType)
-								&& c instanceof DataSubcomponentType) {
-							alertDataFeatureClassifier = (DataSubcomponentType) c;
-							break;
+				String dataType = alertPortDataType;
+				if (dataType.contains("[")) {
+					dimension = Long.parseLong(dataType.substring(dataType.indexOf("[") + 1, dataType.length() - 1));
+					dataType = dataType.substring(0, dataType.indexOf("["));
+				}
+				if (!dataType.isEmpty()) {
+					alertDataFeatureClassifier = Aadl2GlobalScopeUtil.get(containingImpl,
+							Aadl2Package.eINSTANCE.getDataSubcomponentType(), dataType);
+					if (alertDataFeatureClassifier == null) {
+						// Aadl2GlobalScopeUtil.get() doesn't seem to find elements in current package
+						for (Classifier c : pkgSection.getOwnedClassifiers()) {
+							if (c.getQualifiedName().equalsIgnoreCase(dataType) && c instanceof DataSubcomponentType) {
+								alertDataFeatureClassifier = (DataSubcomponentType) c;
+								break;
+							}
 						}
+					} else {
+						ModelTransformUtils.importContainingPackage(alertDataFeatureClassifier, pkgSection);
 					}
-				} else {
-					ModelTransformUtils.importContainingPackage(alertDataFeatureClassifier, pkgSection);
 				}
 			}
 			// If user didn't specify an alert inport, make it an event data port with no type
@@ -330,18 +338,42 @@ public class MonitorTransformHandler extends AadlHandler {
 						if (alertDataFeatureClassifier != null) {
 							((DataPort) monAlertPort).setDataFeatureClassifier(alertDataFeatureClassifier);
 						}
+						if (dimension != null) {
+							final ArrayDimension arrayDimension = ((DataPort) monAlertPort).createArrayDimension();
+							final ArraySize arraySize = Aadl2Factory.eINSTANCE.createArraySize();
+							arraySize.setSize(dimension.intValue());
+							arrayDimension.setSize(arraySize);
+						}
 					} else if (alertPortCategory == PortCategory.EVENT) {
 						monAlertPort = ComponentCreateHelper.createOwnedEventPort(monitorType);
+						if (dimension != null) {
+							final ArrayDimension arrayDimension = ((EventPort) monAlertPort).createArrayDimension();
+							final ArraySize arraySize = Aadl2Factory.eINSTANCE.createArraySize();
+							arraySize.setSize(dimension.intValue());
+							arrayDimension.setSize(arraySize);
+						}
 					} else {
 						monAlertPort = ComponentCreateHelper.createOwnedEventDataPort(monitorType);
 						if (alertDataFeatureClassifier != null) {
 							((EventDataPort) monAlertPort).setDataFeatureClassifier(alertDataFeatureClassifier);
+						}
+						if (dimension != null) {
+							final ArrayDimension arrayDimension = ((EventDataPort) monAlertPort).createArrayDimension();
+							final ArraySize arraySize = Aadl2Factory.eINSTANCE.createArraySize();
+							arraySize.setSize(dimension.intValue());
+							arrayDimension.setSize(arraySize);
 						}
 					}
 				} else {
 					monAlertPort = ComponentCreateHelper.createOwnedEventDataPort(monitorType);
 					if (alertDataFeatureClassifier != null) {
 						((EventDataPort) monAlertPort).setDataFeatureClassifier(alertDataFeatureClassifier);
+					}
+					if (dimension != null) {
+						final ArrayDimension arrayDimension = ((EventDataPort) monAlertPort).createArrayDimension();
+						final ArraySize arraySize = Aadl2Factory.eINSTANCE.createArraySize();
+						arraySize.setSize(dimension.intValue());
+						arrayDimension.setSize(arraySize);
 					}
 				}
 			} else if (dstAlertPort instanceof EventDataPort) {
@@ -362,6 +394,10 @@ public class MonitorTransformHandler extends AadlHandler {
 				}
 			} else if (dstAlertPort instanceof EventPort) {
 				monAlertPort = ComponentCreateHelper.createOwnedEventPort(monitorType);
+				for (ArrayDimension dim : ((EventPort) dstAlertPort).getArrayDimensions()) {
+					final ArrayDimension arrayDimension = ((EventPort) monAlertPort).createArrayDimension();
+					arrayDimension.setSize(dim.getSize());
+				}
 			} else if (dstAlertPort instanceof FeatureGroup) {
 				// TODO: Names of all feature group features should be provided so user can pick one
 
