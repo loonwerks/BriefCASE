@@ -31,7 +31,7 @@ annex resolute {**
 			warning (thread_periodic_protocol())
 			
 			-- If the thread subcomponents of a process are specified as Dispatch_Protocol "Periodic" 
-			-- then the process must have a seL4_Properties::Domain property value specified.
+			-- then the process must have a CASE_Scheduling::Domain property value specified.
 			warning (process_periodic_protocol())
 			
 			-- For all thread subcomponents of processes bound to the same processor (via the Actual_Processor_Binding property), 
@@ -94,11 +94,11 @@ annex resolute {**
 			-- A virtual processor should not have the Dispatch_Protocol specified
 			warning (vm_no_dispatch_protocol())
 			
-			-- The value of a seL4_Properties::Domain property set on processes must be greater than or equal to 1
+			-- The value of a CASE_Scheduling::Domain property set on processes must be greater than or equal to 1
 			warning (valid_sched_domain())
 			
 			-- For all processes bound to the same processor (via the Actual_Processor_Binding property), 
-			-- the seL4_Properties::Domain property value assignments must be sequential and non-repeating
+			-- the CASE_Scheduling::Domain property value assignments must be sequential and non-repeating
 			warning (consistent_sched_domain())
 			
 			-- All thread Compute_Execution_Time property values must be greater than or equal to 2 ms
@@ -159,7 +159,7 @@ private
 			
 		process_periodic_protocol() <=
 			** "Processes containing periodic threads must be specified completely" **
-			forall (p : process) . lint_check(p, exists (t : subcomponents(p)) . has_property(t, Thread_Properties::Dispatch_Protocol) => has_property(p, CASE_Scheduling::Domain))
+			forall (p : process) . lint_check(p, forall (t : subcomponents(p)) . (has_property(t, Thread_Properties::Dispatch_Protocol) and property(t, Thread_Properties::Dispatch_Protocol) = "Periodic") => has_property(p, CASE_Scheduling::Domain))
 			
 		consistent_dispatch_protocol() <=
 			** "All threads bound to a processor must have same Dispatch_Protocol" **
@@ -259,19 +259,19 @@ private
 			forall (vp : virtual_processor) . lint_check(vp, not has_property(vp, Thread_Properties::Dispatch_Protocol))
 		
 		valid_sched_domain() <=
-			** "The value of a seL4_Properties::Domain property set on processes must be greater than or equal to 1" **
+			** "The value of a CASE_Scheduling::Domain property set on processes must be greater than or equal to 1" **
 			forall (p : process) . lint_check(p, has_property(p, CASE_Scheduling::Domain) => property(p, CASE_Scheduling::Domain) >= 1)
 		
 		-- For all processes bound to the same processor (via the Actual_Processor_Binding property), 
-		-- the seL4_Properties::Domain property value assignments must be sequential and non-repeating
+		-- the CASE_Scheduling::Domain property value assignments must be sequential and non-repeating
 		consistent_sched_domain() <=
-			** "seL4_Properties::Domain property value assignments must be sequential and non-repeating" **
+			** "CASE_Scheduling::Domain property value assignments must be sequential and non-repeating" **
 			forall (p : processor) . lint_check(p, consistent_domains(p))
 			
 		consistent_domains(p : processor) : bool =
 			let bound_processes : {process} = {proc for (proc : process) | is_bound_to(proc, p)};
 			let domains : {int} = {property(proc, CASE_Scheduling::Domain) for (proc : bound_processes) | has_property(proc, CASE_Scheduling::Domain)};
-			length(domains) = length(bound_processes) and min(as_list(domains)) >= 2
+			(length(domains) = length(bound_processes)) and ((length(domains) > 0) => min(as_list(domains)) >= 2)
 
 		min_compute_exec_time() <=
 			** "All thread Compute_Execution_Time property values must be greater than or equal to 2 ms" **
