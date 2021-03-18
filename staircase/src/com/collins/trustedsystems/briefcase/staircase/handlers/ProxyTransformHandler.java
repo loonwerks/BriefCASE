@@ -22,6 +22,20 @@ import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
 
 public class ProxyTransformHandler extends AadlHandler {
 
+	public static final String HIGH_PROXY_COMP_TYPE_NAME = "CASE_HighProxy";
+	public static final String LOW_PROXY_COMP_TYPE_NAME = "CASE_LowProxy";
+	public static final String HIGH_PROXY_SUBCOMP_NAME = "HighProxy";
+	public static final String LOW_PROXY_SUBCOMP_NAME = "HighProxy";
+	static final String CONNECTION_IMPL_NAME = "c";
+
+	private String highProxyComponentName;
+	private String highProxySubcomponentName;
+	private String lowProxyComponentName;
+	private String lowProxySubcomponentName;
+	private String dispatchProtocol;
+	private String period;
+	private String proxyRequirement;
+
 	@Override
 	protected void runCommand(URI uri) {
 
@@ -38,7 +52,25 @@ public class ProxyTransformHandler extends AadlHandler {
 				PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell());
 		wizard.create(compImpl);
 		if (wizard.open() == Window.OK) {
-
+			highProxyComponentName = wizard.getHighProxyComponentName();
+			if (highProxyComponentName.isEmpty()) {
+				highProxyComponentName = HIGH_PROXY_COMP_TYPE_NAME;
+			}
+			highProxySubcomponentName = wizard.getHighProxySubcomponentName();
+			if (highProxySubcomponentName.isEmpty()) {
+				highProxySubcomponentName = HIGH_PROXY_SUBCOMP_NAME;
+			}
+			lowProxyComponentName = wizard.getLowProxyComponentName();
+			if (lowProxyComponentName.isEmpty()) {
+				lowProxyComponentName = LOW_PROXY_COMP_TYPE_NAME;
+			}
+			lowProxySubcomponentName = wizard.getLowProxySubcomponentName();
+			if (lowProxySubcomponentName.isEmpty()) {
+				lowProxySubcomponentName = LOW_PROXY_SUBCOMP_NAME;
+			}
+			dispatchProtocol = wizard.getDispatchProtocol();
+			period = wizard.getPeriod();
+			proxyRequirement = wizard.getRequirement();
 		} else {
 			return;
 		}

@@ -85,6 +85,12 @@
                         style="push">
                   </command>
                   <command
+                        commandId="com.collins.trustedsystems.briefcase.staircase.commands.AddProxy"
+                        id="com.collins.trustedsystems.briefcase.menus.outline.resiliency.transformations.AddProxy"
+                        label="Add Proxy..."
+                        style="push">
+                  </command>
+                  <command
                         commandId="com.collins.trustedsystems.briefcase.staircase.commands.AddSwitch"
                         id="com.collins.trustedsystems.briefcase.menus.outline.resiliency.transformations.AddSwitich"
                         label="Add Switch..."
@@ -188,6 +194,12 @@
                         commandId="com.collins.trustedsystems.briefcase.staircase.commands.AddMonitor"
                         id="com.collins.trustedsystems.briefcase.menus.menubar.resiliency.transformations.AddMonitor"
                         label="Add Monitor..."
+                        style="push">
+                  </command>
+                  <command
+                        commandId="com.collins.trustedsystems.briefcase.staircase.commands.AddProxy"
+                        id="com.collins.trustedsystems.briefcase.menus.menubar.resiliency.transformations.AddProxy"
+                        label="Add Proxy..."
                         style="push">
                   </command>
                   <command
@@ -317,6 +329,12 @@
                         style="push">
                   </command>
                   <command
+                        commandId="com.collins.trustedsystems.briefcase.staircase.commands.AddProxy"
+                        id="com.collins.trustedsystems.briefcase.menus.editor.resiliency.transformations.AddProxy"
+                        label="Add Proxy..."
+                        style="push">
+                  </command>
+                  <command
                         commandId="com.collins.trustedsystems.briefcase.staircase.commands.AddSwitch"
                         id="com.collins.trustedsystems.briefcase.menus.editor.resiliency.transformations.AddSwitch"
                         label="Add Switch..."
@@ -412,6 +430,10 @@
             id="com.collins.trustedsystems.briefcase.staircase.commands.ClearRequirementsCache"
             name="Clear Requirements Cache">
       </command>
+      <command
+            id="com.collins.trustedsystems.briefcase.staircase.commands.AddProxy"
+            name="Add Proxy">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.handlers">
@@ -462,6 +484,10 @@
       <handler
             class="com.collins.trustedsystems.briefcase.staircase.handlers.ClearRequirementsCacheHandler"
             commandId="com.collins.trustedsystems.briefcase.staircase.commands.ClearRequirementsCache">
+      </handler>
+      <handler
+            class="com.collins.trustedsystems.briefcase.staircase.handlers.ProxyTransformHandler"
+            commandId="com.collins.trustedsystems.briefcase.staircase.commands.AddProxy">
       </handler>
    </extension>
    <extension
