@@ -36,7 +36,7 @@ public class ModelTransformUtils {
 				} else if (f instanceof FeatureGroup) {
 					inports.add(f.getName());
 					// TODO: support nested feature groups
-					for (Feature p : ((FeatureGroup) f).getFeatureGroupType().getOwnedFeatures()) {
+					for (Feature p : ((FeatureGroup) f).getFeatureGroupType().getAllFeatures()) {
 						if (p instanceof Port && ((Port) p).isIn()) {
 							inports.add(f.getName() + "[" + p.getName() + "]");
 						}
@@ -54,7 +54,7 @@ public class ModelTransformUtils {
 					} else if (f instanceof FeatureGroup) {
 						inports.add(s.getName() + "." + f.getName());
 						// TODO: support nested feature groups
-						for (Feature p : ((FeatureGroup) f).getFeatureGroupType().getOwnedFeatures()) {
+						for (Feature p : ((FeatureGroup) f).getFeatureGroupType().getAllFeatures()) {
 							if (p instanceof Port && ((Port) p).isIn()) {
 								inports.add(s.getName() + "." + f.getName() + "[" + p.getName() + "]");
 							}
@@ -81,7 +81,7 @@ public class ModelTransformUtils {
 				} else if (f instanceof FeatureGroup) {
 					outports.add(f.getName());
 					// TODO: support nested feature groups
-					for (Feature p : ((FeatureGroup) f).getFeatureGroupType().getOwnedFeatures()) {
+					for (Feature p : ((FeatureGroup) f).getFeatureGroupType().getAllFeatures()) {
 						if (p instanceof Port && ((Port) p).isIn()) {
 							outports.add(f.getName() + "[" + p.getName() + "]");
 						}
@@ -99,7 +99,7 @@ public class ModelTransformUtils {
 					} else if (f instanceof FeatureGroup) {
 						outports.add(s.getName() + "." + f.getName());
 						// TODO: support nested feature groups
-						for (Feature p : ((FeatureGroup) f).getFeatureGroupType().getOwnedFeatures()) {
+						for (Feature p : ((FeatureGroup) f).getFeatureGroupType().getAllFeatures()) {
 							if (p instanceof Port && ((Port) p).isIn()) {
 								outports.add(s.getName() + "." + f.getName() + "[" + p.getName() + "]");
 							}

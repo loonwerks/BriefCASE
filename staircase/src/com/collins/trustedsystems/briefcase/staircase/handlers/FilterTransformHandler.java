@@ -13,7 +13,6 @@ import org.eclipse.xtext.ui.editor.XtextEditor;
 import org.eclipse.xtext.ui.editor.utils.EditorUtils;
 import org.osate.aadl2.Aadl2Factory;
 import org.osate.aadl2.Aadl2Package;
-import org.osate.aadl2.AadlPackage;
 import org.osate.aadl2.AnnexSubclause;
 import org.osate.aadl2.ArrayDimension;
 import org.osate.aadl2.ComponentCategory;
@@ -37,12 +36,11 @@ import org.osate.aadl2.NamedValue;
 import org.osate.aadl2.PackageSection;
 import org.osate.aadl2.Port;
 import org.osate.aadl2.PortCategory;
-import org.osate.aadl2.PrivatePackageSection;
 import org.osate.aadl2.Property;
-import org.osate.aadl2.PublicPackageSection;
 import org.osate.aadl2.Realization;
 import org.osate.aadl2.Subcomponent;
 import org.osate.aadl2.UnitLiteral;
+import org.osate.aadl2.modelsupport.util.AadlUtil;
 import org.osate.ui.dialogs.Dialog;
 import org.osate.xtext.aadl2.properties.util.GetProperties;
 import org.osate.xtext.aadl2.properties.util.ThreadProperties;
@@ -217,22 +215,7 @@ public class FilterTransformHandler extends AadlHandler {
 
 			// Retrieve the model object to modify
 			final Connection selectedConnection = (Connection) resource.getEObject(uri.fragment());
-			final AadlPackage aadlPkg = (AadlPackage) resource.getContents().get(0);
-			PackageSection pkgSection = null;
-			// Figure out if the selected connection is in the public or private section
-			EObject eObj = selectedConnection.eContainer();
-			while (eObj != null) {
-				if (eObj instanceof PublicPackageSection) {
-					pkgSection = aadlPkg.getOwnedPublicSection();
-					break;
-				} else if (eObj instanceof PrivatePackageSection) {
-					pkgSection = aadlPkg.getOwnedPrivateSection();
-					break;
-				} else {
-					eObj = eObj.eContainer();
-				}
-			}
-
+			PackageSection pkgSection = AadlUtil.getContainingPackageSection(selectedConnection);
 			if (pkgSection == null) {
 				// Something went wrong
 				Dialog.showError("Filter Transform", "No public or private package sections found.");
@@ -399,7 +382,7 @@ public class FilterTransformHandler extends AadlHandler {
 			// Give it a unique name
 			filterSubcomp
 					.setName(ModelTransformUtils.getUniqueName(filterSubcomponentName, true,
-							containingImpl.getOwnedSubcomponents()));
+							containingImpl.getAllSubcomponents()));
 
 			ComponentCreateHelper.setSubcomponentType(filterSubcomp, filterImpl);
 
@@ -407,7 +390,7 @@ public class FilterTransformHandler extends AadlHandler {
 			final Connection connOut = ComponentCreateHelper.createOwnedConnection(containingImpl, connEndOut);
 			// Give it a unique name
 			connOut.setName(ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false,
-					containingImpl.getOwnedConnections()));
+					containingImpl.getAllConnections()));
 			connOut.setBidirectional(false);
 			final ConnectedElement filterOutSrc = connOut.createSource();
 			filterOutSrc.setContext(filterSubcomp);

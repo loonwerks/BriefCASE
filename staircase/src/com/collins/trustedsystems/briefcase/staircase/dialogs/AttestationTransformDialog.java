@@ -769,7 +769,7 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 					"Attestation Manager component name " + txtMgrComponentName.getText()
 					+ " contains invalid characters. Only 'A..Z', 'a..z', '0..9', and '_' are permitted");
 			return false;
-		} else if (attestationManager == null
+		} else if (attestationManager == null && !txtMgrComponentName.getText().isEmpty()
 				&& AadlUtil.findNamedElementInList(componentsInPackage, txtMgrComponentName.getText()) != null) {
 			Dialog.showError("Attestation Transform", "Component " + txtMgrComponentName.getText()
 					+ " already exists in model. Use the suggested name or enter a new one.");
@@ -787,7 +787,7 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 					"Attestation Gate component name " + txtGateComponentName.getText()
 					+ " contains invalid characters. Only 'A..Z', 'a..z', '0..9', and '_' are permitted");
 			return false;
-		} else if (attestationManager == null
+		} else if (attestationManager == null && !txtGateComponentName.getText().isEmpty()
 				&& AadlUtil.findNamedElementInList(componentsInPackage, txtGateComponentName.getText()) != null) {
 			Dialog.showError("Attestation Transform", "Component " + txtGateComponentName.getText()
 					+ " already exists in model. Use the suggested name or enter a new one.");
@@ -805,12 +805,13 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 					"Attestation Manager subcomponent instance name " + txtMgrSubcomponentName.getText()
 							+ " contains invalid characters. Only 'A..Z', 'a..z', '0..9', and '_' are permitted");
 			return false;
-		} else if (attestationManager == null && AadlUtil.findNamedElementInList(context.getOwnedSubcomponents(),
+		} else if (attestationManager == null && !txtMgrSubcomponentName.getText().isEmpty()
+				&& AadlUtil.findNamedElementInList(context.getAllSubcomponents(),
 				txtMgrSubcomponentName.getText()) != null) {
 			Dialog.showError("Attestation Transform", "Subcomponent " + txtMgrSubcomponentName.getText()
-					+ " already exists in model. Use the suggested name or enter a new one.");
+					+ " already exists in " + context.getName() + ". Use the suggested name or enter a new one.");
 			txtMgrSubcomponentName.setText(ModelTransformUtils.getUniqueName(txtMgrSubcomponentName.getText(), true,
-					context.getOwnedSubcomponents()));
+					context.getAllSubcomponents()));
 			return false;
 		} else {
 			attestationManagerSubcomponentName = txtMgrSubcomponentName.getText();
@@ -823,12 +824,13 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 					"Attestation Gate subcomponent instance name " + txtGateSubcomponentName.getText()
 							+ " contains invalid characters. Only 'A..Z', 'a..z', '0..9', and '_' are permitted");
 			return false;
-		} else if (attestationManager == null && AadlUtil.findNamedElementInList(context.getOwnedSubcomponents(),
+		} else if (attestationManager == null && !txtGateSubcomponentName.getText().isEmpty()
+				&& AadlUtil.findNamedElementInList(context.getAllSubcomponents(),
 				txtGateSubcomponentName.getText()) != null) {
 			Dialog.showError("Attestation Transform", "Subcomponent " + txtGateSubcomponentName.getText()
-					+ " already exists in model. Use the suggested name or enter a new one.");
+					+ " already exists in " + context.getName() + ". Use the suggested name or enter a new one.");
 			txtGateSubcomponentName.setText(ModelTransformUtils.getUniqueName(txtGateSubcomponentName.getText(), true,
-					context.getOwnedSubcomponents()));
+					context.getAllSubcomponents()));
 			return false;
 		} else {
 			attestationGateSubcomponentName = txtGateSubcomponentName.getText();

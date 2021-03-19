@@ -18,7 +18,6 @@ import org.eclipse.xtext.ui.editor.XtextEditor;
 import org.eclipse.xtext.ui.editor.utils.EditorUtils;
 import org.osate.aadl2.Aadl2Factory;
 import org.osate.aadl2.Aadl2Package;
-import org.osate.aadl2.AadlPackage;
 import org.osate.aadl2.ComponentCategory;
 import org.osate.aadl2.ComponentImplementation;
 import org.osate.aadl2.ContainedNamedElement;
@@ -26,13 +25,11 @@ import org.osate.aadl2.ContainmentPathElement;
 import org.osate.aadl2.ListValue;
 import org.osate.aadl2.ModalPropertyValue;
 import org.osate.aadl2.PackageSection;
-import org.osate.aadl2.PrivatePackageSection;
 import org.osate.aadl2.ProcessSubcomponent;
 import org.osate.aadl2.ProcessorSubcomponent;
 import org.osate.aadl2.Property;
 import org.osate.aadl2.PropertyAssociation;
 import org.osate.aadl2.PropertyExpression;
-import org.osate.aadl2.PublicPackageSection;
 import org.osate.aadl2.Realization;
 import org.osate.aadl2.ReferenceValue;
 import org.osate.aadl2.Subcomponent;
@@ -40,6 +37,7 @@ import org.osate.aadl2.SystemSubcomponent;
 import org.osate.aadl2.VirtualProcessorImplementation;
 import org.osate.aadl2.VirtualProcessorSubcomponent;
 import org.osate.aadl2.VirtualProcessorType;
+import org.osate.aadl2.modelsupport.util.AadlUtil;
 import org.osate.ui.dialogs.Dialog;
 import org.osate.xtext.aadl2.properties.util.DeploymentProperties;
 import org.osate.xtext.aadl2.properties.util.GetProperties;
@@ -210,22 +208,7 @@ public class VirtualizationTransformHandler extends AadlHandler {
 
 				final Subcomponent selectedSub = (Subcomponent) resource.getEObject(selectedComponentURI.fragment());
 				final ComponentImplementation containingImpl = selectedSub.getContainingComponentImpl();
-				final AadlPackage aadlPkg = (AadlPackage) resource.getContents().get(0);
-				PackageSection pkgSection = null;
-				// Figure out if the selected subcomponent is in the public or private section
-				EObject eObj = selectedSub.eContainer();
-				while (eObj != null) {
-					if (eObj instanceof PublicPackageSection) {
-						pkgSection = aadlPkg.getOwnedPublicSection();
-						break;
-					} else if (eObj instanceof PrivatePackageSection) {
-						pkgSection = aadlPkg.getOwnedPrivateSection();
-						break;
-					} else {
-						eObj = eObj.eContainer();
-					}
-				}
-
+				PackageSection pkgSection = AadlUtil.getContainingPackageSection(containingImpl);
 				if (pkgSection == null) {
 					// Something went wrong
 					Dialog.showError("Virtualization Transform", "No public or private package sections found.");
@@ -280,7 +263,7 @@ public class VirtualizationTransformHandler extends AadlHandler {
 
 				// Give it a unique name
 				vpSub.setName(ModelTransformUtils.getUniqueName(virtualProcessorSubcomponentName, true,
-						containingImpl.getOwnedSubcomponents()));
+						containingImpl.getAllSubcomponents()));
 
 				// Set subcomponent type
 				vpSub.setVirtualProcessorSubcomponentType(vpImpl);

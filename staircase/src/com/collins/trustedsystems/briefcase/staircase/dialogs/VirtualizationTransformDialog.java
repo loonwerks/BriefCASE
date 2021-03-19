@@ -211,7 +211,8 @@ public class VirtualizationTransformDialog extends TitleAreaDialog {
 					"VirtualProcessor component name " + txtVirtualProcessorComponentName.getText()
 							+ " contains invalid characters. Only 'A..Z', 'a..z', '0..9', and '_' are permitted");
 			return false;
-		} else if (AadlUtil.findNamedElementInList(componentsInPackage,
+		} else if (!txtVirtualProcessorComponentName.getText().isEmpty()
+				&& AadlUtil.findNamedElementInList(componentsInPackage,
 				txtVirtualProcessorComponentName.getText()) != null) {
 			Dialog.showError("Virtualization Transform", "Component " + txtVirtualProcessorComponentName.getText()
 					+ " already exists in model. Use the suggested name or enter a new one.");
@@ -229,12 +230,13 @@ public class VirtualizationTransformDialog extends TitleAreaDialog {
 					"Virtual Processor subcomponent instance name " + txtVirtualProcessorSubcomponentName.getText()
 							+ " contains invalid characters. Only 'A..Z', 'a..z', '0..9', and '_' are permitted");
 			return false;
-		} else if (AadlUtil.findNamedElementInList(context.getOwnedSubcomponents(),
+		} else if (!txtVirtualProcessorSubcomponentName.getText().isEmpty()
+				&& AadlUtil.findNamedElementInList(context.getAllSubcomponents(),
 				txtVirtualProcessorSubcomponentName.getText()) != null) {
 			Dialog.showError("Virtualization Transform", "Subcomponent " + txtVirtualProcessorSubcomponentName.getText()
-					+ " already exists in model. Use the suggested name or enter a new one.");
+					+ " already exists in " + context.getName() + ". Use the suggested name or enter a new one.");
 			txtVirtualProcessorSubcomponentName.setText(ModelTransformUtils.getUniqueName(
-					txtVirtualProcessorSubcomponentName.getText(), true, context.getOwnedSubcomponents()));
+					txtVirtualProcessorSubcomponentName.getText(), true, context.getAllSubcomponents()));
 			return false;
 		} else {
 			virtualProcessorSubcomponentName = txtVirtualProcessorSubcomponentName.getText();

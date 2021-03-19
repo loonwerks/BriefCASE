@@ -636,7 +636,8 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 			Dialog.showError("Monitor Transform", "Monitor component name " + txtMonitorComponentName.getText()
 					+ " contains invalid characters. Only 'A..Z', 'a..z', '0..9', and '_' are permitted");
 			return false;
-		} else if (AadlUtil.findNamedElementInList(componentsInPackage, txtMonitorComponentName.getText()) != null) {
+		} else if (!txtMonitorComponentName.getText().isEmpty()
+				&& AadlUtil.findNamedElementInList(componentsInPackage, txtMonitorComponentName.getText()) != null) {
 			Dialog.showError("Monitor Transform", "Component " + txtMonitorComponentName.getText()
 					+ " already exists in model. Use the suggested name or enter a new one.");
 			txtMonitorComponentName.setText(
@@ -653,12 +654,13 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 					"Monitor subcomponent instance name " + txtMonitorSubcomponentName.getText()
 					+ " contains invalid characters. Only 'A..Z', 'a..z', '0..9', and '_' are permitted");
 			return false;
-		} else if (AadlUtil.findNamedElementInList(context.getOwnedSubcomponents(),
+		} else if (!txtMonitorSubcomponentName.getText().isEmpty()
+				&& AadlUtil.findNamedElementInList(context.getAllSubcomponents(),
 				txtMonitorSubcomponentName.getText()) != null) {
 			Dialog.showError("Monitor Transform", "Subcomponent " + txtMonitorSubcomponentName.getText()
-					+ " already exists in model. Use the suggested name or enter a new one.");
+					+ " already exists in " + context.getName() + ". Use the suggested name or enter a new one.");
 			txtMonitorSubcomponentName.setText(ModelTransformUtils.getUniqueName(txtMonitorSubcomponentName.getText(),
-					true, context.getOwnedSubcomponents()));
+					true, context.getAllSubcomponents()));
 			return false;
 		} else {
 			monitorSubcomponentName = txtMonitorSubcomponentName.getText();

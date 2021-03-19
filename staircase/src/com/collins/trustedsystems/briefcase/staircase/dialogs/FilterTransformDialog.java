@@ -466,7 +466,7 @@ public class FilterTransformDialog extends TitleAreaDialog {
 			Dialog.showError("Filter Transform", "Filter component name " + txtFilterComponentName.getText()
 					+ " contains invalid characters. Only 'A..Z', 'a..z', '0..9', and '_' are permitted");
 			return false;
-		} else if (compoundFilter == null
+		} else if (compoundFilter == null && !txtFilterComponentName.getText().isEmpty()
 				&& AadlUtil.findNamedElementInList(componentsInPackage, txtFilterComponentName.getText()) != null) {
 			Dialog.showError("Filter Transform", "Component " + txtFilterComponentName.getText()
 					+ " already exists in model. Use the suggested name or enter a new one.");
@@ -484,12 +484,13 @@ public class FilterTransformDialog extends TitleAreaDialog {
 					"Filter subcomponent instance name " + txtFilterSubcomponentName.getText()
 					+ " contains invalid characters. Only 'A..Z', 'a..z', '0..9', and '_' are permitted");
 			return false;
-		} else if (compoundFilter == null && AadlUtil.findNamedElementInList(context.getOwnedSubcomponents(),
+		} else if (compoundFilter == null && !txtFilterSubcomponentName.getText().isEmpty()
+				&& AadlUtil.findNamedElementInList(context.getAllSubcomponents(),
 				txtFilterSubcomponentName.getText()) != null) {
 			Dialog.showError("Filter Transform", "Subcomponent " + txtFilterSubcomponentName.getText()
-					+ " already exists in model. Use the suggested name or enter a new one.");
+					+ " already exists in " + context.getName() + ". Use the suggested name or enter a new one.");
 			txtFilterSubcomponentName.setText(ModelTransformUtils.getUniqueName(txtFilterSubcomponentName.getText(),
-					true, context.getOwnedSubcomponents()));
+					true, context.getAllSubcomponents()));
 			return false;
 		} else {
 			filterSubcomponentName = txtFilterSubcomponentName.getText();

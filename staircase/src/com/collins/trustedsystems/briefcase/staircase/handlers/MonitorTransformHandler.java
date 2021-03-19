@@ -11,7 +11,6 @@ import org.eclipse.xtext.ui.editor.XtextEditor;
 import org.eclipse.xtext.ui.editor.utils.EditorUtils;
 import org.osate.aadl2.Aadl2Factory;
 import org.osate.aadl2.Aadl2Package;
-import org.osate.aadl2.AadlPackage;
 import org.osate.aadl2.ArrayDimension;
 import org.osate.aadl2.ArraySize;
 import org.osate.aadl2.Classifier;
@@ -35,13 +34,12 @@ import org.osate.aadl2.NamedValue;
 import org.osate.aadl2.PackageSection;
 import org.osate.aadl2.Port;
 import org.osate.aadl2.PortCategory;
-import org.osate.aadl2.PrivatePackageSection;
 import org.osate.aadl2.Property;
-import org.osate.aadl2.PublicPackageSection;
 import org.osate.aadl2.Realization;
 import org.osate.aadl2.Subcomponent;
 import org.osate.aadl2.UnitLiteral;
 import org.osate.aadl2.modelsupport.scoping.Aadl2GlobalScopeUtil;
+import org.osate.aadl2.modelsupport.util.AadlUtil;
 import org.osate.ui.dialogs.Dialog;
 import org.osate.xtext.aadl2.properties.util.GetProperties;
 import org.osate.xtext.aadl2.properties.util.ThreadProperties;
@@ -173,22 +171,8 @@ public class MonitorTransformHandler extends AadlHandler {
 			// Retrieve the model object to modify
 			final Connection selectedConnection = (Connection) resource.getEObject(uri.fragment());
 			final ComponentImplementation containingImpl = selectedConnection.getContainingComponentImpl();
-			final AadlPackage aadlPkg = (AadlPackage) resource.getContents().get(0);
-			PackageSection pkgSection = null;
-			// Figure out if the selected connection is in the public or private section
-			EObject eObj = selectedConnection.eContainer();
-			while (eObj != null) {
-				if (eObj instanceof PublicPackageSection) {
-					pkgSection = aadlPkg.getOwnedPublicSection();
-					break;
-				} else if (eObj instanceof PrivatePackageSection) {
-					pkgSection = aadlPkg.getOwnedPrivateSection();
-					break;
-				} else {
-					eObj = eObj.eContainer();
-				}
-			}
 
+			PackageSection pkgSection = AadlUtil.getContainingPackageSection(containingImpl);
 			if (pkgSection == null) {
 				// Something went wrong
 				Dialog.showError("Monitor Transform", "No public or private package sections found.");
@@ -272,9 +256,9 @@ public class MonitorTransformHandler extends AadlHandler {
 			for (Map.Entry<String, String> refEntry : referencePorts.entrySet()) {
 				ConnectionEnd monRefPort = null;
 				ConnectionEnd srcRefPort = ModelTransformUtils.getPort(containingImpl, refEntry.getValue());
-				// If user didn't specify an expected outport, use the same type as the observed port
+				// If user didn't specify a source port, make it an event data port
 				if (srcRefPort == null) {
-					srcRefPort = portObserved;
+					monRefPort = ComponentCreateHelper.createOwnedEventDataPort(monitorType);
 				}
 				if (srcRefPort instanceof EventDataPort) {
 					monRefPort = ComponentCreateHelper.createOwnedEventDataPort(monitorType);
@@ -300,7 +284,9 @@ public class MonitorTransformHandler extends AadlHandler {
 				}
 				((DirectedFeature) monRefPort).setIn(true);
 				monRefPort.setName(refEntry.getKey());
-				monReferencePorts.put(srcRefPort, monRefPort);
+				if (srcRefPort != null) {
+					monReferencePorts.put(srcRefPort, monRefPort);
+				}
 			}
 
 			// Create monitor alert port
@@ -537,7 +523,7 @@ public class MonitorTransformHandler extends AadlHandler {
 			// Give it a unique name
 			monitorSubcomp
 					.setName(ModelTransformUtils.getUniqueName(monitorSubcomponentName, true,
-							containingImpl.getOwnedSubcomponents()));
+							containingImpl.getAllSubcomponents()));
 
 			ComponentCreateHelper.setSubcomponentType(monitorSubcomp, monitorImpl);
 
@@ -547,7 +533,7 @@ public class MonitorTransformHandler extends AadlHandler {
 			// Give it a unique name
 			connObserved
 					.setName(ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false,
-							containingImpl.getOwnedConnections()));
+							containingImpl.getAllConnections()));
 			connObserved.setBidirectional(false);
 			final ConnectedElement monitorObservedSrc = connObserved.createSource();
 			monitorObservedSrc.setContext(selectedConnection.getSource().getContext());
@@ -574,7 +560,7 @@ public class MonitorTransformHandler extends AadlHandler {
 							portEntry.getKey());
 					connExpected.setName(
 							ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false,
-									containingImpl.getOwnedConnections()));
+									containingImpl.getAllConnections()));
 					connExpected.setBidirectional(false);
 					final ConnectedElement monitorExpectedSrc = connExpected.createSource();
 					monitorExpectedSrc.setContext(
@@ -597,7 +583,7 @@ public class MonitorTransformHandler extends AadlHandler {
 				connAlert = ComponentCreateHelper.createOwnedConnection(containingImpl, monAlertPort);
 				connAlert
 						.setName(ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false,
-								containingImpl.getOwnedConnections()));
+								containingImpl.getAllConnections()));
 				connAlert.setBidirectional(false);
 				final ConnectedElement monitorAlertSrc = connAlert.createSource();
 				monitorAlertSrc.setContext(monitorSubcomp);
@@ -616,7 +602,7 @@ public class MonitorTransformHandler extends AadlHandler {
 				final Connection connReset = ComponentCreateHelper.createOwnedConnection(containingImpl, monResetPort);
 				connReset
 						.setName(ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false,
-								containingImpl.getOwnedConnections()));
+								containingImpl.getAllConnections()));
 				connReset.setBidirectional(false);
 				final ConnectedElement monitorResetSrc = connReset.createSource();
 				monitorResetSrc.setContext(ModelTransformUtils.getSubcomponent(containingImpl, resetPort));

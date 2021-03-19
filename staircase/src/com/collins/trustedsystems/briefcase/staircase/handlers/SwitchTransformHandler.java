@@ -12,7 +12,6 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.xtext.ui.editor.XtextEditor;
 import org.eclipse.xtext.ui.editor.utils.EditorUtils;
 import org.osate.aadl2.Aadl2Factory;
-import org.osate.aadl2.AadlPackage;
 import org.osate.aadl2.ArrayDimension;
 import org.osate.aadl2.ComponentCategory;
 import org.osate.aadl2.ComponentImplementation;
@@ -32,11 +31,10 @@ import org.osate.aadl2.NamedElement;
 import org.osate.aadl2.NamedValue;
 import org.osate.aadl2.PackageSection;
 import org.osate.aadl2.PortConnection;
-import org.osate.aadl2.PrivatePackageSection;
 import org.osate.aadl2.Property;
-import org.osate.aadl2.PublicPackageSection;
 import org.osate.aadl2.Realization;
 import org.osate.aadl2.Subcomponent;
+import org.osate.aadl2.modelsupport.util.AadlUtil;
 import org.osate.ui.dialogs.Dialog;
 import org.osate.xtext.aadl2.properties.util.GetProperties;
 import org.osate.xtext.aadl2.properties.util.ThreadProperties;
@@ -131,22 +129,7 @@ public class SwitchTransformHandler extends AadlHandler {
 			// Retrieve the model object to modify
 			final PortConnection selectedConnection = (PortConnection) resource.getEObject(uri.fragment());
 			final ComponentImplementation containingImpl = selectedConnection.getContainingComponentImpl();
-			final AadlPackage aadlPkg = (AadlPackage) resource.getContents().get(0);
-			PackageSection pkgSection = null;
-			// Figure out if the selected connection is in the public or private section
-			EObject eObj = selectedConnection.eContainer();
-			while (eObj != null) {
-				if (eObj instanceof PublicPackageSection) {
-					pkgSection = aadlPkg.getOwnedPublicSection();
-					break;
-				} else if (eObj instanceof PrivatePackageSection) {
-					pkgSection = aadlPkg.getOwnedPrivateSection();
-					break;
-				} else {
-					eObj = eObj.eContainer();
-				}
-			}
-
+			PackageSection pkgSection = AadlUtil.getContainingPackageSection(containingImpl);
 			if (pkgSection == null) {
 				// Something went wrong
 				Dialog.showError("Switch Transform", "No public or private package sections found.");
@@ -400,7 +383,7 @@ public class SwitchTransformHandler extends AadlHandler {
 
 		// Give it a unique name
 		switchSubcomp.setName(
-				ModelTransformUtils.getUniqueName(SWITCH_COMP_IMPL_NAME, true, compImpl.getOwnedSubcomponents()));
+				ModelTransformUtils.getUniqueName(SWITCH_COMP_IMPL_NAME, true, compImpl.getAllSubcomponents()));
 
 		ComponentCreateHelper.setSubcomponentType(switchSubcomp, switchImpl);
 

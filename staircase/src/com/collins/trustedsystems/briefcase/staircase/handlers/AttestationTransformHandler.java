@@ -43,14 +43,13 @@ import org.osate.aadl2.PackageSection;
 import org.osate.aadl2.Port;
 import org.osate.aadl2.PortCategory;
 import org.osate.aadl2.PortConnection;
-import org.osate.aadl2.PrivatePackageSection;
 import org.osate.aadl2.Property;
 import org.osate.aadl2.PropertyAssociation;
-import org.osate.aadl2.PublicPackageSection;
 import org.osate.aadl2.Realization;
 import org.osate.aadl2.Subcomponent;
 import org.osate.aadl2.UnitLiteral;
 import org.osate.aadl2.modelsupport.scoping.Aadl2GlobalScopeUtil;
+import org.osate.aadl2.modelsupport.util.AadlUtil;
 import org.osate.ui.dialogs.Dialog;
 import org.osate.xtext.aadl2.properties.util.GetProperties;
 import org.osate.xtext.aadl2.properties.util.ThreadProperties;
@@ -237,22 +236,7 @@ public class AttestationTransformHandler extends AadlHandler {
 			// Get containing component implementation
 			final ComponentImplementation ci = commDriver.getContainingComponentImpl();
 
-			final AadlPackage aadlPkg = (AadlPackage) resource.getContents().get(0);
-			PackageSection pkgSection = null;
-			// Figure out if the comm driver's containing implementation is in the public or private section
-			EObject eObj = commDriver.eContainer();
-			while (eObj != null) {
-				if (eObj instanceof PublicPackageSection) {
-					pkgSection = aadlPkg.getOwnedPublicSection();
-					break;
-				} else if (eObj instanceof PrivatePackageSection) {
-					pkgSection = aadlPkg.getOwnedPrivateSection();
-					break;
-				} else {
-					eObj = eObj.eContainer();
-				}
-			}
-
+			PackageSection pkgSection = AadlUtil.getContainingPackageSection(commDriver);
 			if (pkgSection == null) {
 				// Something went wrong
 				Dialog.showError("Attestation Transform", "No public or private package sections found.");
@@ -616,7 +600,7 @@ public class AttestationTransformHandler extends AadlHandler {
 			// Give it a unique name
 			attestationManagerSubcomp
 					.setName(ModelTransformUtils.getUniqueName(attestationManagerSubcomponentName, true,
-							ci.getOwnedSubcomponents()));
+							ci.getAllSubcomponents()));
 			// Assign thread implementation
 			ComponentCreateHelper.setSubcomponentType(attestationManagerSubcomp, attestationManagerImpl);
 
@@ -803,7 +787,7 @@ public class AttestationTransformHandler extends AadlHandler {
 			// Give it a unique name
 			attestationGateSubcomp.setName(
 					ModelTransformUtils.getUniqueName(attestationGateSubcomponentName, true,
-							ci.getOwnedSubcomponents()));
+							ci.getAllSubcomponents()));
 			// Assign implementation
 			ComponentCreateHelper.setSubcomponentType(attestationGateSubcomp, attestationGateImpl);
 
@@ -911,7 +895,7 @@ public class AttestationTransformHandler extends AadlHandler {
 			for (Connection newConn : newConns) {
 				// Make sure each new connection has a unique name
 				newConn.setName(
-						ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false, ci.getOwnedConnections()));
+						ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false, ci.getAllConnections()));
 				ci.getOwnedConnections().add(newConn);
 				// Move to right place
 //				ci.getOwnedPortConnections().move(connIdx + idxOffset, ci.getOwnedPortConnections().size() - 1);
