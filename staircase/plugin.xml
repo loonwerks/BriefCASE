@@ -87,7 +87,7 @@
                   <command
                         commandId="com.collins.trustedsystems.briefcase.staircase.commands.AddProxy"
                         id="com.collins.trustedsystems.briefcase.menus.outline.resiliency.transformations.AddProxy"
-                        label="Add Proxy..."
+                        label="Add Proxies..."
                         style="push">
                   </command>
                   <command
@@ -199,7 +199,7 @@
                   <command
                         commandId="com.collins.trustedsystems.briefcase.staircase.commands.AddProxy"
                         id="com.collins.trustedsystems.briefcase.menus.menubar.resiliency.transformations.AddProxy"
-                        label="Add Proxy..."
+                        label="Add Proxies..."
                         style="push">
                   </command>
                   <command
@@ -331,7 +331,7 @@
                   <command
                         commandId="com.collins.trustedsystems.briefcase.staircase.commands.AddProxy"
                         id="com.collins.trustedsystems.briefcase.menus.editor.resiliency.transformations.AddProxy"
-                        label="Add Proxy..."
+                        label="Add Proxies..."
                         style="push">
                   </command>
                   <command
@@ -351,6 +351,12 @@
                      id="com.collins.trustedsystems.briefcase.menus.editor.resiliency.synthesis"
                      label="Synthesis Tools">
                </menu>
+               <command
+                     commandId="com.collins.trustedsystems.briefcase.staircase.commands.AddProxy"
+                     id="com.collins.trustedsystems.briefcase.menus.menubar.resiliency.transformations.AddProxy"
+                     label="Add Proxies..."
+                     style="push">
+               </command>
             </menu>
             <menu
                   id="com.collins.trustedsystems.briefcase.menus.editor.build"
