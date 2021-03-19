@@ -34,6 +34,7 @@ public class PortSelectorControl {
 
 	private TableViewer tblPorts;
 	private List<String> connectionEnds;
+	private List<PortConnectionItem> portConnectionItems = new ArrayList<PortConnectionItem>();
 
 	private static final String NO_PORT_SELECTED = "<No port selected>";
 
@@ -77,7 +78,7 @@ public class PortSelectorControl {
 		baseComposite.setLayout(new GridLayout(1, true));
 
 		final Composite tableComposite = new Composite(baseComposite, SWT.NONE);
-		gridData.heightHint = 120;
+		gridData.heightHint = 250;
 		tableComposite.setLayoutData(gridData);
 		final TableColumnLayout tableColumnLayout = new TableColumnLayout();
 		tableComposite.setLayout(tableColumnLayout);
@@ -135,7 +136,8 @@ public class PortSelectorControl {
 		tblPorts.setContentProvider(new ArrayContentProvider());
 
 		// Initialize
-		PortConnectionItems.INSTANCE.getPorts().clear();
+//		PortConnectionItems.INSTANCE.getPorts().clear();
+		portConnectionItems.clear();
 //		if (initPort != null) {
 //			String iPort = initPort;
 //			if (iPort.isEmpty()) {
@@ -143,7 +145,8 @@ public class PortSelectorControl {
 //			}
 //			PortConnectionItems.INSTANCE.getPorts().add(new PortConnectionItem("", "", NO_PORT_SELECTED));
 //		}
-		tblPorts.setInput(PortConnectionItems.INSTANCE.getPorts());
+//		tblPorts.setInput(PortConnectionItems.INSTANCE.getPorts());
+		tblPorts.setInput(portConnectionItems);
 
 		// Layout the viewer
 		tableColumnLayout.setColumnData(colInputPortName.getColumn(), new ColumnWeightData(35, 100, true));
@@ -159,8 +162,9 @@ public class PortSelectorControl {
 		btnAdd.setText("Add port");
 		btnAdd.addListener(SWT.Selection, e -> {
 			if (e.type == SWT.Selection) {
-				PortConnectionItems.INSTANCE.getPorts()
-						.add(new PortConnectionItem("", "", NO_PORT_SELECTED));
+//				PortConnectionItems.INSTANCE.getPorts()
+//						.add(new PortConnectionItem("", "", NO_PORT_SELECTED));
+				portConnectionItems.add(new PortConnectionItem("", "", NO_PORT_SELECTED));
 				tblPorts.refresh();
 			}
 		});
@@ -175,7 +179,8 @@ public class PortSelectorControl {
 				final Iterator<PortConnectionItem> iterator = selection.iterator();
 				while (iterator.hasNext()) {
 					PortConnectionItem port = iterator.next();
-					PortConnectionItems.INSTANCE.getPorts().remove(port);
+//					PortConnectionItems.INSTANCE.getPorts().remove(port);
+					portConnectionItems.remove(port);
 				}
 				tblPorts.refresh();
 			}
@@ -202,7 +207,8 @@ public class PortSelectorControl {
 //	}
 	public Map<String, List<String>> getContents() {
 		final Map<String, List<String>> contents = new HashMap<>();
-		for (PortConnectionItem item : PortConnectionItems.INSTANCE.getPorts()) {
+//		for (PortConnectionItem item : PortConnectionItems.INSTANCE.getPorts()) {
+		for (PortConnectionItem item : portConnectionItems) {
 			final List<String> portNames = new ArrayList<>();
 			portNames.add(item.getInputPortName());
 			portNames.add(item.getOutputPortName());
@@ -249,11 +255,13 @@ public class PortSelectorControl {
 		}
 
 		public void setInputPortName(String inputPortName) {
-			propertyChangeSupport.firePropertyChange("inputPortName", this.inputPortName, this.inputPortName = inputPortName);
+			propertyChangeSupport.firePropertyChange("inputPortName", this.inputPortName,
+					this.inputPortName = inputPortName);
 		}
 
 		public void setOutputPortName(String outputPortName) {
-			propertyChangeSupport.firePropertyChange("outputPortName", this.outputPortName, this.outputPortName = outputPortName);
+			propertyChangeSupport.firePropertyChange("outputPortName", this.outputPortName,
+					this.outputPortName = outputPortName);
 		}
 
 		public void setConnectionEnd(String connectionEnd) {
@@ -347,9 +355,10 @@ public class PortSelectorControl {
 			if (idx < 0) {
 				idx = 0;
 			}
-			p.setConnectionEnd(connectionEnds.get(idx));
+
 			p.setInputPortName(connectionEnds.get(idx) + "_in");
 			p.setOutputPortName(connectionEnds.get(idx) + "_out");
+			p.setConnectionEnd(connectionEnds.get(idx));
 			viewer.update(element, null);
 		}
 	}

@@ -53,7 +53,11 @@ public class ProxyTransformDialog extends TitleAreaDialog {
 	private List<Button> btnLowProxyDispatchProtocol = new ArrayList<>();
 	private Label lblLowProxyPeriodField;
 	private Text txtLowProxyPeriod;
-	private Button btnAddComponent;
+//	private Button btnAddProxiedComponent;
+//	private Label lblProxiedComponentName;
+//	private Text txtProxiedComponentName;
+//	private Label lblProxiedSubcomponentName;
+//	private Text txtProxiedSubcomponentName;
 	private Combo cboProxyRequirement;
 	private String highProxyComponentName = "";
 	private String highProxySubcomponentName = "";
@@ -65,7 +69,9 @@ public class ProxyTransformDialog extends TitleAreaDialog {
 	private Map<String, List<String>> lowProxyPortNames = new HashMap<>();
 	private String lowProxyDispatchProtocol = "";
 	private String lowProxyPeriod = "";
-	private boolean addComponent = false;
+//	private boolean addProxiedComponent = false;
+//	private String proxiedComponentName = "";
+//	private String proxiedSubcomponentName = "";
 	private String proxyRequirement = "";
 
 	private List<String> inports = new ArrayList<>();
@@ -119,7 +125,7 @@ public class ProxyTransformDialog extends TitleAreaDialog {
 		container.setLayout(layout);
 
 		// Add component between proxies
-		createAddComponentField(container);
+//		createAddProxiedComponentField(container);
 		// Add requirement field
 		createRequirementField(container);
 
@@ -431,22 +437,37 @@ public class ProxyTransformDialog extends TitleAreaDialog {
 		cboProxyRequirement.setText(NO_REQUIREMENT_SELECTED);
 	}
 
-	/**
-	 * Creates the input field for selecting whether to add a component between
-	 * high and low proxies
-	 * @param container
-	 */
-	private void createAddComponentField(Composite container) {
-		final Label lblComponentField = new Label(container, SWT.NONE);
-		lblComponentField.setText("Add component between proxies");
-
-		GridData dataInfoField = new GridData();
-		dataInfoField.grabExcessHorizontalSpace = true;
-		dataInfoField.horizontalAlignment = SWT.FILL;
-		btnAddComponent = new Button(container, SWT.CHECK);
-		btnAddComponent.setSelection(false);
-		btnAddComponent.setLayoutData(dataInfoField);
-	}
+//	/**
+//	 * Creates the input field for selecting whether to add a component between
+//	 * high and low proxies
+//	 * @param container
+//	 */
+//	private void createAddProxiedComponentField(Composite container) {
+//		final Label lblComponentField = new Label(container, SWT.NONE);
+//		lblComponentField.setText("Add component between proxies");
+//
+//		GridData dataInfoField = new GridData();
+//		dataInfoField.grabExcessHorizontalSpace = true;
+//		dataInfoField.horizontalAlignment = SWT.FILL;
+//		btnAddProxiedComponent = new Button(container, SWT.CHECK);
+//		btnAddProxiedComponent.setSelection(false);
+//		btnAddProxiedComponent.setLayoutData(dataInfoField);
+//		btnAddProxiedComponent.addListener(SWT.Selection, e -> {
+//			if (e.type == SWT.Selection) {
+//				lblProxiedComponentName.setEnabled(btnAddProxiedComponent.getSelection());
+//				txtProxiedComponentName.setEnabled(btnAddProxiedComponent.getSelection());
+//				lblProxiedSubcomponentName.setEnabled(btnAddProxiedComponent.getSelection());
+//				txtProxiedSubcomponentName.setEnabled(btnAddProxiedComponent.getSelection());
+//				if (btnAddProxiedComponent.getSelection()) {
+//					txtProxiedComponentName.setText(ProxyTransformHandler.PROXIED_COMP_TYPE_NAME);
+//					txtProxiedSubcomponentName.setText(ProxyTransformHandler.PROXIED_SUBCOMP_NAME);
+//				} else {
+//					txtProxiedComponentName.setText("");
+//					txtProxiedSubcomponentName.setText("");
+//				}
+//			}
+//		});
+//	}
 
 	@Override
 	protected void okPressed() {
@@ -471,7 +492,8 @@ public class ProxyTransformDialog extends TitleAreaDialog {
 			Dialog.showError("Proxy Transform", "High Proxy component name " + txtHighProxyComponentName.getText()
 					+ " contains invalid characters. Only 'A..Z', 'a..z', '0..9', and '_' are permitted");
 			return false;
-		} else if (AadlUtil.findNamedElementInList(componentsInPackage, txtHighProxyComponentName.getText()) != null) {
+		} else if (!txtHighProxyComponentName.getText().isEmpty()
+				&& AadlUtil.findNamedElementInList(componentsInPackage, txtHighProxyComponentName.getText()) != null) {
 			Dialog.showError("Proxy Transform", "Component " + txtHighProxyComponentName.getText()
 					+ " already exists in model. Use the suggested name or enter a new one.");
 			txtHighProxyComponentName.setText(
@@ -488,12 +510,13 @@ public class ProxyTransformDialog extends TitleAreaDialog {
 					"High Proxy subcomponent instance name " + txtHighProxySubcomponentName.getText()
 							+ " contains invalid characters. Only 'A..Z', 'a..z', '0..9', and '_' are permitted");
 			return false;
-		} else if (AadlUtil.findNamedElementInList(context.getOwnedSubcomponents(),
+		} else if (!txtHighProxySubcomponentName.getText().isEmpty()
+				&& AadlUtil.findNamedElementInList(context.getAllSubcomponents(),
 				txtHighProxySubcomponentName.getText()) != null) {
 			Dialog.showError("Proxy Transform", "Subcomponent " + txtHighProxySubcomponentName.getText()
-					+ " already exists in model. Use the suggested name or enter a new one.");
+					+ " already exists in " + context.getName() + ". Use the suggested name or enter a new one.");
 			txtHighProxySubcomponentName.setText(ModelTransformUtils
-					.getUniqueName(txtHighProxySubcomponentName.getText(), true, context.getOwnedSubcomponents()));
+					.getUniqueName(txtHighProxySubcomponentName.getText(), true, context.getAllSubcomponents()));
 			return false;
 		} else {
 			highProxySubcomponentName = txtHighProxySubcomponentName.getText();
@@ -541,7 +564,8 @@ public class ProxyTransformDialog extends TitleAreaDialog {
 			Dialog.showError("Proxy Transform", "Low Proxy component name " + txtLowProxyComponentName.getText()
 					+ " contains invalid characters. Only 'A..Z', 'a..z', '0..9', and '_' are permitted");
 			return false;
-		} else if (AadlUtil.findNamedElementInList(componentsInPackage, txtLowProxyComponentName.getText()) != null) {
+		} else if (!txtLowProxyComponentName.getText().isEmpty()
+				&& AadlUtil.findNamedElementInList(componentsInPackage, txtLowProxyComponentName.getText()) != null) {
 			Dialog.showError("Proxy Transform", "Component " + txtLowProxyComponentName.getText()
 					+ " already exists in model. Use the suggested name or enter a new one.");
 			txtLowProxyComponentName.setText(
@@ -558,12 +582,13 @@ public class ProxyTransformDialog extends TitleAreaDialog {
 					"Low Proxy subcomponent instance name " + txtLowProxySubcomponentName.getText()
 							+ " contains invalid characters. Only 'A..Z', 'a..z', '0..9', and '_' are permitted");
 			return false;
-		} else if (AadlUtil.findNamedElementInList(context.getOwnedSubcomponents(),
+		} else if (!txtLowProxySubcomponentName.getText().isEmpty()
+				&& AadlUtil.findNamedElementInList(context.getAllSubcomponents(),
 				txtLowProxySubcomponentName.getText()) != null) {
 			Dialog.showError("Proxy Transform", "Subcomponent " + txtLowProxySubcomponentName.getText()
-					+ " already exists in model. Use the suggested name or enter a new one.");
+					+ " already exists in " + context.getName() + ". Use the suggested name or enter a new one.");
 			txtLowProxySubcomponentName.setText(ModelTransformUtils.getUniqueName(txtLowProxySubcomponentName.getText(),
-					true, context.getOwnedSubcomponents()));
+					true, context.getAllSubcomponents()));
 			return false;
 		} else {
 			lowProxySubcomponentName = txtLowProxySubcomponentName.getText();
@@ -605,8 +630,43 @@ public class ProxyTransformDialog extends TitleAreaDialog {
 			}
 		}
 
-		// Add component
-		addComponent = btnAddComponent.getSelection();
+//		// Add proxied component
+//		addProxiedComponent = btnAddProxiedComponent.getSelection();
+//		if (addProxiedComponent) {
+//			// Proxied component name
+//			if (!txtProxiedComponentName.getText().isEmpty()
+//					&& !ModelTransformUtils.isValidName(txtProxiedComponentName.getText())) {
+//				Dialog.showError("Proxy Transform", "Proxied component name " + txtProxiedComponentName.getText()
+//						+ " contains invalid characters. Only 'A..Z', 'a..z', '0..9', and '_' are permitted");
+//				return false;
+//			} else if (!txtProxiedComponentName.getText().isEmpty() && AadlUtil
+//					.findNamedElementInList(componentsInPackage, txtProxiedComponentName.getText()) != null) {
+//				Dialog.showError("Proxy Transform", "Component " + txtProxiedComponentName.getText()
+//						+ " already exists in model. Use the suggested name or enter a new one.");
+//				txtProxiedComponentName.setText(ModelTransformUtils.getUniqueName(txtProxiedComponentName.getText(),
+//						true, componentsInPackage));
+//				return false;
+//			} else {
+//				proxiedComponentName = txtProxiedComponentName.getText();
+//			}
+//			// Proxied subcomponent name
+//			if (!txtProxiedSubcomponentName.getText().isEmpty()
+//					&& !ModelTransformUtils.isValidName(txtProxiedSubcomponentName.getText())) {
+//				Dialog.showError("Proxy Transform", "Proxied subcomponent name " + txtProxiedSubcomponentName.getText()
+//						+ " contains invalid characters. Only 'A..Z', 'a..z', '0..9', and '_' are permitted");
+//				return false;
+//			} else if (!txtProxiedSubcomponentName.getText().isEmpty()
+//					&& AadlUtil.findNamedElementInList(context.getAllSubcomponents(),
+//							txtProxiedSubcomponentName.getText()) != null) {
+//				Dialog.showError("Proxy Transform", "Subcomponent " + txtProxiedSubcomponentName.getText()
+//						+ " already exists in " + context.getName() + ". Use the suggested name or enter a new one.");
+//				txtProxiedSubcomponentName.setText(ModelTransformUtils
+//						.getUniqueName(txtProxiedSubcomponentName.getText(), true, context.getAllSubcomponents()));
+//				return false;
+//			} else {
+//				proxiedSubcomponentName = txtProxiedSubcomponentName.getText();
+//			}
+//		}
 
 		// Requirement
 		proxyRequirement = cboProxyRequirement.getText();
@@ -663,9 +723,17 @@ public class ProxyTransformDialog extends TitleAreaDialog {
 		return lowProxyPeriod;
 	}
 
-	public boolean getAddComponent() {
-		return addComponent;
-	}
+//	public boolean getAddProxiedComponent() {
+//		return addProxiedComponent;
+//	}
+//
+//	public String getProxiedComponentName() {
+//		return proxiedComponentName;
+//	}
+//
+//	public String getProxiedSubcomponentName() {
+//		return proxiedSubcomponentName;
+//	}
 
 	public String getRequirement() {
 		return proxyRequirement;
