@@ -1,8 +1,10 @@
 package com.collins.trustedsystems.briefcase.staircase.dialogs;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.jface.dialogs.IMessageProvider;
@@ -21,6 +23,8 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.TabFolder;
+import org.eclipse.swt.widgets.TabItem;
 import org.eclipse.swt.widgets.Text;
 import org.osate.aadl2.Classifier;
 import org.osate.aadl2.ComponentImplementation;
@@ -29,6 +33,7 @@ import org.osate.aadl2.ThreadGroupImplementation;
 import org.osate.aadl2.modelsupport.util.AadlUtil;
 import org.osate.ui.dialogs.Dialog;
 
+import com.collins.trustedsystems.briefcase.staircase.dialogs.PortSelectorControl.PortDirection;
 import com.collins.trustedsystems.briefcase.staircase.handlers.ProxyTransformHandler;
 import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsManager;
 import com.collins.trustedsystems.briefcase.staircase.utils.ModelTransformUtils;
@@ -38,18 +43,29 @@ public class ProxyTransformDialog extends TitleAreaDialog {
 	private ComponentImplementation context;
 	private Text txtHighProxyComponentName;
 	private Text txtHighProxySubcomponentName;
+	private PortSelectorControl pscHighProxyPortNames = null;
+	private List<Button> btnHighProxyDispatchProtocol = new ArrayList<>();
+	private Label lblHighProxyPeriodField;
+	private Text txtHighProxyPeriod;
 	private Text txtLowProxyComponentName;
 	private Text txtLowProxySubcomponentName;
-	private List<Button> btnDispatchProtocol = new ArrayList<>();
-	private Label lblPeriodField;
-	private Text txtPeriod;
+	private PortSelectorControl pscLowProxyPortNames = null;
+	private List<Button> btnLowProxyDispatchProtocol = new ArrayList<>();
+	private Label lblLowProxyPeriodField;
+	private Text txtLowProxyPeriod;
+	private Button btnAddComponent;
 	private Combo cboProxyRequirement;
 	private String highProxyComponentName = "";
 	private String highProxySubcomponentName = "";
+	private Map<String, List<String>> highProxyPortNames = new HashMap<>();
+	private String highProxyDispatchProtocol = "";
+	private String highProxyPeriod = "";
 	private String lowProxyComponentName = "";
 	private String lowProxySubcomponentName = "";
-	private String dispatchProtocol = "";
-	private String period = "";
+	private Map<String, List<String>> lowProxyPortNames = new HashMap<>();
+	private String lowProxyDispatchProtocol = "";
+	private String lowProxyPeriod = "";
+	private boolean addComponent = false;
 	private String proxyRequirement = "";
 
 	private List<String> inports = new ArrayList<>();
@@ -91,30 +107,99 @@ public class ProxyTransformDialog extends TitleAreaDialog {
 	@Override
 	protected Control createDialogArea(Composite parent) {
 		final Composite area = (Composite) super.createDialogArea(parent);
+
+		final TabFolder folder = new TabFolder(area, SWT.NONE);
+		createHighProxyTab(folder);
+		createLowProxyTab(folder);
+		folder.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, true));
+
 		final Composite container = new Composite(area, SWT.NONE);
 		container.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
-		final GridLayout layout = new GridLayout(2, false);
+		final GridLayout layout = new GridLayout(2, true);
 		container.setLayout(layout);
 
-		// Proxy high component name
-		createHighProxyComponentNameField(container);
-		// Proxy high subcomponent name
-		createHighProxySubcomponentNameField(container);
-		// Proxy low component name
-		createLowProxyComponentNameField(container);
-		// Proxy low subcomponent name
-		createLowProxySubcomponentNameField(container);
-		// Ports
-
-		// Only display dispatch protocol if filter is a thread
-		if (context instanceof ProcessImplementation || context instanceof ThreadGroupImplementation) {
-			createDispatchProtocolField(container);
-		}
-
-		// Add proxy information fields
+		// Add component between proxies
+		createAddComponentField(container);
+		// Add requirement field
 		createRequirementField(container);
 
 		return area;
+	}
+
+	private void createHighProxyTab(TabFolder folder) {
+
+		final Composite container = new Composite(folder, SWT.NONE);
+		container.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+		final GridLayout layout = new GridLayout(1, false);
+		container.setLayout(layout);
+
+		final TabItem highProxyTab = new TabItem(folder, SWT.NONE);
+		highProxyTab.setText("High-side Proxy");
+
+		final Composite namesContainer = new Composite(container, SWT.NONE);
+		namesContainer.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+		namesContainer.setLayout(new GridLayout(2, false));
+
+		// Proxy high component name
+		createHighProxyComponentNameField(namesContainer);
+		// Proxy high subcomponent name
+		createHighProxySubcomponentNameField(namesContainer);
+
+		final Composite portsContainer = new Composite(container, SWT.NONE);
+		portsContainer.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+		portsContainer.setLayout(new GridLayout(1, false));
+
+		// Proxy high ports
+		createHighProxyPortsField(portsContainer);
+
+		final Composite miscContainer = new Composite(container, SWT.NONE);
+		miscContainer.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+		miscContainer.setLayout(new GridLayout(2, false));
+
+		// Only display dispatch protocol if proxy is a thread
+		if (context instanceof ProcessImplementation || context instanceof ThreadGroupImplementation) {
+			createHighProxyDispatchProtocolField(miscContainer);
+		}
+
+		highProxyTab.setControl(container);
+	}
+
+	private void createLowProxyTab(TabFolder folder) {
+
+		final Composite container = new Composite(folder, SWT.NONE);
+		container.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+		final GridLayout layout = new GridLayout(1, false);
+		container.setLayout(layout);
+
+		final TabItem lowProxyTab = new TabItem(folder, SWT.NONE);
+		lowProxyTab.setText("Low-side Proxy");
+
+		final Composite namesContainer = new Composite(container, SWT.NONE);
+		namesContainer.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+		namesContainer.setLayout(new GridLayout(2, false));
+
+		// Proxy low component name
+		createLowProxyComponentNameField(namesContainer);
+		// Proxy low subcomponent name
+		createLowProxySubcomponentNameField(namesContainer);
+
+		final Composite portsContainer = new Composite(container, SWT.NONE);
+		portsContainer.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+		portsContainer.setLayout(new GridLayout(1, false));
+
+		// Proxy low ports
+		createLowProxyPortsField(portsContainer);
+
+		final Composite miscContainer = new Composite(container, SWT.NONE);
+		miscContainer.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+		miscContainer.setLayout(new GridLayout(2, false));
+
+		// Only display dispatch protocol if proxy is a thread
+		if (context instanceof ProcessImplementation || context instanceof ThreadGroupImplementation) {
+			createLowProxyDispatchProtocolField(miscContainer);
+		}
+
+		lowProxyTab.setControl(container);
 	}
 
 	/**
@@ -149,6 +234,79 @@ public class ProxyTransformDialog extends TitleAreaDialog {
 		txtHighProxySubcomponentName.setText(ProxyTransformHandler.HIGH_PROXY_SUBCOMP_NAME);
 	}
 
+	private void createHighProxyPortsField(Composite container) {
+		final Label lblPortNamesField = new Label(container, SWT.NONE);
+		lblPortNamesField.setText("High Proxy ports");
+		lblPortNamesField.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, true));
+
+		final List<String> connectionEnds = new ArrayList<>();
+//		connectionEnds.add(NO_PORT_SELECTED);
+		connectionEnds.addAll(outports);
+		pscHighProxyPortNames = new PortSelectorControl(container, PortDirection.INPUT, connectionEnds);
+	}
+
+	/**
+	 * Creates the input field for selecting the high-side proxy dispatch protocol
+	 * @param container
+	 */
+	private void createHighProxyDispatchProtocolField(Composite container) {
+		final Label lblDispatchProtocolField = new Label(container, SWT.NONE);
+		lblDispatchProtocolField.setText("Dispatch protocol");
+		lblDispatchProtocolField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+
+		// Create a group to contain the log port options
+		final Group protocolGroup = new Group(container, SWT.NONE);
+		protocolGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		protocolGroup.setLayout(new RowLayout(SWT.HORIZONTAL));
+
+		btnHighProxyDispatchProtocol.clear();
+
+		final Button btnNoProtocol = new Button(protocolGroup, SWT.RADIO);
+		btnNoProtocol.setText("None");
+		btnNoProtocol.setSelection(true);
+		btnNoProtocol.addSelectionListener(new SelectionListener() {
+
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				lblHighProxyPeriodField.setEnabled(!btnNoProtocol.getSelection());
+				txtHighProxyPeriod.setEnabled(!btnNoProtocol.getSelection());
+				if (btnNoProtocol.getSelection()) {
+					txtHighProxyPeriod.setText("");
+				}
+			}
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {
+				widgetSelected(e);
+			}
+		});
+
+		final Button btnPeriodic = new Button(protocolGroup, SWT.RADIO);
+		btnPeriodic.setText("Periodic");
+		btnPeriodic.setSelection(false);
+
+		final Button btnSporadic = new Button(protocolGroup, SWT.RADIO);
+		btnSporadic.setText("Sporadic");
+		btnSporadic.setSelection(false);
+
+		lblHighProxyPeriodField = new Label(container, SWT.NONE);
+		lblHighProxyPeriodField.setText("Period");
+		lblHighProxyPeriodField.setEnabled(false);
+		lblHighProxyPeriodField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+
+		final GridData dataInfoField = new GridData();
+		dataInfoField.grabExcessHorizontalSpace = true;
+		dataInfoField.horizontalAlignment = SWT.FILL;
+		txtHighProxyPeriod = new Text(container, SWT.BORDER);
+		txtHighProxyPeriod.setLayoutData(dataInfoField);
+		txtHighProxyPeriod.setEnabled(false);
+
+		btnHighProxyDispatchProtocol.add(btnNoProtocol);
+		btnHighProxyDispatchProtocol.add(btnPeriodic);
+		btnHighProxyDispatchProtocol.add(btnSporadic);
+
+	}
+
 	/**
 	 * Creates the input text field for specifying the low proxy component name
 	 * @param container
@@ -181,11 +339,22 @@ public class ProxyTransformDialog extends TitleAreaDialog {
 		txtLowProxySubcomponentName.setText(ProxyTransformHandler.LOW_PROXY_SUBCOMP_NAME);
 	}
 
+	private void createLowProxyPortsField(Composite container) {
+		final Label lblPortNamesField = new Label(container, SWT.NONE);
+		lblPortNamesField.setText("Port names");
+		lblPortNamesField.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, true));
+
+		final List<String> connectionEnds = new ArrayList<>();
+//		connectionEnds.add(NO_PORT_SELECTED);
+		connectionEnds.addAll(inports);
+		pscLowProxyPortNames = new PortSelectorControl(container, PortDirection.OUTPUT, connectionEnds);
+	}
+
 	/**
-	 * Creates the input field for selecting the dispatch protocol
+	 * Creates the input field for selecting the low-side proxy dispatch protocol
 	 * @param container
 	 */
-	private void createDispatchProtocolField(Composite container) {
+	private void createLowProxyDispatchProtocolField(Composite container) {
 		final Label lblDispatchProtocolField = new Label(container, SWT.NONE);
 		lblDispatchProtocolField.setText("Dispatch protocol");
 		lblDispatchProtocolField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
@@ -195,7 +364,7 @@ public class ProxyTransformDialog extends TitleAreaDialog {
 		protocolGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		protocolGroup.setLayout(new RowLayout(SWT.HORIZONTAL));
 
-		btnDispatchProtocol.clear();
+		btnLowProxyDispatchProtocol.clear();
 
 		final Button btnNoProtocol = new Button(protocolGroup, SWT.RADIO);
 		btnNoProtocol.setText("None");
@@ -204,10 +373,10 @@ public class ProxyTransformDialog extends TitleAreaDialog {
 
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				lblPeriodField.setEnabled(!btnNoProtocol.getSelection());
-				txtPeriod.setEnabled(!btnNoProtocol.getSelection());
+				lblLowProxyPeriodField.setEnabled(!btnNoProtocol.getSelection());
+				txtLowProxyPeriod.setEnabled(!btnNoProtocol.getSelection());
 				if (btnNoProtocol.getSelection()) {
-					txtPeriod.setText("");
+					txtLowProxyPeriod.setText("");
 				}
 			}
 
@@ -225,21 +394,21 @@ public class ProxyTransformDialog extends TitleAreaDialog {
 		btnSporadic.setText("Sporadic");
 		btnSporadic.setSelection(false);
 
-		lblPeriodField = new Label(container, SWT.NONE);
-		lblPeriodField.setText("Period");
-		lblPeriodField.setEnabled(false);
-		lblPeriodField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		lblLowProxyPeriodField = new Label(container, SWT.NONE);
+		lblLowProxyPeriodField.setText("Period");
+		lblLowProxyPeriodField.setEnabled(false);
+		lblLowProxyPeriodField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
 		final GridData dataInfoField = new GridData();
 		dataInfoField.grabExcessHorizontalSpace = true;
 		dataInfoField.horizontalAlignment = SWT.FILL;
-		txtPeriod = new Text(container, SWT.BORDER);
-		txtPeriod.setLayoutData(dataInfoField);
-		txtPeriod.setEnabled(false);
+		txtLowProxyPeriod = new Text(container, SWT.BORDER);
+		txtLowProxyPeriod.setLayoutData(dataInfoField);
+		txtLowProxyPeriod.setEnabled(false);
 
-		btnDispatchProtocol.add(btnNoProtocol);
-		btnDispatchProtocol.add(btnPeriodic);
-		btnDispatchProtocol.add(btnSporadic);
+		btnLowProxyDispatchProtocol.add(btnNoProtocol);
+		btnLowProxyDispatchProtocol.add(btnPeriodic);
+		btnLowProxyDispatchProtocol.add(btnSporadic);
 
 	}
 
@@ -260,6 +429,23 @@ public class ProxyTransformDialog extends TitleAreaDialog {
 		cboProxyRequirement.add(NO_REQUIREMENT_SELECTED);
 		requirements.forEach(r -> cboProxyRequirement.add(r));
 		cboProxyRequirement.setText(NO_REQUIREMENT_SELECTED);
+	}
+
+	/**
+	 * Creates the input field for selecting whether to add a component between
+	 * high and low proxies
+	 * @param container
+	 */
+	private void createAddComponentField(Composite container) {
+		final Label lblComponentField = new Label(container, SWT.NONE);
+		lblComponentField.setText("Add component between proxies");
+
+		GridData dataInfoField = new GridData();
+		dataInfoField.grabExcessHorizontalSpace = true;
+		dataInfoField.horizontalAlignment = SWT.FILL;
+		btnAddComponent = new Button(container, SWT.CHECK);
+		btnAddComponent.setSelection(false);
+		btnAddComponent.setLayoutData(dataInfoField);
 	}
 
 	@Override
@@ -313,6 +499,42 @@ public class ProxyTransformDialog extends TitleAreaDialog {
 			highProxySubcomponentName = txtHighProxySubcomponentName.getText();
 		}
 
+		// High Proxy Ports
+		highProxyPortNames = pscHighProxyPortNames.getContents();
+		for (Map.Entry<String, List<String>> ports : highProxyPortNames.entrySet()) {
+			for (int i = 0; i < ports.getValue().size(); ++i) {
+				if (ports.getValue().get(i).isEmpty()) {
+					Dialog.showError("Proxy Transform",
+							"The high-side proxy " + (i == 0 ? "input" : "output")
+									+ " port name must be specified in order to establish a connection with "
+									+ ports.getKey() + ".");
+					return false;
+				} else if (!portNames.add(ports.getValue().get(i))) {
+					Dialog.showError("Proxy Transform", "The high-side proxy " + (i == 0 ? "input" : "output")
+							+ " port name " + ports.getValue().get(i)
+							+ " cannot be used since it has already been specified for a different port in this component.");
+					return false;
+				}
+			}
+		}
+
+		// High Proxy Dispatch Protocol and Period
+		for (Button b : btnHighProxyDispatchProtocol) {
+			if (b.getSelection() && !b.getText().equalsIgnoreCase("None")) {
+				highProxyDispatchProtocol = b.getText();
+				// make sure period is properly formatted
+				if (txtHighProxyPeriod.getText().isEmpty()
+						|| txtHighProxyPeriod.getText().matches("((\\d)+(\\s)*(ps|ns|us|ms|sec|min|hr)?)")) {
+					highProxyPeriod = txtHighProxyPeriod.getText();
+				} else {
+					Dialog.showError("Proxy Transform", "High-side proxy period " + txtHighProxyPeriod.getText()
+							+ " is malformed. See the AADL definition of Period in Timing_Properties.aadl.");
+					return false;
+				}
+				break;
+			}
+		}
+
 		// Low Proxy Component Name
 		if (!txtLowProxyComponentName.getText().isEmpty()
 				&& !ModelTransformUtils.isValidName(txtLowProxyComponentName.getText())) {
@@ -347,22 +569,44 @@ public class ProxyTransformDialog extends TitleAreaDialog {
 			lowProxySubcomponentName = txtLowProxySubcomponentName.getText();
 		}
 
-		// Dispatch Protocol and Period
-		for (Button b : btnDispatchProtocol) {
+		// Low Proxy Ports
+		lowProxyPortNames = pscLowProxyPortNames.getContents();
+		for (Map.Entry<String, List<String>> ports : lowProxyPortNames.entrySet()) {
+			for (int i = 0; i < ports.getValue().size(); ++i) {
+				if (ports.getValue().get(i).isEmpty()) {
+					Dialog.showError("Proxy Transform",
+							"The low-side proxy " + (i == 0 ? "input" : "output")
+									+ " port name must be specified in order to establish a connection with "
+									+ ports.getKey() + ".");
+					return false;
+				} else if (!portNames.add(ports.getValue().get(i))) {
+					Dialog.showError("Proxy Transform", "The low-side proxy " + (i == 0 ? "input" : "output")
+							+ " port name " + ports.getValue().get(i)
+							+ " cannot be used since it has already been specified for a different port in this component.");
+					return false;
+				}
+			}
+		}
+
+		// Low Proxy Dispatch Protocol and Period
+		for (Button b : btnLowProxyDispatchProtocol) {
 			if (b.getSelection() && !b.getText().equalsIgnoreCase("None")) {
-				dispatchProtocol = b.getText();
+				lowProxyDispatchProtocol = b.getText();
 				// make sure period is properly formatted
-				if (txtPeriod.getText().isEmpty()
-						|| txtPeriod.getText().matches("((\\d)+(\\s)*(ps|ns|us|ms|sec|min|hr)?)")) {
-					period = txtPeriod.getText();
+				if (txtLowProxyPeriod.getText().isEmpty()
+						|| txtLowProxyPeriod.getText().matches("((\\d)+(\\s)*(ps|ns|us|ms|sec|min|hr)?)")) {
+					lowProxyPeriod = txtLowProxyPeriod.getText();
 				} else {
-					Dialog.showError("Monitor Transform", "Monitor period " + txtPeriod.getText()
+					Dialog.showError("Proxy Transform", "Low-side proxy period " + txtLowProxyPeriod.getText()
 							+ " is malformed. See the AADL definition of Period in Timing_Properties.aadl.");
 					return false;
 				}
 				break;
 			}
 		}
+
+		// Add component
+		addComponent = btnAddComponent.getSelection();
 
 		// Requirement
 		proxyRequirement = cboProxyRequirement.getText();
@@ -387,6 +631,18 @@ public class ProxyTransformDialog extends TitleAreaDialog {
 		return highProxySubcomponentName;
 	}
 
+	public Map<String, List<String>> getHighProxyPortNames() {
+		return highProxyPortNames;
+	}
+
+	public String getHighProxyDispatchProtocol() {
+		return highProxyDispatchProtocol;
+	}
+
+	public String getHighProxyPeriod() {
+		return highProxyPeriod;
+	}
+
 	public String getLowProxyComponentName() {
 		return lowProxyComponentName;
 	}
@@ -395,12 +651,20 @@ public class ProxyTransformDialog extends TitleAreaDialog {
 		return lowProxySubcomponentName;
 	}
 
-	public String getDispatchProtocol() {
-		return dispatchProtocol;
+	public Map<String, List<String>> getLowProxyPortNames() {
+		return lowProxyPortNames;
 	}
 
-	public String getPeriod() {
-		return period;
+	public String getLowProxyDispatchProtocol() {
+		return lowProxyDispatchProtocol;
+	}
+
+	public String getLowProxyPeriod() {
+		return lowProxyPeriod;
+	}
+
+	public boolean getAddComponent() {
+		return addComponent;
 	}
 
 	public String getRequirement() {

@@ -1,5 +1,8 @@
 package com.collins.trustedsystems.briefcase.staircase.handlers;
 
+import java.util.List;
+import java.util.Map;
+
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.jface.window.Window;
@@ -25,15 +28,20 @@ public class ProxyTransformHandler extends AadlHandler {
 	public static final String HIGH_PROXY_COMP_TYPE_NAME = "CASE_HighProxy";
 	public static final String LOW_PROXY_COMP_TYPE_NAME = "CASE_LowProxy";
 	public static final String HIGH_PROXY_SUBCOMP_NAME = "HighProxy";
-	public static final String LOW_PROXY_SUBCOMP_NAME = "HighProxy";
+	public static final String LOW_PROXY_SUBCOMP_NAME = "LowProxy";
 	static final String CONNECTION_IMPL_NAME = "c";
 
 	private String highProxyComponentName;
 	private String highProxySubcomponentName;
+	private Map<String, List<String>> highProxyPortNames;
+	private String highProxyDispatchProtocol;
+	private String highProxyPeriod;
 	private String lowProxyComponentName;
 	private String lowProxySubcomponentName;
-	private String dispatchProtocol;
-	private String period;
+	private Map<String, List<String>> lowProxyPortNames;
+	private String lowProxyDispatchProtocol;
+	private String lowProxyPeriod;
+	private boolean addComponent;
 	private String proxyRequirement;
 
 	@Override
@@ -60,6 +68,9 @@ public class ProxyTransformHandler extends AadlHandler {
 			if (highProxySubcomponentName.isEmpty()) {
 				highProxySubcomponentName = HIGH_PROXY_SUBCOMP_NAME;
 			}
+			highProxyPortNames = wizard.getHighProxyPortNames();
+			highProxyDispatchProtocol = wizard.getHighProxyDispatchProtocol();
+			highProxyPeriod = wizard.getHighProxyPeriod();
 			lowProxyComponentName = wizard.getLowProxyComponentName();
 			if (lowProxyComponentName.isEmpty()) {
 				lowProxyComponentName = LOW_PROXY_COMP_TYPE_NAME;
@@ -68,8 +79,10 @@ public class ProxyTransformHandler extends AadlHandler {
 			if (lowProxySubcomponentName.isEmpty()) {
 				lowProxySubcomponentName = LOW_PROXY_SUBCOMP_NAME;
 			}
-			dispatchProtocol = wizard.getDispatchProtocol();
-			period = wizard.getPeriod();
+			lowProxyPortNames = wizard.getLowProxyPortNames();
+			lowProxyDispatchProtocol = wizard.getLowProxyDispatchProtocol();
+			lowProxyPeriod = wizard.getLowProxyPeriod();
+			addComponent = wizard.getAddComponent();
 			proxyRequirement = wizard.getRequirement();
 		} else {
 			return;
