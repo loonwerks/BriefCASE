@@ -3,7 +3,7 @@ public
 
 annex resolute {**
 			
-		ruleset HAMR {
+		ruleset HAMR_Guidelines {
 			
 			-- The model must contain at least one process bound to a processor
 			error (one_process())
