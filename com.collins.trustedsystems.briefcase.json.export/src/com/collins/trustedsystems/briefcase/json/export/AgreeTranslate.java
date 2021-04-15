@@ -47,6 +47,7 @@ import com.rockwellcollins.atc.agree.agree.GuaranteeStatement;
 import com.rockwellcollins.atc.agree.agree.IfThenElseExpr;
 import com.rockwellcollins.atc.agree.agree.IndicesExpr;
 import com.rockwellcollins.atc.agree.agree.IntLitExpr;
+import com.rockwellcollins.atc.agree.agree.LibraryFnDef;
 import com.rockwellcollins.atc.agree.agree.NamedElmExpr;
 import com.rockwellcollins.atc.agree.agree.NodeDef;
 import com.rockwellcollins.atc.agree.agree.NodeEq;
@@ -64,6 +65,7 @@ import com.rockwellcollins.atc.agree.agree.SpecStatement;
 import com.rockwellcollins.atc.agree.agree.ThisRef;
 import com.rockwellcollins.atc.agree.agree.Type;
 import com.rockwellcollins.atc.agree.agree.UnaryExpr;
+import com.rockwellcollins.atc.agree.agree.UninterpretedFnDef;
 
 public class AgreeTranslate {
 
@@ -448,6 +450,46 @@ public class AgreeTranslate {
 		return result;
 	}
 
+	private static JsonElement genUninterpretedFnDef(UninterpretedFnDef stmt) {
+
+		JsonObject result = new JsonObject();
+		result.add("kind", new JsonPrimitive("UninterpretedFnDef"));
+
+		if (stmt.getContainingClassifier() == null) {
+			AadlPackage pkg = (AadlPackage) Aadl2Json.getContainingModelUnit(stmt);
+			result.add("packageName", new JsonPrimitive(pkg.getName()));
+		}
+		result.add("name", new JsonPrimitive(stmt.getName()));
+
+		JsonArray args = new JsonArray();
+		for (Arg arg : stmt.getArgs()) {
+			args.add(genArg(arg));
+		}
+		result.add("args", args);
+		result.add("type", genType(stmt.getType()));
+		return result;
+	}
+
+	private static JsonElement genLibraryFnDef(LibraryFnDef stmt) {
+
+		JsonObject result = new JsonObject();
+		result.add("kind", new JsonPrimitive("LibraryFnDef"));
+
+		if (stmt.getContainingClassifier() == null) {
+			AadlPackage pkg = (AadlPackage) Aadl2Json.getContainingModelUnit(stmt);
+			result.add("packageName", new JsonPrimitive(pkg.getName()));
+		}
+		result.add("name", new JsonPrimitive(stmt.getName()));
+
+		JsonArray args = new JsonArray();
+		for (Arg arg : stmt.getArgs()) {
+			args.add(genArg(arg));
+		}
+		result.add("args", args);
+		result.add("type", genType(stmt.getType()));
+		return result;
+	}
+
 	private static JsonElement genConstStatement(ConstStatement stmt) {
 		JsonObject result = new JsonObject();
 
@@ -515,6 +557,10 @@ public class AgreeTranslate {
 			return genPropertyStatement((PropertyStatement) stmt);
 		} else if (stmt instanceof FnDef) {
 			return genFnDef((FnDef) stmt);
+		} else if (stmt instanceof UninterpretedFnDef) {
+			return genUninterpretedFnDef((UninterpretedFnDef) stmt);
+		} else if (stmt instanceof LibraryFnDef) {
+			return genLibraryFnDef((LibraryFnDef) stmt);
 		} else if (stmt instanceof ConstStatement) {
 			return genConstStatement((ConstStatement) stmt);
 		} else if (stmt instanceof NodeDef) {
