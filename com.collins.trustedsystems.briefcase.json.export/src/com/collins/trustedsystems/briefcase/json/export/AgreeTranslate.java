@@ -24,6 +24,7 @@ import com.rockwellcollins.atc.agree.agree.AgreeContractSubclause;
 import com.rockwellcollins.atc.agree.agree.AgreePackage;
 import com.rockwellcollins.atc.agree.agree.Arg;
 import com.rockwellcollins.atc.agree.agree.ArraySubExpr;
+import com.rockwellcollins.atc.agree.agree.ArrayType;
 import com.rockwellcollins.atc.agree.agree.AssertStatement;
 import com.rockwellcollins.atc.agree.agree.AssignStatement;
 import com.rockwellcollins.atc.agree.agree.AssumeStatement;
@@ -39,6 +40,7 @@ import com.rockwellcollins.atc.agree.agree.EqStatement;
 import com.rockwellcollins.atc.agree.agree.EventExpr;
 import com.rockwellcollins.atc.agree.agree.ExistsExpr;
 import com.rockwellcollins.atc.agree.agree.Expr;
+import com.rockwellcollins.atc.agree.agree.FlatmapExpr;
 import com.rockwellcollins.atc.agree.agree.FnDef;
 import com.rockwellcollins.atc.agree.agree.FoldLeftExpr;
 import com.rockwellcollins.atc.agree.agree.ForallExpr;
@@ -275,6 +277,8 @@ public class AgreeTranslate {
 			return genRealCast((RealCast) expr);
 		} else if (expr instanceof GetPropertyExpr) {
 			return genGetPropertyExpr((GetPropertyExpr) expr);
+		} else if (expr instanceof FlatmapExpr) {
+			return genFlatmapExpr((FlatmapExpr) expr);
 		} else {
 			return new JsonPrimitive("new_case/genExpr/" + (expr == null ? "null" : expr.toString()));
 		}
@@ -284,6 +288,15 @@ public class AgreeTranslate {
 		JsonObject result = new JsonObject();
 		result.add("kind", new JsonPrimitive("IndicesExpr"));
 		result.add("array", genExpr(expr.getArray()));
+		return result;
+	}
+
+	private static JsonElement genFlatmapExpr(FlatmapExpr expr) {
+		JsonObject result = new JsonObject();
+		result.add("kind", new JsonPrimitive("FlatmapExpr"));
+		result.add("binding", new JsonPrimitive(expr.getBinding().getName()));
+		result.add("array", genExpr(expr.getArray()));
+		result.add("expr", genExpr(expr.getExpr()));
 		return result;
 	}
 
@@ -409,12 +422,29 @@ public class AgreeTranslate {
 		return result;
 	}
 
+	private static JsonElement genArrayType(ArrayType type) {
+
+		JsonObject result = new JsonObject();
+		result.add("kind", new JsonPrimitive("ArrayType"));
+
+		result.add("size", new JsonPrimitive(type.getSize()));
+		if (type.getStem() instanceof PrimType) {
+			result.add("arrayType", new JsonPrimitive(((PrimType) type).getName()));
+		} else if (type.getStem() instanceof DoubleDotRef) {
+			NamedElement ne = ((DoubleDotRef) type.getStem()).getElm();
+			result.add("arrayType", new JsonPrimitive(ne.getQualifiedName()));
+		}
+		return result;
+	}
+
 	private static JsonElement genType(Type type) {
 		JsonElement result = null;
 		if (type instanceof DoubleDotRef) {
 			result = genDoubleDotRef((DoubleDotRef) type);
 		} else if (type instanceof PrimType) {
 			result = genPrimType((PrimType) type);
+		} else if (type instanceof ArrayType) {
+			result = genArrayType((ArrayType) type);
 		} else {
 			result = new JsonPrimitive("new_case/genType/" + type);
 		}
