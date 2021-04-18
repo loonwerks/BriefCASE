@@ -23,6 +23,7 @@ import com.rockwellcollins.atc.agree.agree.AgreeContractLibrary;
 import com.rockwellcollins.atc.agree.agree.AgreeContractSubclause;
 import com.rockwellcollins.atc.agree.agree.AgreePackage;
 import com.rockwellcollins.atc.agree.agree.Arg;
+import com.rockwellcollins.atc.agree.agree.ArrayLiteralExpr;
 import com.rockwellcollins.atc.agree.agree.ArraySubExpr;
 import com.rockwellcollins.atc.agree.agree.ArrayType;
 import com.rockwellcollins.atc.agree.agree.AssertStatement;
@@ -110,6 +111,17 @@ public class AgreeTranslate {
 		JsonObject result = new JsonObject();
 		result.add("kind", new JsonPrimitive("BoolLitExpr"));
 		result.add("value", new JsonPrimitive(expr.getVal().getValue() + ""));
+		return result;
+	}
+
+	private static JsonElement genArrayLiteralExpr(ArrayLiteralExpr expr) {
+		JsonObject result = new JsonObject();
+		result.add("kind", new JsonPrimitive("ArrayLiteralExpr"));
+		JsonArray elems = new JsonArray();
+		for (Expr elemExpr : expr.getElems()) {
+			elems.add(genExpr(elemExpr));
+		}
+		result.add("elems", elems);
 		return result;
 	}
 
@@ -241,6 +253,8 @@ public class AgreeTranslate {
 			return genRealLitExpr((RealLitExpr) expr);
 		} else if (expr instanceof BoolLitExpr) {
 			return genBoolLitExpr((BoolLitExpr) expr);
+		} else if (expr instanceof ArrayLiteralExpr) {
+			return genArrayLiteralExpr((ArrayLiteralExpr) expr);
 		} else if (expr instanceof BinaryExpr) {
 			return genBinaryExpr((BinaryExpr) expr);
 		} else if (expr instanceof UnaryExpr) {
