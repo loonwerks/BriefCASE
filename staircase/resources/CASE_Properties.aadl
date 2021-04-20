@@ -1,5 +1,9 @@
 property set CASE_Properties is
 
+	-- Deprecated
+	-- Type of CASE component
+	Component_Type: inherit enumeration (FILTER, MONITOR, ATTESTATION, GATE, SWITCH, PROXY, ADAPTER, VIRTUAL_MACHINE, SEL4) applies to (thread, thread group, process, system, processor, virtual processor);
+	
 	-- Implementation language for this component (eg c, CakeML)
 	Component_Language: inherit enumeration (c, CakeML) applies to (thread, thread group, process, system);
 	
