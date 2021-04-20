@@ -414,7 +414,7 @@ public class SplatHandler extends AbstractHandler {
 							if (!assuranceLevel.equalsIgnoreCase(SplatPreferenceConstants.ASSURANCE_LEVEL_BASIC)) {
 								implLang = "CakeML";
 							}
-							if (!CasePropertyUtils.setCompImpl(ci, implLang)) {
+							if (!CasePropertyUtils.setCompLanguage(ci, implLang)) {
 //								return;
 							}
 

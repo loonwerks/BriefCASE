@@ -49,7 +49,7 @@ public class CasePropertyUtils {
 	public static final String GATING = "Gating";
 	public static final String ISOLATING = "Isolating";
 
-	public static final String COMP_IMPL = "Component_Impl";
+	public static final String COMP_LANG = "Component_Language";
 	public static final String COMP_SPEC = "Component_Spec";
 
 	public static final String CACHE_TIMEOUT = "Cache_Timeout";
@@ -294,13 +294,15 @@ public class CasePropertyUtils {
 		return true;
 	}
 
-	public static boolean setCompImpl(Classifier comp, String compImpl) {
+	public static boolean setCompLanguage(Classifier comp, String compLang) {
 		try {
 			final Property prop = Aadl2GlobalScopeUtil.get(comp, Aadl2Package.eINSTANCE.getProperty(),
-					CASE_PROPSET_NAME + "::" + COMP_IMPL);
-			final StringLiteral strLit = Aadl2Factory.eINSTANCE.createStringLiteral();
-			strLit.setValue(compImpl);
-			comp.setPropertyValue(prop, strLit);
+					CASE_PROPSET_NAME + "::" + COMP_LANG);
+			final EnumerationLiteral enumLit = Aadl2Factory.eINSTANCE.createEnumerationLiteral();
+			enumLit.setName(compLang);
+			final NamedValue namedVal = Aadl2Factory.eINSTANCE.createNamedValue();
+			namedVal.setNamedValue(enumLit);
+			comp.setPropertyValue(prop, namedVal);
 		} catch (PropertyDoesNotApplyToHolderException e) {
 			return false;
 		}

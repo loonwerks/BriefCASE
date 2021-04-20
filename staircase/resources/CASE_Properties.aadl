@@ -1,7 +1,7 @@
 property set CASE_Properties is
 
 	-- Implementation language for this component (eg c, CakeML)
-	Component_Impl: aadlstring applies to (thread, thread group, process, system);
+	Component_Language: inherit enumeration (c, CakeML) applies to (thread, thread group, process, system);
 	
 	-- ID of the AGREE CONTRACT that specifies the behavior of this component
 	Component_Spec: list of aadlstring applies to (thread, thread group, process, system);
