@@ -5,17 +5,17 @@ property set CASE_Properties is
 	
 	--- The <b>Component_Spec</b> property identifies the AGREE contract that specifies the behavior of the 
 	--- component.
-	Component_Spec: list of aadlstring applies to (thread);
+	Component_Spec: list of aadlstring applies to (thread, process, system);
 	
 	--- Remote Attestation
-	Cache_Timeout: time applies to (thread);
+	Cache_Timeout: time applies to (thread, process, system);
 	
 	--- Future iterations of this property set will likely change this property (i.e. the name or entirely 
 	--- removed).
-	Cache_Size: aadlinteger applies to (thread);
+	Cache_Size: aadlinteger applies to (thread, process, system);
 	
 	--- Communication Driver
-	Comm_Driver: aadlboolean applies to (thread);
+	Comm_Driver: aadlboolean applies to (thread, process, system);
 	
 	--- Communication Modality
 	Comm_Modality: inherit enumeration (RF, WIFI, WIRED_ETHERNET, SERIAL, BT, 
@@ -216,35 +216,35 @@ property set CASE_Properties is
 	--- 	<li><b>'100'</b> indicates the component was implemented using a trusted build / formal 
 	---			method process by the CASE toolset.
 	--- </ul>
-	Filtering: aadlinteger 0 .. 100 applies to (thread, process, system, subcomponent);
+	Filtering: aadlinteger 0 .. 100 applies to (thread, thread group, process, system, subcomponent);
 	                   
 	--- The <b>Attesting</b> property specifies a component's ability to attest external components.                   
 	--- <ul>
 	--- 	<li><b>'100'</b> indicates the component was implemented using a trusted build / formal 
 	--- 		method process by the CASE toolset.
 	--- </ul>
-	Attesting: aadlinteger 0 .. 100 applies to (thread, process, system, subcomponent);
+	Attesting: aadlinteger 0 .. 100 applies to (thread, thread group, process, system, subcomponent);
 	
 	--- The <b>Isolating</b> property specifies a component's ability to isolate (virtualize) components.
 	--- <ul>
 	--- 	<li><b>'100'</b> indicates the component was implemented using a trusted build / formal 
 	--- 		method process by the CASE toolset.
 	--- </ul>
-	Isolating: aadlinteger 0 .. 100 applies to (thread, process, system, subcomponent);	
+	Isolating: aadlinteger 0 .. 100 applies to (thread, thread group, process, processor, virtual processor, system, subcomponent);	
 
 	--- The <b>Monitoring</b> property specifies a component's ability to monitor messages.
 	--- <ul>
 	--- 	<li><b>'100'</b> indicates the component was implemented using a trusted build / formal 
 	--- 		method process by the CASE toolset.
 	--- </ul>
-	Monitoring: aadlinteger 0 .. 100 applies to (thread, process, system, subcomponent);
+	Monitoring: aadlinteger 0 .. 100 applies to (thread, thread group, process, system, subcomponent);
 
 	--- The <b>Gating</b> property specifies a component's ability to gate messages.
 	--- <ul>
 	--- 	<li><b>'100'</b> indicates the component was implemented using a trusted build / formal 
 	--- 		method process by the CASE toolset.
 	--- </ul>
-	Gating: aadlinteger 0 .. 100 applies to (thread, process, system, subcomponent);		
+	Gating: aadlinteger 0 .. 100 applies to (thread, thread group, process, system, subcomponent);		
 	
 	--- The <b>Authenticating</b> property specifies a component's ability to autheticate messages.
 	--- <ul>
@@ -253,7 +253,7 @@ property set CASE_Properties is
 	--- </ul>
 	--- Note: There is currently no trusted build transform for authenticating 
 	--- from the CASE toolset.
-	Authenticating: aadlinteger 0 .. 100 applies to (thread, process, system, subcomponent);		
+	Authenticating: aadlinteger 0 .. 100 applies to (thread, thread group, process, system, subcomponent);		
 	
 	--- The <b>Encrypting</b> property specifies a component's ability to encrypt messages.
 	--- <ul>
@@ -262,7 +262,7 @@ property set CASE_Properties is
 	--- </ul>
 	--- Note: There is currently no trusted build transform for encrypting 
 	--- from the CASE toolset.
-	Encrypting: aadlinteger 0 .. 100 applies to (thread, process, system, subcomponent);
+	Encrypting: aadlinteger 0 .. 100 applies to (thread, thread group, process, system, subcomponent);
 	
 	-- ----------------------------------------
 	-- -------- Security Attributes -----------
