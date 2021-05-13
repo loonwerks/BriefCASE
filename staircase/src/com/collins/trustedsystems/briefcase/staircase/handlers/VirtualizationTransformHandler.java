@@ -1,6 +1,5 @@
 package com.collins.trustedsystems.briefcase.staircase.handlers;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -271,9 +270,9 @@ public class VirtualizationTransformHandler extends AadlHandler {
 				// Bind the virtual processor to the processor(s)
 				// If a binding to a processor already exists, add virtual processor to Applies To
 				// Remove virtualized components from this processor binding
-				// Add non-virtualized components to binding if their parents are virtualized
+//				// Add non-virtualized components to binding if their parents are virtualized
 				boolean propertyAssociationFound = false;
-				final List<String> nonVmBoundChildren = new ArrayList<>();
+//				final List<String> nonVmBoundChildren = new ArrayList<>();
 				final Iterator<PropertyAssociation> paIterator = containingImpl.getOwnedPropertyAssociations()
 						.iterator();
 				while (paIterator.hasNext()) {
@@ -318,25 +317,25 @@ public class VirtualizationTransformHandler extends AadlHandler {
 
 									}
 
-									// If any subcomponents with implicit processor bindings to be virtualized
-									// have children that are not to be virtualized, create explicit processor bindings for them
-									for (String s : virtualizationComponents) {
-										final Set<String> processors = implicitProcessorBindings.get(s);
-										if (processors != null && processors.contains(processorRef)) {
-											final Subcomponent parent = virtualizationSubNameMap.get(s);
-											for (Subcomponent child : parent.getComponentImplementation()
-													.getOwnedSubcomponents()) {
-												if (!virtualizationSubNameMap.containsValue(child)) {
-													final String childQualName = s + "." + child.getName();
-													final ContainedNamedElement ne = createContainedNamedElement(
-															selectedSub,
-															childQualName);
-													pa.getAppliesTos().add(ne);
-													nonVmBoundChildren.add(childQualName);
-												}
-											}
-										}
-									}
+//									// If any subcomponents with implicit processor bindings to be virtualized
+//									// have children that are not to be virtualized, create explicit processor bindings for them
+//									for (String s : virtualizationComponents) {
+//										final Set<String> processors = implicitProcessorBindings.get(s);
+//										if (processors != null && processors.contains(processorRef)) {
+//											final Subcomponent parent = virtualizationSubNameMap.get(s);
+//											for (Subcomponent child : parent.getComponentImplementation()
+//													.getOwnedSubcomponents()) {
+//												if (!virtualizationSubNameMap.containsValue(child)) {
+//													final String childQualName = s + "." + child.getName();
+//													final ContainedNamedElement ne = createContainedNamedElement(
+//															selectedSub,
+//															childQualName);
+//													pa.getAppliesTos().add(ne);
+//													nonVmBoundChildren.add(childQualName);
+//												}
+//											}
+//										}
+//									}
 
 									propertyAssociationFound = true;
 								}
@@ -393,7 +392,8 @@ public class VirtualizationTransformHandler extends AadlHandler {
 
 				// Add add_virtualization claims to resolute prove statement, if applicable
 				if (!virtualizationRequirement.isEmpty()) {
-					return new AddVirtualizationClaim(virtualizationComponents, nonVmBoundChildren, vpSub);
+//					return new AddVirtualizationClaim(virtualizationComponents, nonVmBoundChildren, vpSub);
+					return new AddVirtualizationClaim(virtualizationComponents, vpSub);
 				}
 
 				return null;

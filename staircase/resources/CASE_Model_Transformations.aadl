@@ -11,8 +11,8 @@ public
 	end CASE_MsgHeader;
 	data implementation CASE_MsgHeader.Impl
 		subcomponents
-			src: data Base_Types::Integer;--Integer_32;
-			dst: data Base_Types::Integer;--Integer_32;
+			src: data Base_Types::Integer_32;
+			dst: data Base_Types::Integer_32;
 			trusted: data Base_Types::Boolean;
 			HMAC: data Base_Types::Boolean;
 	end CASE_MsgHeader.Impl;
@@ -90,9 +90,9 @@ public
 			attestation_manager_exists(comm_driver, attestation_manager) and attestation_manager_not_bypassed(comm_driver, attestation_manager, attestation_gate) and component_implemented(attestation_manager)
 		
 		-- Strategy for proper insertion of virtualization
-		strategy add_virtualization(bound_components : {component}, non_vm_comps : {component}, virtual_machine : component) <=
+		strategy add_virtualization(bound_components : {component}, virtual_machine : component) <=
 			** bound_components " contained in VM " virtual_machine **
-			vm_bound_to_processor(virtual_machine) and components_bound_to_vm(bound_components, virtual_machine) and subcomponents_not_bound_to_other_processors(bound_components, non_vm_comps, virtual_machine)
+			vm_bound_to_processor(virtual_machine) and components_bound_to_vm(bound_components, virtual_machine) and subcomponents_not_bound_to_other_processors(bound_components, virtual_machine)
 		
 		-- Strategy for proper insertion of a monitor
 		strategy add_monitor(comp_context : component, monitor : component) <=
@@ -236,10 +236,10 @@ public
 		
 		-- Checks that subcomponents of specified virtualized components are not bound to processors other than the 
 		-- specified VM
-		subcomponents_not_bound_to_other_processors(bound_components : {component}, non_vm_comps : {component}, virtual_machine : component) <=
+		subcomponents_not_bound_to_other_processors(bound_components : {component}, virtual_machine : component) <=
 			** "Subcomponents are not bound to other processors" **
 			let subs : {component} = get_subcomponents(next_subcomponent(bound_components));
-			forall (s : subs) . not exists (v : component) . (is_bound_to_processor(s, v) and not (v = virtual_machine) and not member(s, non_vm_comps))
+			forall (s : subs) . not exists (v : component) . (is_bound_to_processor(s, v) and not (v = virtual_machine))
 			
 		-- Get set of descendants
 		get_subcomponents(curr : {component}) : {component} =
@@ -254,7 +254,7 @@ public
 			
 		implementation_language_assurance(comp : component) <=
 			** comp " implementation is appropriate for OS" **
-			is_seL4_component(comp) => (has_property(comp, CASE_Properties::Component_Impl) and property(comp, CASE_Properties::Component_Impl) = "CakeML")
+			is_seL4_component(comp) => (has_property(comp, CASE_Properties::Component_Language) and property(comp, CASE_Properties::Component_Language) = "CakeML")
 			
 		-- checks that a component will run on seL4 by checking that the processors it is bound to have the seL4 OS property
 		is_seL4_component(comp : component) : bool =

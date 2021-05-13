@@ -989,6 +989,13 @@ public class Sel4TransformHandler extends AadlHandler {
 			final NamedValue namedVal = (NamedValue) mpv.createOwnedValue(Aadl2Package.eINSTANCE.getNamedValue());
 			namedVal.setNamedValue(enumLit);
 			systemImpl.getOwnedPropertyAssociations().add(pa);
+
+			// Import CASE_Properties file
+			try {
+				CasePropertyUtils.addCasePropertyImport(AadlUtil.getContainingPackageSection(systemImpl));
+			} catch (Exception e) {
+//				return null;
+			}
 		}
 
 	}

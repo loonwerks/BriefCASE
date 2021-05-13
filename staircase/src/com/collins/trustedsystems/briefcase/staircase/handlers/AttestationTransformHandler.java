@@ -34,7 +34,6 @@ import org.osate.aadl2.EventDataPort;
 import org.osate.aadl2.EventPort;
 import org.osate.aadl2.Feature;
 import org.osate.aadl2.FeatureGroup;
-import org.osate.aadl2.FeatureGroupConnection;
 import org.osate.aadl2.FeatureGroupType;
 import org.osate.aadl2.IntegerLiteral;
 import org.osate.aadl2.NamedElement;
@@ -791,11 +790,12 @@ public class AttestationTransformHandler extends AadlHandler {
 			// Assign implementation
 			ComponentCreateHelper.setSubcomponentType(attestationGateSubcomp, attestationGateImpl);
 
-			final List<Connection> newConns = new ArrayList<>();
+			// TODO: Handle feature group connections
+			final List<PortConnection> newPortConns = new ArrayList<>();
 			// Create new connections between comm driver / attestation gate / destination components
 			int connIdx = -1;
-			for (int i = 0; i < ci.getOwnedConnections().size(); i++) {
-				final Connection conn = ci.getOwnedConnections().get(i);
+			for (int i = 0; i < ci.getOwnedPortConnections().size(); i++) {
+				final PortConnection conn = ci.getOwnedPortConnections().get(i);
 				// Ignore bus connections (destination context not null)
 				if (conn.getSource().getContext() == commDriver && conn.getDestination().getContext() != null) {
 
@@ -821,7 +821,7 @@ public class AttestationTransformHandler extends AadlHandler {
 					// Create connections from comm driver to attestation manager
 					// Don't create extra connections if a comm driver feature is fan out
 					boolean connExists = false;
-					for (Connection c : newConns) {
+					for (PortConnection c : newPortConns) {
 						if (c.getSource().getConnectionEnd().getName().equalsIgnoreCase(featureName)) {
 							connExists = true;
 							break;
@@ -831,16 +831,16 @@ public class AttestationTransformHandler extends AadlHandler {
 						continue;
 					}
 
-					// TODO: Make this a generic connection
-					Connection connOut = null;
-					if (conn instanceof PortConnection) {
-						connOut = Aadl2Factory.eINSTANCE.createPortConnection();
-					} else if (conn instanceof FeatureGroupConnection) {
-						connOut = Aadl2Factory.eINSTANCE.createFeatureGroupConnection();
-					} else {
-						// TODO: Handle this
-						continue;
-					}
+//					PortConnection connOut = null;
+//					if (conn instanceof PortConnection) {
+//						connOut = Aadl2Factory.eINSTANCE.createPortConnection();
+//					} else if (conn instanceof FeatureGroupConnection) {
+//						connOut = Aadl2Factory.eINSTANCE.createFeatureGroupConnection();
+//					} else {
+//						// TODO: Handle this
+//						continue;
+//					}
+					final PortConnection connOut = Aadl2Factory.eINSTANCE.createPortConnection();
 					connOut.setBidirectional(false);
 					final ConnectedElement connSrc = connOut.createSource();
 					connSrc.setContext(commDriver);
@@ -855,7 +855,7 @@ public class AttestationTransformHandler extends AadlHandler {
 						}
 					}
 
-					newConns.add(connOut);
+					newPortConns.add(connOut);
 				}
 			}
 
@@ -868,7 +868,7 @@ public class AttestationTransformHandler extends AadlHandler {
 			final ConnectedElement idDst = portConnId.createDestination();
 			idDst.setContext(attestationGateSubcomp);
 			idDst.setConnectionEnd(agId);
-			newConns.add(portConnId);
+			newPortConns.add(portConnId);
 
 			// Create attestation request / response connections between comm driver and attestation manager
 			final PortConnection portConnReq = Aadl2Factory.eINSTANCE.createPortConnection();
@@ -879,7 +879,7 @@ public class AttestationTransformHandler extends AadlHandler {
 			final ConnectedElement reqDst = portConnReq.createDestination();
 			reqDst.setContext(commDriver);
 			reqDst.setConnectionEnd(commReq);
-			newConns.add(portConnReq);
+			newPortConns.add(portConnReq);
 
 			final PortConnection portConnRes = Aadl2Factory.eINSTANCE.createPortConnection();
 			portConnRes.setBidirectional(false);
@@ -889,16 +889,16 @@ public class AttestationTransformHandler extends AadlHandler {
 			final ConnectedElement resDst = portConnRes.createDestination();
 			resDst.setContext(attestationManagerSubcomp);
 			resDst.setConnectionEnd(commRes);
-			newConns.add(portConnRes);
+			newPortConns.add(portConnRes);
 
 			int idxOffset = 0;
-			for (Connection newConn : newConns) {
+			for (PortConnection newConn : newPortConns) {
 				// Make sure each new connection has a unique name
 				newConn.setName(
 						ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false, ci.getAllConnections()));
-				ci.getOwnedConnections().add(newConn);
+				ci.getOwnedPortConnections().add(newConn);
 				// Move to right place
-//				ci.getOwnedPortConnections().move(connIdx + idxOffset, ci.getOwnedPortConnections().size() - 1);
+				ci.getOwnedPortConnections().move(connIdx + idxOffset, ci.getOwnedPortConnections().size() - 1);
 				// TODO: THIS DOES NOT WORK. If a PortConnection is added, the size of OwnedConnections is not incremented
 //				ci.getOwnedConnections().move(connIdx + idxOffset, ci.getOwnedConnections().size() - 1);
 				idxOffset++;
