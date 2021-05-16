@@ -701,10 +701,10 @@ public class MonitorTransformHandler extends AadlHandler {
 							&& selectedConnection.getDestination().getContext() != null) {
 						gateContextName = selectedConnection.getDestination().getContext().getName();
 					}
-					return new AddMonitorClaim(req.getContext(), monitorSubcomp, gateContextName,
+					return new AddMonitorClaim(req.getContext(), monitorSubcomp, monAlertPort, gateContextName,
 							observedDataFeatureClassifier);
 				} else {
-					return new AddMonitorClaim(req.getContext(), monitorSubcomp);
+					return new AddMonitorClaim(req.getContext(), monitorSubcomp, monAlertPort);
 				}
 			}
 

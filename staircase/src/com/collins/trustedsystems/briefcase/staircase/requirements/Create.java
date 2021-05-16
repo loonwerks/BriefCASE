@@ -200,7 +200,7 @@ public class Create {
 		final String[] parts = qualifiedName.split("\\.");
 		if (parts.length > 2 && classifier instanceof ComponentImplementation) {
 			// parts[0] and parts[1] will be the containing component implementation name
-			// parts[2] and on will refer to a subcomponent or connection
+			// parts[2] and on will refer to a subcomponent or connection or feature
 			final ComponentImplementation ci = (ComponentImplementation) classifier;
 			for (Element e : ci.getOwnedElements()) {
 				if (e instanceof NamedElement) {

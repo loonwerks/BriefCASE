@@ -95,14 +95,14 @@ public
 			vm_bound_to_processor(virtual_machine) and components_bound_to_vm(bound_components, virtual_machine) and subcomponents_not_bound_to_other_processors(bound_components, virtual_machine)
 		
 		-- Strategy for proper insertion of a monitor
-		strategy add_monitor(comp_context : component, monitor : component) <=
+		strategy add_monitor(comp_context : component, monitor : component, alert_port : feature) <=
 			** "Monitor " monitor " is properly added to " comp_context **
-			component_exists(monitor, CASE_Properties::Monitoring) and alert_connected(monitor) and independent_reset(monitor, comp_context) and component_implemented(monitor)
+			component_exists(monitor, CASE_Properties::Monitoring) and alert_connected(monitor, alert_port) and independent_reset(monitor, comp_context) and component_implemented(monitor)
 
 		-- Strategy for proper insertion of a monitor with a gate
-		strategy add_monitor_gate(comp_context : component, monitor : component, gate_context : component, message_type : data) <=
+		strategy add_monitor_gate(comp_context : component, monitor : component, alert_port : feature, gate_context : component, message_type : data) <=
 			** "Monitor " monitor " is properly added to " comp_context **
-			component_exists(monitor, CASE_Properties::Monitoring) and alert_connected(monitor) and independent_reset(monitor, comp_context) and component_not_bypassed(monitor, gate_context, message_type) and component_implemented(monitor)
+			component_exists(monitor, CASE_Properties::Monitoring) and alert_connected(monitor, alert_port) and independent_reset(monitor, comp_context) and component_not_bypassed(monitor, gate_context, message_type) and component_implemented(monitor)
 
 		-- Strategy claim for proper insertion of a switch
 		strategy add_switch(comp_context : component, switch : component, message_type : data) <=
@@ -264,11 +264,9 @@ public
 		is_bound_to_processor(c : component, p : component) : bool =
 			is_bound_to(c, p) and (is_processor(p) or is_virtual_processor(p))
 						
-		alert_connected(monitor : component) <=
+		alert_connected(monitor : component, alert_port : feature) <=
 			** "Monitor Alert port is connected" **
-			let alert_ports : {feature} = {p for (p : features(monitor)) | name(p) = "Alert"};
-			let alert_conns : {connection} = {c for (p : alert_ports) (c : connection) | source(c) = p};
-			length(alert_conns) > 0
+			contained(alert_port, monitor) and length(connections(alert_port)) > 0
 						
 		independent_reset(monitor : component, comp_context : component) <=
 			** "Monitor reset port cannot be triggered by source of observed signal" **
