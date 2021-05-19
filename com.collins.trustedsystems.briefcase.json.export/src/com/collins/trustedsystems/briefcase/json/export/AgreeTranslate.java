@@ -62,6 +62,7 @@ import com.rockwellcollins.atc.agree.agree.PrimType;
 import com.rockwellcollins.atc.agree.agree.PropertyStatement;
 import com.rockwellcollins.atc.agree.agree.RealCast;
 import com.rockwellcollins.atc.agree.agree.RealLitExpr;
+import com.rockwellcollins.atc.agree.agree.RecordDef;
 import com.rockwellcollins.atc.agree.agree.RecordLitExpr;
 import com.rockwellcollins.atc.agree.agree.SelectionExpr;
 import com.rockwellcollins.atc.agree.agree.SpecStatement;
@@ -586,6 +587,18 @@ public class AgreeTranslate {
 		return result;
 	}
 
+	private static JsonElement genRecordDef(RecordDef stmt) {
+		JsonObject result = new JsonObject();
+		result.add("kind", new JsonPrimitive("RecordDef"));
+		result.add("name", new JsonPrimitive(stmt.getName()));
+		JsonArray args = new JsonArray();
+		for (Arg arg : stmt.getArgs()) {
+			args.add(genArg(arg));
+		}
+		result.add("args", args);
+		return result;
+	}
+
 	private static JsonElement genSpecStatement(SpecStatement stmt) {
 		if (stmt instanceof AssertStatement) {
 			return genAssertStatement((AssertStatement) stmt);
@@ -609,6 +622,8 @@ public class AgreeTranslate {
 			return genConstStatement((ConstStatement) stmt);
 		} else if (stmt instanceof NodeDef) {
 			return genNodeDef((NodeDef) stmt);
+		} else if (stmt instanceof RecordDef) {
+			return genRecordDef((RecordDef) stmt);
 		} else {
 			return new JsonPrimitive("new_case/genSpecStatement/" + stmt.toString());
 		}
