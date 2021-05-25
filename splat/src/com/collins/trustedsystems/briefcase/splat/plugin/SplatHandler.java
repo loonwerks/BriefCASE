@@ -423,6 +423,8 @@ public class SplatHandler extends AbstractHandler {
 									+ ci.getType().getName() + "/" + ci.getType().getName();
 							if (implLang.equalsIgnoreCase("c")) {
 								sourceText += ".c";
+							} else if (implLang.equalsIgnoreCase("cakeml")) {
+								sourceText += ".S";
 							} else {
 								sourceText += ".o";
 							}

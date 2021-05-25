@@ -67,7 +67,7 @@ public class AddMonitorClaim extends BuiltInClaim {
 			} else {
 				callArgs.add(Create.THIS(qualifiedName + "." + this.gateContext));
 			}
-			callArgs.add(Create.THIS(this.msgType));
+			callArgs.add(Create.id(this.msgType));
 		}
 		return callArgs;
 	}

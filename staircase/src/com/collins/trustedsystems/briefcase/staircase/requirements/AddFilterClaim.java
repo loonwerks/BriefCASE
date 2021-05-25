@@ -46,7 +46,7 @@ public class AddFilterClaim extends BuiltInClaim {
 		defParams.add(Create.arg("comp_context", Create.baseType("component")));
 		defParams.add(Create.arg("filter", Create.baseType("component")));
 		defParams.add(Create.arg("conn", Create.baseType("connection")));
-		defParams.add(Create.arg("message_type", Create.baseType("aadl")));
+		defParams.add(Create.arg("message_type", Create.baseType("data")));
 		return defParams;
 	}
 
