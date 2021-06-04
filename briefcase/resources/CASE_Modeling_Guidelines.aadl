@@ -232,7 +232,7 @@ private
 			forall (p : port) . lint_check(p, length(connections(p)) > 0)
 			
 		threads_have_source() <=
-			** "Thread implementations must indicate location of source code or binary" **
+			** "Thread implementations should indicate location of source code or binary" **
 			forall (t : thread) . lint_check(t, has_property(t, Programming_Properties::Source_Text))
 
 		processes_bound() <=

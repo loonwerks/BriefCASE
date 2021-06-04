@@ -135,8 +135,7 @@ public
 		-- the component on the communication pathway.
 		filter_exists(filter : component, comp_context : component, conn : connection) <=
 			** "A CASE_Filter " filter " is connected to component " comp_context " by connection " conn **
-			let conns : {connection} = {c for (c : connections(comp_context)) | destination_component(c) = comp_context and source_component(c) = filter};
-			has_mitigation_type(filter, CASE_Properties::Filtering) and exists(c : conns) . c = conn
+			has_mitigation_type(filter, CASE_Properties::Filtering) and connected(filter, conn, comp_context)
 						
 		-- Check to see if the specified component exists
 		component_exists(comp : component, mitigation_type : property) <=
@@ -171,12 +170,12 @@ public
 					
 		-- Returns the set of components that are ancestors of a target component through communication pathways that don't pass through a filter
 		get_non_filter_sources(target : component, filter : component, msg_type : data) : {component} = 
-			let srcs : {component} = {c for (conn : connections (target)) (c : source_component(conn)) | has_type(conn) and type(conn) = msg_type and not (source_component(conn) = filter) and not (source_component(conn) = target)}; 
+			let srcs : {component} = {c for (conn : connections(target)) (c : source_component(conn)) | has_type(conn) and type(conn) = msg_type and not is_source_component(conn, filter) and not is_source_component(conn, target)}; 
 			recursive_backwards_reach(srcs)
 		
 		-- Returns the set of components that are ancestors of the filter on a target component
 		get_filter_sources(target : component, filter : component, msg_type : data) : {component} = 
-			let srcs : {component} = {c for (conn : connections(target)) (c : source_component(conn)) | has_type(conn) and type(conn) = msg_type and name(source_component(conn)) = name(filter)};
+			let srcs : {component} = {c for (conn : connections(target)) (c : source_component(conn)) | has_type(conn) and type(conn) = msg_type and is_source_component(conn, filter)};
 			prev_reach(srcs)
 		
 		recursive_backwards_reach(curr : {component}) : {component} = 
@@ -205,10 +204,10 @@ public
 		attestation_manager_exists(comm_driver : component, attestation_manager : component) <=
 			** "An attestation manager on " comm_driver " exists" **
 			-- check that the attestation manager only has attestation request/response connections to the comm driver
-			is_comm_driver(comm_driver) and has_mitigation_type(attestation_manager, CASE_Properties::Attesting) and
-			forall (conn : connections(attestation_manager)) . 
-					(has_type(conn) and name(type(conn)) = "CASE_AttestationRequestMsg.Impl") => destination_component(conn) = comm_driver and
-					(has_type(conn) and name(type(conn)) = "CASE_AttestationResponseMsg.Impl") => source_component(conn) = comm_driver
+			is_comm_driver(comm_driver) and has_mitigation_type(attestation_manager, CASE_Properties::Attesting) 
+--			and forall (conn : connections(attestation_manager)) . 
+--				(has_type(conn) and name(type(conn)) = "CASE_AttestationRequestMsg.Impl") => destination_component(conn) = comm_driver and
+--				(has_type(conn) and name(type(conn)) = "CASE_AttestationResponseMsg.Impl") => source_component(conn) = comm_driver
 						
 		-- Evidence that communication from the comm driver cannot bypass attestation manager
 		attestation_manager_not_bypassed(comm_driver : component, attestation_manager : component, attestation_gate : component) <=

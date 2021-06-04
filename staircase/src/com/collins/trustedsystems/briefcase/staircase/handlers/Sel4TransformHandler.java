@@ -811,9 +811,10 @@ public class Sel4TransformHandler extends AadlHandler {
 
 				if (c instanceof PortConnection) {
 					final PortConnection pc = transformImpl.createOwnedPortConnection();
-					pc.setName(
-							ModelTransformUtils.getUniqueName(PORT_CONNECTION_IMPL_NAME, false,
-									transformImpl.getOwnedPortConnections()));
+//					pc.setName(
+//							ModelTransformUtils.getUniqueName(PORT_CONNECTION_IMPL_NAME, false,
+//									transformImpl.getOwnedPortConnections()));
+					pc.setName(c.getName());
 					pc.setBidirectional(c.isBidirectional());
 					final ConnectedElement src = pc.createSource();
 					final ConnectedElement dst = pc.createDestination();
@@ -825,8 +826,9 @@ public class Sel4TransformHandler extends AadlHandler {
 					copyPropertyAssociations(c, pc);
 				} else if (c instanceof AccessConnection) {
 					final AccessConnection ac = transformImpl.createOwnedAccessConnection();
-					ac.setName(ModelTransformUtils.getUniqueName(ACCESS_CONNECTION_IMPL_NAME, false,
-							transformImpl.getOwnedAccessConnections()));
+//					ac.setName(ModelTransformUtils.getUniqueName(ACCESS_CONNECTION_IMPL_NAME, false,
+//							transformImpl.getOwnedAccessConnections()));
+					ac.setName(c.getName());
 					final ConnectedElement src = ac.createSource();
 					final ConnectedElement dst = ac.createDestination();
 					src.setContext(srcContext);

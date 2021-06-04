@@ -24,7 +24,6 @@ import org.osate.aadl2.ComponentType;
 import org.osate.aadl2.ConnectedElement;
 import org.osate.aadl2.Connection;
 import org.osate.aadl2.ConnectionEnd;
-import org.osate.aadl2.DataImplementation;
 import org.osate.aadl2.DataPort;
 import org.osate.aadl2.DataSubcomponentType;
 import org.osate.aadl2.DefaultAnnexSubclause;
@@ -70,15 +69,15 @@ import com.rockwellcollins.atc.agree.unparsing.AgreeAnnexUnparser;
 
 public class AttestationTransformHandler extends AadlHandler {
 
-	static final String AM_REQUEST_MSG_NAME = "CASE_AttestationRequestMsg";
-	static final String AM_RESPONSE_MSG_NAME = "CASE_AttestationResponseMsg";
+//	static final String AM_REQUEST_MSG_NAME = "CASE_AttestationRequestMsg";
+//	static final String AM_RESPONSE_MSG_NAME = "CASE_AttestationResponseMsg";
 	static final String AM_REQUEST_MSG_IMPL_NAME = "CASE_AttestationRequestMsg.Impl";
 	static final String AM_RESPONSE_MSG_IMPL_NAME = "CASE_AttestationResponseMsg.Impl";
 	public static final String AM_COMP_TYPE_NAME = "CASE_AttestationManager";
 	public static final String AG_COMP_TYPE_NAME = "CASE_AttestationGate";
 	public static final String LOG_PORT_NAME = "LogMessage";
-	static final String AM_PORT_ATTESTATION_REQUEST_NAME = "AttestationRequest";
-	static final String AM_PORT_ATTESTATION_RESPONSE_NAME = "AttestationResponse";
+	public static final String AM_PORT_ATTESTATION_REQUEST_NAME = "AttestationRequest";
+	public static final String AM_PORT_ATTESTATION_RESPONSE_NAME = "AttestationResponse";
 	public static final String AM_PORT_TRUSTED_IDS_NAME = "TrustedIds";
 //	static final String AM_PORT_ATTESTATION_REQUEST_NAME_EXTERNAL = "comm_request";
 //	static final String AM_PORT_ATTESTATION_RESPONSE_NAME_EXTERNAL = "comm_response";
@@ -94,6 +93,8 @@ public class AttestationTransformHandler extends AadlHandler {
 	private String attestationManagerPeriod;
 	private String attestationGateDispatchProtocol;
 	private String attestationGatePeriod;
+	private String requestMessageDataType;
+	private String responseMessageDataType;
 	private long cacheTimeout;
 	private long cacheSize;
 	private String idListDataType;
@@ -162,6 +163,8 @@ public class AttestationTransformHandler extends AadlHandler {
 			attestationManagerPeriod = wizard.getMgrPeriod();
 			attestationGateDispatchProtocol = wizard.getGateDispatchProtocol();
 			attestationGatePeriod = wizard.getGatePeriod();
+			requestMessageDataType = wizard.getRequestMessageDataType();
+			responseMessageDataType = wizard.getResponseMessageDataType();
 			cacheTimeout = wizard.getCacheTimeout();
 			cacheSize = wizard.getCacheSize();
 			idListDataType = wizard.getIdListDataType();
@@ -312,14 +315,62 @@ public class AttestationTransformHandler extends AadlHandler {
 			}
 
 			// Get the request and response message types from the CASE_Model_Transformations package
-			DataImplementation requestMsgImpl = null;
-			DataImplementation responseMsgImpl = null;
-			final AadlPackage caseModelTransformationsPkg = CaseUtils.getCaseModelTransformationsPackage();
-			for (Classifier classifier : caseModelTransformationsPkg.getOwnedPublicSection().getOwnedClassifiers()) {
-				if (classifier.getName().equalsIgnoreCase(AM_REQUEST_MSG_IMPL_NAME)) {
-					requestMsgImpl = (DataImplementation) classifier;
-				} else if (classifier.getName().equalsIgnoreCase(AM_RESPONSE_MSG_IMPL_NAME)) {
-					responseMsgImpl = (DataImplementation) classifier;
+//			DataImplementation requestMsgImpl = null;
+//			DataImplementation responseMsgImpl = null;
+//			final AadlPackage caseModelTransformationsPkg = CaseUtils.getCaseModelTransformationsPackage();
+//			for (Classifier classifier : caseModelTransformationsPkg.getOwnedPublicSection().getOwnedClassifiers()) {
+//				if (classifier.getName().equalsIgnoreCase(AM_REQUEST_MSG_IMPL_NAME)) {
+//					requestMsgImpl = (DataImplementation) classifier;
+//				} else if (classifier.getName().equalsIgnoreCase(AM_RESPONSE_MSG_IMPL_NAME)) {
+//					responseMsgImpl = (DataImplementation) classifier;
+//				}
+//			}
+			DataSubcomponentType requestMsgImpl = null;
+			if (!requestMessageDataType.isEmpty()) {
+				requestMsgImpl = Aadl2GlobalScopeUtil.get(ci, Aadl2Package.eINSTANCE.getDataSubcomponentType(),
+						requestMessageDataType);
+				if (requestMsgImpl == null) {
+					// Aadl2GlobalScopeUtil.get() doesn't seem to find elements in current package
+					for (Classifier c : pkgSection.getOwnedClassifiers()) {
+						if (c.getQualifiedName().equalsIgnoreCase(requestMessageDataType)
+								&& c instanceof DataSubcomponentType) {
+							requestMsgImpl = (DataSubcomponentType) c;
+							break;
+						}
+					}
+				} else {
+					ModelTransformUtils.importContainingPackage(requestMsgImpl, pkgSection);
+				}
+			}
+
+			DataSubcomponentType responseMsgImpl = null;
+			if (!responseMessageDataType.isEmpty()) {
+				requestMsgImpl = Aadl2GlobalScopeUtil.get(ci, Aadl2Package.eINSTANCE.getDataSubcomponentType(),
+						idListDataType);
+				if (requestMsgImpl == null) {
+					// Aadl2GlobalScopeUtil.get() doesn't seem to find elements in current package
+					for (Classifier c : pkgSection.getOwnedClassifiers()) {
+						if (c.getQualifiedName().equalsIgnoreCase(requestMessageDataType)
+								&& c instanceof DataSubcomponentType) {
+							requestMsgImpl = (DataSubcomponentType) c;
+							break;
+						}
+					}
+				} else {
+					ModelTransformUtils.importContainingPackage(requestMsgImpl, pkgSection);
+				}
+			}
+
+			if (requestMsgImpl == null || responseMsgImpl == null) {
+				final AadlPackage caseModelTransformationsPkg = CaseUtils.getCaseModelTransformationsPackage();
+				for (Classifier classifier : caseModelTransformationsPkg.getOwnedPublicSection()
+						.getOwnedClassifiers()) {
+					if (requestMsgImpl == null && classifier.getName().equalsIgnoreCase(AM_REQUEST_MSG_IMPL_NAME)) {
+						requestMsgImpl = (DataSubcomponentType) classifier;
+					} else if (responseMsgImpl == null
+							&& classifier.getName().equalsIgnoreCase(AM_RESPONSE_MSG_IMPL_NAME)) {
+						responseMsgImpl = (DataSubcomponentType) classifier;
+					}
 				}
 			}
 

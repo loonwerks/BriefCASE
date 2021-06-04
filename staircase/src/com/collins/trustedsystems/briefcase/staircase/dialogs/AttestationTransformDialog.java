@@ -61,6 +61,8 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 	private Text txtGateComponentName;
 	private Text txtMgrSubcomponentName;
 	private Text txtGateSubcomponentName;
+	private Text txtRequestMessageDataType;
+	private Text txtResponseMessageDataType;
 	private Text txtCacheTimeout;
 	private Combo cboCacheSize;
 	private Text txtIdListDataType;
@@ -81,6 +83,8 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 	private String attestationGateComponentName;
 	private String attestationManagerSubcomponentName;
 	private String attestationGateSubcomponentName;
+	private String requestMessageDataType = "";
+	private String responseMessageDataType = "";
 	private long cacheTimeout = 0;
 	private long cacheSize = 0;
 	private String idListDataType = "";
@@ -181,6 +185,8 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 
 		createMgrComponentNameField(container);
 		createMgrSubcomponentNameField(container);
+		createRequestMessageDataTypeField(container);
+		createResponseMessageDataTypeField(container);
 		createCacheTimeoutField(container);
 		createCacheSizeField(container);
 		createIdListDataTypeField(container);
@@ -309,6 +315,74 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		} else {
 			txtGateSubcomponentName.setText(attestationGate.getName());
 			txtGateSubcomponentName.setEnabled(false);
+		}
+
+	}
+
+	private void createRequestMessageDataTypeField(Composite container) {
+
+		final Label lblRequestMessageDataTypeField = new Label(container, SWT.NONE);
+		lblRequestMessageDataTypeField.setText("Request Message data type");
+
+		final GridData dataInfoField = new GridData();
+		dataInfoField.grabExcessHorizontalSpace = true;
+		dataInfoField.horizontalAlignment = SWT.FILL;
+		dataInfoField.grabExcessVerticalSpace = false;
+		txtRequestMessageDataType = new Text(container, SWT.BORDER);
+		txtRequestMessageDataType.setLayoutData(dataInfoField);
+
+		if (attestationManager != null) {
+
+			final ComponentType ct = attestationManager.getComponentType();
+			for (Feature f : ct.getOwnedFeatures()) {
+				if (f.getName().equalsIgnoreCase(AttestationTransformHandler.AM_PORT_ATTESTATION_REQUEST_NAME)) {
+					String dataType = "";
+					if (f instanceof EventDataPort) {
+						final EventDataPort port = (EventDataPort) f;
+						dataType = port.getDataFeatureClassifier().getQualifiedName();
+					} else if (f instanceof DataPort) {
+						final DataPort port = (DataPort) f;
+						dataType = port.getDataFeatureClassifier().getQualifiedName();
+					}
+					txtRequestMessageDataType.setText(dataType);
+				}
+			}
+
+			txtRequestMessageDataType.setEnabled(false);
+		}
+
+	}
+
+	private void createResponseMessageDataTypeField(Composite container) {
+
+		final Label lblResponseMessageDataTypeField = new Label(container, SWT.NONE);
+		lblResponseMessageDataTypeField.setText("Response Message data type");
+
+		final GridData dataInfoField = new GridData();
+		dataInfoField.grabExcessHorizontalSpace = true;
+		dataInfoField.horizontalAlignment = SWT.FILL;
+		dataInfoField.grabExcessVerticalSpace = false;
+		txtResponseMessageDataType = new Text(container, SWT.BORDER);
+		txtResponseMessageDataType.setLayoutData(dataInfoField);
+
+		if (attestationManager != null) {
+
+			final ComponentType ct = attestationManager.getComponentType();
+			for (Feature f : ct.getOwnedFeatures()) {
+				if (f.getName().equalsIgnoreCase(AttestationTransformHandler.AM_PORT_ATTESTATION_RESPONSE_NAME)) {
+					String dataType = "";
+					if (f instanceof EventDataPort) {
+						final EventDataPort port = (EventDataPort) f;
+						dataType = port.getDataFeatureClassifier().getQualifiedName();
+					} else if (f instanceof DataPort) {
+						final DataPort port = (DataPort) f;
+						dataType = port.getDataFeatureClassifier().getQualifiedName();
+					}
+					txtResponseMessageDataType.setText(dataType);
+				}
+			}
+
+			txtResponseMessageDataType.setEnabled(false);
 		}
 
 	}
@@ -836,6 +910,40 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 			attestationGateSubcomponentName = txtGateSubcomponentName.getText();
 		}
 
+		// Request Message Data Type
+		if (!txtRequestMessageDataType.getText().isEmpty() && !txtRequestMessageDataType.getText().contains("::")) {
+			// Check if type is defined in current package
+			if (AadlUtil.findNamedElementInList(componentsInPackage, txtRequestMessageDataType.getText()) == null) {
+				Dialog.showError("Attestation Transform",
+						"Request message data type was not found in package "
+								+ AadlUtil.getContainingPackage(context).getName()
+								+ ". Enter the data type's qualified name if it is defined in a different package.");
+				return false;
+			} else {
+				// Add the package name
+				txtRequestMessageDataType.setText(
+						AadlUtil.getContainingPackage(context).getName() + "::" + txtRequestMessageDataType.getText());
+			}
+		}
+		requestMessageDataType = txtRequestMessageDataType.getText();
+
+		// Response Message Data Type
+		if (!txtResponseMessageDataType.getText().isEmpty() && !txtResponseMessageDataType.getText().contains("::")) {
+			// Check if type is defined in current package
+			if (AadlUtil.findNamedElementInList(componentsInPackage, txtResponseMessageDataType.getText()) == null) {
+				Dialog.showError("Attestation Transform",
+						"Response message data type was not found in package "
+								+ AadlUtil.getContainingPackage(context).getName()
+								+ ". Enter the data type's qualified name if it is defined in a different package.");
+				return false;
+			} else {
+				// Add the package name
+				txtResponseMessageDataType.setText(
+						AadlUtil.getContainingPackage(context).getName() + "::" + txtResponseMessageDataType.getText());
+			}
+		}
+		responseMessageDataType = txtResponseMessageDataType.getText();
+
 
 		// Timeout
 		try {
@@ -975,6 +1083,14 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 
 	public String getAttestationGateSubcomponentName() {
 		return attestationGateSubcomponentName;
+	}
+
+	public String getRequestMessageDataType() {
+		return requestMessageDataType;
+	}
+
+	public String getResponseMessageDataType() {
+		return responseMessageDataType;
 	}
 
 	public long getCacheTimeout() {
