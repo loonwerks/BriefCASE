@@ -367,14 +367,6 @@
       <menuContribution
             allPopups="false"
             locationURI="toolbar:org.eclipse.ui.main.toolbar">
-         <toolbar
-               id="touch.toolbar"
-               label="Touch">
-            <command
-                  commandId="com.collins.trustedsystems.briefcase.staircase.commands.Touch"
-                  label="Touch">
-            </command>
-         </toolbar>
       </menuContribution>
    </extension>
    <extension

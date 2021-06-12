@@ -34,9 +34,11 @@ import org.osate.aadl2.IntegerLiteral;
 import org.osate.aadl2.NamedValue;
 import org.osate.aadl2.PortCategory;
 import org.osate.aadl2.ProcessImplementation;
+import org.osate.aadl2.ProcessType;
 import org.osate.aadl2.Property;
 import org.osate.aadl2.PropertyExpression;
 import org.osate.aadl2.Subcomponent;
+import org.osate.aadl2.SystemImplementation;
 import org.osate.aadl2.ThreadGroupImplementation;
 import org.osate.aadl2.modelsupport.util.AadlUtil;
 import org.osate.ui.dialogs.Dialog;
@@ -143,8 +145,8 @@ public class FilterTransformDialog extends TitleAreaDialog {
 		// Add filter information fields
 		createFilterComponentNameField(container);
 		createFilterSubcomponentNameField(container);
-		// Only display dispatch protocol if filter is a thread
-		if (context instanceof ProcessImplementation || context instanceof ThreadGroupImplementation) {
+		if (context instanceof ProcessImplementation || context instanceof ThreadGroupImplementation
+				|| (context instanceof SystemImplementation && context.getTypeName().endsWith("_seL4"))) {
 			createDispatchProtocolField(container);
 		}
 		createPortNamesField(container);
@@ -259,9 +261,15 @@ public class FilterTransformDialog extends TitleAreaDialog {
 		txtPeriod.setEnabled(false);
 
 		if (compoundFilter != null) {
-			Property prop = GetProperties.lookupPropertyDefinition(compoundFilter, ThreadProperties._NAME,
+			Subcomponent filterSubcomponent = compoundFilter;
+			if (compoundFilter.getComponentType() instanceof ProcessType
+					&& compoundFilter.getComponentType().getName().endsWith("_seL4")) {
+				filterSubcomponent = ((ProcessImplementation) filterSubcomponent.getComponentImplementation())
+						.getOwnedThreadSubcomponents().get(0);
+			}
+			Property prop = GetProperties.lookupPropertyDefinition(filterSubcomponent, ThreadProperties._NAME,
 					ThreadProperties.DISPATCH_PROTOCOL);
-			final List<? extends PropertyExpression> protocol = compoundFilter.getPropertyValueList(prop);
+			final List<? extends PropertyExpression> protocol = filterSubcomponent.getPropertyValueList(prop);
 			if (!protocol.isEmpty()) {
 				final NamedValue nv = (NamedValue) protocol.get(0);
 				final EnumerationLiteral el = (EnumerationLiteral) nv.getNamedValue();
@@ -281,9 +289,9 @@ public class FilterTransformDialog extends TitleAreaDialog {
 			btnPeriodic.setEnabled(false);
 			btnSporadic.setEnabled(false);
 
-			prop = GetProperties.lookupPropertyDefinition(compoundFilter, TimingProperties._NAME,
+			prop = GetProperties.lookupPropertyDefinition(filterSubcomponent, TimingProperties._NAME,
 					TimingProperties.PERIOD);
-			final List<? extends PropertyExpression> periodVals = compoundFilter.getPropertyValueList(prop);
+			final List<? extends PropertyExpression> periodVals = filterSubcomponent.getPropertyValueList(prop);
 			if (!periodVals.isEmpty()) {
 				String period = "";
 				if (periodVals.get(0) instanceof IntegerLiteral) {

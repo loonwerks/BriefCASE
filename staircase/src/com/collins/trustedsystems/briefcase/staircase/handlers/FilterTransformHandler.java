@@ -36,6 +36,7 @@ import org.osate.aadl2.NamedValue;
 import org.osate.aadl2.PackageSection;
 import org.osate.aadl2.Port;
 import org.osate.aadl2.PortCategory;
+import org.osate.aadl2.ProcessImplementation;
 import org.osate.aadl2.Property;
 import org.osate.aadl2.Realization;
 import org.osate.aadl2.Subcomponent;
@@ -74,6 +75,7 @@ public class FilterTransformHandler extends AadlHandler {
 	private PortCategory logPortType;
 	private String filterRequirement;
 	private String filterPolicy;
+	private boolean isSel4Process = false;
 
 	@Override
 	protected void runCommand(URI uri) {
@@ -104,6 +106,16 @@ public class FilterTransformHandler extends AadlHandler {
 					"A filter can only be connected to a thread, thread group, or process.");
 			return;
 		}
+
+		// Check that a filter isn't being added to a thread in a seL4 process
+		if (subcomponent.getContainingComponentImpl() instanceof ProcessImplementation
+				&& subcomponent.getContainingComponentImpl().getTypeName().endsWith("_seL4")) {
+			Dialog.showError("Filter Transform", "An seL4 process cannot contain multiple components.");
+			return;
+		}
+
+		isSel4Process = subcomponent.getComponentImplementation() instanceof ProcessImplementation
+				&& subcomponent.getContainingComponentImpl().getTypeName().endsWith("_seL4");
 
 		boolean createCompoundFilter = false;
 		Connection filterOutConn = null;
@@ -144,6 +156,19 @@ public class FilterTransformHandler extends AadlHandler {
 						return;
 					}
 				}
+			}
+		}
+		if (createCompoundFilter && isSel4Process) {
+			// Make sure seL4 process contains a filter thread
+			ProcessImplementation pi = (ProcessImplementation) subcomponent.getComponentImplementation();
+			if (pi.getOwnedThreadSubcomponents().size() != 1) {
+				Dialog.showError("Filter Transform", "seL4 filter does not contain a single thread.");
+				return;
+			}
+			if (!CasePropertyUtils.hasMitigationType(pi.getOwnedThreadSubcomponents().get(0).getClassifier(),
+					MITIGATION_TYPE.FILTER)) {
+				Dialog.showError("Filter Transform", "seL4 process does not contain a filter thread.");
+				return;
 			}
 		}
 
@@ -227,18 +252,12 @@ public class FilterTransformHandler extends AadlHandler {
 				return null;
 			}
 
+			final ComponentImplementation containingImpl = selectedConnection.getContainingComponentImpl();
+
 			// Figure out component type by looking at the component type of the destination component
 			ComponentCategory compCategory = ((Subcomponent) selectedConnection.getDestination().getContext())
 					.getCategory();
-
-			// If the component type is a process, we will need to put a single thread inside.
-			// Per convention, we will attach all properties and contracts to the thread.
-			// For this model transformation, we will create the thread first, then wrap it in a process
-			// component, using the same mechanism we use for the seL4 transformation
-			final boolean isProcess = (compCategory == ComponentCategory.PROCESS);
-			if (isProcess) {
-				compCategory = ComponentCategory.THREAD;
-			} else if (compCategory == ComponentCategory.THREAD_GROUP) {
+			if (compCategory == ComponentCategory.THREAD_GROUP) {
 				compCategory = ComponentCategory.THREAD;
 			}
 
@@ -246,8 +265,10 @@ public class FilterTransformHandler extends AadlHandler {
 					.createOwnedClassifier(ComponentCreateHelper.getTypeClass(compCategory));
 
 			// Give it a unique name
+			final String filterName = ModelTransformUtils.getUniqueName(filterComponentName, true, pkgSection.getOwnedClassifiers());
 			filterType.setName(
-					ModelTransformUtils.getUniqueName(filterComponentName, true, pkgSection.getOwnedClassifiers()));
+					ModelTransformUtils.getUniqueName(filterName + (isSel4Process ? "_seL4" : ""), true,
+							pkgSection.getOwnedClassifiers()));
 
 			// Create filter ports
 			final ConnectionEnd connectionEnd = selectedConnection.getDestination().getConnectionEnd();
@@ -332,12 +353,10 @@ public class FilterTransformHandler extends AadlHandler {
 			}
 
 			// CASE::Component_Spec property
-			String filterPropId = filterType.getName() + "_" + connEndOut.getName();
+			String filterPropId = filterName + "_" + connEndOut.getName();
 			if (!CasePropertyUtils.setCompSpec(filterType, filterPropId)) {
 //				return;
 			}
-
-			final ComponentImplementation containingImpl = selectedConnection.getContainingComponentImpl();
 
 			// Move filter to top of file
 			pkgSection.getOwnedClassifiers().move(0, pkgSection.getOwnedClassifiers().size() - 1);
@@ -349,27 +368,29 @@ public class FilterTransformHandler extends AadlHandler {
 			final Realization r = filterImpl.createOwnedRealization();
 			r.setImplemented(filterType);
 
-			// Dispatch protocol
-			if (!filterDispatchProtocol.isEmpty() && compCategory == ComponentCategory.THREAD) {
-				final Property dispatchProtocolProp = GetProperties.lookupPropertyDefinition(filterImpl,
-						ThreadProperties._NAME, ThreadProperties.DISPATCH_PROTOCOL);
-				final EnumerationLiteral dispatchProtocolLit = Aadl2Factory.eINSTANCE.createEnumerationLiteral();
-				dispatchProtocolLit.setName(filterDispatchProtocol);
-				final NamedValue nv = Aadl2Factory.eINSTANCE.createNamedValue();
-				nv.setNamedValue(dispatchProtocolLit);
-				filterImpl.setPropertyValue(dispatchProtocolProp, nv);
-			}
-			// Period
-			if (!filterPeriod.isEmpty() && compCategory == ComponentCategory.THREAD) {
-				final Property periodProp = GetProperties.lookupPropertyDefinition(filterImpl, TimingProperties._NAME,
-						TimingProperties.PERIOD);
-				final IntegerLiteral periodLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
-				final UnitLiteral unit = Aadl2Factory.eINSTANCE.createUnitLiteral();
-				unit.setName(filterPeriod.replaceAll("[\\d]", "").trim());
-				periodLit.setBase(0);
-				periodLit.setValue(Long.parseLong(filterPeriod.replaceAll("[\\D]", "").trim()));
-				periodLit.setUnit(unit);
-				filterImpl.setPropertyValue(periodProp, periodLit);
+			if (compCategory == ComponentCategory.THREAD) {
+				// Dispatch protocol
+				if (!filterDispatchProtocol.isEmpty()) {
+					final Property dispatchProtocolProp = GetProperties.lookupPropertyDefinition(filterImpl,
+							ThreadProperties._NAME, ThreadProperties.DISPATCH_PROTOCOL);
+					final EnumerationLiteral dispatchProtocolLit = Aadl2Factory.eINSTANCE.createEnumerationLiteral();
+					dispatchProtocolLit.setName(filterDispatchProtocol);
+					final NamedValue nv = Aadl2Factory.eINSTANCE.createNamedValue();
+					nv.setNamedValue(dispatchProtocolLit);
+					filterImpl.setPropertyValue(dispatchProtocolProp, nv);
+				}
+				// Period
+				if (!filterPeriod.isEmpty()) {
+					final Property periodProp = GetProperties.lookupPropertyDefinition(filterImpl,
+							TimingProperties._NAME, TimingProperties.PERIOD);
+					final IntegerLiteral periodLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
+					final UnitLiteral unit = Aadl2Factory.eINSTANCE.createUnitLiteral();
+					unit.setName(filterPeriod.replaceAll("[\\d]", "").trim());
+					periodLit.setBase(0);
+					periodLit.setValue(Long.parseLong(filterPeriod.replaceAll("[\\D]", "").trim()));
+					periodLit.setUnit(unit);
+					filterImpl.setPropertyValue(periodProp, periodLit);
+				}
 			}
 
 			// Add it to proper place (just below component type)
@@ -409,7 +430,7 @@ public class FilterTransformHandler extends AadlHandler {
 			selectedConnection.getDestination().setConnectionEnd(connEndIn);
 
 			// AGREE
-			final String filterPolicyName = filterType.getName() + "_policy";
+			final String filterPolicyName = filterName + "_policy";
 
 			if (filterPolicy.isEmpty()) {
 				filterPolicy = "false;";
@@ -445,16 +466,23 @@ public class FilterTransformHandler extends AadlHandler {
 
 			agreeClauses.append("**}");
 
-			final DefaultAnnexSubclause annexSubclauseImpl = ComponentCreateHelper
-					.createOwnedAnnexSubclause(filterType);
-			annexSubclauseImpl.setName("agree");
-			annexSubclauseImpl.setSourceText(agreeClauses.toString());
+			if (isSel4Process) {
+				final DefaultAnnexSubclause annexSubclauseImpl = ComponentCreateHelper
+						.createOwnedAnnexSubclause(filterImpl);
+				annexSubclauseImpl.setName("agree");
+				annexSubclauseImpl.setSourceText(
+						"{**" + System.lineSeparator() + "lift contract;" + System.lineSeparator() + "**}");
+			} else {
+				final DefaultAnnexSubclause annexSubclauseImpl = ComponentCreateHelper
+						.createOwnedAnnexSubclause(filterType);
+				annexSubclauseImpl.setName("agree");
+				annexSubclauseImpl.setSourceText(agreeClauses.toString());
+			}
 
-			if (isProcess) {
-
-				// TODO: Wrap thread component in a process
-
-				// TODO: Bind process to processor
+			// Add thread if this is a seL4 process
+			if (isSel4Process) {
+				Sel4TransformHandler.insertThreadInSel4Process((ProcessImplementation) filterImpl,
+						filterDispatchProtocol, filterPeriod, agreeClauses.toString());
 			}
 
 			// Add add_filter claims to resolute prove statement, if applicable
@@ -474,6 +502,7 @@ public class FilterTransformHandler extends AadlHandler {
 	}
 
 
+
 	/**
 	 * Adds a new spec to the specified filter
 	 * @param uri
@@ -485,7 +514,14 @@ public class FilterTransformHandler extends AadlHandler {
 		final AddFilterClaim claim = xtextEditor.getDocument().modify(resource -> {
 
 			final Subcomponent subcomponent = (Subcomponent) resource.getEObject(subURI.fragment());
-			final ComponentType filter = subcomponent.getComponentType();
+			ComponentType filter = null;
+			// If it's an seL4 process, get the contained thread type instead
+			if (isSel4Process) {
+				ProcessImplementation pi = (ProcessImplementation) subcomponent.getComponentImplementation();
+				filter = pi.getOwnedThreadSubcomponents().get(0).getComponentType();
+			} else {
+				filter = subcomponent.getComponentType();
+			}
 
 			final Connection connection = (Connection) resource.getEObject(connURI.fragment());
 			final ConnectionEnd connectionEnd = connection.getSource().getConnectionEnd();

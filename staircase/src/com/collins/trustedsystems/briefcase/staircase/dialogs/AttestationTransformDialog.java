@@ -41,6 +41,7 @@ import org.osate.aadl2.ProcessImplementation;
 import org.osate.aadl2.Property;
 import org.osate.aadl2.PropertyExpression;
 import org.osate.aadl2.Subcomponent;
+import org.osate.aadl2.SystemImplementation;
 import org.osate.aadl2.ThreadGroupImplementation;
 import org.osate.aadl2.modelsupport.scoping.Aadl2GlobalScopeUtil;
 import org.osate.aadl2.modelsupport.util.AadlUtil;
@@ -64,7 +65,7 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 	private Text txtRequestMessageDataType;
 	private Text txtResponseMessageDataType;
 	private Text txtCacheTimeout;
-	private Combo cboCacheSize;
+//	private Combo cboCacheSize;
 	private Text txtIdListDataType;
 	private PortNamesControl pncPortNames = null;
 	private List<Button> btnMgrDispatchProtocol = new ArrayList<>();
@@ -86,7 +87,7 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 	private String requestMessageDataType = "";
 	private String responseMessageDataType = "";
 	private long cacheTimeout = 0;
-	private long cacheSize = 0;
+//	private long cacheSize = 0;
 	private String idListDataType = "";
 	private Map<String, List<String>> gatePortNames = new HashMap<>();
 	private String mgrDispatchProtocol = "";
@@ -104,8 +105,8 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 	private Subcomponent attestationManager = null;
 	private Subcomponent attestationGate = null;
 
-	private static final int MAX_CACHE_SIZE = 6;
-	private static final int DEFAULT_CACHE_SIZE = 4;
+//	private static final int MAX_CACHE_SIZE = 6;
+//	private static final int DEFAULT_CACHE_SIZE = 4;
 
 	private static final String NO_REQUIREMENT_SELECTED = "<No requirement selected>";
 
@@ -188,9 +189,10 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		createRequestMessageDataTypeField(container);
 		createResponseMessageDataTypeField(container);
 		createCacheTimeoutField(container);
-		createCacheSizeField(container);
+//		createCacheSizeField(container);
 		createIdListDataTypeField(container);
-		if (context instanceof ProcessImplementation || context instanceof ThreadGroupImplementation) {
+		if (context instanceof ProcessImplementation || context instanceof ThreadGroupImplementation
+				|| (context instanceof SystemImplementation && context.getTypeName().endsWith("_seL4"))) {
 			createMgrDispatchProtocolField(container);
 		}
 		createMgrLogPortField(container);
@@ -223,7 +225,8 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		final Composite miscContainer = new Composite(container, SWT.NONE);
 		miscContainer.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 		miscContainer.setLayout(new GridLayout(2, false));
-		if (context instanceof ProcessImplementation || context instanceof ThreadGroupImplementation) {
+		if (context instanceof ProcessImplementation || context instanceof ThreadGroupImplementation
+				|| (context instanceof SystemImplementation && context.getTypeName().endsWith("_seL4"))) {
 			createGateDispatchProtocolField(miscContainer);
 		}
 		createGateLogPortField(miscContainer);
@@ -418,38 +421,38 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 
 	}
 
-	private void createCacheSizeField(Composite container) {
-
-		final Label lblCacheSizeField = new Label(container, SWT.NONE);
-		lblCacheSizeField.setText("Cache size");
-
-		final GridData dataInfoField = new GridData();
-		dataInfoField.grabExcessHorizontalSpace = true;
-		dataInfoField.horizontalAlignment = SWT.FILL;
-		dataInfoField.grabExcessVerticalSpace = false;
-		cboCacheSize = new Combo(container, SWT.BORDER | SWT.READ_ONLY);
-		cboCacheSize.setLayoutData(dataInfoField);
-		for (int i = 1; i <= MAX_CACHE_SIZE; i++) {
-			cboCacheSize.add(Integer.toString(i));
-		}
-		if (attestationManager == null) {
-			cboCacheSize.setText(Integer.toString(DEFAULT_CACHE_SIZE));
-		} else {
-			final ComponentImplementation ci = attestationManager.getComponentImplementation();
-			final Property prop = Aadl2GlobalScopeUtil.get(ci, Aadl2Package.eINSTANCE.getProperty(),
-					CasePropertyUtils.CASE_PROPSET_NAME + "::" + CasePropertyUtils.CACHE_SIZE);
-			final List<? extends PropertyExpression> propVals = ci.getPropertyValueList(prop);
-			if (propVals != null) {
-				// There should be only one property value
-				final PropertyExpression expr = propVals.get(0);
-				if (expr instanceof IntegerLiteral) {
-					cboCacheSize.setText(Long.toString(((IntegerLiteral) expr).getValue()));
-				}
-			}
-			cboCacheSize.setEnabled(false);
-		}
-
-	}
+//	private void createCacheSizeField(Composite container) {
+//
+//		final Label lblCacheSizeField = new Label(container, SWT.NONE);
+//		lblCacheSizeField.setText("Cache size");
+//
+//		final GridData dataInfoField = new GridData();
+//		dataInfoField.grabExcessHorizontalSpace = true;
+//		dataInfoField.horizontalAlignment = SWT.FILL;
+//		dataInfoField.grabExcessVerticalSpace = false;
+//		cboCacheSize = new Combo(container, SWT.BORDER | SWT.READ_ONLY);
+//		cboCacheSize.setLayoutData(dataInfoField);
+//		for (int i = 1; i <= MAX_CACHE_SIZE; i++) {
+//			cboCacheSize.add(Integer.toString(i));
+//		}
+//		if (attestationManager == null) {
+//			cboCacheSize.setText(Integer.toString(DEFAULT_CACHE_SIZE));
+//		} else {
+//			final ComponentImplementation ci = attestationManager.getComponentImplementation();
+//			final Property prop = Aadl2GlobalScopeUtil.get(ci, Aadl2Package.eINSTANCE.getProperty(),
+//					CasePropertyUtils.CASE_PROPSET_NAME + "::" + CasePropertyUtils.CACHE_SIZE);
+//			final List<? extends PropertyExpression> propVals = ci.getPropertyValueList(prop);
+//			if (propVals != null) {
+//				// There should be only one property value
+//				final PropertyExpression expr = propVals.get(0);
+//				if (expr instanceof IntegerLiteral) {
+//					cboCacheSize.setText(Long.toString(((IntegerLiteral) expr).getValue()));
+//				}
+//			}
+//			cboCacheSize.setEnabled(false);
+//		}
+//
+//	}
 
 	private void createIdListDataTypeField(Composite container) {
 
@@ -953,13 +956,13 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 			return false;
 		}
 
-		// Cache Size
-		try {
-			cacheSize = Long.parseLong(cboCacheSize.getText());
-		} catch (NumberFormatException e) {
-			Dialog.showError("Attestation Transform", "Value of Cache Size must be an integer.");
-			return false;
-		}
+//		// Cache Size
+//		try {
+//			cacheSize = Long.parseLong(cboCacheSize.getText());
+//		} catch (NumberFormatException e) {
+//			Dialog.showError("Attestation Transform", "Value of Cache Size must be an integer.");
+//			return false;
+//		}
 
 		// ID List Data Type
 		if (!txtIdListDataType.getText().isEmpty() && !txtIdListDataType.getText().contains("::")) {
@@ -1097,9 +1100,9 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		return cacheTimeout;
 	}
 
-	public long getCacheSize() {
-		return cacheSize;
-	}
+//	public long getCacheSize() {
+//		return cacheSize;
+//	}
 
 	public String getIdListDataType() {
 		return idListDataType;

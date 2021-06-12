@@ -25,6 +25,7 @@ import org.osate.aadl2.Access;
 import org.osate.aadl2.AccessConnection;
 import org.osate.aadl2.AnnexSubclause;
 import org.osate.aadl2.Classifier;
+import org.osate.aadl2.ComponentCategory;
 import org.osate.aadl2.ComponentImplementation;
 import org.osate.aadl2.ComponentType;
 import org.osate.aadl2.ConnectedElement;
@@ -41,6 +42,7 @@ import org.osate.aadl2.EnumerationLiteral;
 import org.osate.aadl2.EventDataPort;
 import org.osate.aadl2.EventPort;
 import org.osate.aadl2.Feature;
+import org.osate.aadl2.IntegerLiteral;
 import org.osate.aadl2.ListValue;
 import org.osate.aadl2.ModalPropertyValue;
 import org.osate.aadl2.NamedElement;
@@ -66,9 +68,14 @@ import org.osate.aadl2.ThreadGroupImplementation;
 import org.osate.aadl2.ThreadGroupSubcomponent;
 import org.osate.aadl2.ThreadImplementation;
 import org.osate.aadl2.ThreadSubcomponent;
+import org.osate.aadl2.ThreadType;
+import org.osate.aadl2.UnitLiteral;
 import org.osate.aadl2.modelsupport.scoping.Aadl2GlobalScopeUtil;
 import org.osate.aadl2.modelsupport.util.AadlUtil;
 import org.osate.ui.dialogs.Dialog;
+import org.osate.xtext.aadl2.properties.util.GetProperties;
+import org.osate.xtext.aadl2.properties.util.ThreadProperties;
+import org.osate.xtext.aadl2.properties.util.TimingProperties;
 
 import com.collins.trustedsystems.briefcase.staircase.dialogs.Sel4TransformDialog;
 import com.collins.trustedsystems.briefcase.staircase.requirements.CyberRequirement;
@@ -550,7 +557,7 @@ public class Sel4TransformHandler extends AadlHandler {
 	 * @param transformedSubs - Map of compImpl's subcomponent names to transformed component implementation
 	 * @return Resulting transformed component implementation
 	 */
-	public ComponentImplementation transform(ComponentImplementation compImpl,
+	public static ComponentImplementation transform(ComponentImplementation compImpl,
 			Map<Subcomponent, ComponentImplementation> transformedSubs) {
 
 		final PackageSection pkgSection = AadlUtil.getContainingPackageSection(compImpl);
@@ -867,12 +874,141 @@ public class Sel4TransformHandler extends AadlHandler {
 	}
 
 	/**
+	 * Inserts a single thread into a designated seL4 process
+	 */
+	public static void insertThreadInSel4Process(ProcessImplementation processImpl, String dispatchProtocol,
+			String period, String agreeClauses) {
+
+		final PackageSection pkgSection = (PackageSection) processImpl.eContainer();
+
+		// Create thread type
+		final ThreadType threadType = (ThreadType) pkgSection
+				.createOwnedClassifier(ComponentCreateHelper.getTypeClass(ComponentCategory.THREAD));
+		threadType.setName(processImpl.getTypeName().replace("_seL4", ""));
+
+		// Give it the same features
+		final Map<Feature, Feature> features = new HashMap<>();
+		for (Feature processFeature : processImpl.getType().getOwnedFeatures()) {
+			if (processFeature instanceof DataPort) {
+				final DataPort threadFeature = EcoreUtil.copy((DataPort) processFeature);
+				ComponentCreateHelper.createOwnedDataPort(threadType, threadFeature);
+				features.put(processFeature, threadFeature);
+			} else if (processFeature instanceof EventDataPort) {
+				final EventDataPort threadFeature = EcoreUtil.copy((EventDataPort) processFeature);
+				ComponentCreateHelper.createOwnedEventDataPort(threadType, threadFeature);
+				features.put(processFeature, threadFeature);
+			} else if (processFeature instanceof EventPort) {
+				final EventPort threadFeature = EcoreUtil.copy((EventPort) processFeature);
+				ComponentCreateHelper.createOwnedEventPort(threadType, threadFeature);
+				features.put(processFeature, threadFeature);
+			} else if (processFeature instanceof DataAccess) {
+				final DataAccess threadFeature = EcoreUtil.copy((DataAccess) processFeature);
+				ComponentCreateHelper.createOwnedDataAccess(threadType, threadFeature);
+				features.put(processFeature, threadFeature);
+			} else if (processFeature instanceof SubprogramAccess) {
+				final SubprogramAccess threadFeature = EcoreUtil.copy((SubprogramAccess) processFeature);
+				ComponentCreateHelper.createOwnedSubprogramAccess(threadType, threadFeature);
+				features.put(processFeature, threadFeature);
+			}
+		}
+		// Give it the same property associations
+		copyPropertyAssociations(processImpl.getType(), threadType);
+
+		// Create corresponding implementation
+		ThreadImplementation threadImpl = (ThreadImplementation) pkgSection
+				.createOwnedClassifier(Aadl2Package.eINSTANCE.getThreadImplementation());
+
+		// Give it a name
+		threadImpl.setName(threadType.getName() + ".Impl");
+		// Give it a realization
+		final Realization threadRealization = threadImpl.createOwnedRealization();
+		threadRealization.setImplemented(threadType);
+
+		// Add thread-specific property associations
+		// Dispatch protocol
+		if (!dispatchProtocol.isEmpty()) {
+			final Property dispatchProtocolProp = GetProperties.lookupPropertyDefinition(threadImpl,
+					ThreadProperties._NAME, ThreadProperties.DISPATCH_PROTOCOL);
+			final EnumerationLiteral dispatchProtocolLit = Aadl2Factory.eINSTANCE.createEnumerationLiteral();
+			dispatchProtocolLit.setName(dispatchProtocol);
+			final NamedValue nv = Aadl2Factory.eINSTANCE.createNamedValue();
+			nv.setNamedValue(dispatchProtocolLit);
+			threadImpl.setPropertyValue(dispatchProtocolProp, nv);
+		}
+		// Period
+		if (!period.isEmpty()) {
+			final Property periodProp = GetProperties.lookupPropertyDefinition(threadImpl, TimingProperties._NAME,
+					TimingProperties.PERIOD);
+			final IntegerLiteral periodLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
+			final UnitLiteral unit = Aadl2Factory.eINSTANCE.createUnitLiteral();
+			unit.setName(period.replaceAll("[\\d]", "").trim());
+			periodLit.setBase(0);
+			periodLit.setValue(Long.parseLong(period.replaceAll("[\\D]", "").trim()));
+			periodLit.setUnit(unit);
+			threadImpl.setPropertyValue(periodProp, periodLit);
+		}
+
+		// Add subcomponent
+		final ThreadSubcomponent sub = processImpl.createOwnedThreadSubcomponent();
+		sub.setName(processImpl.getTypeName());
+		sub.setThreadSubcomponentType(threadImpl);
+
+		// Add connections
+		final Iterator<Map.Entry<Feature, Feature>> iterator = features.entrySet().iterator();
+		while (iterator.hasNext()) {
+			final Map.Entry<Feature, Feature> f = iterator.next();
+			final Feature processFeature = f.getKey();
+			final Feature threadFeature = f.getValue();
+			if (threadFeature instanceof Port) {
+				final PortConnection pc = processImpl.createOwnedPortConnection();
+				pc.setName(ModelTransformUtils.getUniqueName(PORT_CONNECTION_IMPL_NAME, false,
+						processImpl.getOwnedPortConnections()));
+				pc.setBidirectional(((Port) threadFeature).getDirection() == DirectionType.IN_OUT);
+				final ConnectedElement src = pc.createSource();
+				final ConnectedElement dst = pc.createDestination();
+				if (((Port) processFeature).isIn()) {
+					src.setContext(null);
+					src.setConnectionEnd(threadFeature);
+					dst.setContext(sub);
+					dst.setConnectionEnd(processFeature);
+				} else {
+					src.setContext(sub);
+					src.setConnectionEnd(processFeature);
+					dst.setContext(null);
+					dst.setConnectionEnd(threadFeature);
+				}
+			} else if (threadFeature instanceof Access) {
+				final AccessConnection ac = processImpl.createOwnedAccessConnection();
+				ac.setName(ModelTransformUtils.getUniqueName(ACCESS_CONNECTION_IMPL_NAME, false,
+						processImpl.getOwnedAccessConnections()));
+				final ConnectedElement src = ac.createSource();
+				final ConnectedElement dst = ac.createDestination();
+				src.setContext(null);
+				src.setConnectionEnd(threadFeature);
+				dst.setContext(sub);
+				dst.setConnectionEnd(processFeature);
+			}
+		}
+
+		// Give it the same property associations
+		copyPropertyAssociations(processImpl, threadImpl);
+
+		// Add AGREE clauses
+		if (!agreeClauses.isEmpty()) {
+			final DefaultAnnexSubclause defaultAnnexSubclause = ComponentCreateHelper
+					.createOwnedAnnexSubclause(threadType);
+			defaultAnnexSubclause.setName("agree");
+			defaultAnnexSubclause.setSourceText(agreeClauses);
+		}
+	}
+
+	/**
 	 * Copies property associations from one AADL named element to another.
 	 * Only valid property associations accepted by the 'to' element will be copied
 	 * @param from
 	 * @param to
 	 */
-	private void copyPropertyAssociations(NamedElement from, NamedElement to) {
+	public static void copyPropertyAssociations(NamedElement from, NamedElement to) {
 		if (to == null || from == null) {
 			return;
 		}

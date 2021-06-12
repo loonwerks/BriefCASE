@@ -96,7 +96,7 @@ public class AttestationTransformHandler extends AadlHandler {
 	private String requestMessageDataType;
 	private String responseMessageDataType;
 	private long cacheTimeout;
-	private long cacheSize;
+//	private long cacheSize;
 	private String idListDataType;
 	private Map<String, List<String>> attestationGatePortNames;
 	private PortCategory attestationManagerLogPortType;
@@ -166,7 +166,7 @@ public class AttestationTransformHandler extends AadlHandler {
 			requestMessageDataType = wizard.getRequestMessageDataType();
 			responseMessageDataType = wizard.getResponseMessageDataType();
 			cacheTimeout = wizard.getCacheTimeout();
-			cacheSize = wizard.getCacheSize();
+//			cacheSize = wizard.getCacheSize();
 			idListDataType = wizard.getIdListDataType();
 			attestationGatePortNames = wizard.getGatePortNames();
 			attestationManagerLogPortType = wizard.getMgrLogPortType();
@@ -605,12 +605,12 @@ public class AttestationTransformHandler extends AadlHandler {
 				}
 			}
 
-			// CASE_Properties::CACHE_SIZE property
-			if (cacheSize > 0) {
-				if (!CasePropertyUtils.setCacheSize(attestationManagerImpl, cacheSize)) {
-//					return;
-				}
-			}
+//			// CASE_Properties::CACHE_SIZE property
+//			if (cacheSize > 0) {
+//				if (!CasePropertyUtils.setCacheSize(attestationManagerImpl, cacheSize)) {
+////					return;
+//				}
+//			}
 
 			// Dispatch protocol property
 			if (!attestationManagerDispatchProtocol.isEmpty() && compCategory == ComponentCategory.THREAD) {
@@ -983,9 +983,10 @@ public class AttestationTransformHandler extends AadlHandler {
 
 			if (isProcess) {
 
-				// TODO: Wrap thread component in a process
+				// Wrap thread component in a process
+				Sel4TransformHandler.transform(attestationManagerImpl, null);
+				Sel4TransformHandler.transform(attestationGateImpl, null);
 
-				// TODO: Bind process to processor
 			}
 
 			// Add add_attestation claims to resolute prove statement, if applicable

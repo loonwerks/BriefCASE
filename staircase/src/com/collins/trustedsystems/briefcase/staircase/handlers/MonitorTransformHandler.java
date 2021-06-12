@@ -34,6 +34,7 @@ import org.osate.aadl2.NamedValue;
 import org.osate.aadl2.PackageSection;
 import org.osate.aadl2.Port;
 import org.osate.aadl2.PortCategory;
+import org.osate.aadl2.ProcessImplementation;
 import org.osate.aadl2.Property;
 import org.osate.aadl2.Realization;
 import org.osate.aadl2.Subcomponent;
@@ -82,6 +83,7 @@ public class MonitorTransformHandler extends AadlHandler {
 	private boolean observationGate;
 	private String monitorRequirement;
 	private String monitorAgreeProperty;
+	private boolean isSel4Process = false;
 
 	@Override
 	protected void runCommand(URI uri) {
@@ -98,6 +100,20 @@ public class MonitorTransformHandler extends AadlHandler {
 
 		// TODO: Check if monitor is being placed after a filter. If so, filter requirement claim needs
 		// to be updated so filter_exists doesn't return false
+
+		// Check that a monitor isn't being added to a thread in a seL4 process
+		Subcomponent subcomponent = (Subcomponent) selectedConnection.getSource().getContext();
+		if (subcomponent == null) {
+			subcomponent = (Subcomponent) selectedConnection.getDestination().getContext();
+		}
+		if (subcomponent.getContainingComponentImpl() instanceof ProcessImplementation
+				&& subcomponent.getContainingComponentImpl().getTypeName().endsWith("_seL4")) {
+			Dialog.showError("Monitor Transform", "An seL4 process cannot contain multiple components.");
+			return;
+		}
+
+		isSel4Process = subcomponent.getComponentImplementation() instanceof ProcessImplementation
+				&& subcomponent.getContainingComponentImpl().getTypeName().endsWith("_seL4");
 
 		// Open wizard to enter monitor info
 		MonitorTransformDialog wizard = new MonitorTransformDialog(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell());
@@ -195,15 +211,7 @@ public class MonitorTransformHandler extends AadlHandler {
 				context = (Subcomponent) selectedConnection.getSource().getContext();
 			}
 			ComponentCategory compCategory = context.getCategory();
-
-			// If the component type is a process, we will need to put a single thread inside.
-			// Per convention, we will attach all properties and contracts to the thread.
-			// For this model transformation, we will create the thread first, then wrap it in a process
-			// component, using the same mechanism we use for the seL4 transformation
-			boolean isProcess = (compCategory == ComponentCategory.PROCESS);
-			if (isProcess) {
-				compCategory = ComponentCategory.THREAD;
-			} else if (compCategory == ComponentCategory.THREAD_GROUP) {
+			if (compCategory == ComponentCategory.THREAD_GROUP) {
 				compCategory = ComponentCategory.THREAD;
 			}
 
@@ -211,8 +219,11 @@ public class MonitorTransformHandler extends AadlHandler {
 					.createOwnedClassifier(ComponentCreateHelper.getTypeClass(compCategory));
 
 			// Give it a unique name
+			final String monitorName = ModelTransformUtils.getUniqueName(monitorComponentName, true,
+					pkgSection.getOwnedClassifiers());
 			monitorType.setName(
-					ModelTransformUtils.getUniqueName(monitorComponentName, true, pkgSection.getOwnedClassifiers()));
+					ModelTransformUtils.getUniqueName(monitorName + (isSel4Process ? "_seL4" : ""), true,
+							pkgSection.getOwnedClassifiers()));
 
 			// Create monitor observed port
 			final ConnectionEnd portSrc = selectedConnection.getSource().getConnectionEnd();
@@ -465,10 +476,10 @@ public class MonitorTransformHandler extends AadlHandler {
 			}
 
 			// CASE_Properties::Component_Spec property
-			final String monitorAlertPropId = monitorType.getName() + "_" + alertPortName;
+			final String monitorAlertPropId = monitorName + "_" + alertPortName;
 			String monitorGatePropId = "";
 			if (observationGate) {
-				monitorGatePropId += monitorType.getName() + "_" + observationGatePortName;
+				monitorGatePropId += monitorName + "_" + observationGatePortName;
 			}
 			if (!CasePropertyUtils.setCompSpec(monitorType,
 					monitorAlertPropId + (monitorGatePropId.isEmpty() ? "" : "," + monitorGatePropId))) {
@@ -493,27 +504,29 @@ public class MonitorTransformHandler extends AadlHandler {
 			// Move below component type
 			pkgSection.getOwnedClassifiers().move(1, pkgSection.getOwnedClassifiers().size() - 1);
 
-			// Dispatch protocol property
-			if (!dispatchProtocol.isEmpty() && compCategory == ComponentCategory.THREAD) {
-				final Property dispatchProtocolProp = GetProperties.lookupPropertyDefinition(monitorImpl,
-						ThreadProperties._NAME, ThreadProperties.DISPATCH_PROTOCOL);
-				final EnumerationLiteral dispatchProtocolLit = Aadl2Factory.eINSTANCE.createEnumerationLiteral();
-				dispatchProtocolLit.setName(dispatchProtocol);
-				final NamedValue nv = Aadl2Factory.eINSTANCE.createNamedValue();
-				nv.setNamedValue(dispatchProtocolLit);
-				monitorImpl.setPropertyValue(dispatchProtocolProp, nv);
-			}
-			// Period
-			if (!period.isEmpty() && compCategory == ComponentCategory.THREAD) {
-				final Property periodProp = GetProperties.lookupPropertyDefinition(monitorImpl, TimingProperties._NAME,
-						TimingProperties.PERIOD);
-				final IntegerLiteral periodLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
-				final UnitLiteral unit = Aadl2Factory.eINSTANCE.createUnitLiteral();
-				unit.setName(period.replaceAll("[\\d]", "").trim());
-				periodLit.setBase(0);
-				periodLit.setValue(Long.parseLong(period.replaceAll("[\\D]", "").trim()));
-				periodLit.setUnit(unit);
-				monitorImpl.setPropertyValue(periodProp, periodLit);
+			if (compCategory == ComponentCategory.THREAD) {
+				// Dispatch protocol property
+				if (!dispatchProtocol.isEmpty()) {
+					final Property dispatchProtocolProp = GetProperties.lookupPropertyDefinition(monitorImpl,
+							ThreadProperties._NAME, ThreadProperties.DISPATCH_PROTOCOL);
+					final EnumerationLiteral dispatchProtocolLit = Aadl2Factory.eINSTANCE.createEnumerationLiteral();
+					dispatchProtocolLit.setName(dispatchProtocol);
+					final NamedValue nv = Aadl2Factory.eINSTANCE.createNamedValue();
+					nv.setNamedValue(dispatchProtocolLit);
+					monitorImpl.setPropertyValue(dispatchProtocolProp, nv);
+				}
+				// Period
+				if (!period.isEmpty()) {
+					final Property periodProp = GetProperties.lookupPropertyDefinition(monitorImpl,
+							TimingProperties._NAME, TimingProperties.PERIOD);
+					final IntegerLiteral periodLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
+					final UnitLiteral unit = Aadl2Factory.eINSTANCE.createUnitLiteral();
+					unit.setName(period.replaceAll("[\\d]", "").trim());
+					periodLit.setBase(0);
+					periodLit.setValue(Long.parseLong(period.replaceAll("[\\D]", "").trim()));
+					periodLit.setUnit(unit);
+					monitorImpl.setPropertyValue(periodProp, periodLit);
+				}
 			}
 
 			// Insert monitor subcomponent in containing component implementation
@@ -623,7 +636,7 @@ public class MonitorTransformHandler extends AadlHandler {
 				monitorAgreeProperty = monitorAgreeProperty.trim() + ";";
 			}
 
-			final String monitorPolicyName = monitorType.getName() + "_policy";
+			final String monitorPolicyName = monitorName + "_policy";
 
 			String resetString = "";
 			if (resetPort != null) {
@@ -680,16 +693,23 @@ public class MonitorTransformHandler extends AadlHandler {
 
 			agreeClauses.append("**}");
 
-			final DefaultAnnexSubclause annexSubclauseImpl = ComponentCreateHelper
-					.createOwnedAnnexSubclause(monitorType);
-			annexSubclauseImpl.setName("agree");
-			annexSubclauseImpl.setSourceText(agreeClauses.toString());
+			if (isSel4Process) {
+				final DefaultAnnexSubclause annexSubclauseImpl = ComponentCreateHelper
+						.createOwnedAnnexSubclause(monitorImpl);
+				annexSubclauseImpl.setName("agree");
+				annexSubclauseImpl.setSourceText(
+						"{**" + System.lineSeparator() + "lift contract;" + System.lineSeparator() + "**}");
+			} else {
+				final DefaultAnnexSubclause annexSubclauseImpl = ComponentCreateHelper
+						.createOwnedAnnexSubclause(monitorType);
+				annexSubclauseImpl.setName("agree");
+				annexSubclauseImpl.setSourceText(agreeClauses.toString());
+			}
 
-			if (isProcess) {
-
-				// TODO: Wrap thread component in a process
-
-				// TODO: Bind process to processor
+			// Add thread if this is a seL4 process
+			if (isSel4Process) {
+				Sel4TransformHandler.insertThreadInSel4Process((ProcessImplementation) monitorImpl, dispatchProtocol,
+						period, agreeClauses.toString());
 			}
 
 			// Add add_monitor claims to resolute prove statement, if applicable

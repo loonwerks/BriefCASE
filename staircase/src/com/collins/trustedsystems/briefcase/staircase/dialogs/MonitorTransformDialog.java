@@ -30,6 +30,7 @@ import org.osate.aadl2.Classifier;
 import org.osate.aadl2.ComponentImplementation;
 import org.osate.aadl2.PortCategory;
 import org.osate.aadl2.ProcessImplementation;
+import org.osate.aadl2.SystemImplementation;
 import org.osate.aadl2.ThreadGroupImplementation;
 import org.osate.aadl2.modelsupport.util.AadlUtil;
 import org.osate.ui.dialogs.Dialog;
@@ -175,7 +176,8 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 		createLatchedField(container);
 		createObservationGateField(container);
 		// Only display dispatch protocol if monitor is a thread
-		if (context instanceof ProcessImplementation || context instanceof ThreadGroupImplementation) {
+		if (context instanceof ProcessImplementation || context instanceof ThreadGroupImplementation
+				|| (context instanceof SystemImplementation && context.getTypeName().endsWith("_seL4"))) {
 			createDispatchProtocolField(container);
 		}
 		createRequirementField(container);
