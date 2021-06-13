@@ -876,7 +876,8 @@ public class Sel4TransformHandler extends AadlHandler {
 	/**
 	 * Inserts a single thread into a designated seL4 process
 	 */
-	public static void insertThreadInSel4Process(ProcessImplementation processImpl, String dispatchProtocol,
+	public static ThreadSubcomponent insertThreadInSel4Process(ProcessImplementation processImpl,
+			String dispatchProtocol,
 			String period, String agreeClauses) {
 
 		final PackageSection pkgSection = (PackageSection) processImpl.eContainer();
@@ -926,7 +927,7 @@ public class Sel4TransformHandler extends AadlHandler {
 
 		// Add thread-specific property associations
 		// Dispatch protocol
-		if (!dispatchProtocol.isEmpty()) {
+		if (dispatchProtocol != null && !dispatchProtocol.isEmpty()) {
 			final Property dispatchProtocolProp = GetProperties.lookupPropertyDefinition(threadImpl,
 					ThreadProperties._NAME, ThreadProperties.DISPATCH_PROTOCOL);
 			final EnumerationLiteral dispatchProtocolLit = Aadl2Factory.eINSTANCE.createEnumerationLiteral();
@@ -936,7 +937,7 @@ public class Sel4TransformHandler extends AadlHandler {
 			threadImpl.setPropertyValue(dispatchProtocolProp, nv);
 		}
 		// Period
-		if (!period.isEmpty()) {
+		if (period != null && !period.isEmpty()) {
 			final Property periodProp = GetProperties.lookupPropertyDefinition(threadImpl, TimingProperties._NAME,
 					TimingProperties.PERIOD);
 			final IntegerLiteral periodLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
@@ -994,12 +995,14 @@ public class Sel4TransformHandler extends AadlHandler {
 		copyPropertyAssociations(processImpl, threadImpl);
 
 		// Add AGREE clauses
-		if (!agreeClauses.isEmpty()) {
+		if (agreeClauses != null && !agreeClauses.isEmpty()) {
 			final DefaultAnnexSubclause defaultAnnexSubclause = ComponentCreateHelper
 					.createOwnedAnnexSubclause(threadType);
 			defaultAnnexSubclause.setName("agree");
 			defaultAnnexSubclause.setSourceText(agreeClauses);
 		}
+
+		return sub;
 	}
 
 	/**

@@ -26,30 +26,22 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.TabFolder;
 import org.eclipse.swt.widgets.TabItem;
 import org.eclipse.swt.widgets.Text;
-import org.osate.aadl2.Aadl2Package;
 import org.osate.aadl2.Classifier;
 import org.osate.aadl2.ComponentImplementation;
-import org.osate.aadl2.ComponentType;
-import org.osate.aadl2.DataPort;
-import org.osate.aadl2.EventDataPort;
-import org.osate.aadl2.EventPort;
-import org.osate.aadl2.Feature;
-import org.osate.aadl2.IntegerLiteral;
+import org.osate.aadl2.Context;
 import org.osate.aadl2.PortCategory;
 import org.osate.aadl2.PortConnection;
 import org.osate.aadl2.ProcessImplementation;
-import org.osate.aadl2.Property;
-import org.osate.aadl2.PropertyExpression;
 import org.osate.aadl2.Subcomponent;
 import org.osate.aadl2.SystemImplementation;
 import org.osate.aadl2.ThreadGroupImplementation;
-import org.osate.aadl2.modelsupport.scoping.Aadl2GlobalScopeUtil;
 import org.osate.aadl2.modelsupport.util.AadlUtil;
 import org.osate.ui.dialogs.Dialog;
 
 import com.collins.trustedsystems.briefcase.staircase.handlers.AttestationTransformHandler;
 import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsManager;
 import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
+import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils.MITIGATION_TYPE;
 import com.collins.trustedsystems.briefcase.staircase.utils.ModelTransformUtils;
 
 /**
@@ -102,8 +94,8 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 	private List<String> requirements = new ArrayList<>();
 //	private String mgrAgreeProperty;
 //	private String gateAgreeProperty;
-	private Subcomponent attestationManager = null;
-	private Subcomponent attestationGate = null;
+//	private Subcomponent attestationManager = null;
+//	private Subcomponent attestationGate = null;
 
 //	private static final int MAX_CACHE_SIZE = 6;
 //	private static final int DEFAULT_CACHE_SIZE = 4;
@@ -131,8 +123,9 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		return size;
 	}
 
-	public void create(Subcomponent commDriver, Subcomponent attestationManager,
-			Subcomponent attestationGate) {
+//	public void create(Subcomponent commDriver, Subcomponent attestationManager,
+//			Subcomponent attestationGate) {
+	public void create(Subcomponent commDriver) {
 
 		if (commDriver == null) {
 			Dialog.showError("Attestation Transform", "Unknown communication driver.");
@@ -141,8 +134,8 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 
 		this.context = commDriver.getContainingComponentImpl();
 		this.commDriver = commDriver.getName();
-		this.attestationManager = attestationManager;
-		this.attestationGate = attestationGate;
+//		this.attestationManager = attestationManager;
+//		this.attestationGate = attestationGate;
 
 		// Populate requirements list
 		RequirementsManager.getInstance().getImportedRequirements().forEach(r -> requirements.add(r.getId()));
@@ -246,14 +239,14 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		dataInfoField.grabExcessVerticalSpace = false;
 		txtMgrComponentName = new Text(container, SWT.BORDER);
 		txtMgrComponentName.setLayoutData(dataInfoField);
-		if (attestationManager == null) {
+//		if (attestationManager == null) {
 			txtMgrComponentName
 					.setText(ModelTransformUtils.getUniqueName(AttestationTransformHandler.AM_COMP_TYPE_NAME, true,
 							AadlUtil.getContainingPackageSection(context).getOwnedClassifiers()));
-		} else {
-			txtMgrComponentName.setText(attestationManager.getComponentType().getName());
-			txtMgrComponentName.setEnabled(false);
-		}
+//		} else {
+//			txtMgrComponentName.setText(attestationManager.getComponentType().getName());
+//			txtMgrComponentName.setEnabled(false);
+//		}
 
 	}
 
@@ -268,13 +261,13 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		dataInfoField.grabExcessVerticalSpace = false;
 		txtMgrSubcomponentName = new Text(container, SWT.BORDER);
 		txtMgrSubcomponentName.setLayoutData(dataInfoField);
-		if (attestationManager == null) {
+//		if (attestationManager == null) {
 			txtMgrSubcomponentName.setText(ModelTransformUtils.getUniqueName(
 					AttestationTransformHandler.AM_SUBCOMP_NAME, true, context.getOwnedSubcomponents()));
-		} else {
-			txtMgrSubcomponentName.setText(attestationManager.getName());
-			txtMgrSubcomponentName.setEnabled(false);
-		}
+//		} else {
+//			txtMgrSubcomponentName.setText(attestationManager.getName());
+//			txtMgrSubcomponentName.setEnabled(false);
+//		}
 
 	}
 
@@ -290,14 +283,14 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		dataInfoField.grabExcessVerticalSpace = false;
 		txtGateComponentName = new Text(container, SWT.BORDER);
 		txtGateComponentName.setLayoutData(dataInfoField);
-		if (attestationManager == null) {
+//		if (attestationGate == null) {
 			txtGateComponentName
 					.setText(ModelTransformUtils.getUniqueName(AttestationTransformHandler.AG_COMP_TYPE_NAME, true,
 							AadlUtil.getContainingPackageSection(context).getOwnedClassifiers()));
-		} else {
-			txtGateComponentName.setText(attestationGate.getComponentType().getName());
-			txtGateComponentName.setEnabled(false);
-		}
+//		} else {
+//			txtGateComponentName.setText(attestationGate.getComponentType().getName());
+//			txtGateComponentName.setEnabled(false);
+//		}
 
 	}
 
@@ -312,13 +305,13 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		dataInfoField.grabExcessVerticalSpace = false;
 		txtGateSubcomponentName = new Text(container, SWT.BORDER);
 		txtGateSubcomponentName.setLayoutData(dataInfoField);
-		if (attestationGate == null) {
+//		if (attestationGate == null) {
 			txtGateSubcomponentName.setText(ModelTransformUtils.getUniqueName(
 					AttestationTransformHandler.AG_SUBCOMP_NAME, true, context.getOwnedSubcomponents()));
-		} else {
-			txtGateSubcomponentName.setText(attestationGate.getName());
-			txtGateSubcomponentName.setEnabled(false);
-		}
+//		} else {
+//			txtGateSubcomponentName.setText(attestationGate.getName());
+//			txtGateSubcomponentName.setEnabled(false);
+//		}
 
 	}
 
@@ -334,25 +327,25 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		txtRequestMessageDataType = new Text(container, SWT.BORDER);
 		txtRequestMessageDataType.setLayoutData(dataInfoField);
 
-		if (attestationManager != null) {
-
-			final ComponentType ct = attestationManager.getComponentType();
-			for (Feature f : ct.getOwnedFeatures()) {
-				if (f.getName().equalsIgnoreCase(AttestationTransformHandler.AM_PORT_ATTESTATION_REQUEST_NAME)) {
-					String dataType = "";
-					if (f instanceof EventDataPort) {
-						final EventDataPort port = (EventDataPort) f;
-						dataType = port.getDataFeatureClassifier().getQualifiedName();
-					} else if (f instanceof DataPort) {
-						final DataPort port = (DataPort) f;
-						dataType = port.getDataFeatureClassifier().getQualifiedName();
-					}
-					txtRequestMessageDataType.setText(dataType);
-				}
-			}
-
-			txtRequestMessageDataType.setEnabled(false);
-		}
+//		if (attestationManager != null) {
+//
+//			final ComponentType ct = attestationManager.getComponentType();
+//			for (Feature f : ct.getOwnedFeatures()) {
+//				if (f.getName().equalsIgnoreCase(AttestationTransformHandler.AM_PORT_ATTESTATION_REQUEST_NAME)) {
+//					String dataType = "";
+//					if (f instanceof EventDataPort) {
+//						final EventDataPort port = (EventDataPort) f;
+//						dataType = port.getDataFeatureClassifier().getQualifiedName();
+//					} else if (f instanceof DataPort) {
+//						final DataPort port = (DataPort) f;
+//						dataType = port.getDataFeatureClassifier().getQualifiedName();
+//					}
+//					txtRequestMessageDataType.setText(dataType);
+//				}
+//			}
+//
+//			txtRequestMessageDataType.setEnabled(false);
+//		}
 
 	}
 
@@ -368,25 +361,25 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		txtResponseMessageDataType = new Text(container, SWT.BORDER);
 		txtResponseMessageDataType.setLayoutData(dataInfoField);
 
-		if (attestationManager != null) {
-
-			final ComponentType ct = attestationManager.getComponentType();
-			for (Feature f : ct.getOwnedFeatures()) {
-				if (f.getName().equalsIgnoreCase(AttestationTransformHandler.AM_PORT_ATTESTATION_RESPONSE_NAME)) {
-					String dataType = "";
-					if (f instanceof EventDataPort) {
-						final EventDataPort port = (EventDataPort) f;
-						dataType = port.getDataFeatureClassifier().getQualifiedName();
-					} else if (f instanceof DataPort) {
-						final DataPort port = (DataPort) f;
-						dataType = port.getDataFeatureClassifier().getQualifiedName();
-					}
-					txtResponseMessageDataType.setText(dataType);
-				}
-			}
-
-			txtResponseMessageDataType.setEnabled(false);
-		}
+//		if (attestationManager != null) {
+//
+//			final ComponentType ct = attestationManager.getComponentType();
+//			for (Feature f : ct.getOwnedFeatures()) {
+//				if (f.getName().equalsIgnoreCase(AttestationTransformHandler.AM_PORT_ATTESTATION_RESPONSE_NAME)) {
+//					String dataType = "";
+//					if (f instanceof EventDataPort) {
+//						final EventDataPort port = (EventDataPort) f;
+//						dataType = port.getDataFeatureClassifier().getQualifiedName();
+//					} else if (f instanceof DataPort) {
+//						final DataPort port = (DataPort) f;
+//						dataType = port.getDataFeatureClassifier().getQualifiedName();
+//					}
+//					txtResponseMessageDataType.setText(dataType);
+//				}
+//			}
+//
+//			txtResponseMessageDataType.setEnabled(false);
+//		}
 
 	}
 
@@ -403,21 +396,21 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		txtCacheTimeout = new Text(container, SWT.BORDER);
 		txtCacheTimeout.setLayoutData(dataInfoField);
 
-		if (attestationManager != null) {
-			final ComponentImplementation ci = attestationManager.getComponentImplementation();
-			final Property prop = Aadl2GlobalScopeUtil.get(ci, Aadl2Package.eINSTANCE.getProperty(),
-					CasePropertyUtils.CASE_PROPSET_NAME + "::" + CasePropertyUtils.CACHE_TIMEOUT);
-			final List<? extends PropertyExpression> propVals = ci.getPropertyValueList(prop);
-
-			if (propVals != null) {
-				// There should be only one property value
-				final PropertyExpression expr = propVals.get(0);
-				if (expr instanceof IntegerLiteral) {
-					txtCacheTimeout.setText(Long.toString(((IntegerLiteral) expr).getValue()));
-				}
-			}
-			txtCacheTimeout.setEnabled(false);
-		}
+//		if (attestationManager != null) {
+//			final ComponentImplementation ci = attestationManager.getComponentImplementation();
+//			final Property prop = Aadl2GlobalScopeUtil.get(ci, Aadl2Package.eINSTANCE.getProperty(),
+//					CasePropertyUtils.CASE_PROPSET_NAME + "::" + CasePropertyUtils.CACHE_TIMEOUT);
+//			final List<? extends PropertyExpression> propVals = ci.getPropertyValueList(prop);
+//
+//			if (propVals != null) {
+//				// There should be only one property value
+//				final PropertyExpression expr = propVals.get(0);
+//				if (expr instanceof IntegerLiteral) {
+//					txtCacheTimeout.setText(Long.toString(((IntegerLiteral) expr).getValue()));
+//				}
+//			}
+//			txtCacheTimeout.setEnabled(false);
+//		}
 
 	}
 
@@ -466,25 +459,25 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		txtIdListDataType = new Text(container, SWT.BORDER);
 		txtIdListDataType.setLayoutData(dataInfoField);
 
-		if (attestationManager != null) {
-
-			final ComponentType ct = attestationManager.getComponentType();
-			for (Feature f : ct.getOwnedFeatures()) {
-				if (f.getName().equalsIgnoreCase(AttestationTransformHandler.AM_PORT_TRUSTED_IDS_NAME)) {
-					String dataType = "";
-					if (f instanceof EventDataPort) {
-						final EventDataPort port = (EventDataPort) f;
-						dataType = port.getDataFeatureClassifier().getQualifiedName();
-					} else if (f instanceof DataPort) {
-						final DataPort port = (DataPort) f;
-						dataType = port.getDataFeatureClassifier().getQualifiedName();
-					}
-					txtIdListDataType.setText(dataType);
-				}
-			}
-
-			txtIdListDataType.setEnabled(false);
-		}
+//		if (attestationManager != null) {
+//
+//			final ComponentType ct = attestationManager.getComponentType();
+//			for (Feature f : ct.getOwnedFeatures()) {
+//				if (f.getName().equalsIgnoreCase(AttestationTransformHandler.AM_PORT_TRUSTED_IDS_NAME)) {
+//					String dataType = "";
+//					if (f instanceof EventDataPort) {
+//						final EventDataPort port = (EventDataPort) f;
+//						dataType = port.getDataFeatureClassifier().getQualifiedName();
+//					} else if (f instanceof DataPort) {
+//						final DataPort port = (DataPort) f;
+//						dataType = port.getDataFeatureClassifier().getQualifiedName();
+//					}
+//					txtIdListDataType.setText(dataType);
+//				}
+//			}
+//
+//			txtIdListDataType.setEnabled(false);
+//		}
 
 	}
 
@@ -502,6 +495,10 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 					&& conn.getSource().getContext().getName().equalsIgnoreCase(commDriver)
 					&& conn.getDestination().getContext() != null) {
 
+				if (isAttestationManager(conn.getDestination().getContext())) {
+					continue;
+				}
+
 				final String commPortName = conn.getSource().getConnectionEnd().getName();
 				if (!commPortNames.contains(commPortName)) {
 					commPortNames.add(commPortName);
@@ -514,6 +511,20 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		// Port names control
 		pncPortNames = new PortNamesControl(container, commDriver + " Output Port Name", commPortNames,
 				defaultInputPortNames, defaultOutputPortNames, "Gate");
+	}
+
+	private boolean isAttestationManager(Context context) {
+
+		if (!(context instanceof Subcomponent)) {
+			return false;
+		}
+		// Check if it's an attestation manager
+		if (CasePropertyUtils.hasMitigationType(((Subcomponent) context).getClassifier(),
+				MITIGATION_TYPE.ATTESTATION)) {
+			return true;
+		}
+
+		return false;
 	}
 
 	/**
@@ -573,6 +584,53 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		txtMgrPeriod = new Text(container, SWT.BORDER);
 		txtMgrPeriod.setLayoutData(dataInfoField);
 		txtMgrPeriod.setEnabled(false);
+
+//		if (attestationManager != null) {
+//			Subcomponent mgrSubcomponent = attestationManager;
+//			if (attestationManager.getComponentType() instanceof ProcessType
+//					&& attestationManager.getComponentType().getName().endsWith("_seL4")) {
+//				mgrSubcomponent = ((ProcessImplementation) mgrSubcomponent.getComponentImplementation())
+//						.getOwnedThreadSubcomponents().get(0);
+//			}
+//			Property prop = GetProperties.lookupPropertyDefinition(mgrSubcomponent, ThreadProperties._NAME,
+//					ThreadProperties.DISPATCH_PROTOCOL);
+//			final List<? extends PropertyExpression> protocol = mgrSubcomponent.getPropertyValueList(prop);
+//			if (!protocol.isEmpty()) {
+//				final NamedValue nv = (NamedValue) protocol.get(0);
+//				final EnumerationLiteral el = (EnumerationLiteral) nv.getNamedValue();
+//				final String dispatchProtocol = el.getName();
+//				if (dispatchProtocol.equalsIgnoreCase("Periodic")) {
+//					btnNoProtocol.setSelection(false);
+//					btnPeriodic.setSelection(true);
+//				} else if (dispatchProtocol.equalsIgnoreCase("Sporadic")) {
+//					btnNoProtocol.setSelection(false);
+//					btnSporadic.setSelection(true);
+//				} else {
+//					btnNoProtocol.setSelection(true);
+//				}
+//			}
+//
+//			btnNoProtocol.setEnabled(false);
+//			btnPeriodic.setEnabled(false);
+//			btnSporadic.setEnabled(false);
+//
+//			prop = GetProperties.lookupPropertyDefinition(mgrSubcomponent, TimingProperties._NAME,
+//					TimingProperties.PERIOD);
+//			final List<? extends PropertyExpression> periodVals = mgrSubcomponent.getPropertyValueList(prop);
+//			if (!periodVals.isEmpty()) {
+//				String period = "";
+//				if (periodVals.get(0) instanceof IntegerLiteral) {
+//					final IntegerLiteral periodVal = (IntegerLiteral) periodVals.get(0);
+//					period = Long.toString(periodVal.getValue());
+//					if (periodVal.getUnit() != null) {
+//						period += periodVal.getUnit().getName();
+//					}
+//				}
+//				txtMgrPeriod.setText(period);
+//			}
+//			lblMgrPeriodField.setEnabled(false);
+//			txtMgrPeriod.setEnabled(false);
+//		}
 
 		btnMgrDispatchProtocol.add(btnNoProtocol);
 		btnMgrDispatchProtocol.add(btnPeriodic);
@@ -638,6 +696,53 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		txtGatePeriod.setLayoutData(dataInfoField);
 		txtGatePeriod.setEnabled(false);
 
+//		if (attestationGate != null) {
+//			Subcomponent gateSubcomponent = attestationGate;
+//			if (attestationGate.getComponentType() instanceof ProcessType
+//					&& attestationGate.getComponentType().getName().endsWith("_seL4")) {
+//				gateSubcomponent = ((ProcessImplementation) gateSubcomponent.getComponentImplementation())
+//						.getOwnedThreadSubcomponents().get(0);
+//			}
+//			Property prop = GetProperties.lookupPropertyDefinition(gateSubcomponent, ThreadProperties._NAME,
+//					ThreadProperties.DISPATCH_PROTOCOL);
+//			final List<? extends PropertyExpression> protocol = gateSubcomponent.getPropertyValueList(prop);
+//			if (!protocol.isEmpty()) {
+//				final NamedValue nv = (NamedValue) protocol.get(0);
+//				final EnumerationLiteral el = (EnumerationLiteral) nv.getNamedValue();
+//				final String dispatchProtocol = el.getName();
+//				if (dispatchProtocol.equalsIgnoreCase("Periodic")) {
+//					btnNoProtocol.setSelection(false);
+//					btnPeriodic.setSelection(true);
+//				} else if (dispatchProtocol.equalsIgnoreCase("Sporadic")) {
+//					btnNoProtocol.setSelection(false);
+//					btnSporadic.setSelection(true);
+//				} else {
+//					btnNoProtocol.setSelection(true);
+//				}
+//			}
+//
+//			btnNoProtocol.setEnabled(false);
+//			btnPeriodic.setEnabled(false);
+//			btnSporadic.setEnabled(false);
+//
+//			prop = GetProperties.lookupPropertyDefinition(gateSubcomponent, TimingProperties._NAME,
+//					TimingProperties.PERIOD);
+//			final List<? extends PropertyExpression> periodVals = gateSubcomponent.getPropertyValueList(prop);
+//			if (!periodVals.isEmpty()) {
+//				String period = "";
+//				if (periodVals.get(0) instanceof IntegerLiteral) {
+//					final IntegerLiteral periodVal = (IntegerLiteral) periodVals.get(0);
+//					period = Long.toString(periodVal.getValue());
+//					if (periodVal.getUnit() != null) {
+//						period += periodVal.getUnit().getName();
+//					}
+//				}
+//				txtGatePeriod.setText(period);
+//			}
+//			lblGatePeriodField.setEnabled(false);
+//			txtGatePeriod.setEnabled(false);
+//		}
+
 		btnGateDispatchProtocol.add(btnNoProtocol);
 		btnGateDispatchProtocol.add(btnPeriodic);
 		btnGateDispatchProtocol.add(btnSporadic);
@@ -678,26 +783,26 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		btnEventDataLogPort.setText("Event Data");
 		btnEventDataLogPort.setSelection(false);
 
-		if (attestationManager != null) {
-			final ComponentType ct = attestationManager.getComponentType();
-			for (Feature f : ct.getOwnedFeatures()) {
-				if (f.getName().equalsIgnoreCase(AttestationTransformHandler.LOG_PORT_NAME)) {
-					btnNoLogPort.setSelection(false);
-					if (f instanceof DataPort) {
-						btnDataLogPort.setSelection(true);
-					} else if (f instanceof EventPort) {
-						btnEventLogPort.setSelection(true);
-					} else if (f instanceof EventDataPort) {
-						btnEventDataLogPort.setSelection(true);
-					}
-					break;
-				}
-			}
-			btnDataLogPort.setEnabled(false);
-			btnEventLogPort.setEnabled(false);
-			btnEventDataLogPort.setEnabled(false);
-			btnNoLogPort.setEnabled(false);
-		}
+//		if (attestationManager != null) {
+//			final ComponentType ct = attestationManager.getComponentType();
+//			for (Feature f : ct.getOwnedFeatures()) {
+//				if (f.getName().equalsIgnoreCase(AttestationTransformHandler.LOG_PORT_NAME)) {
+//					btnNoLogPort.setSelection(false);
+//					if (f instanceof DataPort) {
+//						btnDataLogPort.setSelection(true);
+//					} else if (f instanceof EventPort) {
+//						btnEventLogPort.setSelection(true);
+//					} else if (f instanceof EventDataPort) {
+//						btnEventDataLogPort.setSelection(true);
+//					}
+//					break;
+//				}
+//			}
+//			btnDataLogPort.setEnabled(false);
+//			btnEventLogPort.setEnabled(false);
+//			btnEventDataLogPort.setEnabled(false);
+//			btnNoLogPort.setEnabled(false);
+//		}
 
 		btnMgrLogPortType.add(btnDataLogPort);
 		btnMgrLogPortType.add(btnEventLogPort);
@@ -739,26 +844,26 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		btnEventDataLogPort.setText("Event Data");
 		btnEventDataLogPort.setSelection(false);
 
-		if (attestationManager != null) {
-			final ComponentType ct = attestationManager.getComponentType();
-			for (Feature f : ct.getOwnedFeatures()) {
-				if (f.getName().equalsIgnoreCase(AttestationTransformHandler.LOG_PORT_NAME)) {
-					btnNoLogPort.setSelection(false);
-					if (f instanceof DataPort) {
-						btnDataLogPort.setSelection(true);
-					} else if (f instanceof EventPort) {
-						btnEventLogPort.setSelection(true);
-					} else if (f instanceof EventDataPort) {
-						btnEventDataLogPort.setSelection(true);
-					}
-					break;
-				}
-			}
-			btnDataLogPort.setEnabled(false);
-			btnEventLogPort.setEnabled(false);
-			btnEventDataLogPort.setEnabled(false);
-			btnNoLogPort.setEnabled(false);
-		}
+//		if (attestationGate != null) {
+//			final ComponentType ct = attestationGate.getComponentType();
+//			for (Feature f : ct.getOwnedFeatures()) {
+//				if (f.getName().equalsIgnoreCase(AttestationTransformHandler.LOG_PORT_NAME)) {
+//					btnNoLogPort.setSelection(false);
+//					if (f instanceof DataPort) {
+//						btnDataLogPort.setSelection(true);
+//					} else if (f instanceof EventPort) {
+//						btnEventLogPort.setSelection(true);
+//					} else if (f instanceof EventDataPort) {
+//						btnEventDataLogPort.setSelection(true);
+//					}
+//					break;
+//				}
+//			}
+//			btnDataLogPort.setEnabled(false);
+//			btnEventLogPort.setEnabled(false);
+//			btnEventDataLogPort.setEnabled(false);
+//			btnNoLogPort.setEnabled(false);
+//		}
 
 		btnGateLogPortType.add(btnDataLogPort);
 		btnGateLogPortType.add(btnEventLogPort);
@@ -846,7 +951,8 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 					"Attestation Manager component name " + txtMgrComponentName.getText()
 					+ " contains invalid characters. Only 'A..Z', 'a..z', '0..9', and '_' are permitted");
 			return false;
-		} else if (attestationManager == null && !txtMgrComponentName.getText().isEmpty()
+//		} else if (attestationManager == null && !txtMgrComponentName.getText().isEmpty()
+		} else if (!txtMgrComponentName.getText().isEmpty()
 				&& AadlUtil.findNamedElementInList(componentsInPackage, txtMgrComponentName.getText()) != null) {
 			Dialog.showError("Attestation Transform", "Component " + txtMgrComponentName.getText()
 					+ " already exists in model. Use the suggested name or enter a new one.");
@@ -864,7 +970,8 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 					"Attestation Gate component name " + txtGateComponentName.getText()
 					+ " contains invalid characters. Only 'A..Z', 'a..z', '0..9', and '_' are permitted");
 			return false;
-		} else if (attestationManager == null && !txtGateComponentName.getText().isEmpty()
+//		} else if (attestationGate == null && !txtGateComponentName.getText().isEmpty()
+		} else if (!txtGateComponentName.getText().isEmpty()
 				&& AadlUtil.findNamedElementInList(componentsInPackage, txtGateComponentName.getText()) != null) {
 			Dialog.showError("Attestation Transform", "Component " + txtGateComponentName.getText()
 					+ " already exists in model. Use the suggested name or enter a new one.");
@@ -882,7 +989,8 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 					"Attestation Manager subcomponent instance name " + txtMgrSubcomponentName.getText()
 							+ " contains invalid characters. Only 'A..Z', 'a..z', '0..9', and '_' are permitted");
 			return false;
-		} else if (attestationManager == null && !txtMgrSubcomponentName.getText().isEmpty()
+//		} else if (attestationManager == null && !txtMgrSubcomponentName.getText().isEmpty()
+		} else if (!txtMgrSubcomponentName.getText().isEmpty()
 				&& AadlUtil.findNamedElementInList(context.getAllSubcomponents(),
 				txtMgrSubcomponentName.getText()) != null) {
 			Dialog.showError("Attestation Transform", "Subcomponent " + txtMgrSubcomponentName.getText()
@@ -901,7 +1009,8 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 					"Attestation Gate subcomponent instance name " + txtGateSubcomponentName.getText()
 							+ " contains invalid characters. Only 'A..Z', 'a..z', '0..9', and '_' are permitted");
 			return false;
-		} else if (attestationManager == null && !txtGateSubcomponentName.getText().isEmpty()
+//		} else if (attestationGate == null && !txtGateSubcomponentName.getText().isEmpty()
+		} else if (!txtGateSubcomponentName.getText().isEmpty()
 				&& AadlUtil.findNamedElementInList(context.getAllSubcomponents(),
 				txtGateSubcomponentName.getText()) != null) {
 			Dialog.showError("Attestation Transform", "Subcomponent " + txtGateSubcomponentName.getText()

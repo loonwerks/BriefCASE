@@ -215,8 +215,8 @@ public
 			-- all outgoing connections from the comm driver to components inside the 
 			-- parent of the comm driver connect to the attestation manager or attestation gate
 			let out_conns : {connection} = {conn for (conn : connections(comm_driver)) | source_component(conn) = comm_driver and not (destination_component(conn) = parent(comm_driver))};
-			forall(conn : out_conns) . (not is_software_component(destination_component(conn)) or destination_component(conn) = attestation_manager or destination_component(conn) = attestation_gate)
-
+--			forall(conn : out_conns) . (not is_software_component(destination_component(conn)) or destination_component(conn) = attestation_manager or destination_component(conn) = attestation_gate)
+			forall(conn : out_conns) . (not is_software_component(destination_component(conn)) or has_mitigation_type(destination_component(conn), CASE_Properties::Attesting) or has_mitigation_type(destination_component(conn), CASE_Properties::Gating))
 				
 		-- Checks if the specified virtual processor is a CASE Virtualization and is bound to a processor
 		vm_bound_to_processor(virtual_machine : component) <=

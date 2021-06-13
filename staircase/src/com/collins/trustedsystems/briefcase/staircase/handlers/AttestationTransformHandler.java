@@ -2,6 +2,7 @@ package com.collins.trustedsystems.briefcase.staircase.handlers;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -41,10 +42,13 @@ import org.osate.aadl2.PackageSection;
 import org.osate.aadl2.Port;
 import org.osate.aadl2.PortCategory;
 import org.osate.aadl2.PortConnection;
+import org.osate.aadl2.ProcessImplementation;
 import org.osate.aadl2.Property;
-import org.osate.aadl2.PropertyAssociation;
 import org.osate.aadl2.Realization;
 import org.osate.aadl2.Subcomponent;
+import org.osate.aadl2.ThreadImplementation;
+import org.osate.aadl2.ThreadSubcomponent;
+import org.osate.aadl2.ThreadType;
 import org.osate.aadl2.UnitLiteral;
 import org.osate.aadl2.modelsupport.scoping.Aadl2GlobalScopeUtil;
 import org.osate.aadl2.modelsupport.util.AadlUtil;
@@ -65,7 +69,8 @@ import com.collins.trustedsystems.briefcase.staircase.utils.ModelTransformUtils;
 import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
 import com.rockwellcollins.atc.agree.agree.AgreeContract;
 import com.rockwellcollins.atc.agree.agree.AgreeContractSubclause;
-import com.rockwellcollins.atc.agree.unparsing.AgreeAnnexUnparser;
+import com.rockwellcollins.atc.agree.agree.NamedSpecStatement;
+import com.rockwellcollins.atc.agree.agree.SpecStatement;
 
 public class AttestationTransformHandler extends AadlHandler {
 
@@ -104,6 +109,7 @@ public class AttestationTransformHandler extends AadlHandler {
 	private String attestationRequirement;
 //	private String attestationManagerAgreeProperty;
 //	private String attestationGateAgreeProperty;
+	private boolean isSel4Process = false;
 
 	@Override
 	protected void runCommand(URI uri) {
@@ -126,22 +132,40 @@ public class AttestationTransformHandler extends AadlHandler {
 			return;
 		}
 
-		// Check if the selected subcomponent already has an attestation manager connected
-		// If there is, ask the user if they would like to associate the attestation manager with another requirement
-		final Subcomponent attestationManager = getAttestationManager(selectedSubcomponent);
-		Subcomponent attestationGate = null;
-		if (attestationManager != null) {
-			if (!Dialog.askQuestion("Attestation Transform", selectedSubcomponent.getName()
-					+ " already has associated attestation components. Would you like to associate them with a new requirement?")) {
-				return;
-			}
-			attestationGate = getAttestationGate(attestationManager);
+//		// Check if the selected subcomponent already has an attestation manager connected
+//		// If there is, ask the user if they would like to associate the attestation manager with another requirement
+//		final Subcomponent attestationManager = getAttestationManager(selectedSubcomponent);
+//		Subcomponent attestationGate = null;
+//		if (attestationManager != null) {
+//			if (!Dialog.askQuestion("Attestation Transform", selectedSubcomponent.getName()
+//					+ " already has associated attestation components. Would you like to associate them with a new requirement?")) {
+//				return;
+//			}
+//			attestationGate = getAttestationGate(attestationManager);
+//		}
+
+		// Check that attestation components aren't being added to a thread in a seL4 process
+		if (selectedSubcomponent.getContainingComponentImpl() instanceof ProcessImplementation
+				&& selectedSubcomponent.getContainingComponentImpl().getTypeName().endsWith("_seL4")) {
+			Dialog.showError("Attestation Transform", "An seL4 process cannot contain multiple components.");
+			return;
+		}
+
+		isSel4Process = selectedSubcomponent.getComponentImplementation() instanceof ProcessImplementation
+				&& selectedSubcomponent.getContainingComponentImpl().getTypeName().endsWith("_seL4");
+
+		if (isSel4Process && ((ProcessImplementation) selectedSubcomponent.getComponentImplementation())
+				.getOwnedThreadSubcomponents().size() != 1) {
+			Dialog.showError("Add Attestation",
+					"Selected comm driver is tagged as an seL4 process, but does not contain a single thread subcomponent.");
+			return;
 		}
 
 		// Open wizard to enter filter info
 		final AttestationTransformDialog wizard = new AttestationTransformDialog(
 				PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell());
-		wizard.create(selectedSubcomponent, attestationManager, attestationGate);
+//		wizard.create(selectedSubcomponent, attestationManager, attestationGate);
+		wizard.create(selectedSubcomponent);
 		if (wizard.open() == Window.OK) {
 			attestationManagerComponentName = wizard.getAttestationManagerComponentName();
 			if (attestationManagerComponentName.isEmpty()) {
@@ -179,15 +203,15 @@ public class AttestationTransformHandler extends AadlHandler {
 		}
 
 		// Insert the attestation manager
-		if (attestationManager != null) {
-			associateNewRequirement(EcoreUtil.getURI(selectedSubcomponent), EcoreUtil.getURI(attestationManager),
-					EcoreUtil.getURI(attestationGate));
-			BriefcaseNotifier.notify("StairCASE - Attestation Transform",
-					"New requirement associated with Attestation Manager.");
-		} else {
-			insertAttestationManager(uri);
+//		if (attestationManager != null) {
+//			associateNewRequirement(EcoreUtil.getURI(selectedSubcomponent), EcoreUtil.getURI(attestationManager),
+//					EcoreUtil.getURI(attestationGate));
+//			BriefcaseNotifier.notify("StairCASE - Attestation Transform",
+//					"New requirement associated with Attestation Manager.");
+//		} else {
+		insertAttestationComponents(uri);
 			BriefcaseNotifier.notify("StairCASE - Attestation Transform", "Attestation added to model.");
-		}
+//		}
 
 		// Save
 		saveChanges(false);
@@ -196,37 +220,37 @@ public class AttestationTransformHandler extends AadlHandler {
 
 	}
 
-	private void associateNewRequirement(URI commDriverUri, URI attestationManagerUri, URI attestationGateUri) {
-		final XtextEditor xtextEditor = EditorUtils.getActiveXtextEditor();
-
-		final AddAttestationClaim claim = xtextEditor.getDocument().modify(resource -> {
-
-			final Subcomponent commDriver = (Subcomponent) resource.getEObject(commDriverUri.fragment());
-			final Subcomponent attestationManager = (Subcomponent) resource
-					.getEObject(attestationManagerUri.fragment());
-			final Subcomponent attestationGate = (Subcomponent) resource.getEObject(attestationGateUri.fragment());
-
-			// Add add_attestation claims to resolute prove statement, if applicable
-			if (!attestationRequirement.isEmpty()) {
-				final CyberRequirement req = RequirementsManager.getInstance().getRequirement(attestationRequirement);
-				return new AddAttestationClaim(req.getContext(), commDriver, attestationManager,
-						attestationGate);
-			}
-
-			return null;
-		});
-
-		if (claim != null) {
-			RequirementsManager.getInstance().modifyRequirement(attestationRequirement, claim);
-		}
-	}
+//	private void associateNewRequirement(URI commDriverUri, URI attestationManagerUri, URI attestationGateUri) {
+//		final XtextEditor xtextEditor = EditorUtils.getActiveXtextEditor();
+//
+//		final AddAttestationClaim claim = xtextEditor.getDocument().modify(resource -> {
+//
+//			final Subcomponent commDriver = (Subcomponent) resource.getEObject(commDriverUri.fragment());
+//			final Subcomponent attestationManager = (Subcomponent) resource
+//					.getEObject(attestationManagerUri.fragment());
+//			final Subcomponent attestationGate = (Subcomponent) resource.getEObject(attestationGateUri.fragment());
+//
+//			// Add add_attestation claims to resolute prove statement, if applicable
+//			if (!attestationRequirement.isEmpty()) {
+//				final CyberRequirement req = RequirementsManager.getInstance().getRequirement(attestationRequirement);
+//				return new AddAttestationClaim(req.getContext(), commDriver, attestationManager,
+//						attestationGate);
+//			}
+//
+//			return null;
+//		});
+//
+//		if (claim != null) {
+//			RequirementsManager.getInstance().modifyRequirement(attestationRequirement, claim);
+//		}
+//	}
 
 	/**
-	 * Inserts an attestation manager component into the model.  The attestation manager is inserted at
+	 * Inserts an attestation manager and gate component into the model.  The attestation manager is inserted at
 	 * the location of the selected connection
 	 * @param uri - The URI of the selected connection
 	 */
-	private void insertAttestationManager(URI uri) {
+	private void insertAttestationComponents(URI uri) {
 
 		// Get the active xtext editor so we can make modifications
 		final XtextEditor xtextEditor = EditorUtils.getActiveXtextEditor();
@@ -255,64 +279,87 @@ public class AttestationTransformHandler extends AadlHandler {
 			}
 
 			ComponentCategory compCategory = commDriver.getCategory();
-			// If the component type is a process, we will need to put a single thread inside.
-			// Per convention, we will attach all properties and contracts to the thread.
-			// For this model transformation, we will create the thread first, then wrap it in a process
-			// component, using the same mechanism we use for the seL4 transformation
-			final boolean isProcess = (compCategory == ComponentCategory.PROCESS);
-			if (isProcess) {
+			if (compCategory == ComponentCategory.THREAD_GROUP) {
 				compCategory = ComponentCategory.THREAD;
 			}
+//			// If the component type is a process, we will need to put a single thread inside.
+//			// Per convention, we will attach all properties and contracts to the thread.
+//			// For this model transformation, we will create the thread first, then wrap it in a process
+//			// component, using the same mechanism we use for the seL4 transformation
+//			final boolean isProcess = (compCategory == ComponentCategory.PROCESS);
+//			if (isProcess) {
+//				compCategory = ComponentCategory.THREAD;
+//			}
 
 			// Create new comm driver component that copies the selected one
-			final ComponentType commDriverType = (ComponentType) pkgSection
-					.createOwnedClassifier(ComponentCreateHelper.getTypeClass(compCategory));
+
+//			final ComponentType commDriverType = (ComponentType) pkgSection
+//					.createOwnedClassifier(ComponentCreateHelper.getTypeClass(compCategory));
+			final ComponentType commDriverType = EcoreUtil.copy(commDriver.getComponentType());
+			pkgSection.getOwnedClassifiers().add(commDriverType);
+
 			// Give it a unique name
-			commDriverType.setName(
-					ModelTransformUtils.getUniqueName(commDriver.getComponentType().getName() + "_Attestation", true,
-					pkgSection.getOwnedClassifiers()));
+//			commDriverType.setName(
+//					ModelTransformUtils.getUniqueName(commDriver.getComponentType().getName() + "_Attestation", true,
+//					pkgSection.getOwnedClassifiers()));
+			String commDriverName = commDriver.getComponentType().getName().replace("_seL4", "") + "_Attestation";
+			commDriverName = ModelTransformUtils.getUniqueName(commDriverName, true, pkgSection.getOwnedClassifiers())
+					+ (isSel4Process ? "_seL4" : "");
+			commDriverType.setName(commDriverName);
 //			commDriverType.setExtended(commDriver.getComponentType());
 
-			// Copy the features
-			// TODO: Copy feature properties
-			for (Feature f : commDriver.getComponentType().getOwnedFeatures()) {
+			// Make sure data classifier package is in with clause
+			for (Feature f : commDriverType.getOwnedFeatures()) {
 				if (f instanceof EventDataPort) {
-					final EventDataPort p = ComponentCreateHelper.createOwnedEventDataPort(commDriverType);
-					p.setName(f.getName());
-					p.setDataFeatureClassifier(((EventDataPort) f).getDataFeatureClassifier());
-					for (ArrayDimension dim : ((EventDataPort) f).getArrayDimensions()) {
-						ArrayDimension arrayDimension = p.createArrayDimension();
-						arrayDimension.setSize(dim.getSize());
-					}
-					// Make sure data classifier package is in with clause
-					ModelTransformUtils.importContainingPackage(p.getDataFeatureClassifier(), pkgSection);
-					p.setIn(((EventDataPort) f).isIn());
-					p.setOut(((EventDataPort) f).isOut());
+					ModelTransformUtils.importContainingPackage(((EventDataPort) f).getDataFeatureClassifier(),
+							pkgSection);
 				} else if (f instanceof DataPort) {
-					final DataPort p = ComponentCreateHelper.createOwnedDataPort(commDriverType);
-					p.setName(f.getName());
-					p.setDataFeatureClassifier(((DataPort) f).getDataFeatureClassifier());
-					for (ArrayDimension dim : ((DataPort) f).getArrayDimensions()) {
-						ArrayDimension arrayDimension = p.createArrayDimension();
-						arrayDimension.setSize(dim.getSize());
-					}
-					// Make sure data classifier package is in with clause
-					ModelTransformUtils.importContainingPackage(p.getDataFeatureClassifier(), pkgSection);
-					p.setIn(((DataPort) f).isIn());
-					p.setOut(((DataPort) f).isOut());
-				} else if (f instanceof EventPort) {
-					final EventPort p = ComponentCreateHelper.createOwnedEventPort(commDriverType);
-					p.setName(f.getName());
-					p.setIn(((EventPort) f).isIn());
-					p.setOut(((EventPort) f).isOut());
-				} else if (f instanceof FeatureGroup) {
-					final FeatureGroup fg = commDriverType.createOwnedFeatureGroup();
-					fg.setName(f.getName());
-					fg.setIn(((FeatureGroup) f).isIn());
-					fg.setOut(((FeatureGroup) f).isOut());
-					fg.setFeatureType(((FeatureGroup) f).getFeatureGroupType());
+					ModelTransformUtils.importContainingPackage(((DataPort) f).getDataFeatureClassifier(), pkgSection);
 				}
 			}
+//			// Copy the features
+//			// Copy feature properties
+//			for (Feature f : commDriver.getComponentType().getOwnedFeatures()) {
+//				commDriverType.getOwnedFeatures().add(EcoreUtil.copy(f));
+//				// Make sure data classifier package is in with clause
+//				ModelTransformUtils.importContainingPackage(p.getDataFeatureClassifier(), pkgSection);
+//				if (f instanceof EventDataPort) {
+//					final EventDataPort p = ComponentCreateHelper.createOwnedEventDataPort(commDriverType);
+//					p.setName(f.getName());
+//					p.setDataFeatureClassifier(((EventDataPort) f).getDataFeatureClassifier());
+//					for (ArrayDimension dim : ((EventDataPort) f).getArrayDimensions()) {
+//						ArrayDimension arrayDimension = p.createArrayDimension();
+//						arrayDimension.setSize(dim.getSize());
+//					}
+//					// Make sure data classifier package is in with clause
+//					ModelTransformUtils.importContainingPackage(p.getDataFeatureClassifier(), pkgSection);
+//					p.setIn(((EventDataPort) f).isIn());
+//					p.setOut(((EventDataPort) f).isOut());
+//				} else if (f instanceof DataPort) {
+//					final DataPort p = ComponentCreateHelper.createOwnedDataPort(commDriverType);
+//					p.setName(f.getName());
+//					p.setDataFeatureClassifier(((DataPort) f).getDataFeatureClassifier());
+//					for (ArrayDimension dim : ((DataPort) f).getArrayDimensions()) {
+//						ArrayDimension arrayDimension = p.createArrayDimension();
+//						arrayDimension.setSize(dim.getSize());
+//					}
+//					// Make sure data classifier package is in with clause
+//					ModelTransformUtils.importContainingPackage(p.getDataFeatureClassifier(), pkgSection);
+//					p.setIn(((DataPort) f).isIn());
+//					p.setOut(((DataPort) f).isOut());
+//				} else if (f instanceof EventPort) {
+//					final EventPort p = ComponentCreateHelper.createOwnedEventPort(commDriverType);
+//					p.setName(f.getName());
+//					p.setIn(((EventPort) f).isIn());
+//					p.setOut(((EventPort) f).isOut());
+//				} else if (f instanceof FeatureGroup) {
+//					final FeatureGroup fg = commDriverType.createOwnedFeatureGroup();
+//					fg.setName(f.getName());
+//					fg.setIn(((FeatureGroup) f).isIn());
+//					fg.setOut(((FeatureGroup) f).isOut());
+//					fg.setFeatureType(((FeatureGroup) f).getFeatureGroupType());
+//				}
+//			}
 
 			// Get the request and response message types from the CASE_Model_Transformations package
 //			DataImplementation requestMsgImpl = null;
@@ -345,19 +392,19 @@ public class AttestationTransformHandler extends AadlHandler {
 
 			DataSubcomponentType responseMsgImpl = null;
 			if (!responseMessageDataType.isEmpty()) {
-				requestMsgImpl = Aadl2GlobalScopeUtil.get(ci, Aadl2Package.eINSTANCE.getDataSubcomponentType(),
-						idListDataType);
+				responseMsgImpl = Aadl2GlobalScopeUtil.get(ci, Aadl2Package.eINSTANCE.getDataSubcomponentType(),
+						responseMessageDataType);
 				if (requestMsgImpl == null) {
 					// Aadl2GlobalScopeUtil.get() doesn't seem to find elements in current package
 					for (Classifier c : pkgSection.getOwnedClassifiers()) {
-						if (c.getQualifiedName().equalsIgnoreCase(requestMessageDataType)
+						if (c.getQualifiedName().equalsIgnoreCase(responseMessageDataType)
 								&& c instanceof DataSubcomponentType) {
-							requestMsgImpl = (DataSubcomponentType) c;
+							responseMsgImpl = (DataSubcomponentType) c;
 							break;
 						}
 					}
 				} else {
-					ModelTransformUtils.importContainingPackage(requestMsgImpl, pkgSection);
+					ModelTransformUtils.importContainingPackage(responseMsgImpl, pkgSection);
 				}
 			}
 
@@ -398,113 +445,211 @@ public class AttestationTransformHandler extends AadlHandler {
 //			commResEx.setName(AM_PORT_ATTESTATION_RESPONSE_NAME_EXTERNAL);
 //			commResEx.setIn(true);
 
-			// Copy the properties
-			copyPropertyAssociations(commDriver.getComponentType(), commDriverType);
+//			// Copy the properties
+//			copyPropertyAssociations(commDriver.getComponentType(), commDriverType);
 
 			// Copy the annexes
-			for (AnnexSubclause annexSubclause : commDriver.getComponentType().getOwnedAnnexSubclauses()) {
-				final DefaultAnnexSubclause defaultAnnexSubclause = commDriverType.createOwnedAnnexSubclause();
-				defaultAnnexSubclause.setName(annexSubclause.getName());
+//			Iterator<AnnexSubclause> annexIterator = commDriverType.getOwnedAnnexSubclauses().iterator();
+//			while (annexIterator.hasNext()) {
+//				AnnexSubclause annex = annexIterator.next();
+//				if (annex.getName().equalsIgnoreCase("agree")) {
+//					annexIterator.remove();
+//					break;
+//				}
+//			}
+//			commDriverType.getOwnedAnnexSubclauses().clear();
+//			for (AnnexSubclause annexSubclause : commDriver.getComponentType().getOwnedAnnexSubclauses()) {
+
+			Iterator<AnnexSubclause> annexIterator = commDriverType.getOwnedAnnexSubclauses().iterator();
+			while (annexIterator.hasNext()) {
+				AnnexSubclause annexSubclause = annexIterator.next();
+//				final DefaultAnnexSubclause defaultAnnexSubclause = EcoreUtil.copy(commDriverType.createOwnedAnnexSubclause());
+//				defaultAnnexSubclause.setName(annexSubclause.getName());
+
 				if (annexSubclause.getName().equalsIgnoreCase("agree")) {
 
 					// Make sure statement IDs are unique
-					final List<String> specStatements = new ArrayList<>();
+//					final List<String> specStatements = new ArrayList<>();
 					final AgreeContractSubclause agreeContractSubclause = (AgreeContractSubclause) ((DefaultAnnexSubclause) annexSubclause)
 							.getParsedAnnexSubclause();
-					final AgreeAnnexUnparser unparser = new AgreeAnnexUnparser();
-					String specs = unparser.unparseContract((AgreeContract) agreeContractSubclause.getContract(), "");
-					for (String spec : specs.split(";")) {
-						String specType = "";
-						if (spec.trim().toLowerCase().startsWith("guarantee")) {
-							specType = "guarantee ";
-						} else if (spec.trim().toLowerCase().startsWith("assume")) {
-							specType = "assume ";
-						} else if (spec.trim().toLowerCase().startsWith("lemma")) {
-							specType = "lemma ";
-						} else if (spec.trim().toLowerCase().startsWith("assert")) {
-							specType = "assert ";
-						}
-						if (!specType.isEmpty()) {
-							String newSpec = "";
-							for (String line : spec.trim().concat(";").split(System.lineSeparator())) {
-								newSpec += line.trim() + " ";
+//					final AgreeAnnexUnparser unparser = new AgreeAnnexUnparser();
+//					String specs = unparser.unparseContract((AgreeContract) agreeContractSubclause.getContract(), "");
+					final AgreeContract agreeContract = (AgreeContract) agreeContractSubclause.getContract();
+					for (SpecStatement spec : agreeContract.getSpecs()) {
+						if (spec instanceof NamedSpecStatement) {
+							final NamedSpecStatement namedSpecStatement = (NamedSpecStatement) spec;
+							if (namedSpecStatement.getName() != null && !namedSpecStatement.getName().isEmpty()) {
+								namedSpecStatement.setName(namedSpecStatement.getName() + "_Attestation");
 							}
-
-							String expr = newSpec.substring(newSpec.lastIndexOf("\"") + 1, newSpec.lastIndexOf(";"))
-									.trim();
-							// get rid of : delimiter
-							expr = expr.substring(1).trim();
-							String desc = newSpec.substring(newSpec.indexOf("\""), newSpec.lastIndexOf("\"") + 1)
-									.trim();
-							String id = newSpec
-									.substring(newSpec.toLowerCase().indexOf(specType) + specType.length(),
-											newSpec.indexOf("\""))
-									.trim();
-
-							newSpec = specType;
-							// If spec has an ID, append a suffix to maintain ID uniqueness
-							if (!id.isEmpty()) {
-								newSpec += id + "_Attestation ";
-							}
-							newSpec += desc + " : " + expr + ";";
-
-							specStatements.add(newSpec);
-						} else if (!spec.trim().isEmpty()) {
-							specStatements.add(spec.trim() + ";");
 						}
 					}
-					String agreeClauses = "{**" + System.lineSeparator();
-					for (String s : specStatements) {
-						agreeClauses += s + System.lineSeparator();
-					}
-					agreeClauses += "**}";
-					defaultAnnexSubclause.setSourceText(agreeClauses);
-				} else {
-					defaultAnnexSubclause.setSourceText(((DefaultAnnexSubclause) annexSubclause).getSourceText());
+//					for (String spec : specs.split(";")) {
+//						String specType = "";
+//						if (spec.trim().toLowerCase().startsWith("guarantee")) {
+//							specType = "guarantee ";
+//						} else if (spec.trim().toLowerCase().startsWith("assume")) {
+//							specType = "assume ";
+//						} else if (spec.trim().toLowerCase().startsWith("lemma")) {
+//							specType = "lemma ";
+//						} else if (spec.trim().toLowerCase().startsWith("assert")) {
+//							specType = "assert ";
+//						}
+//						if (!specType.isEmpty()) {
+//							String newSpec = "";
+//							for (String line : spec.trim().concat(";").split(System.lineSeparator())) {
+//								newSpec += line.trim() + " ";
+//							}
+//
+//							String expr = newSpec.substring(newSpec.lastIndexOf("\"") + 1, newSpec.lastIndexOf(";"))
+//									.trim();
+//							// get rid of : delimiter
+//							expr = expr.substring(1).trim();
+//							String desc = newSpec.substring(newSpec.indexOf("\""), newSpec.lastIndexOf("\"") + 1)
+//									.trim();
+//							String id = newSpec
+//									.substring(newSpec.toLowerCase().indexOf(specType) + specType.length(),
+//											newSpec.indexOf("\""))
+//									.trim();
+//
+//							newSpec = specType;
+//							// If spec has an ID, append a suffix to maintain ID uniqueness
+//							if (!id.isEmpty()) {
+//								newSpec += id + "_Attestation ";
+//							}
+//							newSpec += desc + " : " + expr + ";";
+//
+//							specStatements.add(newSpec);
+//						} else if (!spec.trim().isEmpty()) {
+//							specStatements.add(spec.trim() + ";");
+//						}
+//					}
+//					String agreeClauses = "{**" + System.lineSeparator();
+//					for (String s : specStatements) {
+//						agreeClauses += s + System.lineSeparator();
+//					}
+//					agreeClauses += "**}";
+//
+//					defaultAnnexSubclause.setSourceText(agreeClauses);
+
+					break;
+//				} else {
+//					defaultAnnexSubclause.setSourceText(((DefaultAnnexSubclause) annexSubclause).getSourceText());
+
 				}
 			}
+
 
 			// Put just above it's containing implementation
 			pkgSection.getOwnedClassifiers().move(getIndex(ci.getTypeName(), pkgSection.getOwnedClassifiers()),
 					pkgSection.getOwnedClassifiers().size() - 1);
 
 			// Create extended comm driver implementation
-			final ComponentImplementation commDriverImpl = (ComponentImplementation) pkgSection
-					.createOwnedClassifier(ComponentCreateHelper.getImplClass(compCategory));
+//			final ComponentImplementation commDriverImpl = (ComponentImplementation) pkgSection
+//					.createOwnedClassifier(ComponentCreateHelper.getImplClass(compCategory));
+			final ComponentImplementation commDriverImpl = EcoreUtil.copy(commDriver.getComponentImplementation());
+			pkgSection.getOwnedClassifiers().add(commDriverImpl);
 			commDriverImpl.setName(commDriverType.getName() + ".Impl");
-			final Realization commRealization = commDriverImpl.createOwnedRealization();
-			commRealization.setImplemented(commDriverType);
+			commDriverImpl.getOwnedRealization().setImplemented(commDriverType);
+//			final Realization commRealization = commDriverImpl.createOwnedRealization();
+//			commRealization.setImplemented(commDriverType);
 
-			// Copy the subcomponents
-			for (Subcomponent oldSubcomponent : commDriver.getComponentImplementation().getOwnedSubcomponents()) {
-				final Subcomponent newSubcomponent = ComponentCreateHelper.createOwnedSubcomponent(commDriverImpl,
-						oldSubcomponent.getCategory());
-				newSubcomponent.setName(oldSubcomponent.getName());
-				copyPropertyAssociations(oldSubcomponent, newSubcomponent);
-			}
-			// TODO: Copy the connections
+//			// Copy the subcomponents
+//			for (Subcomponent oldSubcomponent : commDriver.getComponentImplementation().getOwnedSubcomponents()) {
+//				final Subcomponent newSubcomponent = ComponentCreateHelper.createOwnedSubcomponent(commDriverImpl,
+//						oldSubcomponent.getCategory());
+//				newSubcomponent.setName(oldSubcomponent.getName());
+//				copyPropertyAssociations(oldSubcomponent, newSubcomponent);
+//			}
+//			// Copy the connections
 
-			// Copy the properties
-			copyPropertyAssociations(commDriver.getComponentImplementation(), commDriverImpl);
+//			// Copy the properties
+//			copyPropertyAssociations(commDriver.getComponentImplementation(), commDriverImpl);
 
-			// Copy the annexes
-			for (AnnexSubclause annexSubclause : commDriver.getComponentImplementation().getOwnedAnnexSubclauses()) {
-				final DefaultAnnexSubclause defaultAnnexSubclause = commDriverImpl.createOwnedAnnexSubclause();
-				defaultAnnexSubclause.setName(annexSubclause.getName());
-				defaultAnnexSubclause.setSourceText(((DefaultAnnexSubclause) annexSubclause).getSourceText());
-			}
+//			// Copy the annexes
+//			for (AnnexSubclause annexSubclause : commDriver.getComponentImplementation().getOwnedAnnexSubclauses()) {
+//				final DefaultAnnexSubclause defaultAnnexSubclause = commDriverImpl.createOwnedAnnexSubclause();
+//				defaultAnnexSubclause.setName(annexSubclause.getName());
+//				defaultAnnexSubclause.setSourceText(((DefaultAnnexSubclause) annexSubclause).getSourceText());
+//			}
 
 			// Add it to proper place (below extended comm driver type)
 			pkgSection.getOwnedClassifiers().move(getIndex(ci.getTypeName(), pkgSection.getOwnedClassifiers()),
 					pkgSection.getOwnedClassifiers().size() - 1);
 
+			// If comm driver is an seL4 process,
+			// it's thread subcomponent will also need to be copied
+			if (isSel4Process) {
+
+				String subName = ((ProcessImplementation) commDriverImpl).getOwnedThreadSubcomponents().get(0)
+						.getName();
+				((ProcessImplementation) commDriverImpl).getOwnedThreadSubcomponents().clear();
+				((ProcessImplementation) commDriverImpl).getOwnedPortConnections().clear();
+
+				ThreadSubcomponent threadSub = Sel4TransformHandler
+						.insertThreadInSel4Process((ProcessImplementation) commDriverImpl, null, null, null);
+
+				threadSub.setName(subName);
+
+				ThreadType commThreadType = (ThreadType) ((ProcessImplementation) commDriver
+						.getComponentImplementation())
+						.getOwnedThreadSubcomponents().get(0).getComponentType();
+				ThreadImplementation commThreadImpl = (ThreadImplementation) ((ProcessImplementation) commDriver
+						.getComponentImplementation())
+						.getOwnedThreadSubcomponents().get(0).getComponentImplementation();
+
+				// Copy properties
+				threadSub.getComponentType().getOwnedPropertyAssociations().clear();
+				Sel4TransformHandler.copyPropertyAssociations(commThreadType, threadSub.getComponentType());
+				threadSub.getComponentImplementation().getOwnedPropertyAssociations().clear();
+				Sel4TransformHandler.copyPropertyAssociations(commThreadImpl, threadSub.getComponentImplementation());
+
+				// Copy AGREE and make names unique
+				for (AnnexSubclause annexSubclause : commThreadType.getOwnedAnnexSubclauses()) {
+					threadSub.getComponentType().getOwnedAnnexSubclauses().add(EcoreUtil.copy(annexSubclause));
+				}
+				makeAgreeNamesUnique(threadSub.getComponentType().getOwnedAnnexSubclauses());
+				for (AnnexSubclause annexSubclause : commThreadImpl.getOwnedAnnexSubclauses()) {
+					threadSub.getComponentImplementation().getOwnedAnnexSubclauses()
+							.add(EcoreUtil.copy(annexSubclause));
+				}
+				makeAgreeNamesUnique(threadSub.getComponentImplementation().getOwnedAnnexSubclauses());
+
+//				ThreadSubcomponent sub = ((ProcessImplementation) commDriver.getComponentImplementation())
+//						.getOwnedThreadSubcomponents().get(0);
+//				// Copy type
+//				ThreadType commThreadType = (ThreadType) EcoreUtil.copy(sub.getComponentType());
+//				commThreadType.setName(commThreadType.getName() + "_Attestation");
+////				// Create attestation request and response ports for communicating with the attestation manager
+////				final EventDataPort commThreadReq = ComponentCreateHelper
+////						.createOwnedEventDataPort(commThreadType);
+////				final EventDataPort commThreadRes = ComponentCreateHelper
+////						.createOwnedEventDataPort(commThreadType);
+////				commReq.setDataFeatureClassifier(requestMsgImpl);
+////				commRes.setDataFeatureClassifier(responseMsgImpl);
+////				commReq.setName(AM_PORT_ATTESTATION_REQUEST_NAME);
+////				commReq.setIn(true);
+////				commRes.setName(AM_PORT_ATTESTATION_RESPONSE_NAME);
+////				commRes.setOut(true);
+//				// Make sure AGREE names are unique
+//				makeAgreeNamesUnique(commThreadType.getOwnedAnnexSubclauses());
+//				pkgSection.getOwnedClassifiers().add(commThreadType);
+//				// Copy impl
+//				ThreadImplementation commThreadImpl = (ThreadImplementation) EcoreUtil
+//						.copy(sub.getComponentImplementation());
+//				commThreadImpl.setName(commThreadType.getName() + ".Impl");
+//				pkgSection.getOwnedClassifiers().add(commThreadImpl);
+//				// Set thread subcomponent in copied process to this one
+//				((ThreadSubcomponent) commDriverImpl.getOwnedSubcomponents().get(0))
+//						.setThreadSubcomponentType(commThreadImpl);
+			}
+
 			// Create Attestation Manager component type
 			final ComponentType attestationManagerType = (ComponentType) pkgSection
 					.createOwnedClassifier(ComponentCreateHelper.getTypeClass(compCategory));
 			// Give it a unique name
-			attestationManagerType.setName(
-					ModelTransformUtils.getUniqueName(attestationManagerComponentName, true,
-							pkgSection.getOwnedClassifiers()));
+			final String amName = ModelTransformUtils.getUniqueName(attestationManagerComponentName, true,
+					pkgSection.getOwnedClassifiers()) + (isSel4Process ? "_seL4" : "");
+			attestationManagerType.setName(amName);
 
 			// Add the ports for communicating attestation requests/responses with the Comm Driver
 			final EventDataPort amReq = ComponentCreateHelper
@@ -591,7 +736,7 @@ public class AttestationTransformHandler extends AadlHandler {
 			// Create Attestation Manager implementation
 			final ComponentImplementation attestationManagerImpl = (ComponentImplementation) pkgSection
 					.createOwnedClassifier(ComponentCreateHelper.getImplClass(compCategory));
-			attestationManagerImpl.setName(attestationManagerType.getName() + ".Impl");
+			attestationManagerImpl.setName(amName + ".Impl");
 			final Realization r = attestationManagerImpl.createOwnedRealization();
 			r.setImplemented(attestationManagerType);
 
@@ -613,26 +758,28 @@ public class AttestationTransformHandler extends AadlHandler {
 //			}
 
 			// Dispatch protocol property
-			if (!attestationManagerDispatchProtocol.isEmpty() && compCategory == ComponentCategory.THREAD) {
-				final Property dispatchProtocolProp = GetProperties.lookupPropertyDefinition(attestationManagerImpl,
-						ThreadProperties._NAME, ThreadProperties.DISPATCH_PROTOCOL);
-				final EnumerationLiteral dispatchProtocolLit = Aadl2Factory.eINSTANCE.createEnumerationLiteral();
-				dispatchProtocolLit.setName(attestationManagerDispatchProtocol);
-				final NamedValue nv = Aadl2Factory.eINSTANCE.createNamedValue();
-				nv.setNamedValue(dispatchProtocolLit);
-				attestationManagerImpl.setPropertyValue(dispatchProtocolProp, nv);
-			}
-			// Period
-			if (!attestationManagerPeriod.isEmpty() && compCategory == ComponentCategory.THREAD) {
-				final Property periodProp = GetProperties.lookupPropertyDefinition(attestationManagerImpl,
-						TimingProperties._NAME, TimingProperties.PERIOD);
-				final IntegerLiteral periodLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
-				final UnitLiteral unit = Aadl2Factory.eINSTANCE.createUnitLiteral();
-				unit.setName(attestationManagerPeriod.replaceAll("[\\d]", "").trim());
-				periodLit.setBase(0);
-				periodLit.setValue(Long.parseLong(attestationManagerPeriod.replaceAll("[\\D]", "").trim()));
-				periodLit.setUnit(unit);
-				attestationManagerImpl.setPropertyValue(periodProp, periodLit);
+			if (compCategory == ComponentCategory.THREAD) {
+				if (!attestationManagerDispatchProtocol.isEmpty()) {
+					final Property dispatchProtocolProp = GetProperties.lookupPropertyDefinition(attestationManagerImpl,
+							ThreadProperties._NAME, ThreadProperties.DISPATCH_PROTOCOL);
+					final EnumerationLiteral dispatchProtocolLit = Aadl2Factory.eINSTANCE.createEnumerationLiteral();
+					dispatchProtocolLit.setName(attestationManagerDispatchProtocol);
+					final NamedValue nv = Aadl2Factory.eINSTANCE.createNamedValue();
+					nv.setNamedValue(dispatchProtocolLit);
+					attestationManagerImpl.setPropertyValue(dispatchProtocolProp, nv);
+				}
+				// Period
+				if (!attestationManagerPeriod.isEmpty()) {
+					final Property periodProp = GetProperties.lookupPropertyDefinition(attestationManagerImpl,
+							TimingProperties._NAME, TimingProperties.PERIOD);
+					final IntegerLiteral periodLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
+					final UnitLiteral unit = Aadl2Factory.eINSTANCE.createUnitLiteral();
+					unit.setName(attestationManagerPeriod.replaceAll("[\\d]", "").trim());
+					periodLit.setBase(0);
+					periodLit.setValue(Long.parseLong(attestationManagerPeriod.replaceAll("[\\D]", "").trim()));
+					periodLit.setUnit(unit);
+					attestationManagerImpl.setPropertyValue(periodProp, periodLit);
+				}
 			}
 
 			// Replace the comm driver with the extended comm driver
@@ -658,9 +805,9 @@ public class AttestationTransformHandler extends AadlHandler {
 			final ComponentType attestationGateType = (ComponentType) pkgSection
 					.createOwnedClassifier(ComponentCreateHelper.getTypeClass(compCategory));
 			// Give it a unique name
-			attestationGateType.setName(
-					ModelTransformUtils.getUniqueName(attestationGateComponentName, true,
-							pkgSection.getOwnedClassifiers()));
+			final String agName = ModelTransformUtils.getUniqueName(attestationGateComponentName, true,
+					pkgSection.getOwnedClassifiers()) + (isSel4Process ? "_seL4" : "");
+			attestationGateType.setName(agName);
 
 			// Create Attestation Gate ports
 			// To do this we need to look at the current connections of the comm driver in the implementation
@@ -801,7 +948,7 @@ public class AttestationTransformHandler extends AadlHandler {
 			// Create Attestation Gate implementation
 			final ComponentImplementation attestationGateImpl = (ComponentImplementation) pkgSection
 					.createOwnedClassifier(ComponentCreateHelper.getImplClass(compCategory));
-			attestationGateImpl.setName(attestationGateType.getName() + ".Impl");
+			attestationGateImpl.setName(agName + ".Impl");
 			final Realization gateRealization = attestationGateImpl.createOwnedRealization();
 			gateRealization.setImplemented(attestationGateType);
 
@@ -809,26 +956,28 @@ public class AttestationTransformHandler extends AadlHandler {
 			pkgSection.getOwnedClassifiers().move(1, pkgSection.getOwnedClassifiers().size() - 1);
 
 			// Dispatch protocol property
-			if (!attestationGateDispatchProtocol.isEmpty() && compCategory == ComponentCategory.THREAD) {
-				final Property dispatchProtocolProp = GetProperties.lookupPropertyDefinition(attestationGateImpl,
-						ThreadProperties._NAME, ThreadProperties.DISPATCH_PROTOCOL);
-				final EnumerationLiteral dispatchProtocolLit = Aadl2Factory.eINSTANCE.createEnumerationLiteral();
-				dispatchProtocolLit.setName(attestationGateDispatchProtocol);
-				final NamedValue nv = Aadl2Factory.eINSTANCE.createNamedValue();
-				nv.setNamedValue(dispatchProtocolLit);
-				attestationGateImpl.setPropertyValue(dispatchProtocolProp, nv);
-			}
-			// Period
-			if (!attestationGatePeriod.isEmpty() && compCategory == ComponentCategory.THREAD) {
-				final Property periodProp = GetProperties.lookupPropertyDefinition(attestationGateImpl,
-						TimingProperties._NAME, TimingProperties.PERIOD);
-				final IntegerLiteral periodLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
-				final UnitLiteral unit = Aadl2Factory.eINSTANCE.createUnitLiteral();
-				unit.setName(attestationGatePeriod.replaceAll("[\\d]", "").trim());
-				periodLit.setBase(0);
-				periodLit.setValue(Long.parseLong(attestationGatePeriod.replaceAll("[\\D]", "").trim()));
-				periodLit.setUnit(unit);
-				attestationGateImpl.setPropertyValue(periodProp, periodLit);
+			if (compCategory == ComponentCategory.THREAD) {
+				if (!attestationGateDispatchProtocol.isEmpty()) {
+					final Property dispatchProtocolProp = GetProperties.lookupPropertyDefinition(attestationGateImpl,
+							ThreadProperties._NAME, ThreadProperties.DISPATCH_PROTOCOL);
+					final EnumerationLiteral dispatchProtocolLit = Aadl2Factory.eINSTANCE.createEnumerationLiteral();
+					dispatchProtocolLit.setName(attestationGateDispatchProtocol);
+					final NamedValue nv = Aadl2Factory.eINSTANCE.createNamedValue();
+					nv.setNamedValue(dispatchProtocolLit);
+					attestationGateImpl.setPropertyValue(dispatchProtocolProp, nv);
+				}
+				// Period
+				if (!attestationGatePeriod.isEmpty()) {
+					final Property periodProp = GetProperties.lookupPropertyDefinition(attestationGateImpl,
+							TimingProperties._NAME, TimingProperties.PERIOD);
+					final IntegerLiteral periodLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
+					final UnitLiteral unit = Aadl2Factory.eINSTANCE.createUnitLiteral();
+					unit.setName(attestationGatePeriod.replaceAll("[\\d]", "").trim());
+					periodLit.setBase(0);
+					periodLit.setValue(Long.parseLong(attestationGatePeriod.replaceAll("[\\D]", "").trim()));
+					periodLit.setUnit(unit);
+					attestationGateImpl.setPropertyValue(periodProp, periodLit);
+				}
 			}
 
 			// Insert attestation gate in component implementation
@@ -981,11 +1130,13 @@ public class AttestationTransformHandler extends AadlHandler {
 //			annexSubclauseImpl.setSourceText(agreeClauses.toString());
 
 
-			if (isProcess) {
+			if (isSel4Process) {
 
-				// Wrap thread component in a process
-				Sel4TransformHandler.transform(attestationManagerImpl, null);
-				Sel4TransformHandler.transform(attestationGateImpl, null);
+				Sel4TransformHandler.insertThreadInSel4Process((ProcessImplementation) attestationManagerImpl,
+						attestationManagerDispatchProtocol, attestationManagerPeriod, "");
+
+				Sel4TransformHandler.insertThreadInSel4Process((ProcessImplementation) attestationGateImpl,
+						attestationGateDispatchProtocol, attestationGatePeriod, "");
 
 			}
 
@@ -1005,78 +1156,102 @@ public class AttestationTransformHandler extends AadlHandler {
 
 	}
 
+	private void makeAgreeNamesUnique(List<AnnexSubclause> annexSubclauses) {
+		Iterator<AnnexSubclause> annexIterator = annexSubclauses.iterator();
+		while (annexIterator.hasNext()) {
+			AnnexSubclause annexSubclause = annexIterator.next();
 
-	private Subcomponent getAttestationManager(Subcomponent comp) {
+			if (annexSubclause.getName().equalsIgnoreCase("agree")) {
 
-		final ComponentImplementation ci = comp.getContainingComponentImpl();
-
-		// Look at each connection in the subcomponent's containing implementation
-		for (Connection conn : ci.getAllConnections()) {
-
-			// Get the source component of the connection
-			NamedElement ne = conn.getAllSrcContextComponent();
-			// If source component is the specified subcomponent, get the destination component of the connection
-			if (ne instanceof Subcomponent && ne.getName().equalsIgnoreCase(comp.getName())) {
-				ne = conn.getAllDstContextComponent();
-				Subcomponent dst = null;
-				if (ne instanceof Subcomponent) {
-					dst = (Subcomponent) ne;
-					// Check if it's an attestation manager
-					if (CasePropertyUtils.hasMitigationType(dst.getClassifier(), MITIGATION_TYPE.ATTESTATION)) {
-						return dst;
+				// Make sure statement IDs are unique
+				final AgreeContractSubclause agreeContractSubclause = (AgreeContractSubclause) ((DefaultAnnexSubclause) annexSubclause)
+						.getParsedAnnexSubclause();
+				final AgreeContract agreeContract = (AgreeContract) agreeContractSubclause.getContract();
+				for (SpecStatement spec : agreeContract.getSpecs()) {
+					if (spec instanceof NamedSpecStatement) {
+						final NamedSpecStatement namedSpecStatement = (NamedSpecStatement) spec;
+						if (namedSpecStatement.getName() != null && !namedSpecStatement.getName().isEmpty()) {
+							namedSpecStatement.setName(namedSpecStatement.getName() + "_Attestation");
+						}
 					}
 				}
-			}
-
-		}
-
-		return null;
-	}
-
-	private Subcomponent getAttestationGate(Subcomponent attestationManager) {
-
-		final ComponentImplementation ci = attestationManager.getContainingComponentImpl();
-
-		// Look at each connection in the attestation manager's containing implementation
-		for (Connection conn : ci.getAllConnections()) {
-			// Get the source component of the connection
-			NamedElement ne = conn.getAllSrcContextComponent();
-			if (ne instanceof Subcomponent && ne.getName().equalsIgnoreCase(attestationManager.getName())) {
-				ne = conn.getAllDstContextComponent();
-				Subcomponent dst = null;
-				if (ne instanceof Subcomponent) {
-					dst = (Subcomponent) ne;
-					// Check if it's a switch
-					if (CasePropertyUtils.hasMitigationType(dst.getClassifier(), MITIGATION_TYPE.GATE)) {
-						return dst;
-					}
-				}
-			}
-		}
-
-		return null;
-	}
-
-	/**
-	 * Copies property associations from one AADL named element to another.
-	 * Only valid property associations accepted by the 'to' element will be copied
-	 * @param from
-	 * @param to
-	 */
-	private void copyPropertyAssociations(NamedElement from, NamedElement to) {
-		if (to == null || from == null) {
-			return;
-		}
-		for (PropertyAssociation pa : from.getOwnedPropertyAssociations()) {
-			final PropertyAssociation propAssoc = EcoreUtil.copy(pa);
-			final Property prop = propAssoc.getProperty();
-			if (to.acceptsProperty(prop)) {
-				// TODO: Make sure property package is in with clause?
-				to.getOwnedPropertyAssociations().add(propAssoc);
-			} else {
-				// TODO: log exception
+				break;
 			}
 		}
 	}
+
+
+//	private Subcomponent getAttestationManager(Subcomponent comp) {
+//
+//		final ComponentImplementation ci = comp.getContainingComponentImpl();
+//
+//		// Look at each connection in the subcomponent's containing implementation
+//		for (Connection conn : ci.getAllConnections()) {
+//
+//			// Get the source component of the connection
+//			NamedElement ne = conn.getAllSrcContextComponent();
+//			// If source component is the specified subcomponent, get the destination component of the connection
+//			if (ne instanceof Subcomponent && ne.getName().equalsIgnoreCase(comp.getName())) {
+//				ne = conn.getAllDstContextComponent();
+//				Subcomponent dst = null;
+//				if (ne instanceof Subcomponent) {
+//					dst = (Subcomponent) ne;
+//					// Check if it's an attestation manager
+//					if (CasePropertyUtils.hasMitigationType(dst.getClassifier(), MITIGATION_TYPE.ATTESTATION)) {
+//						return dst;
+//					}
+//				}
+//			}
+//
+//		}
+//
+//		return null;
+//	}
+
+//	private Subcomponent getAttestationGate(Subcomponent attestationManager) {
+//
+//		final ComponentImplementation ci = attestationManager.getContainingComponentImpl();
+//
+//		// Look at each connection in the attestation manager's containing implementation
+//		for (Connection conn : ci.getAllConnections()) {
+//			// Get the source component of the connection
+//			NamedElement ne = conn.getAllSrcContextComponent();
+//			if (ne instanceof Subcomponent && ne.getName().equalsIgnoreCase(attestationManager.getName())) {
+//				ne = conn.getAllDstContextComponent();
+//				Subcomponent dst = null;
+//				if (ne instanceof Subcomponent) {
+//					dst = (Subcomponent) ne;
+//					// Check if it's a switch
+//					if (CasePropertyUtils.hasMitigationType(dst.getClassifier(), MITIGATION_TYPE.GATE)) {
+//						return dst;
+//					}
+//				}
+//			}
+//		}
+//
+//		return null;
+//	}
+
+//	/**
+//	 * Copies property associations from one AADL named element to another.
+//	 * Only valid property associations accepted by the 'to' element will be copied
+//	 * @param from
+//	 * @param to
+//	 */
+//	private void copyPropertyAssociations(NamedElement from, NamedElement to) {
+//		if (to == null || from == null) {
+//			return;
+//		}
+//		for (PropertyAssociation pa : from.getOwnedPropertyAssociations()) {
+//			final PropertyAssociation propAssoc = EcoreUtil.copy(pa);
+//			final Property prop = propAssoc.getProperty();
+//			if (to.acceptsProperty(prop)) {
+//				// TODO: Make sure property package is in with clause?
+//				to.getOwnedPropertyAssociations().add(propAssoc);
+//			} else {
+//				// TODO: log exception
+//			}
+//		}
+//	}
 
 }
