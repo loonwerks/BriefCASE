@@ -106,14 +106,14 @@ public class MonitorTransformHandler extends AadlHandler {
 		if (subcomponent == null) {
 			subcomponent = (Subcomponent) selectedConnection.getDestination().getContext();
 		}
-		if (subcomponent.getContainingComponentImpl() instanceof ProcessImplementation
-				&& subcomponent.getContainingComponentImpl().getTypeName().endsWith("_seL4")) {
-			Dialog.showError("Monitor Transform", "An seL4 process cannot contain multiple components.");
-			return;
-		}
+//		if (subcomponent.getContainingComponentImpl() instanceof ProcessImplementation
+//				&& subcomponent.getContainingComponentImpl().getTypeName().endsWith("_seL4")) {
+//			Dialog.showError("Monitor Transform", "An seL4 process cannot contain multiple components.");
+//			return;
+//		}
 
-		isSel4Process = subcomponent.getComponentImplementation() instanceof ProcessImplementation
-				&& subcomponent.getContainingComponentImpl().getTypeName().endsWith("_seL4");
+//		isSel4Process = subcomponent.getComponentImplementation() instanceof ProcessImplementation
+//				&& subcomponent.getContainingComponentImpl().getTypeName().endsWith("_seL4");
 
 		// Open wizard to enter monitor info
 		MonitorTransformDialog wizard = new MonitorTransformDialog(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell());
@@ -142,6 +142,7 @@ public class MonitorTransformHandler extends AadlHandler {
 			}
 			resetPort = wizard.getResetPort();
 			latched = wizard.getLatched();
+			isSel4Process = wizard.createThread();
 			dispatchProtocol = wizard.getDispatchProtocol();
 			period = wizard.getPeriod();
 			referencePorts = wizard.getReferencePorts();

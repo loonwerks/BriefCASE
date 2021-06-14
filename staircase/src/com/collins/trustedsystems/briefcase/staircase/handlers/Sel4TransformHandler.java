@@ -951,7 +951,7 @@ public class Sel4TransformHandler extends AadlHandler {
 
 		// Add subcomponent
 		final ThreadSubcomponent sub = processImpl.createOwnedThreadSubcomponent();
-		sub.setName(processImpl.getTypeName());
+		sub.setName(processImpl.getTypeName().replace("_seL4", ""));
 		sub.setThreadSubcomponentType(threadImpl);
 
 		// Add connections

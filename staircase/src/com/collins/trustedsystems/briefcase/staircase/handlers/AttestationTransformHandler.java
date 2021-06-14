@@ -144,22 +144,22 @@ public class AttestationTransformHandler extends AadlHandler {
 //			attestationGate = getAttestationGate(attestationManager);
 //		}
 
-		// Check that attestation components aren't being added to a thread in a seL4 process
-		if (selectedSubcomponent.getContainingComponentImpl() instanceof ProcessImplementation
-				&& selectedSubcomponent.getContainingComponentImpl().getTypeName().endsWith("_seL4")) {
-			Dialog.showError("Attestation Transform", "An seL4 process cannot contain multiple components.");
-			return;
-		}
+//		// Check that attestation components aren't being added to a thread in a seL4 process
+//		if (selectedSubcomponent.getContainingComponentImpl() instanceof ProcessImplementation
+//				&& selectedSubcomponent.getContainingComponentImpl().getTypeName().endsWith("_seL4")) {
+//			Dialog.showError("Attestation Transform", "An seL4 process cannot contain multiple components.");
+//			return;
+//		}
 
-		isSel4Process = selectedSubcomponent.getComponentImplementation() instanceof ProcessImplementation
-				&& selectedSubcomponent.getContainingComponentImpl().getTypeName().endsWith("_seL4");
+//		isSel4Process = selectedSubcomponent.getComponentImplementation() instanceof ProcessImplementation
+//				&& selectedSubcomponent.getContainingComponentImpl().getTypeName().endsWith("_seL4");
 
-		if (isSel4Process && ((ProcessImplementation) selectedSubcomponent.getComponentImplementation())
-				.getOwnedThreadSubcomponents().size() != 1) {
-			Dialog.showError("Add Attestation",
-					"Selected comm driver is tagged as an seL4 process, but does not contain a single thread subcomponent.");
-			return;
-		}
+//		if (isSel4Process && ((ProcessImplementation) selectedSubcomponent.getComponentImplementation())
+//				.getOwnedThreadSubcomponents().size() != 1) {
+//			Dialog.showError("Add Attestation",
+//					"Selected comm driver is tagged as an seL4 process, but does not contain a single thread subcomponent.");
+//			return;
+//		}
 
 		// Open wizard to enter filter info
 		final AttestationTransformDialog wizard = new AttestationTransformDialog(
@@ -195,6 +195,7 @@ public class AttestationTransformHandler extends AadlHandler {
 			attestationGatePortNames = wizard.getGatePortNames();
 			attestationManagerLogPortType = wizard.getMgrLogPortType();
 			attestationGateLogPortType = wizard.getGateLogPortType();
+			isSel4Process = wizard.createThread();
 			attestationRequirement = wizard.getRequirement();
 //			attestationManagerAgreeProperty = wizard.getMgrAgreeProperty();
 //			attestationGateAgreeProperty = wizard.getGateAgreeProperty();
@@ -271,10 +272,6 @@ public class AttestationTransformHandler extends AadlHandler {
 
 			// Import CASE_Properties file
 			if (!CasePropertyUtils.addCasePropertyImport(pkgSection)) {
-				return null;
-			}
-			// Import CASE_Model_Transformations file
-			if (!CaseUtils.addCaseModelTransformationsImport(pkgSection, true)) {
 				return null;
 			}
 
@@ -394,7 +391,7 @@ public class AttestationTransformHandler extends AadlHandler {
 			if (!responseMessageDataType.isEmpty()) {
 				responseMsgImpl = Aadl2GlobalScopeUtil.get(ci, Aadl2Package.eINSTANCE.getDataSubcomponentType(),
 						responseMessageDataType);
-				if (requestMsgImpl == null) {
+				if (responseMsgImpl == null) {
 					// Aadl2GlobalScopeUtil.get() doesn't seem to find elements in current package
 					for (Classifier c : pkgSection.getOwnedClassifiers()) {
 						if (c.getQualifiedName().equalsIgnoreCase(responseMessageDataType)
@@ -418,6 +415,10 @@ public class AttestationTransformHandler extends AadlHandler {
 							&& classifier.getName().equalsIgnoreCase(AM_RESPONSE_MSG_IMPL_NAME)) {
 						responseMsgImpl = (DataSubcomponentType) classifier;
 					}
+				}
+				// Import CASE_Model_Transformations file, if necessary
+				if (requestMsgImpl != null || responseMsgImpl != null) {
+					CaseUtils.addCaseModelTransformationsImport(pkgSection, true);
 				}
 			}
 
@@ -460,83 +461,84 @@ public class AttestationTransformHandler extends AadlHandler {
 //			commDriverType.getOwnedAnnexSubclauses().clear();
 //			for (AnnexSubclause annexSubclause : commDriver.getComponentType().getOwnedAnnexSubclauses()) {
 
-			Iterator<AnnexSubclause> annexIterator = commDriverType.getOwnedAnnexSubclauses().iterator();
-			while (annexIterator.hasNext()) {
-				AnnexSubclause annexSubclause = annexIterator.next();
-//				final DefaultAnnexSubclause defaultAnnexSubclause = EcoreUtil.copy(commDriverType.createOwnedAnnexSubclause());
-//				defaultAnnexSubclause.setName(annexSubclause.getName());
-
-				if (annexSubclause.getName().equalsIgnoreCase("agree")) {
-
-					// Make sure statement IDs are unique
-//					final List<String> specStatements = new ArrayList<>();
-					final AgreeContractSubclause agreeContractSubclause = (AgreeContractSubclause) ((DefaultAnnexSubclause) annexSubclause)
-							.getParsedAnnexSubclause();
-//					final AgreeAnnexUnparser unparser = new AgreeAnnexUnparser();
-//					String specs = unparser.unparseContract((AgreeContract) agreeContractSubclause.getContract(), "");
-					final AgreeContract agreeContract = (AgreeContract) agreeContractSubclause.getContract();
-					for (SpecStatement spec : agreeContract.getSpecs()) {
-						if (spec instanceof NamedSpecStatement) {
-							final NamedSpecStatement namedSpecStatement = (NamedSpecStatement) spec;
-							if (namedSpecStatement.getName() != null && !namedSpecStatement.getName().isEmpty()) {
-								namedSpecStatement.setName(namedSpecStatement.getName() + "_Attestation");
-							}
-						}
-					}
-//					for (String spec : specs.split(";")) {
-//						String specType = "";
-//						if (spec.trim().toLowerCase().startsWith("guarantee")) {
-//							specType = "guarantee ";
-//						} else if (spec.trim().toLowerCase().startsWith("assume")) {
-//							specType = "assume ";
-//						} else if (spec.trim().toLowerCase().startsWith("lemma")) {
-//							specType = "lemma ";
-//						} else if (spec.trim().toLowerCase().startsWith("assert")) {
-//							specType = "assert ";
-//						}
-//						if (!specType.isEmpty()) {
-//							String newSpec = "";
-//							for (String line : spec.trim().concat(";").split(System.lineSeparator())) {
-//								newSpec += line.trim() + " ";
+			makeAgreeNamesUnique(commDriverType.getOwnedAnnexSubclauses());
+//			Iterator<AnnexSubclause> annexIterator = commDriverType.getOwnedAnnexSubclauses().iterator();
+//			while (annexIterator.hasNext()) {
+//				AnnexSubclause annexSubclause = annexIterator.next();
+////				final DefaultAnnexSubclause defaultAnnexSubclause = EcoreUtil.copy(commDriverType.createOwnedAnnexSubclause());
+////				defaultAnnexSubclause.setName(annexSubclause.getName());
+//
+//				if (annexSubclause.getName().equalsIgnoreCase("agree")) {
+//
+//					// Make sure statement IDs are unique
+////					final List<String> specStatements = new ArrayList<>();
+//					final AgreeContractSubclause agreeContractSubclause = (AgreeContractSubclause) ((DefaultAnnexSubclause) annexSubclause)
+//							.getParsedAnnexSubclause();
+////					final AgreeAnnexUnparser unparser = new AgreeAnnexUnparser();
+////					String specs = unparser.unparseContract((AgreeContract) agreeContractSubclause.getContract(), "");
+//					final AgreeContract agreeContract = (AgreeContract) agreeContractSubclause.getContract();
+//					for (SpecStatement spec : agreeContract.getSpecs()) {
+//						if (spec instanceof NamedSpecStatement) {
+//							final NamedSpecStatement namedSpecStatement = (NamedSpecStatement) spec;
+//							if (namedSpecStatement.getName() != null && !namedSpecStatement.getName().isEmpty()) {
+//								namedSpecStatement.setName(namedSpecStatement.getName() + "_Attestation");
 //							}
-//
-//							String expr = newSpec.substring(newSpec.lastIndexOf("\"") + 1, newSpec.lastIndexOf(";"))
-//									.trim();
-//							// get rid of : delimiter
-//							expr = expr.substring(1).trim();
-//							String desc = newSpec.substring(newSpec.indexOf("\""), newSpec.lastIndexOf("\"") + 1)
-//									.trim();
-//							String id = newSpec
-//									.substring(newSpec.toLowerCase().indexOf(specType) + specType.length(),
-//											newSpec.indexOf("\""))
-//									.trim();
-//
-//							newSpec = specType;
-//							// If spec has an ID, append a suffix to maintain ID uniqueness
-//							if (!id.isEmpty()) {
-//								newSpec += id + "_Attestation ";
-//							}
-//							newSpec += desc + " : " + expr + ";";
-//
-//							specStatements.add(newSpec);
-//						} else if (!spec.trim().isEmpty()) {
-//							specStatements.add(spec.trim() + ";");
 //						}
 //					}
-//					String agreeClauses = "{**" + System.lineSeparator();
-//					for (String s : specStatements) {
-//						agreeClauses += s + System.lineSeparator();
-//					}
-//					agreeClauses += "**}";
+////					for (String spec : specs.split(";")) {
+////						String specType = "";
+////						if (spec.trim().toLowerCase().startsWith("guarantee")) {
+////							specType = "guarantee ";
+////						} else if (spec.trim().toLowerCase().startsWith("assume")) {
+////							specType = "assume ";
+////						} else if (spec.trim().toLowerCase().startsWith("lemma")) {
+////							specType = "lemma ";
+////						} else if (spec.trim().toLowerCase().startsWith("assert")) {
+////							specType = "assert ";
+////						}
+////						if (!specType.isEmpty()) {
+////							String newSpec = "";
+////							for (String line : spec.trim().concat(";").split(System.lineSeparator())) {
+////								newSpec += line.trim() + " ";
+////							}
+////
+////							String expr = newSpec.substring(newSpec.lastIndexOf("\"") + 1, newSpec.lastIndexOf(";"))
+////									.trim();
+////							// get rid of : delimiter
+////							expr = expr.substring(1).trim();
+////							String desc = newSpec.substring(newSpec.indexOf("\""), newSpec.lastIndexOf("\"") + 1)
+////									.trim();
+////							String id = newSpec
+////									.substring(newSpec.toLowerCase().indexOf(specType) + specType.length(),
+////											newSpec.indexOf("\""))
+////									.trim();
+////
+////							newSpec = specType;
+////							// If spec has an ID, append a suffix to maintain ID uniqueness
+////							if (!id.isEmpty()) {
+////								newSpec += id + "_Attestation ";
+////							}
+////							newSpec += desc + " : " + expr + ";";
+////
+////							specStatements.add(newSpec);
+////						} else if (!spec.trim().isEmpty()) {
+////							specStatements.add(spec.trim() + ";");
+////						}
+////					}
+////					String agreeClauses = "{**" + System.lineSeparator();
+////					for (String s : specStatements) {
+////						agreeClauses += s + System.lineSeparator();
+////					}
+////					agreeClauses += "**}";
+////
+////					defaultAnnexSubclause.setSourceText(agreeClauses);
 //
-//					defaultAnnexSubclause.setSourceText(agreeClauses);
-
-					break;
-//				} else {
-//					defaultAnnexSubclause.setSourceText(((DefaultAnnexSubclause) annexSubclause).getSourceText());
-
-				}
-			}
+//					break;
+////				} else {
+////					defaultAnnexSubclause.setSourceText(((DefaultAnnexSubclause) annexSubclause).getSourceText());
+//
+//				}
+//			}
 
 
 			// Put just above it's containing implementation
@@ -817,6 +819,16 @@ public class AttestationTransformHandler extends AadlHandler {
 			final List<String> agPortNames = new ArrayList<>();
 			for (Connection conn : ci.getOwnedConnections()) {
 				if (conn.getSource().getContext() == commDriver && conn.getDestination().getContext() != null) {
+
+					// Ignore if the connection destination is an attestation manager
+					if (conn.getDestination().getContext() instanceof Subcomponent) {
+						if (CasePropertyUtils.hasMitigationType(
+								((Subcomponent) conn.getDestination().getContext()).getClassifier(),
+								MITIGATION_TYPE.ATTESTATION)) {
+							continue;
+						}
+					}
+
 					final ConnectionEnd commPort = conn.getSource().getConnectionEnd();
 					if (agPortNames.contains(commPort.getName())) {
 						continue;
@@ -998,6 +1010,15 @@ public class AttestationTransformHandler extends AadlHandler {
 				final PortConnection conn = ci.getOwnedPortConnections().get(i);
 				// Ignore bus connections (destination context not null)
 				if (conn.getSource().getContext() == commDriver && conn.getDestination().getContext() != null) {
+
+					// Ignore if the connection destination is an attestation manager
+					if (conn.getDestination().getContext() instanceof Subcomponent) {
+						if (CasePropertyUtils.hasMitigationType(
+								((Subcomponent) conn.getDestination().getContext()).getClassifier(),
+								MITIGATION_TYPE.ATTESTATION)) {
+							continue;
+						}
+					}
 
 					// In order to put new connections in right place, keep track of
 					// the first relevant comm driver connection name

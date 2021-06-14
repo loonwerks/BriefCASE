@@ -150,17 +150,23 @@ public class VirtualizationTransformDialog extends TitleAreaDialog {
 	 * @param container
 	 */
 	private void createComponentSelectionField(Composite container) {
-		// Don't display this field if
-		// Component contains one or no subcomponents OR component is a process
-		if (this.subcomponent.getComponentImplementation().getOwnedSubcomponents() == null
-				|| this.subcomponent.getComponentImplementation().getOwnedSubcomponents().size() <= 1
-				|| this.subcomponent.getComponentType().getCategory() == ComponentCategory.PROCESS) {
-			return;
-		}
 
 		final Label lblComponentSelectionField = new Label(container, SWT.NONE);
 		lblComponentSelectionField.setText("Components in VM");
 		lblComponentSelectionField.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, true));
+
+		// Only display label if
+		// Component contains one or no subcomponents OR component is a process
+		if (this.subcomponent.getComponentImplementation().getOwnedSubcomponents() == null
+				|| this.subcomponent.getComponentImplementation().getOwnedSubcomponents().size() <= 1
+				|| this.subcomponent.getComponentType().getCategory() == ComponentCategory.PROCESS) {
+
+			final Label lblComponent = new Label(container, SWT.BORDER);
+			lblComponent.setText(this.subcomponent.getComponentImplementation().getName());
+			lblComponent.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, true));
+
+			return;
+		}
 
 		subcomponentSelector = new SubcomponentSelector(container, this.subcomponent, CheckStyle.MULTIPLE);
 

@@ -31,10 +31,8 @@ import org.osate.aadl2.ComponentImplementation;
 import org.osate.aadl2.Context;
 import org.osate.aadl2.PortCategory;
 import org.osate.aadl2.PortConnection;
-import org.osate.aadl2.ProcessImplementation;
 import org.osate.aadl2.Subcomponent;
-import org.osate.aadl2.SystemImplementation;
-import org.osate.aadl2.ThreadGroupImplementation;
+import org.osate.aadl2.ThreadImplementation;
 import org.osate.aadl2.modelsupport.util.AadlUtil;
 import org.osate.ui.dialogs.Dialog;
 
@@ -60,14 +58,19 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 //	private Combo cboCacheSize;
 	private Text txtIdListDataType;
 	private PortNamesControl pncPortNames = null;
+	private Label lblMgrDispatchProtocolField;
+	private Group mgrProtocolGroup;
 	private List<Button> btnMgrDispatchProtocol = new ArrayList<>();
 	private Label lblMgrPeriodField;
 	private Text txtMgrPeriod;
+	private Label lblGateDispatchProtocolField;
+	private Group gateProtocolGroup;
 	private List<Button> btnGateDispatchProtocol = new ArrayList<>();
 	private Label lblGatePeriodField;
 	private Text txtGatePeriod;
 	private List<Button> btnMgrLogPortType = new ArrayList<>();
 	private List<Button> btnGateLogPortType = new ArrayList<>();
+	private Button btnCreateThread = null;
 	private Combo cboRequirement;
 //	private Button btnPropagateGuarantees;
 //	private Text txtMgrAgreeProperty;
@@ -91,6 +94,7 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 	private String requirement;
 //	private boolean propagateGuarantees;
 	private String commDriver = "";
+	private boolean createThread = false;
 	private List<String> requirements = new ArrayList<>();
 //	private String mgrAgreeProperty;
 //	private String gateAgreeProperty;
@@ -162,6 +166,9 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		final GridLayout layout = new GridLayout(2, true);
 		container.setLayout(layout);
 
+		if (!(context instanceof ThreadImplementation)) {
+			createCreateThreadField(container);
+		}
 		createRequirementField(container);
 
 		return area;
@@ -184,10 +191,10 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		createCacheTimeoutField(container);
 //		createCacheSizeField(container);
 		createIdListDataTypeField(container);
-		if (context instanceof ProcessImplementation || context instanceof ThreadGroupImplementation
-				|| (context instanceof SystemImplementation && context.getTypeName().endsWith("_seL4"))) {
+//		if (context instanceof ProcessImplementation || context instanceof ThreadGroupImplementation
+//				|| (context instanceof SystemImplementation && context.getTypeName().endsWith("_seL4"))) {
 			createMgrDispatchProtocolField(container);
-		}
+//		}
 		createMgrLogPortField(container);
 //		createMgrAgreePropertyField(container);
 
@@ -218,10 +225,10 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		final Composite miscContainer = new Composite(container, SWT.NONE);
 		miscContainer.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 		miscContainer.setLayout(new GridLayout(2, false));
-		if (context instanceof ProcessImplementation || context instanceof ThreadGroupImplementation
-				|| (context instanceof SystemImplementation && context.getTypeName().endsWith("_seL4"))) {
+//		if (context instanceof ProcessImplementation || context instanceof ThreadGroupImplementation
+//				|| (context instanceof SystemImplementation && context.getTypeName().endsWith("_seL4"))) {
 			createGateDispatchProtocolField(miscContainer);
-		}
+//		}
 		createGateLogPortField(miscContainer);
 //		createGateAgreePropertyField(miscContainer);
 
@@ -532,18 +539,18 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 	 * @param container
 	 */
 	private void createMgrDispatchProtocolField(Composite container) {
-		final Label lblDispatchProtocolField = new Label(container, SWT.NONE);
-		lblDispatchProtocolField.setText("Dispatch protocol");
-		lblDispatchProtocolField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		lblMgrDispatchProtocolField = new Label(container, SWT.NONE);
+		lblMgrDispatchProtocolField.setText("Dispatch protocol");
+		lblMgrDispatchProtocolField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
 		// Create a group to contain the log port options
-		final Group protocolGroup = new Group(container, SWT.NONE);
-		protocolGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		protocolGroup.setLayout(new RowLayout(SWT.HORIZONTAL));
+		mgrProtocolGroup = new Group(container, SWT.NONE);
+		mgrProtocolGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		mgrProtocolGroup.setLayout(new RowLayout(SWT.HORIZONTAL));
 
 		btnMgrDispatchProtocol.clear();
 
-		final Button btnNoProtocol = new Button(protocolGroup, SWT.RADIO);
+		final Button btnNoProtocol = new Button(mgrProtocolGroup, SWT.RADIO);
 		btnNoProtocol.setText("None");
 		btnNoProtocol.setSelection(true);
 		btnNoProtocol.addSelectionListener(new SelectionListener() {
@@ -563,11 +570,11 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 			}
 		});
 
-		final Button btnPeriodic = new Button(protocolGroup, SWT.RADIO);
+		final Button btnPeriodic = new Button(mgrProtocolGroup, SWT.RADIO);
 		btnPeriodic.setText("Periodic");
 		btnPeriodic.setSelection(false);
 
-		final Button btnSporadic = new Button(protocolGroup, SWT.RADIO);
+		final Button btnSporadic = new Button(mgrProtocolGroup, SWT.RADIO);
 		btnSporadic.setText("Sporadic");
 		btnSporadic.setSelection(false);
 
@@ -643,18 +650,18 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 	 * @param container
 	 */
 	private void createGateDispatchProtocolField(Composite container) {
-		final Label lblDispatchProtocolField = new Label(container, SWT.NONE);
-		lblDispatchProtocolField.setText("Dispatch protocol");
-		lblDispatchProtocolField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		lblGateDispatchProtocolField = new Label(container, SWT.NONE);
+		lblGateDispatchProtocolField.setText("Dispatch protocol");
+		lblGateDispatchProtocolField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
 		// Create a group to contain the log port options
-		final Group protocolGroup = new Group(container, SWT.NONE);
-		protocolGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		protocolGroup.setLayout(new RowLayout(SWT.HORIZONTAL));
+		gateProtocolGroup = new Group(container, SWT.NONE);
+		gateProtocolGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		gateProtocolGroup.setLayout(new RowLayout(SWT.HORIZONTAL));
 
 		btnGateDispatchProtocol.clear();
 
-		final Button btnNoProtocol = new Button(protocolGroup, SWT.RADIO);
+		final Button btnNoProtocol = new Button(gateProtocolGroup, SWT.RADIO);
 		btnNoProtocol.setText("None");
 		btnNoProtocol.setSelection(true);
 		btnNoProtocol.addSelectionListener(new SelectionListener() {
@@ -674,11 +681,11 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 			}
 		});
 
-		final Button btnPeriodic = new Button(protocolGroup, SWT.RADIO);
+		final Button btnPeriodic = new Button(gateProtocolGroup, SWT.RADIO);
 		btnPeriodic.setText("Periodic");
 		btnPeriodic.setSelection(false);
 
-		final Button btnSporadic = new Button(protocolGroup, SWT.RADIO);
+		final Button btnSporadic = new Button(gateProtocolGroup, SWT.RADIO);
 		btnSporadic.setText("Sporadic");
 		btnSporadic.setSelection(false);
 
@@ -869,6 +876,65 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		btnGateLogPortType.add(btnEventLogPort);
 		btnGateLogPortType.add(btnEventDataLogPort);
 		btnGateLogPortType.add(btnNoLogPort);
+
+	}
+
+	/**
+	 * Creates the input field for specifying if a thread should also be created
+	 * if filter is a process
+	 * @param container
+	 */
+	private void createCreateThreadField(Composite container) {
+		final Label lblCreateThreadField = new Label(container, SWT.NONE);
+		lblCreateThreadField.setText("Create internal thread components");
+		lblCreateThreadField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true));
+
+		GridData dataInfoField = new GridData();
+		dataInfoField.grabExcessHorizontalSpace = true;
+		dataInfoField.horizontalAlignment = SWT.FILL;
+		btnCreateThread = new Button(container, SWT.CHECK);
+		btnCreateThread.setLayoutData(dataInfoField);
+		btnCreateThread.addListener(SWT.Selection, e -> {
+			if (e.type == SWT.Selection) {
+				if (btnCreateThread.getSelection()) {
+					for (Button b : btnMgrDispatchProtocol) {
+						b.setEnabled(true);
+					}
+					for (Button b : btnGateDispatchProtocol) {
+						b.setEnabled(true);
+					}
+				} else {
+					for (Button b : btnMgrDispatchProtocol) {
+						if (b.getText().equals("None")) {
+							b.setSelection(true);
+							txtMgrPeriod.setText("");
+						} else {
+							b.setSelection(false);
+						}
+						b.setEnabled(false);
+					}
+					for (Button b : btnGateDispatchProtocol) {
+						if (b.getText().equals("None")) {
+							b.setSelection(true);
+							txtGatePeriod.setText("");
+						} else {
+							b.setSelection(false);
+						}
+						b.setEnabled(false);
+					}
+				}
+				lblMgrDispatchProtocolField.setEnabled(btnCreateThread.getSelection());
+				mgrProtocolGroup.setEnabled(btnCreateThread.getSelection());
+				lblMgrPeriodField.setEnabled(btnCreateThread.getSelection());
+				txtMgrPeriod.setEnabled(btnCreateThread.getSelection());
+
+				lblGateDispatchProtocolField.setEnabled(btnCreateThread.getSelection());
+				gateProtocolGroup.setEnabled(btnCreateThread.getSelection());
+				lblGatePeriodField.setEnabled(btnCreateThread.getSelection());
+				txtGatePeriod.setEnabled(btnCreateThread.getSelection());
+			}
+		});
+		btnCreateThread.setSelection(true);
 
 	}
 
@@ -1109,6 +1175,11 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 			}
 		}
 
+		// Create thread
+		if (btnCreateThread != null) {
+			createThread = btnCreateThread.getSelection();
+		}
+
 		// Mgr Dispatch Protocol and Period
 		for (Button b : btnMgrDispatchProtocol) {
 			if (b.getSelection() && !b.getText().equalsIgnoreCase("None")) {
@@ -1219,6 +1290,10 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 
 	public Map<String, List<String>> getGatePortNames() {
 		return gatePortNames;
+	}
+
+	public boolean createThread() {
+		return createThread;
 	}
 
 	public String getMgrDispatchProtocol() {

@@ -38,8 +38,7 @@ import org.osate.aadl2.ProcessType;
 import org.osate.aadl2.Property;
 import org.osate.aadl2.PropertyExpression;
 import org.osate.aadl2.Subcomponent;
-import org.osate.aadl2.SystemImplementation;
-import org.osate.aadl2.ThreadGroupImplementation;
+import org.osate.aadl2.ThreadImplementation;
 import org.osate.aadl2.modelsupport.util.AadlUtil;
 import org.osate.ui.dialogs.Dialog;
 import org.osate.xtext.aadl2.properties.util.GetProperties;
@@ -62,6 +61,9 @@ public class FilterTransformDialog extends TitleAreaDialog {
 	private Subcomponent compoundFilter = null;
 	private Text txtFilterComponentName;
 	private Text txtFilterSubcomponentName;
+	private Button btnCreateThread = null;
+	private Label lblDispatchProtocolField;
+	private Group protocolGroup;
 	private List<Button> btnDispatchProtocol = new ArrayList<>();
 	private Label lblPeriodField;
 	private Text txtPeriod;
@@ -72,6 +74,7 @@ public class FilterTransformDialog extends TitleAreaDialog {
 	private Text txtPolicy;
 	private String filterComponentName = "";
 	private String filterSubcomponentName = "";
+	private boolean createThread = false;
 	private String filterDispatchProtocol = "";
 	private String filterPeriod = "";
 	private String filterInputPortName = "";
@@ -145,10 +148,13 @@ public class FilterTransformDialog extends TitleAreaDialog {
 		// Add filter information fields
 		createFilterComponentNameField(container);
 		createFilterSubcomponentNameField(container);
-		if (context instanceof ProcessImplementation || context instanceof ThreadGroupImplementation
-				|| (context instanceof SystemImplementation && context.getTypeName().endsWith("_seL4"))) {
-			createDispatchProtocolField(container);
+		if (!(context instanceof ThreadImplementation)) {
+			createCreateThreadField(container);
 		}
+//		if (context instanceof ProcessImplementation || context instanceof ThreadGroupImplementation
+//				|| (context instanceof SystemImplementation && context.getTypeName().endsWith("_seL4"))) {
+		createDispatchProtocolField(container);
+//		}
 		createPortNamesField(container);
 		createLogPortField(container);
 		createRequirementField(container);
@@ -206,16 +212,62 @@ public class FilterTransformDialog extends TitleAreaDialog {
 
 
 	/**
-	 * Creates the input field for selecting the dispatch protocol
+	 * Creates the input field for specifying if a thread should also be created
+	 * if filter is a process
+	 * @param container
+	 */
+	private void createCreateThreadField(Composite container) {
+		final Label lblCreateThreadField = new Label(container, SWT.NONE);
+		lblCreateThreadField.setText("Create internal thread component");
+		lblCreateThreadField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true));
+
+		GridData dataInfoField = new GridData();
+		dataInfoField.grabExcessHorizontalSpace = true;
+		dataInfoField.horizontalAlignment = SWT.FILL;
+		btnCreateThread = new Button(container, SWT.CHECK);
+		btnCreateThread.setSelection(true);
+		btnCreateThread.setLayoutData(dataInfoField);
+		btnCreateThread.addListener(SWT.Selection, e -> {
+			if (e.type == SWT.Selection) {
+				if (btnCreateThread.getSelection()) {
+					for (Button b : btnDispatchProtocol) {
+						b.setEnabled(true);
+					}
+				} else {
+					for (Button b : btnDispatchProtocol) {
+						if (b.getText().equals("None")) {
+							b.setSelection(true);
+							txtPeriod.setText("");
+						} else {
+							b.setSelection(false);
+						}
+						b.setEnabled(false);
+					}
+				}
+				lblDispatchProtocolField.setEnabled(btnCreateThread.getSelection());
+				protocolGroup.setEnabled(btnCreateThread.getSelection());
+				lblPeriodField.setEnabled(btnCreateThread.getSelection());
+				txtPeriod.setEnabled(btnCreateThread.getSelection());
+			}
+		});
+
+		if (compoundFilter != null) {
+			btnCreateThread
+					.setSelection(compoundFilter.getComponentImplementation().getOwnedSubcomponents().size() > 0);
+		}
+	}
+
+	/**
+	 * Creates the input field for selecting the dispatch protocol and period
 	 * @param container
 	 */
 	private void createDispatchProtocolField(Composite container) {
-		final Label lblDispatchProtocolField = new Label(container, SWT.NONE);
+		lblDispatchProtocolField = new Label(container, SWT.NONE);
 		lblDispatchProtocolField.setText("Dispatch protocol");
 		lblDispatchProtocolField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true));
 
 		// Create a group to contain the protocol options
-		final Group protocolGroup = new Group(container, SWT.NONE);
+		protocolGroup = new Group(container, SWT.NONE);
 		protocolGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		protocolGroup.setLayout(new RowLayout(SWT.HORIZONTAL));
 
@@ -504,6 +556,11 @@ public class FilterTransformDialog extends TitleAreaDialog {
 			filterSubcomponentName = txtFilterSubcomponentName.getText();
 		}
 
+		// Create thread
+		if (btnCreateThread != null) {
+			createThread = btnCreateThread.getSelection();
+		}
+
 		// Dispatch Protocol and Period
 		for (Button b : btnDispatchProtocol) {
 			if (b.getSelection() && !b.getText().equalsIgnoreCase("None")) {
@@ -585,6 +642,10 @@ public class FilterTransformDialog extends TitleAreaDialog {
 
 	public String getFilterSubcomponentName() {
 		return filterSubcomponentName;
+	}
+
+	public boolean createThread() {
+		return createThread;
 	}
 
 	public String getDispatchProtocol() {

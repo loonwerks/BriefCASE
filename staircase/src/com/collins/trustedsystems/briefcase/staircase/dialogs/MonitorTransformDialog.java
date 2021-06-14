@@ -29,9 +29,7 @@ import org.eclipse.swt.widgets.Text;
 import org.osate.aadl2.Classifier;
 import org.osate.aadl2.ComponentImplementation;
 import org.osate.aadl2.PortCategory;
-import org.osate.aadl2.ProcessImplementation;
-import org.osate.aadl2.SystemImplementation;
-import org.osate.aadl2.ThreadGroupImplementation;
+import org.osate.aadl2.ThreadImplementation;
 import org.osate.aadl2.modelsupport.util.AadlUtil;
 import org.osate.ui.dialogs.Dialog;
 
@@ -62,6 +60,9 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 	private Label lblAlertPortCategoryField;
 	private List<Button> btnAlertPortCategory = new ArrayList<>();
 	private Button btnObservationGate;
+	private Button btnCreateThread = null;
+	private Label lblDispatchProtocolField;
+	private Group protocolGroup;
 	private List<Button> btnDispatchProtocol = new ArrayList<>();
 	private Label lblPeriodField;
 	private Text txtPeriod;
@@ -81,6 +82,7 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 	private String alertPortDataType = "";
 	private PortCategory alertPortCategory = null;
 	private boolean observationGate = false;
+	private boolean createThread = false;
 	private String dispatchProtocol = "";
 	private String period = "";
 	private String monitorRequirement = "";
@@ -175,11 +177,14 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 		createMonitorSubcomponentNameField(container);
 		createLatchedField(container);
 		createObservationGateField(container);
-		// Only display dispatch protocol if monitor is a thread
-		if (context instanceof ProcessImplementation || context instanceof ThreadGroupImplementation
-				|| (context instanceof SystemImplementation && context.getTypeName().endsWith("_seL4"))) {
-			createDispatchProtocolField(container);
+		if (!(context instanceof ThreadImplementation)) {
+			createCreateThreadField(container);
 		}
+//		// Only display dispatch protocol if monitor is a thread
+//		if (context instanceof ProcessImplementation || context instanceof ThreadGroupImplementation
+//				|| (context instanceof SystemImplementation && context.getTypeName().endsWith("_seL4"))) {
+			createDispatchProtocolField(container);
+//		}
 		createRequirementField(container);
 		createAgreeField(container);
 
@@ -525,18 +530,60 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 
 	}
 
+	/**
+	 * Creates the input field for specifying if a thread should also be created
+	 * if filter is a process
+	 * @param container
+	 */
+	private void createCreateThreadField(Composite container) {
+		final Label lblCreateThreadField = new Label(container, SWT.NONE);
+		lblCreateThreadField.setText("Create internal thread component");
+		lblCreateThreadField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true));
+
+		GridData dataInfoField = new GridData();
+		dataInfoField.grabExcessHorizontalSpace = true;
+		dataInfoField.horizontalAlignment = SWT.FILL;
+		btnCreateThread = new Button(container, SWT.CHECK);
+		btnCreateThread.setSelection(true);
+		btnCreateThread.setLayoutData(dataInfoField);
+		btnCreateThread.addListener(SWT.Selection, e -> {
+			if (e.type == SWT.Selection) {
+				if (btnCreateThread.getSelection()) {
+					for (Button b : btnDispatchProtocol) {
+						b.setEnabled(true);
+					}
+				} else {
+					for (Button b : btnDispatchProtocol) {
+						if (b.getText().equals("None")) {
+							b.setSelection(true);
+							txtPeriod.setText("");
+						} else {
+							b.setSelection(false);
+						}
+						b.setEnabled(false);
+					}
+				}
+				lblDispatchProtocolField.setEnabled(btnCreateThread.getSelection());
+				protocolGroup.setEnabled(btnCreateThread.getSelection());
+				lblPeriodField.setEnabled(btnCreateThread.getSelection());
+				txtPeriod.setEnabled(btnCreateThread.getSelection());
+			}
+		});
+
+	}
+
 
 	/**
 	 * Creates the input field for selecting the dispatch protocol
 	 * @param container
 	 */
 	private void createDispatchProtocolField(Composite container) {
-		final Label lblDispatchProtocolField = new Label(container, SWT.NONE);
+		lblDispatchProtocolField = new Label(container, SWT.NONE);
 		lblDispatchProtocolField.setText("Dispatch protocol");
 		lblDispatchProtocolField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
 		// Create a group to contain the log port options
-		final Group protocolGroup = new Group(container, SWT.NONE);
+		protocolGroup = new Group(container, SWT.NONE);
 		protocolGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		protocolGroup.setLayout(new RowLayout(SWT.HORIZONTAL));
 
@@ -811,6 +858,11 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 			}
 		}
 
+		// Create thread
+		if (btnCreateThread != null) {
+			createThread = btnCreateThread.getSelection();
+		}
+
 		// Dispatch Protocol and Period
 		for (Button b : btnDispatchProtocol) {
 			if (b.getSelection() && !b.getText().equalsIgnoreCase("None")) {
@@ -904,6 +956,10 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 
 	public boolean getObservationGate() {
 		return observationGate;
+	}
+
+	public boolean createThread() {
+		return createThread;
 	}
 
 	public String getDispatchProtocol() {

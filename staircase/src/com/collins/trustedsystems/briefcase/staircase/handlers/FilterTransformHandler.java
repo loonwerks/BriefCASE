@@ -107,15 +107,15 @@ public class FilterTransformHandler extends AadlHandler {
 			return;
 		}
 
-		// Check that a filter isn't being added to a thread in a seL4 process
-		if (subcomponent.getContainingComponentImpl() instanceof ProcessImplementation
-				&& subcomponent.getContainingComponentImpl().getTypeName().endsWith("_seL4")) {
-			Dialog.showError("Filter Transform", "An seL4 process cannot contain multiple components.");
-			return;
-		}
+//		// Check that a filter isn't being added to a thread in a seL4 process
+//		if (subcomponent.getContainingComponentImpl() instanceof ProcessImplementation
+//				&& subcomponent.getContainingComponentImpl().getTypeName().endsWith("_seL4")) {
+//			Dialog.showError("Filter Transform", "An seL4 process cannot contain multiple components.");
+//			return;
+//		}
 
-		isSel4Process = subcomponent.getComponentImplementation() instanceof ProcessImplementation
-				&& subcomponent.getContainingComponentImpl().getTypeName().endsWith("_seL4");
+//		isSel4Process = subcomponent.getComponentImplementation() instanceof ProcessImplementation
+//				&& subcomponent.getContainingComponentImpl().getTypeName().endsWith("_seL4");
 
 		boolean createCompoundFilter = false;
 		Connection filterOutConn = null;
@@ -158,19 +158,19 @@ public class FilterTransformHandler extends AadlHandler {
 				}
 			}
 		}
-		if (createCompoundFilter && isSel4Process) {
-			// Make sure seL4 process contains a filter thread
-			ProcessImplementation pi = (ProcessImplementation) subcomponent.getComponentImplementation();
-			if (pi.getOwnedThreadSubcomponents().size() != 1) {
-				Dialog.showError("Filter Transform", "seL4 filter does not contain a single thread.");
-				return;
-			}
-			if (!CasePropertyUtils.hasMitigationType(pi.getOwnedThreadSubcomponents().get(0).getClassifier(),
-					MITIGATION_TYPE.FILTER)) {
-				Dialog.showError("Filter Transform", "seL4 process does not contain a filter thread.");
-				return;
-			}
-		}
+//		if (createCompoundFilter && isSel4Process) {
+//			// Make sure seL4 process contains a filter thread
+//			ProcessImplementation pi = (ProcessImplementation) subcomponent.getComponentImplementation();
+//			if (pi.getOwnedThreadSubcomponents().size() != 1) {
+//				Dialog.showError("Filter Transform", "seL4 filter does not contain a single thread.");
+//				return;
+//			}
+//			if (!CasePropertyUtils.hasMitigationType(pi.getOwnedThreadSubcomponents().get(0).getClassifier(),
+//					MITIGATION_TYPE.FILTER)) {
+//				Dialog.showError("Filter Transform", "seL4 process does not contain a filter thread.");
+//				return;
+//			}
+//		}
 
 		// Open wizard to enter filter info
 		final FilterTransformDialog wizard = new FilterTransformDialog(
@@ -189,6 +189,7 @@ public class FilterTransformHandler extends AadlHandler {
 			if (filterSubcomponentName == "") {
 				filterSubcomponentName = FILTER_SUBCOMP_NAME;
 			}
+			isSel4Process = wizard.createThread();
 			filterDispatchProtocol = wizard.getDispatchProtocol();
 			filterPeriod = wizard.getPeriod();
 			inputPortName = wizard.getInputPortName();

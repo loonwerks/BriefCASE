@@ -220,10 +220,6 @@
                      label="Synthesis Tools">
                </menu>
             </menu>
-            <menu
-                  id="com.collins.trustedsystems.briefcase.menus.menubar.build"
-                  label="System Build">
-            </menu>
          </menu>
       </menuContribution>
       <!--
