@@ -42,7 +42,6 @@ import org.osate.aadl2.EnumerationLiteral;
 import org.osate.aadl2.EventDataPort;
 import org.osate.aadl2.EventPort;
 import org.osate.aadl2.Feature;
-import org.osate.aadl2.IntegerLiteral;
 import org.osate.aadl2.ListValue;
 import org.osate.aadl2.ModalPropertyValue;
 import org.osate.aadl2.NamedElement;
@@ -69,13 +68,11 @@ import org.osate.aadl2.ThreadGroupSubcomponent;
 import org.osate.aadl2.ThreadImplementation;
 import org.osate.aadl2.ThreadSubcomponent;
 import org.osate.aadl2.ThreadType;
-import org.osate.aadl2.UnitLiteral;
 import org.osate.aadl2.modelsupport.scoping.Aadl2GlobalScopeUtil;
 import org.osate.aadl2.modelsupport.util.AadlUtil;
 import org.osate.ui.dialogs.Dialog;
 import org.osate.xtext.aadl2.properties.util.GetProperties;
 import org.osate.xtext.aadl2.properties.util.ThreadProperties;
-import org.osate.xtext.aadl2.properties.util.TimingProperties;
 
 import com.collins.trustedsystems.briefcase.staircase.dialogs.Sel4TransformDialog;
 import com.collins.trustedsystems.briefcase.staircase.requirements.CyberRequirement;
@@ -877,8 +874,7 @@ public class Sel4TransformHandler extends AadlHandler {
 	 * Inserts a single thread into a designated seL4 process
 	 */
 	public static ThreadSubcomponent insertThreadInSel4Process(ProcessImplementation processImpl,
-			String dispatchProtocol,
-			String period, String agreeClauses) {
+			String dispatchProtocol, String agreeClauses) {
 
 		final PackageSection pkgSection = (PackageSection) processImpl.eContainer();
 
@@ -926,6 +922,7 @@ public class Sel4TransformHandler extends AadlHandler {
 		threadRealization.setImplemented(threadType);
 
 		// Add thread-specific property associations
+
 		// Dispatch protocol
 		if (dispatchProtocol != null && !dispatchProtocol.isEmpty()) {
 			final Property dispatchProtocolProp = GetProperties.lookupPropertyDefinition(threadImpl,
@@ -935,18 +932,6 @@ public class Sel4TransformHandler extends AadlHandler {
 			final NamedValue nv = Aadl2Factory.eINSTANCE.createNamedValue();
 			nv.setNamedValue(dispatchProtocolLit);
 			threadImpl.setPropertyValue(dispatchProtocolProp, nv);
-		}
-		// Period
-		if (period != null && !period.isEmpty()) {
-			final Property periodProp = GetProperties.lookupPropertyDefinition(threadImpl, TimingProperties._NAME,
-					TimingProperties.PERIOD);
-			final IntegerLiteral periodLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
-			final UnitLiteral unit = Aadl2Factory.eINSTANCE.createUnitLiteral();
-			unit.setName(period.replaceAll("[\\d]", "").trim());
-			periodLit.setBase(0);
-			periodLit.setValue(Long.parseLong(period.replaceAll("[\\D]", "").trim()));
-			periodLit.setUnit(unit);
-			threadImpl.setPropertyValue(periodProp, periodLit);
 		}
 
 		// Add subcomponent

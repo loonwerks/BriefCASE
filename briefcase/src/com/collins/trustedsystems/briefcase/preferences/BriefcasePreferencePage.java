@@ -1,14 +1,28 @@
 package com.collins.trustedsystems.briefcase.preferences;
 
+import java.io.File;
+import java.io.IOException;
+
+import org.eclipse.jface.preference.BooleanFieldEditor;
+import org.eclipse.jface.preference.DirectoryFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
+import org.eclipse.jface.preference.FileFieldEditor;
+import org.eclipse.jface.preference.StringFieldEditor;
+import org.eclipse.jface.util.PropertyChangeEvent;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
+import org.osate.ui.dialogs.Dialog;
 
 import com.collins.trustedsystems.briefcase.Activator;
 
 public class BriefcasePreferencePage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
 
-//	private FileFieldEditor splatOutputFileFieldEditor;
+	private BooleanFieldEditor splatLogFieldEditor = null;
+	private FileFieldEditor splatLogFileFieldEditor = null;
 
 	public BriefcasePreferencePage() {
 		super(GRID);
@@ -17,46 +31,93 @@ public class BriefcasePreferencePage extends FieldEditorPreferencePage implement
 	@Override
 	public void createFieldEditors() {
 
-//		splatOutputFileFieldEditor = new FileFieldEditor(CasePreferenceConstants.CASE_SPLAT_OUTPUT_FILENAME,
-//				"SPLAT output filename:", true, getFieldEditorParent()) {
-//
-//			@Override
-//			protected String changePressed() {
-//
-//				FileDialog dlgSaveAs = new FileDialog(getShell(), SWT.SAVE | SWT.SHEET);
-//				dlgSaveAs.setText("SPLAT theory file");
-//				if (!getTextControl().getText().isEmpty()) {
-//					dlgSaveAs.setFileName(getTextControl().getText());
-//				} else {
-//					dlgSaveAs.setFileName("SWTheory.sml");
-//				}
-//				dlgSaveAs.setOverwrite(false);
-//				dlgSaveAs.setFilterExtensions(new String[] { "*.sml", "*.*" });
-//				String fileName = dlgSaveAs.open();
-//				if (fileName == null) {
-//					return null;
-//				} else {
-//					fileName = fileName.trim();
-//				}
-//
-//				return fileName;
-//			}
-//
-//			@Override
-//			protected boolean checkState() {
-//				// Don't want to enforce proper path/filenaming
-//				clearErrorMessage();
-//				return true;
-//			}
-//		};
-//		addField(splatOutputFileFieldEditor);
+		// Output folder name
+		addField(new DirectoryFieldEditor(BriefcasePreferenceConstants.SPLAT_OUTPUT_FOLDER, "SPLAT output folder name",
+				getFieldEditorParent()));
 
+		splatLogFieldEditor = new BooleanFieldEditor(BriefcasePreferenceConstants.SPLAT_GENERATE_LOG,
+				"Generate SPLAT run log",
+				getFieldEditorParent());
+		addField(splatLogFieldEditor);
+
+		splatLogFileFieldEditor = new FileFieldEditor(BriefcasePreferenceConstants.SPLAT_LOG_FILENAME,
+				"SPLAT log filename:",
+				true, getFieldEditorParent()) {
+
+			@Override
+			protected String changePressed() {
+
+				FileDialog dlgSaveAs = new FileDialog(getShell(), SWT.SAVE | SWT.SHEET);
+				dlgSaveAs.setText("SPLAT log file");
+				if (!getTextControl().getText().isEmpty()) {
+					dlgSaveAs.setFileName(getTextControl().getText());
+				} else {
+					dlgSaveAs.setFileName("splat.log");
+				}
+				dlgSaveAs.setOverwrite(false);
+				dlgSaveAs.setFilterExtensions(new String[] { "*.log", "*.*" });
+				String fileName = dlgSaveAs.open();
+				if (fileName == null) {
+					return null;
+				} else {
+					fileName = fileName.trim();
+				}
+
+				// Create the file if it doesn't exist
+				try {
+					File file = new File(fileName);
+					file.createNewFile();
+				} catch (IOException e) {
+					Dialog.showError("SPLAT log file - Error", "A problem occurred while creating the file.");
+					return null;
+				}
+
+				return fileName;
+			}
+
+			@Override
+			protected boolean checkState() {
+				// Don't want to enforce proper path/filenaming
+				clearErrorMessage();
+				return true;
+			}
+		};
+		addField(splatLogFileFieldEditor);
+
+		Label label = new Label(getFieldEditorParent(), SWT.SEPARATOR | SWT.HORIZONTAL);
+		label.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 2));
+
+		addField(new StringFieldEditor(BriefcasePreferenceConstants.KU_IMPL_FOLDER,
+				"KU Attestation implementation folder name", getFieldEditorParent()));
+
+	}
+
+	private void configureEnabledFieldEditors() {
+		splatLogFileFieldEditor.setEnabled(splatLogFieldEditor.getBooleanValue(), getFieldEditorParent());
 	}
 
 	@Override
 	public void init(IWorkbench workbench) {
 		setPreferenceStore(Activator.getDefault().getPreferenceStore());
-		setDescription("BriefCASE Settings");
+//		setDescription("BriefCASE Settings");
+	}
+
+	@Override
+	public void propertyChange(PropertyChangeEvent event) {
+		super.propertyChange(event);
+		configureEnabledFieldEditors();
+	}
+
+	@Override
+	protected void performDefaults() {
+		super.performDefaults();
+		configureEnabledFieldEditors();
+	}
+
+	@Override
+	protected void initialize() {
+		super.initialize();
+		configureEnabledFieldEditors();
 	}
 
 }

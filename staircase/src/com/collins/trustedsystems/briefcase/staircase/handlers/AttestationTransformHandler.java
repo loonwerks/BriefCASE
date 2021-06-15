@@ -1,11 +1,13 @@
 package com.collins.trustedsystems.briefcase.staircase.handlers;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.core.resources.IProject;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.util.EcoreUtil;
@@ -45,6 +47,7 @@ import org.osate.aadl2.PortConnection;
 import org.osate.aadl2.ProcessImplementation;
 import org.osate.aadl2.Property;
 import org.osate.aadl2.Realization;
+import org.osate.aadl2.StringLiteral;
 import org.osate.aadl2.Subcomponent;
 import org.osate.aadl2.ThreadImplementation;
 import org.osate.aadl2.ThreadSubcomponent;
@@ -54,9 +57,12 @@ import org.osate.aadl2.modelsupport.scoping.Aadl2GlobalScopeUtil;
 import org.osate.aadl2.modelsupport.util.AadlUtil;
 import org.osate.ui.dialogs.Dialog;
 import org.osate.xtext.aadl2.properties.util.GetProperties;
+import org.osate.xtext.aadl2.properties.util.ProgrammingProperties;
 import org.osate.xtext.aadl2.properties.util.ThreadProperties;
 import org.osate.xtext.aadl2.properties.util.TimingProperties;
 
+import com.collins.trustedsystems.briefcase.preferences.BriefcasePreferenceConstants;
+import com.collins.trustedsystems.briefcase.staircase.Activator;
 import com.collins.trustedsystems.briefcase.staircase.dialogs.AttestationTransformDialog;
 import com.collins.trustedsystems.briefcase.staircase.requirements.AddAttestationClaim;
 import com.collins.trustedsystems.briefcase.staircase.requirements.CyberRequirement;
@@ -67,6 +73,7 @@ import com.collins.trustedsystems.briefcase.staircase.utils.CaseUtils;
 import com.collins.trustedsystems.briefcase.staircase.utils.ComponentCreateHelper;
 import com.collins.trustedsystems.briefcase.staircase.utils.ModelTransformUtils;
 import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
+import com.collins.trustedsystems.briefcase.util.TraverseProject;
 import com.rockwellcollins.atc.agree.agree.AgreeContract;
 import com.rockwellcollins.atc.agree.agree.AgreeContractSubclause;
 import com.rockwellcollins.atc.agree.agree.NamedSpecStatement;
@@ -107,6 +114,7 @@ public class AttestationTransformHandler extends AadlHandler {
 	private PortCategory attestationManagerLogPortType;
 	private PortCategory attestationGateLogPortType;
 	private String attestationRequirement;
+	private boolean useKUImplementation;
 //	private String attestationManagerAgreeProperty;
 //	private String attestationGateAgreeProperty;
 	private boolean isSel4Process = false;
@@ -196,6 +204,7 @@ public class AttestationTransformHandler extends AadlHandler {
 			attestationManagerLogPortType = wizard.getMgrLogPortType();
 			attestationGateLogPortType = wizard.getGateLogPortType();
 			isSel4Process = wizard.createThread();
+			useKUImplementation = wizard.useKUImplementation();
 			attestationRequirement = wizard.getRequirement();
 //			attestationManagerAgreeProperty = wizard.getMgrAgreeProperty();
 //			attestationGateAgreeProperty = wizard.getGateAgreeProperty();
@@ -588,7 +597,7 @@ public class AttestationTransformHandler extends AadlHandler {
 				((ProcessImplementation) commDriverImpl).getOwnedPortConnections().clear();
 
 				ThreadSubcomponent threadSub = Sel4TransformHandler
-						.insertThreadInSel4Process((ProcessImplementation) commDriverImpl, null, null, null);
+						.insertThreadInSel4Process((ProcessImplementation) commDriverImpl, null, null);
 
 				threadSub.setName(subName);
 
@@ -760,28 +769,45 @@ public class AttestationTransformHandler extends AadlHandler {
 //			}
 
 			// Dispatch protocol property
-			if (compCategory == ComponentCategory.THREAD) {
-				if (!attestationManagerDispatchProtocol.isEmpty()) {
-					final Property dispatchProtocolProp = GetProperties.lookupPropertyDefinition(attestationManagerImpl,
-							ThreadProperties._NAME, ThreadProperties.DISPATCH_PROTOCOL);
-					final EnumerationLiteral dispatchProtocolLit = Aadl2Factory.eINSTANCE.createEnumerationLiteral();
-					dispatchProtocolLit.setName(attestationManagerDispatchProtocol);
-					final NamedValue nv = Aadl2Factory.eINSTANCE.createNamedValue();
-					nv.setNamedValue(dispatchProtocolLit);
-					attestationManagerImpl.setPropertyValue(dispatchProtocolProp, nv);
-				}
-				// Period
-				if (!attestationManagerPeriod.isEmpty()) {
-					final Property periodProp = GetProperties.lookupPropertyDefinition(attestationManagerImpl,
-							TimingProperties._NAME, TimingProperties.PERIOD);
-					final IntegerLiteral periodLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
-					final UnitLiteral unit = Aadl2Factory.eINSTANCE.createUnitLiteral();
-					unit.setName(attestationManagerPeriod.replaceAll("[\\d]", "").trim());
-					periodLit.setBase(0);
-					periodLit.setValue(Long.parseLong(attestationManagerPeriod.replaceAll("[\\D]", "").trim()));
-					periodLit.setUnit(unit);
-					attestationManagerImpl.setPropertyValue(periodProp, periodLit);
-				}
+			if (compCategory == ComponentCategory.THREAD && !attestationManagerDispatchProtocol.isEmpty()) {
+				final Property dispatchProtocolProp = GetProperties.lookupPropertyDefinition(attestationManagerImpl,
+						ThreadProperties._NAME, ThreadProperties.DISPATCH_PROTOCOL);
+				final EnumerationLiteral dispatchProtocolLit = Aadl2Factory.eINSTANCE.createEnumerationLiteral();
+				dispatchProtocolLit.setName(attestationManagerDispatchProtocol);
+				final NamedValue nv = Aadl2Factory.eINSTANCE.createNamedValue();
+				nv.setNamedValue(dispatchProtocolLit);
+				attestationManagerImpl.setPropertyValue(dispatchProtocolProp, nv);
+			}
+
+			// Period
+			if (!attestationManagerPeriod.isEmpty()) {
+				final Property periodProp = GetProperties.lookupPropertyDefinition(attestationManagerImpl,
+						TimingProperties._NAME, TimingProperties.PERIOD);
+				final IntegerLiteral periodLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
+				final UnitLiteral unit = Aadl2Factory.eINSTANCE.createUnitLiteral();
+				unit.setName(attestationManagerPeriod.replaceAll("[\\d]", "").trim());
+				periodLit.setBase(0);
+				periodLit.setValue(Long.parseLong(attestationManagerPeriod.replaceAll("[\\D]", "").trim()));
+				periodLit.setUnit(unit);
+				attestationManagerImpl.setPropertyValue(periodProp, periodLit);
+			}
+
+			// Language and Source Text
+			if (useKUImplementation) {
+				CasePropertyUtils.setCompLanguage(attestationManagerImpl, "CakeML");
+
+				final Property sourceTextProp = GetProperties.lookupPropertyDefinition(attestationManagerImpl,
+						ProgrammingProperties._NAME, ProgrammingProperties.SOURCE_TEXT);
+				final StringLiteral sourceTextLit = Aadl2Factory.eINSTANCE.createStringLiteral();
+
+				IProject project = TraverseProject.getCurrentProject();
+				String attestationImplPath = project.getLocation() + File.separator + Activator.getDefault()
+						.getPreferenceStore().getString(BriefcasePreferenceConstants.KU_IMPL_FOLDER) + File.separator;
+				// TODO: Add file name(s) to impl path
+				sourceTextLit.setValue(attestationImplPath);
+				final List<StringLiteral> listVal = new ArrayList<>();
+				listVal.add(sourceTextLit);
+				attestationManagerImpl.setPropertyValue(sourceTextProp, listVal);
 			}
 
 			// Replace the comm driver with the extended comm driver
@@ -968,28 +994,27 @@ public class AttestationTransformHandler extends AadlHandler {
 			pkgSection.getOwnedClassifiers().move(1, pkgSection.getOwnedClassifiers().size() - 1);
 
 			// Dispatch protocol property
-			if (compCategory == ComponentCategory.THREAD) {
-				if (!attestationGateDispatchProtocol.isEmpty()) {
-					final Property dispatchProtocolProp = GetProperties.lookupPropertyDefinition(attestationGateImpl,
-							ThreadProperties._NAME, ThreadProperties.DISPATCH_PROTOCOL);
-					final EnumerationLiteral dispatchProtocolLit = Aadl2Factory.eINSTANCE.createEnumerationLiteral();
-					dispatchProtocolLit.setName(attestationGateDispatchProtocol);
-					final NamedValue nv = Aadl2Factory.eINSTANCE.createNamedValue();
-					nv.setNamedValue(dispatchProtocolLit);
-					attestationGateImpl.setPropertyValue(dispatchProtocolProp, nv);
-				}
-				// Period
-				if (!attestationGatePeriod.isEmpty()) {
-					final Property periodProp = GetProperties.lookupPropertyDefinition(attestationGateImpl,
-							TimingProperties._NAME, TimingProperties.PERIOD);
-					final IntegerLiteral periodLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
-					final UnitLiteral unit = Aadl2Factory.eINSTANCE.createUnitLiteral();
-					unit.setName(attestationGatePeriod.replaceAll("[\\d]", "").trim());
-					periodLit.setBase(0);
-					periodLit.setValue(Long.parseLong(attestationGatePeriod.replaceAll("[\\D]", "").trim()));
-					periodLit.setUnit(unit);
-					attestationGateImpl.setPropertyValue(periodProp, periodLit);
-				}
+			if (compCategory == ComponentCategory.THREAD && !attestationGateDispatchProtocol.isEmpty()) {
+				final Property dispatchProtocolProp = GetProperties.lookupPropertyDefinition(attestationGateImpl,
+						ThreadProperties._NAME, ThreadProperties.DISPATCH_PROTOCOL);
+				final EnumerationLiteral dispatchProtocolLit = Aadl2Factory.eINSTANCE.createEnumerationLiteral();
+				dispatchProtocolLit.setName(attestationGateDispatchProtocol);
+				final NamedValue nv = Aadl2Factory.eINSTANCE.createNamedValue();
+				nv.setNamedValue(dispatchProtocolLit);
+				attestationGateImpl.setPropertyValue(dispatchProtocolProp, nv);
+			}
+
+			// Period
+			if (!attestationGatePeriod.isEmpty()) {
+				final Property periodProp = GetProperties.lookupPropertyDefinition(attestationGateImpl,
+						TimingProperties._NAME, TimingProperties.PERIOD);
+				final IntegerLiteral periodLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
+				final UnitLiteral unit = Aadl2Factory.eINSTANCE.createUnitLiteral();
+				unit.setName(attestationGatePeriod.replaceAll("[\\d]", "").trim());
+				periodLit.setBase(0);
+				periodLit.setValue(Long.parseLong(attestationGatePeriod.replaceAll("[\\D]", "").trim()));
+				periodLit.setUnit(unit);
+				attestationGateImpl.setPropertyValue(periodProp, periodLit);
 			}
 
 			// Insert attestation gate in component implementation
@@ -1154,10 +1179,10 @@ public class AttestationTransformHandler extends AadlHandler {
 			if (isSel4Process) {
 
 				Sel4TransformHandler.insertThreadInSel4Process((ProcessImplementation) attestationManagerImpl,
-						attestationManagerDispatchProtocol, attestationManagerPeriod, "");
+						attestationManagerDispatchProtocol, null);
 
 				Sel4TransformHandler.insertThreadInSel4Process((ProcessImplementation) attestationGateImpl,
-						attestationGateDispatchProtocol, attestationGatePeriod, "");
+						attestationGateDispatchProtocol, null);
 
 			}
 

@@ -71,6 +71,8 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 	private List<Button> btnMgrLogPortType = new ArrayList<>();
 	private List<Button> btnGateLogPortType = new ArrayList<>();
 	private Button btnCreateThread = null;
+	private Label lblUseKUImplementationField;
+	private Button btnUseKUImplementation;
 	private Combo cboRequirement;
 //	private Button btnPropagateGuarantees;
 //	private Text txtMgrAgreeProperty;
@@ -94,7 +96,8 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 	private String requirement;
 //	private boolean propagateGuarantees;
 	private String commDriver = "";
-	private boolean createThread = false;
+	private boolean createThread = true;
+	private boolean useKUImplementation = true;
 	private List<String> requirements = new ArrayList<>();
 //	private String mgrAgreeProperty;
 //	private String gateAgreeProperty;
@@ -197,6 +200,7 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 //		}
 		createMgrLogPortField(container);
 //		createMgrAgreePropertyField(container);
+		createUseKUImplementationField(container);
 
 		mgrTab.setControl(container);
 	}
@@ -880,6 +884,24 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 	}
 
 	/**
+	 * Creates the input field for specifying the KU remote attestation
+	 * implementation should be used
+	 * @param container
+	 */
+	private void createUseKUImplementationField(Composite container) {
+		lblUseKUImplementationField = new Label(container, SWT.NONE);
+		lblUseKUImplementationField.setText("Use KU Remote Attestation implementation");
+		lblUseKUImplementationField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true));
+
+		GridData dataInfoField = new GridData();
+		dataInfoField.grabExcessHorizontalSpace = true;
+		dataInfoField.horizontalAlignment = SWT.FILL;
+		btnUseKUImplementation = new Button(container, SWT.CHECK);
+		btnUseKUImplementation.setLayoutData(dataInfoField);
+		btnUseKUImplementation.setSelection(true);
+	}
+
+	/**
 	 * Creates the input field for specifying if a thread should also be created
 	 * if filter is a process
 	 * @param container
@@ -922,6 +944,7 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 						}
 						b.setEnabled(false);
 					}
+					btnUseKUImplementation.setSelection(false);
 				}
 				lblMgrDispatchProtocolField.setEnabled(btnCreateThread.getSelection());
 				mgrProtocolGroup.setEnabled(btnCreateThread.getSelection());
@@ -932,6 +955,9 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 				gateProtocolGroup.setEnabled(btnCreateThread.getSelection());
 				lblGatePeriodField.setEnabled(btnCreateThread.getSelection());
 				txtGatePeriod.setEnabled(btnCreateThread.getSelection());
+
+				lblUseKUImplementationField.setEnabled(btnCreateThread.getSelection());
+				btnUseKUImplementation.setEnabled(btnCreateThread.getSelection());
 			}
 		});
 		btnCreateThread.setSelection(true);
@@ -1232,6 +1258,9 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 			}
 		}
 
+		// Use KU implementation
+		useKUImplementation = btnUseKUImplementation.getSelection();
+
 		// Requirement
 		requirement = cboRequirement.getText();
 		if (requirement.equals(NO_REQUIREMENT_SELECTED)) {
@@ -1323,6 +1352,10 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 //	public boolean getPropagateGuarantees() {
 //		return propagateGuarantees;
 //	}
+
+	public boolean useKUImplementation() {
+		return useKUImplementation;
+	}
 
 	public String getRequirement() {
 		return requirement;

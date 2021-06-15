@@ -17,8 +17,8 @@ import org.eclipse.ui.PlatformUI;
 import org.osate.aadl2.AadlPackage;
 import org.osate.aadl2.Element;
 import org.osate.aadl2.ModelUnit;
+import org.osate.aadl2.modelsupport.FileNameConstants;
 import org.osate.aadl2.modelsupport.util.AadlUtil;
-import org.osate.workspace.WorkspacePlugin;
 
 public class TraverseProject {
 
@@ -54,12 +54,12 @@ public class TraverseProject {
 		try {
 			IContainer container = project;
 			if (container != null && !container.getName().startsWith(".")) {
-				getFiles(container.members(), result, WorkspacePlugin.SOURCE_FILE_EXT);
-				// getFiles(container.members(), result, WorkspacePlugin.SOURCE_FILE_EXT2);
-				getFiles(container.members(), result, WorkspacePlugin.INSTANCE_FILE_EXT);
+				getFiles(container.members(), result, FileNameConstants.SOURCE_FILE_EXT);
+				getFiles(container.members(), result, FileNameConstants.INSTANCE_FILE_EXT);
 			}
 		} catch (CoreException e) {
-			WorkspacePlugin.log(e);
+//			WorkspacePlugin.log(e);
+			e.printStackTrace();
 		}
 		return result;
 	}
@@ -69,11 +69,11 @@ public class TraverseProject {
 		try {
 			IContainer container = project;
 			if (container != null && !container.getName().startsWith(".")) {
-				getFiles(container.members(), result, WorkspacePlugin.SOURCE_FILE_EXT);
-				// getFiles(container.members(), result, WorkspacePlugin.SOURCE_FILE_EXT2);
+				getFiles(container.members(), result, FileNameConstants.SOURCE_FILE_EXT);
 			}
 		} catch (CoreException e) {
-			WorkspacePlugin.log(e);
+//			WorkspacePlugin.log(e);
+			e.printStackTrace();
 		}
 		return result;
 	}
@@ -83,10 +83,11 @@ public class TraverseProject {
 		try {
 			IContainer container = project;
 			if (container != null && !container.getName().startsWith(".")) {
-				getFiles(container.members(), result, WorkspacePlugin.INSTANCE_FILE_EXT);
+				getFiles(container.members(), result, FileNameConstants.INSTANCE_FILE_EXT);
 			}
 		} catch (CoreException e) {
-			WorkspacePlugin.log(e);
+//			WorkspacePlugin.log(e);
+			e.printStackTrace();
 		}
 		return result;
 	}
@@ -125,29 +126,25 @@ public class TraverseProject {
 					IFile file = (IFile) resources[i];
 					String ext = file.getFileExtension();
 					if (ext != null) {
-//						if ((extension.equalsIgnoreCase(WorkspacePlugin.SOURCE_FILE_EXT)
-//								&& (ext.equalsIgnoreCase(WorkspacePlugin.SOURCE_FILE_EXT))
-//								|| (extension.equalsIgnoreCase(WorkspacePlugin.SOURCE_FILE_EXT2)
-//										&& ext.equalsIgnoreCase(WorkspacePlugin.SOURCE_FILE_EXT2))))
-						if ((extension.equalsIgnoreCase(WorkspacePlugin.SOURCE_FILE_EXT)
-								&& (ext.equalsIgnoreCase(WorkspacePlugin.SOURCE_FILE_EXT)))) {
+						if ((extension.equalsIgnoreCase(FileNameConstants.SOURCE_FILE_EXT)
+								&& (ext.equalsIgnoreCase(FileNameConstants.SOURCE_FILE_EXT)))) {
 							result.add((IFile) resources[i]);
 						}
 						// looking for old style instance file names (i.e., extension aaxl2
-						if (extension.equalsIgnoreCase(WorkspacePlugin.MODEL_FILE_EXT)
-								&& ext.equalsIgnoreCase(WorkspacePlugin.MODEL_FILE_EXT)
-								&& file.getName().endsWith(WorkspacePlugin.INSTANCE_MODEL_POSTFIX)) {
+						if (extension.equalsIgnoreCase(FileNameConstants.MODEL_FILE_EXT)
+								&& ext.equalsIgnoreCase(FileNameConstants.MODEL_FILE_EXT)
+								&& file.getName().endsWith(FileNameConstants.INSTANCE_MODEL_POSTFIX)) {
 							result.add((IFile) resources[i]);
 						}
 						// looking for new style file name extension (aail2) and finding old style instance file names.
-						if (extension.equalsIgnoreCase(WorkspacePlugin.INSTANCE_FILE_EXT)
-								&& ext.equalsIgnoreCase(WorkspacePlugin.MODEL_FILE_EXT)
-								&& file.getName().endsWith(WorkspacePlugin.INSTANCE_MODEL_POSTFIX)) {
+						if (extension.equalsIgnoreCase(FileNameConstants.INSTANCE_FILE_EXT)
+								&& ext.equalsIgnoreCase(FileNameConstants.MODEL_FILE_EXT)
+								&& file.getName().endsWith(FileNameConstants.INSTANCE_MODEL_POSTFIX)) {
 							result.add((IFile) resources[i]);
 						}
 						// looking for and finding new style instance file names
-						if (extension.equalsIgnoreCase(WorkspacePlugin.INSTANCE_FILE_EXT)
-								&& ext.equalsIgnoreCase(WorkspacePlugin.INSTANCE_FILE_EXT)) {
+						if (extension.equalsIgnoreCase(FileNameConstants.INSTANCE_FILE_EXT)
+								&& ext.equalsIgnoreCase(FileNameConstants.INSTANCE_FILE_EXT)) {
 							result.add((IFile) resources[i]);
 						}
 					}
@@ -159,7 +156,8 @@ public class TraverseProject {
 				}
 			}
 		} catch (CoreException e) {
-			WorkspacePlugin.log(e);
+//			WorkspacePlugin.log(e);
+			e.printStackTrace();
 		}
 		return result;
 	}

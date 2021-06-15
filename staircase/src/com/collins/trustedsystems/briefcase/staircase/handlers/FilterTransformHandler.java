@@ -368,29 +368,28 @@ public class FilterTransformHandler extends AadlHandler {
 			final Realization r = filterImpl.createOwnedRealization();
 			r.setImplemented(filterType);
 
-			if (compCategory == ComponentCategory.THREAD) {
-				// Dispatch protocol
-				if (!filterDispatchProtocol.isEmpty()) {
-					final Property dispatchProtocolProp = GetProperties.lookupPropertyDefinition(filterImpl,
-							ThreadProperties._NAME, ThreadProperties.DISPATCH_PROTOCOL);
-					final EnumerationLiteral dispatchProtocolLit = Aadl2Factory.eINSTANCE.createEnumerationLiteral();
-					dispatchProtocolLit.setName(filterDispatchProtocol);
-					final NamedValue nv = Aadl2Factory.eINSTANCE.createNamedValue();
-					nv.setNamedValue(dispatchProtocolLit);
-					filterImpl.setPropertyValue(dispatchProtocolProp, nv);
-				}
-				// Period
-				if (!filterPeriod.isEmpty()) {
-					final Property periodProp = GetProperties.lookupPropertyDefinition(filterImpl,
-							TimingProperties._NAME, TimingProperties.PERIOD);
-					final IntegerLiteral periodLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
-					final UnitLiteral unit = Aadl2Factory.eINSTANCE.createUnitLiteral();
-					unit.setName(filterPeriod.replaceAll("[\\d]", "").trim());
-					periodLit.setBase(0);
-					periodLit.setValue(Long.parseLong(filterPeriod.replaceAll("[\\D]", "").trim()));
-					periodLit.setUnit(unit);
-					filterImpl.setPropertyValue(periodProp, periodLit);
-				}
+			// Dispatch protocol
+			if (compCategory == ComponentCategory.THREAD && !filterDispatchProtocol.isEmpty()) {
+				final Property dispatchProtocolProp = GetProperties.lookupPropertyDefinition(filterImpl,
+						ThreadProperties._NAME, ThreadProperties.DISPATCH_PROTOCOL);
+				final EnumerationLiteral dispatchProtocolLit = Aadl2Factory.eINSTANCE.createEnumerationLiteral();
+				dispatchProtocolLit.setName(filterDispatchProtocol);
+				final NamedValue nv = Aadl2Factory.eINSTANCE.createNamedValue();
+				nv.setNamedValue(dispatchProtocolLit);
+				filterImpl.setPropertyValue(dispatchProtocolProp, nv);
+			}
+
+			// Period
+			if (!filterPeriod.isEmpty()) {
+				final Property periodProp = GetProperties.lookupPropertyDefinition(filterImpl, TimingProperties._NAME,
+						TimingProperties.PERIOD);
+				final IntegerLiteral periodLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
+				final UnitLiteral unit = Aadl2Factory.eINSTANCE.createUnitLiteral();
+				unit.setName(filterPeriod.replaceAll("[\\d]", "").trim());
+				periodLit.setBase(0);
+				periodLit.setValue(Long.parseLong(filterPeriod.replaceAll("[\\D]", "").trim()));
+				periodLit.setUnit(unit);
+				filterImpl.setPropertyValue(periodProp, periodLit);
 			}
 
 			// Add it to proper place (just below component type)
@@ -482,7 +481,7 @@ public class FilterTransformHandler extends AadlHandler {
 			// Add thread if this is a seL4 process
 			if (isSel4Process) {
 				Sel4TransformHandler.insertThreadInSel4Process((ProcessImplementation) filterImpl,
-						filterDispatchProtocol, filterPeriod, agreeClauses.toString());
+						filterDispatchProtocol, agreeClauses.toString());
 			}
 
 			// Add add_filter claims to resolute prove statement, if applicable

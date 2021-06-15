@@ -4,14 +4,9 @@
 
    <extension
          point="org.eclipse.ui.commands">
-      <category
-            id="verifyFilter.commands.category"
-            name="CASE TA6 Commands">
-      </category>
       <command
-            categoryId="verifyFilter.commands.category"
-            id="verifyFilter.commands.verifyCommand"
-            name="Run HOL Proof of Filter">
+            id="com.collins.trustedsystems.briefcase.splat.plugin.RunSplat"
+            name="Run SPLAT">
       </command>
    </extension>
 
@@ -19,17 +14,13 @@
          point="org.eclipse.ui.handlers">
       <handler
             class="com.collins.trustedsystems.briefcase.splat.plugin.SplatHandler"
-            commandId="verifyFilter.commands.verifyCommand">
+            commandId="com.collins.trustedsystems.briefcase.splat.plugin.RunSplat">
          <enabledWhen>
             <reference
                   definitionId="org.osate.xtext.aadl2.Aadl2.Editor.opened">
             </reference>
          </enabledWhen>
       </handler>
-      <handler
-            class="com.collins.trustedsystems.briefcase.splat.plugin.SplatHandler"
-            commandId="filter_checker.commads.verify">
-      </handler>      
    </extension>
 
    <extension
@@ -40,9 +31,9 @@
          <toolbar
                id="verifyFilter.toolbar">
             <command
-                  commandId="verifyFilter.commands.verifyCommand"
+                  commandId="com.collins.trustedsystems.briefcase.splat.plugin.RunSplat"
                   icon="icons/gears.png"
-                  label="Run Verify Command">
+                  label="Run SPLAT">
             </command>           
          </toolbar>
       </menuContribution>
@@ -50,8 +41,8 @@
             allPopups="false"
             locationURI="popup:com.collins.trustedsystems.briefcase.menus.outline.resiliency.synthesis?after=additions">
          <command
-               commandId="filter_checker.commads.verify"
-               label="SPLAT"
+               commandId="com.collins.trustedsystems.briefcase.splat.plugin.RunSplat"
+               label="Run SPLAT"
                style="push">
          </command>
       </menuContribution>
@@ -59,8 +50,8 @@
             allPopups="false"
             locationURI="popup:com.collins.trustedsystems.briefcase.menus.editor.resiliency.synthesis?after=additions">
          <command
-               commandId="filter_checker.commads.verify"
-               label="SPLAT"
+               commandId="com.collins.trustedsystems.briefcase.splat.plugin.RunSplat"
+               label="Run SPLAT"
                style="push">
          </command>
       </menuContribution>
@@ -68,12 +59,13 @@
             allPopups="false"
             locationURI="menu:com.collins.trustedsystems.briefcase.menus.menubar.resiliency.synthesis?after=additions">
          <command
-               commandId="filter_checker.commads.verify"
-               label="SPLAT"
+               commandId="com.collins.trustedsystems.briefcase.splat.plugin.RunSplat"
+               label="Run SPLAT"
                style="push">
          </command>
       </menuContribution>
    </extension>
+ <!--  
    <extension
          point="org.eclipse.ui.preferencePages">
       <page
@@ -89,5 +81,5 @@
             class="com.collins.trustedsystems.briefcase.splat.preferences.SplatPreferenceInitializer">
       </initializer>
    </extension>
-
+-->
 </plugin>

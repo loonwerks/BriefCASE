@@ -503,29 +503,28 @@ public class MonitorTransformHandler extends AadlHandler {
 			// Move below component type
 			pkgSection.getOwnedClassifiers().move(1, pkgSection.getOwnedClassifiers().size() - 1);
 
-			if (compCategory == ComponentCategory.THREAD) {
-				// Dispatch protocol property
-				if (!dispatchProtocol.isEmpty()) {
-					final Property dispatchProtocolProp = GetProperties.lookupPropertyDefinition(monitorImpl,
-							ThreadProperties._NAME, ThreadProperties.DISPATCH_PROTOCOL);
-					final EnumerationLiteral dispatchProtocolLit = Aadl2Factory.eINSTANCE.createEnumerationLiteral();
-					dispatchProtocolLit.setName(dispatchProtocol);
-					final NamedValue nv = Aadl2Factory.eINSTANCE.createNamedValue();
-					nv.setNamedValue(dispatchProtocolLit);
-					monitorImpl.setPropertyValue(dispatchProtocolProp, nv);
-				}
-				// Period
-				if (!period.isEmpty()) {
-					final Property periodProp = GetProperties.lookupPropertyDefinition(monitorImpl,
-							TimingProperties._NAME, TimingProperties.PERIOD);
-					final IntegerLiteral periodLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
-					final UnitLiteral unit = Aadl2Factory.eINSTANCE.createUnitLiteral();
-					unit.setName(period.replaceAll("[\\d]", "").trim());
-					periodLit.setBase(0);
-					periodLit.setValue(Long.parseLong(period.replaceAll("[\\D]", "").trim()));
-					periodLit.setUnit(unit);
-					monitorImpl.setPropertyValue(periodProp, periodLit);
-				}
+			// Dispatch protocol property
+			if (compCategory == ComponentCategory.THREAD && !dispatchProtocol.isEmpty()) {
+				final Property dispatchProtocolProp = GetProperties.lookupPropertyDefinition(monitorImpl,
+						ThreadProperties._NAME, ThreadProperties.DISPATCH_PROTOCOL);
+				final EnumerationLiteral dispatchProtocolLit = Aadl2Factory.eINSTANCE.createEnumerationLiteral();
+				dispatchProtocolLit.setName(dispatchProtocol);
+				final NamedValue nv = Aadl2Factory.eINSTANCE.createNamedValue();
+				nv.setNamedValue(dispatchProtocolLit);
+				monitorImpl.setPropertyValue(dispatchProtocolProp, nv);
+			}
+
+			// Period
+			if (!period.isEmpty()) {
+				final Property periodProp = GetProperties.lookupPropertyDefinition(monitorImpl, TimingProperties._NAME,
+						TimingProperties.PERIOD);
+				final IntegerLiteral periodLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
+				final UnitLiteral unit = Aadl2Factory.eINSTANCE.createUnitLiteral();
+				unit.setName(period.replaceAll("[\\d]", "").trim());
+				periodLit.setBase(0);
+				periodLit.setValue(Long.parseLong(period.replaceAll("[\\D]", "").trim()));
+				periodLit.setUnit(unit);
+				monitorImpl.setPropertyValue(periodProp, periodLit);
 			}
 
 			// Insert monitor subcomponent in containing component implementation
@@ -708,7 +707,7 @@ public class MonitorTransformHandler extends AadlHandler {
 			// Add thread if this is a seL4 process
 			if (isSel4Process) {
 				Sel4TransformHandler.insertThreadInSel4Process((ProcessImplementation) monitorImpl, dispatchProtocol,
-						period, agreeClauses.toString());
+						agreeClauses.toString());
 			}
 
 			// Add add_monitor claims to resolute prove statement, if applicable
