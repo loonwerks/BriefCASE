@@ -52,11 +52,11 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 	private Text txtGateComponentName;
 	private Text txtMgrSubcomponentName;
 	private Text txtGateSubcomponentName;
-	private Text txtRequestMessageDataType;
-	private Text txtResponseMessageDataType;
+	private MenuCombo txtRequestMessageDataType;
+	private MenuCombo txtResponseMessageDataType;
 	private Text txtCacheTimeout;
 //	private Combo cboCacheSize;
-	private Text txtIdListDataType;
+	private MenuCombo txtIdListDataType;
 	private PortNamesControl pncPortNames = null;
 	private Label lblMgrDispatchProtocolField;
 	private Group mgrProtocolGroup;
@@ -96,9 +96,10 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 	private String requirement;
 //	private boolean propagateGuarantees;
 	private String commDriver = "";
-	private boolean createThread = true;
+	private boolean createThread = false;
 	private boolean useKUImplementation = true;
 	private List<String> requirements = new ArrayList<>();
+	private Map<String, List<String>> types = new HashMap<>();
 //	private String mgrAgreeProperty;
 //	private String gateAgreeProperty;
 //	private Subcomponent attestationManager = null;
@@ -144,6 +145,9 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 //		this.attestationManager = attestationManager;
 //		this.attestationGate = attestationGate;
 
+		// Populate package::type list
+		types = ModelTransformUtils.getTypes(context);
+
 		// Populate requirements list
 		RequirementsManager.getInstance().getImportedRequirements().forEach(r -> requirements.add(r.getId()));
 
@@ -153,6 +157,7 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 				+ ".  You may optionally leave these fields empty and manually edit the AADL attestation manager and gate components once they are added to the model.",
 				IMessageProvider.NONE);
 	}
+
 
 	@Override
 	protected Control createDialogArea(Composite parent) {
@@ -191,7 +196,7 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		createMgrSubcomponentNameField(container);
 		createRequestMessageDataTypeField(container);
 		createResponseMessageDataTypeField(container);
-		createCacheTimeoutField(container);
+//		createCacheTimeoutField(container);
 //		createCacheSizeField(container);
 		createIdListDataTypeField(container);
 //		if (context instanceof ProcessImplementation || context instanceof ThreadGroupImplementation
@@ -335,8 +340,9 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		dataInfoField.grabExcessHorizontalSpace = true;
 		dataInfoField.horizontalAlignment = SWT.FILL;
 		dataInfoField.grabExcessVerticalSpace = false;
-		txtRequestMessageDataType = new Text(container, SWT.BORDER);
-		txtRequestMessageDataType.setLayoutData(dataInfoField);
+		txtRequestMessageDataType = new MenuCombo(container, types);
+//		txtRequestMessageDataType = new Text(container, SWT.BORDER);
+//		txtRequestMessageDataType.setLayoutData(dataInfoField);
 
 //		if (attestationManager != null) {
 //
@@ -369,8 +375,9 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		dataInfoField.grabExcessHorizontalSpace = true;
 		dataInfoField.horizontalAlignment = SWT.FILL;
 		dataInfoField.grabExcessVerticalSpace = false;
-		txtResponseMessageDataType = new Text(container, SWT.BORDER);
-		txtResponseMessageDataType.setLayoutData(dataInfoField);
+		txtResponseMessageDataType = new MenuCombo(container, types);
+//		txtResponseMessageDataType = new Text(container, SWT.BORDER);
+//		txtResponseMessageDataType.setLayoutData(dataInfoField);
 
 //		if (attestationManager != null) {
 //
@@ -398,7 +405,7 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 	private void createCacheTimeoutField(Composite container) {
 
 		final Label lblCacheTimeoutField = new Label(container, SWT.NONE);
-		lblCacheTimeoutField.setText("Cache timeout (minutes)");
+		lblCacheTimeoutField.setText("Re-attestation period");
 
 		final GridData dataInfoField = new GridData();
 		dataInfoField.grabExcessHorizontalSpace = true;
@@ -467,8 +474,10 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		dataInfoField.grabExcessHorizontalSpace = true;
 		dataInfoField.horizontalAlignment = SWT.FILL;
 		dataInfoField.grabExcessVerticalSpace = false;
-		txtIdListDataType = new Text(container, SWT.BORDER);
-		txtIdListDataType.setLayoutData(dataInfoField);
+
+//		txtIdListDataType = new Text(container, SWT.BORDER);
+		txtIdListDataType = new MenuCombo(container, types);
+//		txtIdListDataType.setLayoutData(dataInfoField);
 
 //		if (attestationManager != null) {
 //
@@ -1124,10 +1133,10 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 								+ AadlUtil.getContainingPackage(context).getName()
 								+ ". Enter the data type's qualified name if it is defined in a different package.");
 				return false;
-			} else {
-				// Add the package name
-				txtRequestMessageDataType.setText(
-						AadlUtil.getContainingPackage(context).getName() + "::" + txtRequestMessageDataType.getText());
+//			} else {
+//				// Add the package name
+//				txtRequestMessageDataType.setText(
+//						AadlUtil.getContainingPackage(context).getName() + "::" + txtRequestMessageDataType.getText());
 			}
 		}
 		requestMessageDataType = txtRequestMessageDataType.getText();
@@ -1141,22 +1150,24 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 								+ AadlUtil.getContainingPackage(context).getName()
 								+ ". Enter the data type's qualified name if it is defined in a different package.");
 				return false;
-			} else {
-				// Add the package name
-				txtResponseMessageDataType.setText(
-						AadlUtil.getContainingPackage(context).getName() + "::" + txtResponseMessageDataType.getText());
+//			} else {
+//				// Add the package name
+//				txtResponseMessageDataType.setText(
+//						AadlUtil.getContainingPackage(context).getName() + "::" + txtResponseMessageDataType.getText());
 			}
 		}
 		responseMessageDataType = txtResponseMessageDataType.getText();
 
 
-		// Timeout
-		try {
-			cacheTimeout = Long.parseLong(txtCacheTimeout.getText());
-		} catch (NumberFormatException e) {
-			Dialog.showError("Attestation Transform", "Value of Cache Timeout must be an integer.");
-			return false;
-		}
+		// TODO: Timeout
+//		try {
+//			if (!txtCacheTimeout.getText().isEmpty()) {
+//				cacheTimeout = Long.parseLong(txtCacheTimeout.getText());
+//			}
+//		} catch (NumberFormatException e) {
+//			Dialog.showError("Attestation Transform", "Value of Cache Timeout must be an integer.");
+//			return false;
+//		}
 
 //		// Cache Size
 //		try {
@@ -1174,10 +1185,10 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 						"ID list data type was not found in package " + AadlUtil.getContainingPackage(context).getName()
 								+ ". Enter the data type's qualified name if it is defined in a different package.");
 				return false;
-			} else {
-				// Add the package name
-				txtIdListDataType
-						.setText(AadlUtil.getContainingPackage(context).getName() + "::" + txtIdListDataType.getText());
+//			} else {
+//				// Add the package name
+//				txtIdListDataType
+//						.setText(AadlUtil.getContainingPackage(context).getName() + "::" + txtIdListDataType.getText());
 			}
 		}
 		idListDataType = txtIdListDataType.getText();

@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 
 import org.eclipse.jface.preference.BooleanFieldEditor;
-import org.eclipse.jface.preference.DirectoryFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.FileFieldEditor;
 import org.eclipse.jface.preference.StringFieldEditor;
@@ -32,7 +31,9 @@ public class BriefcasePreferencePage extends FieldEditorPreferencePage implement
 	public void createFieldEditors() {
 
 		// Output folder name
-		addField(new DirectoryFieldEditor(BriefcasePreferenceConstants.SPLAT_OUTPUT_FOLDER, "SPLAT output folder name",
+//		addField(new DirectoryFieldEditor(BriefcasePreferenceConstants.SPLAT_OUTPUT_FOLDER, "SPLAT output folder name",
+//				getFieldEditorParent()));
+		addField(new StringFieldEditor(BriefcasePreferenceConstants.SPLAT_OUTPUT_FOLDER, "SPLAT output folder name",
 				getFieldEditorParent()));
 
 		splatLogFieldEditor = new BooleanFieldEditor(BriefcasePreferenceConstants.SPLAT_GENERATE_LOG,

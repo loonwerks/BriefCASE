@@ -2,13 +2,18 @@ package com.collins.trustedsystems.briefcase.staircase.utils;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeSet;
 
 import org.eclipse.emf.ecore.EObject;
 import org.osate.aadl2.AadlPackage;
+import org.osate.aadl2.Classifier;
 import org.osate.aadl2.ComponentImplementation;
 import org.osate.aadl2.ConnectionEnd;
+import org.osate.aadl2.DataImplementation;
+import org.osate.aadl2.DataType;
 import org.osate.aadl2.DirectedFeature;
 import org.osate.aadl2.Feature;
 import org.osate.aadl2.FeatureGroup;
@@ -259,6 +264,51 @@ public class ModelTransformUtils {
 		if (!pkgFound) {
 			pkgSection.getImportedUnits().add(pkg);
 		}
+	}
+
+	/**
+	 * Returns a list of data types and data implementations for each
+	 * package visible to obj
+	 * @param obj
+	 * @return
+	 */
+	public static Map<String, List<String>> getTypes(EObject obj) {
+		Map<String, List<String>> types = new HashMap<>();
+		if (obj == null) {
+			return null;
+		}
+
+		// Look in current package
+		final PackageSection pkgSection = AadlUtil.getContainingPackageSection(obj);
+		if (pkgSection == null) {
+			return null;
+		}
+		List<String> packageTypes = new ArrayList<>();
+		for (Classifier c : pkgSection.getOwnedClassifiers()) {
+			if (c instanceof DataType || c instanceof DataImplementation) {
+				packageTypes.add(c.getName());
+			}
+		}
+		if (!packageTypes.isEmpty()) {
+			types.put(AadlUtil.getContainingPackage(pkgSection).getName(), packageTypes);
+		}
+		// Look in referenced packages specified in with clause
+		for (ModelUnit modelUnit : pkgSection.getImportedUnits()) {
+			packageTypes = new ArrayList<>();
+			if (modelUnit instanceof AadlPackage) {
+				final AadlPackage aadlPkg = (AadlPackage) modelUnit;
+				for (Classifier c : aadlPkg.getOwnedPublicSection().getOwnedClassifiers()) {
+					if (c instanceof DataType || c instanceof DataImplementation) {
+						packageTypes.add(c.getName());
+					}
+				}
+				if (!packageTypes.isEmpty()) {
+					types.put(aadlPkg.getName(), packageTypes);
+				}
+			}
+		}
+
+		return types;
 	}
 
 	/**

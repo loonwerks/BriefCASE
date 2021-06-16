@@ -56,7 +56,7 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 	private Text txtAlertPortName;
 	private Combo cboAlertPort;
 	private Label lblAlertPortDataTypeField;
-	private Text txtAlertPortDataType;
+	private MenuCombo txtAlertPortDataType;
 	private Label lblAlertPortCategoryField;
 	private List<Button> btnAlertPortCategory = new ArrayList<>();
 	private Button btnObservationGate;
@@ -90,6 +90,7 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 
 	private List<String> inports = new ArrayList<>();
 	private List<String> outports = new ArrayList<>();
+	private Map<String, List<String>> types = new HashMap<>();
 	private List<String> requirements = new ArrayList<>();
 
 	private static final String NO_PORT_SELECTED = "<No port selected>";
@@ -116,6 +117,8 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 		outports = ModelTransformUtils.getOutports(context);
 		// Provide list of inports that monitor's alert out port can be connected to
 		inports = ModelTransformUtils.getInports(context);
+		// Populate data types list
+		types = ModelTransformUtils.getTypes(context);
 		// Populate requirements list
 		RequirementsManager.getInstance().getImportedRequirements().forEach(r -> requirements.add(r.getId()));
 		create();
@@ -495,8 +498,9 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 		dataInfoField.grabExcessHorizontalSpace = true;
 		dataInfoField.horizontalAlignment = SWT.FILL;
 		dataInfoField.grabExcessVerticalSpace = false;
-		txtAlertPortDataType = new Text(container, SWT.BORDER);
-		txtAlertPortDataType.setLayoutData(dataInfoField);
+//		txtAlertPortDataType = new Text(container, SWT.BORDER);
+//		txtAlertPortDataType.setLayoutData(dataInfoField);
+		txtAlertPortDataType = new MenuCombo(container, types);
 
 	}
 
@@ -820,10 +824,10 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 								+ AadlUtil.getContainingPackage(context).getName()
 								+ ". Enter the data type's qualified name if it is defined in a different package.");
 				return false;
-			} else {
-				// Add the package name
-				txtAlertPortDataType.setText(
-						AadlUtil.getContainingPackage(context).getName() + "::" + txtAlertPortDataType.getText());
+//			} else {
+//				// Add the package name
+//				txtAlertPortDataType.setText(
+//						AadlUtil.getContainingPackage(context).getName() + "::" + txtAlertPortDataType.getText());
 			}
 		}
 		if (txtAlertPortDataType.getText().contains("[")) {
