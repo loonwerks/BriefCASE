@@ -61,6 +61,7 @@ import org.osate.xtext.aadl2.properties.util.ProgrammingProperties;
 import org.osate.xtext.aadl2.properties.util.ThreadProperties;
 import org.osate.xtext.aadl2.properties.util.TimingProperties;
 
+import com.collins.trustedsystems.briefcase.attestation.AttestationAccess;
 import com.collins.trustedsystems.briefcase.preferences.BriefcasePreferenceConstants;
 import com.collins.trustedsystems.briefcase.staircase.Activator;
 import com.collins.trustedsystems.briefcase.staircase.dialogs.AttestationTransformDialog;
@@ -220,11 +221,19 @@ public class AttestationTransformHandler extends AadlHandler {
 //					"New requirement associated with Attestation Manager.");
 //		} else {
 		insertAttestationComponents(uri);
-			BriefcaseNotifier.notify("StairCASE - Attestation Transform", "Attestation added to model.");
+		BriefcaseNotifier.notify("StairCASE - Attestation Transform", "Attestation added to model.");
 //		}
 
 		// Save
 		saveChanges(false);
+
+		// Add attestation implementation, if requested
+		if (useKUImplementation) {
+			if (!AttestationAccess.createSourceDirectory()) {
+				Dialog.showWarning("Attestation Transform",
+						"Attestation components were added to the model, but the KU implementation source code could not be copied into the project");
+			}
+		}
 
 		return;
 

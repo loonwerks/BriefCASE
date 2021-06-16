@@ -32,7 +32,7 @@ import org.osate.aadl2.Context;
 import org.osate.aadl2.PortCategory;
 import org.osate.aadl2.PortConnection;
 import org.osate.aadl2.Subcomponent;
-import org.osate.aadl2.ThreadImplementation;
+import org.osate.aadl2.SystemImplementation;
 import org.osate.aadl2.modelsupport.util.AadlUtil;
 import org.osate.ui.dialogs.Dialog;
 
@@ -169,7 +169,7 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		final GridLayout layout = new GridLayout(2, true);
 		container.setLayout(layout);
 
-		if (!(context instanceof ThreadImplementation)) {
+		if (context instanceof SystemImplementation) {
 			createCreateThreadField(container);
 		}
 		createRequirementField(container);
@@ -925,6 +925,7 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 					for (Button b : btnGateDispatchProtocol) {
 						b.setEnabled(true);
 					}
+					btnUseKUImplementation.setSelection(true);
 				} else {
 					for (Button b : btnMgrDispatchProtocol) {
 						if (b.getText().equals("None")) {

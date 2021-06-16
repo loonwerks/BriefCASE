@@ -390,6 +390,12 @@ public class VirtualizationTransformHandler extends AadlHandler {
 					pa.getAppliesTos().add(cne);
 				}
 
+				// Add HAMR::Component_Type property to virtualization components
+//				for (String virtualComp : virtualizationComponents) {
+//					final ContainedNamedElement cne = createContainedNamedElement(selectedSub, virtualComp);
+//					pa.getAppliesTos().add(cne);
+//				}
+
 				// Add add_virtualization claims to resolute prove statement, if applicable
 				if (!virtualizationRequirement.isEmpty()) {
 //					return new AddVirtualizationClaim(virtualizationComponents, nonVmBoundChildren, vpSub);

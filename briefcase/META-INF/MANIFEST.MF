@@ -21,7 +21,8 @@ Import-Package: org.eclipse.debug.ui.console,
  org.osate.workspace
 Bundle-ClassPath: .,
  dependencies/gson-2.8.5.jar
-Export-Package: com.collins.trustedsystems.briefcase.preferences,
+Export-Package: com.collins.trustedsystems.briefcase,
+ com.collins.trustedsystems.briefcase.preferences,
  com.collins.trustedsystems.briefcase.util
 Bundle-Activator: com.collins.trustedsystems.briefcase.Activator
 Bundle-ActivationPolicy: lazy

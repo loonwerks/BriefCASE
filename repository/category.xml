@@ -6,6 +6,6 @@
    <feature id="com.collins.trustedsystems.briefcase.feature.source">
       <category name="case.source"/>
    </feature>
-   <category-def name="case" label="CASE (by Collins Aerospace)"/>
-   <category-def name="case.source" label="CASE Source Code"/>
+   <category-def name="case" label="BriefCASE (by Collins Aerospace)"/>
+   <category-def name="case.source" label="BriefCASE Source Code"/>
 </site>

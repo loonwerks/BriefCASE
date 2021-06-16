@@ -38,7 +38,7 @@ import org.osate.aadl2.ProcessType;
 import org.osate.aadl2.Property;
 import org.osate.aadl2.PropertyExpression;
 import org.osate.aadl2.Subcomponent;
-import org.osate.aadl2.ThreadImplementation;
+import org.osate.aadl2.SystemImplementation;
 import org.osate.aadl2.modelsupport.util.AadlUtil;
 import org.osate.ui.dialogs.Dialog;
 import org.osate.xtext.aadl2.properties.util.GetProperties;
@@ -148,7 +148,7 @@ public class FilterTransformDialog extends TitleAreaDialog {
 		// Add filter information fields
 		createFilterComponentNameField(container);
 		createFilterSubcomponentNameField(container);
-		if (!(context instanceof ThreadImplementation)) {
+		if (context instanceof SystemImplementation) {
 			createCreateThreadField(container);
 		}
 //		if (context instanceof ProcessImplementation || context instanceof ThreadGroupImplementation

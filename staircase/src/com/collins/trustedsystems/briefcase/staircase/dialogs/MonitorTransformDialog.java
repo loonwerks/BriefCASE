@@ -29,7 +29,7 @@ import org.eclipse.swt.widgets.Text;
 import org.osate.aadl2.Classifier;
 import org.osate.aadl2.ComponentImplementation;
 import org.osate.aadl2.PortCategory;
-import org.osate.aadl2.ThreadImplementation;
+import org.osate.aadl2.SystemImplementation;
 import org.osate.aadl2.modelsupport.util.AadlUtil;
 import org.osate.ui.dialogs.Dialog;
 
@@ -177,7 +177,7 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 		createMonitorSubcomponentNameField(container);
 		createLatchedField(container);
 		createObservationGateField(container);
-		if (!(context instanceof ThreadImplementation)) {
+		if (context instanceof SystemImplementation) {
 			createCreateThreadField(container);
 		}
 //		// Only display dispatch protocol if monitor is a thread
