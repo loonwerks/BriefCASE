@@ -696,7 +696,7 @@ public class MonitorTransformHandler extends AadlHandler {
 
 			String alertExpr = "";
 			if (monAlertPort instanceof EventPort || monAlertPort instanceof EventDataPort) {
-				alertExpr = "alerted <=> event(" + alertPortName + ")";
+				alertExpr = "event(" + alertPortName + ") <=> alerted";
 			}
 			if (alertExpr.isEmpty()) {
 				alertExpr = "false";
