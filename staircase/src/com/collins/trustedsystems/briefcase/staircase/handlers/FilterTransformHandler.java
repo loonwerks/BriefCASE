@@ -267,8 +267,8 @@ public class FilterTransformHandler extends AadlHandler {
 
 			// Give it a unique name
 			final String filterName = ModelTransformUtils.getUniqueName(filterComponentName, true,
-					pkgSection.getOwnedClassifiers()) + (isSel4Process ? "_seL4" : "");
-			filterType.setName(filterName);
+					pkgSection.getOwnedClassifiers());
+			filterType.setName(filterName + (isSel4Process ? "_seL4" : ""));
 
 			// Create filter ports
 			final ConnectionEnd connectionEnd = selectedConnection.getDestination().getConnectionEnd();

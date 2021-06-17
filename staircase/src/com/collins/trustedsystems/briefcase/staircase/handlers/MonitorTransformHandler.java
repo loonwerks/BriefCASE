@@ -221,8 +221,8 @@ public class MonitorTransformHandler extends AadlHandler {
 
 			// Give it a unique name
 			final String monitorName = ModelTransformUtils.getUniqueName(monitorComponentName, true,
-					pkgSection.getOwnedClassifiers()) + (isSel4Process ? "_seL4" : "");
-			monitorType.setName(monitorName);
+					pkgSection.getOwnedClassifiers());
+			monitorType.setName(monitorName + (isSel4Process ? "_seL4" : ""));
 
 			// Create monitor observed port
 			final ConnectionEnd portSrc = selectedConnection.getSource().getConnectionEnd();
