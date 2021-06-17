@@ -494,10 +494,10 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 		lblAlertPortDataTypeField = new Label(container, SWT.NONE);
 		lblAlertPortDataTypeField.setText("Alert port data type");
 
-		final GridData dataInfoField = new GridData();
-		dataInfoField.grabExcessHorizontalSpace = true;
-		dataInfoField.horizontalAlignment = SWT.FILL;
-		dataInfoField.grabExcessVerticalSpace = false;
+//		final GridData dataInfoField = new GridData();
+//		dataInfoField.grabExcessHorizontalSpace = true;
+//		dataInfoField.horizontalAlignment = SWT.FILL;
+//		dataInfoField.grabExcessVerticalSpace = false;
 //		txtAlertPortDataType = new Text(container, SWT.BORDER);
 //		txtAlertPortDataType.setLayoutData(dataInfoField);
 		txtAlertPortDataType = new MenuCombo(container, types);
@@ -514,12 +514,12 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 		final Label lblObservationGateField = new Label(container, SWT.NONE);
 		lblObservationGateField.setText("Gate Observed connection");
 
-		final GridData dataInfoField = new GridData();
-		dataInfoField.grabExcessHorizontalSpace = true;
-		dataInfoField.horizontalAlignment = SWT.FILL;
+//		final GridData dataInfoField = new GridData();
+//		dataInfoField.grabExcessHorizontalSpace = true;
+//		dataInfoField.horizontalAlignment = SWT.FILL;
 		btnObservationGate = new Button(container, SWT.CHECK);
 		btnObservationGate.setSelection(false);
-		btnObservationGate.setLayoutData(dataInfoField);
+		btnObservationGate.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		btnObservationGate.addListener(SWT.Selection, e -> {
 			if (e.type == SWT.Selection) {
 				txtObservationGatePortName.setEnabled(btnObservationGate.getSelection());
@@ -542,14 +542,14 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 	private void createCreateThreadField(Composite container) {
 		final Label lblCreateThreadField = new Label(container, SWT.NONE);
 		lblCreateThreadField.setText("Create internal thread component");
-		lblCreateThreadField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true));
+//		lblCreateThreadField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
-		GridData dataInfoField = new GridData();
-		dataInfoField.grabExcessHorizontalSpace = true;
-		dataInfoField.horizontalAlignment = SWT.FILL;
+//		GridData dataInfoField = new GridData();
+//		dataInfoField.grabExcessHorizontalSpace = true;
+//		dataInfoField.horizontalAlignment = SWT.FILL;
 		btnCreateThread = new Button(container, SWT.CHECK);
 		btnCreateThread.setSelection(true);
-		btnCreateThread.setLayoutData(dataInfoField);
+		btnCreateThread.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		btnCreateThread.addListener(SWT.Selection, e -> {
 			if (e.type == SWT.Selection) {
 				if (btnCreateThread.getSelection()) {

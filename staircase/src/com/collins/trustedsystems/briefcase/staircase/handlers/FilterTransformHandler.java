@@ -359,7 +359,14 @@ public class FilterTransformHandler extends AadlHandler {
 			}
 
 			// Move filter to top of file
-			pkgSection.getOwnedClassifiers().move(0, pkgSection.getOwnedClassifiers().size() - 1);
+//			pkgSection.getOwnedClassifiers().move(0, pkgSection.getOwnedClassifiers().size() - 1);
+			try {
+				pkgSection.getOwnedClassifiers().move(
+					getIndex(containingImpl.getTypeName(), pkgSection.getOwnedClassifiers()),
+					pkgSection.getOwnedClassifiers().size() - 1);
+			} catch (Exception e) {
+
+			}
 
 			// Create Filter implementation
 			final ComponentImplementation filterImpl = (ComponentImplementation) pkgSection
@@ -393,7 +400,14 @@ public class FilterTransformHandler extends AadlHandler {
 			}
 
 			// Add it to proper place (just below component type)
-			pkgSection.getOwnedClassifiers().move(1, pkgSection.getOwnedClassifiers().size() - 1);
+//			pkgSection.getOwnedClassifiers().move(1, pkgSection.getOwnedClassifiers().size() - 1);
+			try {
+				pkgSection.getOwnedClassifiers().move(
+					getIndex(containingImpl.getTypeName(), pkgSection.getOwnedClassifiers()),
+					pkgSection.getOwnedClassifiers().size() - 1);
+			} catch (Exception e) {
+
+			}
 
 			// Insert filter feature in process component implementation
 			final Subcomponent filterSubcomp = ComponentCreateHelper.createOwnedSubcomponent(containingImpl,
@@ -421,8 +435,12 @@ public class FilterTransformHandler extends AadlHandler {
 
 			// Put portConnOut in right place (after portConnIn)
 			final String destName = selectedConnection.getName();
-			containingImpl.getOwnedConnections().move(getIndex(destName, containingImpl.getOwnedConnections()) + 1,
+			try {
+				containingImpl.getOwnedConnections().move(getIndex(destName, containingImpl.getOwnedConnections()) + 1,
 					containingImpl.getOwnedConnections().size() - 1);
+			} catch (Exception e) {
+
+			}
 
 			// Rewire selected connection so the filter is the destination
 			selectedConnection.getDestination().setContext(filterSubcomp);
@@ -482,6 +500,7 @@ public class FilterTransformHandler extends AadlHandler {
 			if (isSel4Process) {
 				Sel4TransformHandler.insertThreadInSel4Process((ProcessImplementation) filterImpl,
 						filterDispatchProtocol, agreeClauses.toString());
+
 			}
 
 			// Add add_filter claims to resolute prove statement, if applicable

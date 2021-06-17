@@ -491,7 +491,14 @@ public class MonitorTransformHandler extends AadlHandler {
 //			}
 
 			// Move to top of file
-			pkgSection.getOwnedClassifiers().move(0, pkgSection.getOwnedClassifiers().size() - 1);
+//			pkgSection.getOwnedClassifiers().move(0, pkgSection.getOwnedClassifiers().size() - 1);
+			try {
+				pkgSection.getOwnedClassifiers().move(
+					getIndex(containingImpl.getTypeName(), pkgSection.getOwnedClassifiers()),
+					pkgSection.getOwnedClassifiers().size() - 1);
+			} catch (Exception e) {
+
+			}
 
 			// Create monitor implementation
 			final ComponentImplementation monitorImpl = (ComponentImplementation) pkgSection
@@ -501,7 +508,14 @@ public class MonitorTransformHandler extends AadlHandler {
 			r.setImplemented(monitorType);
 
 			// Move below component type
-			pkgSection.getOwnedClassifiers().move(1, pkgSection.getOwnedClassifiers().size() - 1);
+//			pkgSection.getOwnedClassifiers().move(1, pkgSection.getOwnedClassifiers().size() - 1);
+			try {
+				pkgSection.getOwnedClassifiers().move(
+					getIndex(containingImpl.getTypeName(), pkgSection.getOwnedClassifiers()),
+					pkgSection.getOwnedClassifiers().size() - 1);
+			} catch (Exception e) {
+
+			}
 
 			// Dispatch protocol property
 			if (compCategory == ComponentCategory.THREAD && !dispatchProtocol.isEmpty()) {
@@ -555,8 +569,12 @@ public class MonitorTransformHandler extends AadlHandler {
 
 			// Put portConnObserved in right place (after selected connection)
 			String destName = selectedConnection.getName();
-			containingImpl.getOwnedConnections().move(getIndex(destName, containingImpl.getOwnedConnections()) + 1,
+			try {
+				containingImpl.getOwnedConnections().move(getIndex(destName, containingImpl.getOwnedConnections()) + 1,
 					containingImpl.getOwnedPortConnections().size() - 1);
+			} catch (Exception e) {
+
+			}
 
 			// Change selected connection source to monitor gate output port, if needed
 			if (observationGate) {
@@ -583,8 +601,13 @@ public class MonitorTransformHandler extends AadlHandler {
 					monitorExpectedDst.setConnectionEnd(portEntry.getValue());
 					// Put connExpected in right place (before connObserved)
 					destName = connObserved.getName();
-					containingImpl.getOwnedConnections().move(getIndex(destName, containingImpl.getOwnedConnections()),
+					try {
+						containingImpl.getOwnedConnections().move(
+								getIndex(destName, containingImpl.getOwnedConnections()),
 							containingImpl.getOwnedConnections().size() - 1);
+					} catch (Exception e) {
+
+					}
 				}
 			}
 
@@ -604,8 +627,13 @@ public class MonitorTransformHandler extends AadlHandler {
 				monitorAlertDst.setConnectionEnd(dstAlertPort);
 				// Put connAlert in right place (after connObserved)
 				destName = connObserved.getName();
-				containingImpl.getOwnedConnections().move(getIndex(destName, containingImpl.getOwnedConnections()) + 1,
+				try {
+					containingImpl.getOwnedConnections().move(
+							getIndex(destName, containingImpl.getOwnedConnections()) + 1,
 						containingImpl.getOwnedConnections().size() - 1);
+				} catch (Exception e) {
+
+				}
 			}
 
 			// Create Reset connection, if provided
@@ -623,8 +651,13 @@ public class MonitorTransformHandler extends AadlHandler {
 				monitorResetDst.setConnectionEnd(monResetPort);
 				// Put connExpected in right place (after observed)
 				destName = connObserved.getName();
-				containingImpl.getOwnedConnections().move(getIndex(destName, containingImpl.getOwnedConnections()) + 1,
+				try {
+					containingImpl.getOwnedConnections().move(
+							getIndex(destName, containingImpl.getOwnedConnections()) + 1,
 						containingImpl.getOwnedConnections().size() - 1);
+				} catch (Exception e) {
+
+				}
 			}
 
 			// AGREE

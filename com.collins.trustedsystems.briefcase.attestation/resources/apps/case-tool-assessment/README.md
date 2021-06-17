@@ -17,6 +17,6 @@ Specifically, you may be interested in the parameters `CAKE`, which is the locat
 
 You may perform additional configuration by directly editing the values in `Config.sml`.
 
-You can build the UserAM (AKA the groundstation or AM test harness) with `make user_am`, and you can build the HeliAM with `make heli_am`, or you can build both with `make tool_assessment`. After the build is completed, you will find the static libraries `libuser_am.a` and `libheli_am.a` in `build/apps/case-tool-assessment`, representing the UserAM and HeliAM components, respectively.
+You can build the UserAM (AKA the groundstation or AM test harness) with `make user_am`. This will produce `user_am.S` at the top-level of the build directory, and `libuser_am_c.a` in `build/apps/case-tool-assessment`. Similarly, you can build the HeliAM with `make heli_am` to produce `heli_am.S` and `libheli_am_c.a`. Finally you can build both with `make tool_assessment`.
 
-There are also alternative build targets `heli_am_nocrypto`, `user_am_nocrypto`, and `tool_assessment_nocrypto`, which produces `libheli_am_nocrypto.a` and `libuser_am_nocrypto.a`. These represent the same components, but with the crypto stubbed out. This may be useful for testing/integration, since the crypto library is very platform dependent.
+There are also alternative build targets `heli_am_nocrypto`, `user_am_nocrypto`, and `tool_assessment_nocrypto`, which produce the same components, but with the crypto stubbed out. This may be useful for testing/integration, since the crypto library is very platform dependent.

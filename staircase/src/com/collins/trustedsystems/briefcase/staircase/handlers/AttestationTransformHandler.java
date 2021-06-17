@@ -560,8 +560,12 @@ public class AttestationTransformHandler extends AadlHandler {
 
 
 			// Put just above it's containing implementation
-			pkgSection.getOwnedClassifiers().move(getIndex(ci.getTypeName(), pkgSection.getOwnedClassifiers()),
+			try {
+				pkgSection.getOwnedClassifiers().move(getIndex(ci.getTypeName(), pkgSection.getOwnedClassifiers()),
 					pkgSection.getOwnedClassifiers().size() - 1);
+			} catch (Exception e) {
+
+			}
 
 			// Create extended comm driver implementation
 //			final ComponentImplementation commDriverImpl = (ComponentImplementation) pkgSection
@@ -593,8 +597,12 @@ public class AttestationTransformHandler extends AadlHandler {
 //			}
 
 			// Add it to proper place (below extended comm driver type)
-			pkgSection.getOwnedClassifiers().move(getIndex(ci.getTypeName(), pkgSection.getOwnedClassifiers()),
+			try {
+				pkgSection.getOwnedClassifiers().move(getIndex(ci.getTypeName(), pkgSection.getOwnedClassifiers()),
 					pkgSection.getOwnedClassifiers().size() - 1);
+			} catch (Exception e) {
+
+			}
 
 			// If comm driver is an seL4 process,
 			// it's thread subcomponent will also need to be copied
@@ -751,7 +759,13 @@ public class AttestationTransformHandler extends AadlHandler {
 
 
 			// Move attestation manager to top of file
-			pkgSection.getOwnedClassifiers().move(0, pkgSection.getOwnedClassifiers().size() - 1);
+//			pkgSection.getOwnedClassifiers().move(0, pkgSection.getOwnedClassifiers().size() - 1);
+			try {
+				pkgSection.getOwnedClassifiers().move(getIndex(ci.getTypeName(), pkgSection.getOwnedClassifiers()),
+					pkgSection.getOwnedClassifiers().size() - 1);
+			} catch (Exception e) {
+
+			}
 
 			// Create Attestation Manager implementation
 			final ComponentImplementation attestationManagerImpl = (ComponentImplementation) pkgSection
@@ -761,7 +775,12 @@ public class AttestationTransformHandler extends AadlHandler {
 			r.setImplemented(attestationManagerType);
 
 			// Add it to proper place (just below component type)
-			pkgSection.getOwnedClassifiers().move(1, pkgSection.getOwnedClassifiers().size() - 1);
+			try {
+				pkgSection.getOwnedClassifiers().move(getIndex(ci.getTypeName(), pkgSection.getOwnedClassifiers()),
+					pkgSection.getOwnedClassifiers().size() - 1);
+			} catch (Exception e) {
+
+			}
 
 			// CASE_Properties::CACHE_TIMEOUT property
 			if (cacheTimeout > 0) {
@@ -990,7 +1009,13 @@ public class AttestationTransformHandler extends AadlHandler {
 //			}
 
 			// Move attestation gate to top of file
-			pkgSection.getOwnedClassifiers().move(0, pkgSection.getOwnedClassifiers().size() - 1);
+//			pkgSection.getOwnedClassifiers().move(0, pkgSection.getOwnedClassifiers().size() - 1);
+			try {
+				pkgSection.getOwnedClassifiers().move(getIndex(ci.getTypeName(), pkgSection.getOwnedClassifiers()),
+					pkgSection.getOwnedClassifiers().size() - 1);
+			} catch (Exception e) {
+
+			}
 
 			// Create Attestation Gate implementation
 			final ComponentImplementation attestationGateImpl = (ComponentImplementation) pkgSection
@@ -1000,7 +1025,13 @@ public class AttestationTransformHandler extends AadlHandler {
 			gateRealization.setImplemented(attestationGateType);
 
 			// Add it to proper place (just below component type)
-			pkgSection.getOwnedClassifiers().move(1, pkgSection.getOwnedClassifiers().size() - 1);
+//			pkgSection.getOwnedClassifiers().move(1, pkgSection.getOwnedClassifiers().size() - 1);
+			try {
+				pkgSection.getOwnedClassifiers().move(getIndex(ci.getTypeName(), pkgSection.getOwnedClassifiers()),
+					pkgSection.getOwnedClassifiers().size() - 1);
+			} catch (Exception e) {
+
+			}
 
 			// Dispatch protocol property
 			if (compCategory == ComponentCategory.THREAD && !attestationGateDispatchProtocol.isEmpty()) {
@@ -1153,10 +1184,15 @@ public class AttestationTransformHandler extends AadlHandler {
 						ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false, ci.getAllConnections()));
 				ci.getOwnedPortConnections().add(newConn);
 				// Move to right place
-				ci.getOwnedPortConnections().move(connIdx + idxOffset, ci.getOwnedPortConnections().size() - 1);
+				try {
+					ci.getOwnedPortConnections().move(connIdx + idxOffset, ci.getOwnedPortConnections().size() - 1);
+					idxOffset++;
+				} catch (Exception e) {
+
+				}
 				// TODO: THIS DOES NOT WORK. If a PortConnection is added, the size of OwnedConnections is not incremented
 //				ci.getOwnedConnections().move(connIdx + idxOffset, ci.getOwnedConnections().size() - 1);
-				idxOffset++;
+
 			}
 
 //			// Add AGREE statements

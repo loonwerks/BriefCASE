@@ -221,12 +221,12 @@ public class FilterTransformDialog extends TitleAreaDialog {
 		lblCreateThreadField.setText("Create internal thread component");
 		lblCreateThreadField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true));
 
-		GridData dataInfoField = new GridData();
-		dataInfoField.grabExcessHorizontalSpace = true;
-		dataInfoField.horizontalAlignment = SWT.FILL;
+//		GridData dataInfoField = new GridData();
+//		dataInfoField.grabExcessHorizontalSpace = true;
+//		dataInfoField.horizontalAlignment = SWT.FILL;
 		btnCreateThread = new Button(container, SWT.CHECK);
 		btnCreateThread.setSelection(true);
-		btnCreateThread.setLayoutData(dataInfoField);
+		btnCreateThread.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		btnCreateThread.addListener(SWT.Selection, e -> {
 			if (e.type == SWT.Selection) {
 				if (btnCreateThread.getSelection()) {

@@ -142,20 +142,25 @@ public abstract class AadlHandler extends AbstractHandler {
 
 	/**
 	 * Returns the index of a component with the specified name in the specified element list.
-	 * TODO: What if the name isn't in the list?
 	 * @param compName - Component name
 	 * @param elements - Collection of elements
 	 * @return An identifier that is unique in the specified list
+	 * Throws exception if name is not in list
 	 */
 	protected static int getIndex(String compName, final Collection<? extends NamedElement> elements) {
 		int idx = 0;
+		boolean found = false;
 
 		for (NamedElement e : elements) {
 			if (e.getName().equalsIgnoreCase(compName)) {
+				found = true;
 				break;
 			} else {
-				idx++;
+				++idx;
 			}
+		}
+		if (!found) {
+			throw new IndexOutOfBoundsException();
 		}
 		return idx;
 	}

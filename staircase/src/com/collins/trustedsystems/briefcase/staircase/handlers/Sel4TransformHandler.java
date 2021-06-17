@@ -681,8 +681,12 @@ public class Sel4TransformHandler extends AadlHandler {
 		}
 
 //		// Put it in the correct place (after component implementation of original component)
-//		pkgSection.getOwnedClassifiers().move(getIndex(compImpl.getName(), pkgSection.getOwnedClassifiers()) + 1,
-//				pkgSection.getOwnedClassifiers().size() - 1);
+//		try {
+//			pkgSection.getOwnedClassifiers().move(getIndex(compImpl.getName(), pkgSection.getOwnedClassifiers()) + 1,
+//					pkgSection.getOwnedClassifiers().size() - 1);
+//		} catch (Exception e) {
+//
+//		}
 
 		// Create corresponding implementation
 		ComponentImplementation transformImpl = null;
@@ -863,8 +867,13 @@ public class Sel4TransformHandler extends AadlHandler {
 		}
 
 //		// Put it in the correct place (after transformed component type)
-//		pkgSection.getOwnedClassifiers().move(getIndex(transformType.getName(), pkgSection.getOwnedClassifiers()) + 1,
-//				pkgSection.getOwnedClassifiers().size() - 1);
+//		try {
+//			pkgSection.getOwnedClassifiers().move(
+//					getIndex(transformType.getName(), pkgSection.getOwnedClassifiers()) + 1,
+//					pkgSection.getOwnedClassifiers().size() - 1);
+//		} catch (Exception e) {
+//
+//		}
 
 		return transformImpl;
 
@@ -911,6 +920,14 @@ public class Sel4TransformHandler extends AadlHandler {
 		// Give it the same property associations
 		copyPropertyAssociations(processImpl.getType(), threadType);
 
+		// Put thread component above process components
+		try {
+			pkgSection.getOwnedClassifiers().move(getIndex(processImpl.getTypeName(), pkgSection.getOwnedClassifiers()),
+				pkgSection.getOwnedClassifiers().size() - 1);
+		} catch (Exception e) {
+
+		}
+
 		// Create corresponding implementation
 		ThreadImplementation threadImpl = (ThreadImplementation) pkgSection
 				.createOwnedClassifier(Aadl2Package.eINSTANCE.getThreadImplementation());
@@ -932,6 +949,14 @@ public class Sel4TransformHandler extends AadlHandler {
 			final NamedValue nv = Aadl2Factory.eINSTANCE.createNamedValue();
 			nv.setNamedValue(dispatchProtocolLit);
 			threadImpl.setPropertyValue(dispatchProtocolProp, nv);
+		}
+
+		// Put thread component above process components
+		try {
+			pkgSection.getOwnedClassifiers().move(getIndex(processImpl.getTypeName(), pkgSection.getOwnedClassifiers()),
+				pkgSection.getOwnedClassifiers().size() - 1);
+		} catch (Exception e) {
+
 		}
 
 		// Add subcomponent
