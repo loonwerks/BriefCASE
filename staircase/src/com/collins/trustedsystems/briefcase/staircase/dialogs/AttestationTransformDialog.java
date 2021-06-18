@@ -122,6 +122,7 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		setMessage(
 				"Enter Attestation details.  You may optionally leave these fields empty and manually edit the model.",
 				IMessageProvider.NONE);
+
 	}
 
 	@Override
@@ -129,6 +130,11 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		final Point size = super.getInitialSize();
 		size.y += convertHeightInCharsToPixels(1);
 		return size;
+	}
+
+	@Override
+	protected boolean isResizable() {
+		return true;
 	}
 
 //	public void create(Subcomponent commDriver, Subcomponent attestationManager,
@@ -161,6 +167,7 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 
 	@Override
 	protected Control createDialogArea(Composite parent) {
+
 		final Composite area = (Composite) super.createDialogArea(parent);
 		area.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 

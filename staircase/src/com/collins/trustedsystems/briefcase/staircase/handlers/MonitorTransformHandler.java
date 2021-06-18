@@ -165,8 +165,11 @@ public class MonitorTransformHandler extends AadlHandler {
 
 		BriefcaseNotifier.notify("StairCASE - Monitor Transform", "Monitor added to model.");
 
-		// Save
-		saveChanges(false);
+		// Format and save
+		format(true);
+
+//		// Save
+//		saveChanges(false);
 
 		return;
 

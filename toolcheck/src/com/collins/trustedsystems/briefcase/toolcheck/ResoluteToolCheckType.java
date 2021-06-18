@@ -17,7 +17,7 @@ public class ResoluteToolCheckType implements ResoluteExternalAnalysisType {
 	@Override
 	public List<ResoluteType> getArgTypes() {
 		ArrayList<ResoluteType> list = new ArrayList<ResoluteType>();
-		list.add(BaseType.STRING); // Tool output filename
+		list.add(BaseType.STRING); // Tool name
 		return list;
 	}
 }

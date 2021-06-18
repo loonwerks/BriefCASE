@@ -111,6 +111,11 @@ public class ProxyTransformDialog extends TitleAreaDialog {
 	}
 
 	@Override
+	protected boolean isResizable() {
+		return true;
+	}
+
+	@Override
 	protected Control createDialogArea(Composite parent) {
 		final Composite area = (Composite) super.createDialogArea(parent);
 

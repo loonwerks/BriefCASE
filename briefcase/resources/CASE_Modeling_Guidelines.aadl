@@ -76,8 +76,8 @@ annex resolute {**
 			-- All ports should be connected
 			warning (ports_connected())
 			
-			-- Thread implementations must indicate location of source code or binary
-			warning (threads_have_source())
+			-- Thread CakeML implementations should indicate location of source code or binary
+			warning (cakeml_threads_have_source())
 			
 			-- All processes must be bound to a processor
 			error (processes_bound())
@@ -112,6 +112,15 @@ annex resolute {**
 			
 			-- All thread Compute_Execution_Time property values must be divisible by 2 ms
 			warning (compute_exec_time_div_by_tick())
+			
+			-- A bound process should have the Timing_Properties::Frame_Period property set
+			warning (frame_period_property_set())
+			
+			-- A bound process should have the Timing_Properties::Clock_Period property set
+			warning (clock_period_property_set())
+			
+			-- The maximum stack size requirements for each thread should be specified using the Memory_Properties::Stack_Size property.
+			warning (thread_stack_size())
 			
 		}
 
@@ -229,11 +238,12 @@ private
 			
 		ports_connected() <=
 			** "All ports should be connected" **
-			forall (p : port) . lint_check(p, length(connections(p)) > 0)
+			let sw_comps : {component} = {c for (c : component) | exists(p : processor) . processor_bound(c, p)};
+			forall (comp : sw_comps) (p : features(comp)) . lint_check(p, is_port(p) and length(connections(p)) > 0)
 			
-		threads_have_source() <=
-			** "Thread implementations should indicate location of source code or binary" **
-			forall (t : thread) . lint_check(t, has_property(t, Programming_Properties::Source_Text))
+		cakeml_threads_have_source() <=
+			** "Thread CakeML implementations should indicate location of source code or binary" **
+			forall (t : thread) . lint_check(t, (has_property(t, CASE_Properties::Component_Language) and property(t, CASE_Properties::Component_Language) = "CakeML") => has_property(t, Programming_Properties::Source_Text))
 
 		processes_bound() <=
 			** "All processes must be bound to a processor" **
@@ -262,11 +272,11 @@ private
 			** "The value of a CASE_Scheduling::Domain property set on processes must be greater than or equal to 1" **
 			forall (p : process) . lint_check(p, has_property(p, CASE_Scheduling::Domain) => property(p, CASE_Scheduling::Domain) >= 1)
 		
-		-- For all processes bound to the same processor (via the Actual_Processor_Binding property), 
+		-- For all processes bound to the same seL4 processor (via the Actual_Processor_Binding property), 
 		-- the CASE_Scheduling::Domain property value assignments must be sequential and non-repeating
 		consistent_sched_domain() <=
 			** "CASE_Scheduling::Domain property value assignments must be sequential and non-repeating" **
-			forall (p : processor) . lint_check(p, consistent_domains(p))
+			forall (p : processor) . lint_check(p, (has_property(p, CASE_Properties::OS) and property(p, CASE_Properties::OS) = "seL4") => consistent_domains(p))
 			
 		consistent_domains(p : processor) : bool =
 			let bound_processes : {process} = {proc for (proc : process) | is_bound_to(proc, p)};
@@ -288,7 +298,19 @@ private
 		compute_exec_time_div_by_tick() <=
 			** "All thread Compute_Execution_Time property values must be divisible by 2 ms" **
 				forall (t : thread) . lint_check(t, has_property(t, Compute_Execution_Time) => (lower_bound(property(t, Compute_Execution_Time)) % 2 = 0 and upper_bound(property(t, Compute_Execution_Time)) % 2 = 0))
+				
+		frame_period_property_set() <=
+			** "A bound process should have the Timing_Properties::Frame_Period property set" **
+			forall (p : processor) . lint_check(p, (has_property(p, CASE_Properties::OS) and property(p, CASE_Properties::OS) = "seL4" and (exists(proc : process) . processor_bound(proc, p))) => has_property(p, Timing_Properties::Frame_Period))
+			
+		clock_period_property_set() <=
+			** "A bound process should have the Timing_Properties::Clock_Period property set" **
+			forall (p : processor) . lint_check(p, (has_property(p, CASE_Properties::OS) and property(p, CASE_Properties::OS) = "seL4" and (exists(proc : process) . processor_bound(proc, p))) => has_property(p, Timing_Properties::Clock_Period))
 
+		thread_stack_size() <=
+			** "The maximum stack size requirements for each thread should be specified using the Memory_Properties::Stack_Size property" **
+			forall (t : thread) . lint_check(t, (exists(p : processor) . processor_bound(t, p)) => has_property(t, Memory_Properties::Stack_Size))
+			
 	**};
 	
 end CASE_Modeling_Guidelines;

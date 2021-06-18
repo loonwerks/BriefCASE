@@ -5,8 +5,6 @@ import java.util.Iterator;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.util.EcoreUtil;
-import org.eclipse.jface.text.source.ISourceViewer;
-import org.eclipse.jface.text.source.SourceViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.xtext.ui.editor.XtextEditor;
@@ -216,11 +214,11 @@ public class FilterTransformHandler extends AadlHandler {
 			BriefcaseNotifier.notify("StairCASE - Filter Transform", "Filter added to model.");
 		}
 
-		// Format
-		((SourceViewer) EditorUtils.getActiveXtextEditor().getInternalSourceViewer()).doOperation(ISourceViewer.FORMAT);
+		// Format and save
+		format(true);
 
-		// Save
-		saveChanges(false);
+//		// Save
+//		saveChanges(false);
 
 		return;
 

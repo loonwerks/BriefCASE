@@ -39,7 +39,8 @@ public class AddAttestationClaim extends BuiltInClaim {
 	@Override
 	public List<Arg> getDefinitionParams() {
 		final List<Arg> defParams = new ArrayList<>();
-		defParams.add(Create.arg("comm_driver", Create.baseType("component")));
+//		defParams.add(Create.arg("comm_driver", Create.baseType("component")));
+		defParams.add(Create.arg("comp_context", Create.baseType("component")));
 		defParams.add(Create.arg("attestation_manager", Create.baseType("component")));
 		defParams.add(Create.arg("attestation_gate", Create.baseType("component")));
 		return defParams;

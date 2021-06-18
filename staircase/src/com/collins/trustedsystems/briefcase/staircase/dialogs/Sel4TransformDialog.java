@@ -62,6 +62,11 @@ public class Sel4TransformDialog extends TitleAreaDialog {
 	}
 
 	@Override
+	protected boolean isResizable() {
+		return true;
+	}
+
+	@Override
 	protected Control createDialogArea(Composite parent) {
 		final Composite area = (Composite) super.createDialogArea(parent);
 		final Composite container = new Composite(area, SWT.NONE);

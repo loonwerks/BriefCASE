@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -18,7 +19,8 @@ import org.osate.aadl2.AadlPackage;
 import org.osate.aadl2.ModelUnit;
 import org.osate.aadl2.instance.ComponentInstance;
 
-import com.collins.trustedsystems.briefcase.splat.preferences.SplatPreferenceConstants;
+import com.collins.trustedsystems.briefcase.preferences.BriefcasePreferenceConstants;
+import com.collins.trustedsystems.briefcase.util.Filesystem;
 import com.rockwellcollins.atc.resolute.analysis.execution.EvaluationContext;
 import com.rockwellcollins.atc.resolute.analysis.execution.ResoluteExternalAnalysis;
 import com.rockwellcollins.atc.resolute.analysis.execution.ResoluteFailException;
@@ -60,13 +62,29 @@ public class ResoluteToolCheck implements ResoluteExternalAnalysis {
 
 		switch (toolName) {
 		case "splat":
-			outputFileName = Platform.getPreferencesService().getString("com.collins.trustedsystems.briefcase.splat.plugin",
-					SplatPreferenceConstants.LOG_FILENAME, "", null);
+			outputFileName = Platform.getPreferencesService().getString("com.collins.trustedsystems.briefcase",
+					BriefcasePreferenceConstants.SPLAT_LOG_FILENAME, "", null);
 			break;
 		case "attestation":
-			throw new ResoluteFailException(
-					"[ERROR] A high-assurance implementation of the Attestation Manager is not available.",
-					evalContext.getThisInstance());
+			IFile file = Filesystem.getFile(context.getThisInstance().eResource().getURI());
+			if (file == null) {
+				throw new ResoluteFailException(
+						"[ERROR] Could not find file associated with "
+								+ evalContext.getThisInstance().getClassifier().getName() + ".",
+						evalContext.getThisInstance());
+			}
+			String kuFolderName = Platform.getPreferencesService().getString("com.collins.trustedsystems.briefcase",
+					BriefcasePreferenceConstants.KU_IMPL_FOLDER, "", null);
+			IFolder kuFolder = (IFolder) file.getProject().findMember(kuFolderName, false);
+			if (kuFolder == null) {
+				return new BoolValue(false);
+			} else {
+				return new BoolValue(true);
+			}
+
+//			throw new ResoluteFailException(
+//					"[ERROR] A high-assurance implementation of the Attestation Manager is not available.",
+//					evalContext.getThisInstance());
 		}
 
 		if (outputFileName.isEmpty()) {

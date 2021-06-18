@@ -187,6 +187,12 @@ public class VirtualizationTransformHandler extends AadlHandler {
 
 		BriefcaseNotifier.notify("StairCASE - Virtualization Transform", "Virtual machine added to model.");
 
+		// Format and save
+		format(true);
+
+//		// Save
+//		saveChanges(false);
+
 		return;
 
 	}

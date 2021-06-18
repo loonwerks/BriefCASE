@@ -224,8 +224,11 @@ public class AttestationTransformHandler extends AadlHandler {
 		BriefcaseNotifier.notify("StairCASE - Attestation Transform", "Attestation added to model.");
 //		}
 
-		// Save
-		saveChanges(false);
+		// Format and save
+		format(true);
+
+//		// Save
+//		saveChanges(false);
 
 		// Add attestation implementation, if requested
 		if (useKUImplementation) {

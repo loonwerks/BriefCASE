@@ -4,12 +4,17 @@ import java.util.Collection;
 
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.text.TextSelection;
+import org.eclipse.jface.text.source.ISourceViewer;
+import org.eclipse.jface.text.source.SourceViewer;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -20,6 +25,7 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.handlers.HandlerUtil;
+import org.eclipse.ui.progress.WorkbenchJob;
 import org.eclipse.xtext.resource.EObjectAtOffsetHelper;
 import org.eclipse.xtext.ui.editor.XtextEditor;
 import org.eclipse.xtext.ui.editor.outline.impl.EObjectNode;
@@ -33,16 +39,11 @@ public abstract class AadlHandler extends AbstractHandler {
 
 	static final String OUTLINE_VIEW_PART_ID = "org.eclipse.ui.views.ContentOutline";
 	protected ExecutionEvent executionEvent;
-	private IWorkbenchWindow window;
 
 	@Override
 	public Object execute(ExecutionEvent event) {
 
 		this.executionEvent = event;
-		window = HandlerUtil.getActiveWorkbenchWindow(event);
-		if (window == null) {
-			return null;
-		}
 
 		// Save changes
 		if (!saveChanges(true)) {
@@ -120,8 +121,12 @@ public abstract class AadlHandler extends AbstractHandler {
 		return null;
 	}
 
-	protected boolean saveChanges(boolean prompt) {
+	protected static boolean saveChanges(boolean prompt) {
 
+		IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+		if (window == null) {
+			return false;
+		}
 		final IEditorPart[] dirtyEditors = window.getActivePage().getDirtyEditors();
 
 		if (dirtyEditors.length == 0) {
@@ -131,12 +136,50 @@ public abstract class AadlHandler extends AbstractHandler {
 		if (prompt && !MessageDialog.openConfirm(window.getShell(), "Save editors", "Save editors and continue?")) {
 			return false;
 		} else {
-			NullProgressMonitor monitor = new NullProgressMonitor();
 			for (IEditorPart e : dirtyEditors) {
-				e.doSave(monitor);
+//				final ITextOperationTarget fOperationTarget = e.getAdapter(ITextOperationTarget.class);
+//				fOperationTarget.doOperation(ISourceViewer.FORMAT);
+//				((SourceViewer) ((XtextEditor) e).getInternalSourceViewer())
+//				((SourceViewer) EditorUtils.getActiveXtextEditor().getInternalSourceViewer())
+//						.doOperation(ISourceViewer.FORMAT);
+				e.doSave(new NullProgressMonitor());
 			}
 			return true;
 		}
+	}
+
+	/**
+	 * Formats files (Shift-Ctrl-F) since for some reason the xtext formatter is doing that
+	 */
+	public static void format(boolean saveAfterFormat) {
+		WorkbenchJob refreshJob = new WorkbenchJob("Format") {
+			@Override
+			public IStatus runInUIThread(IProgressMonitor monitor) {
+
+				IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+				if (window == null) {
+					return null;
+				}
+				final IEditorPart[] dirtyEditors = window.getActivePage().getDirtyEditors();
+				for (IEditorPart e : dirtyEditors) {
+//					final ITextOperationTarget fOperationTarget = e.getAdapter(ITextOperationTarget.class);
+//					fOperationTarget.doOperation(ISourceViewer.FORMAT);
+					if (e instanceof XtextEditor) {
+						((SourceViewer) ((XtextEditor) e).getInternalSourceViewer())
+//					((SourceViewer) EditorUtils.getActiveXtextEditor().getInternalSourceViewer())
+							.doOperation(ISourceViewer.FORMAT);
+						e.doSave(new NullProgressMonitor());
+					}
+				}
+//				((SourceViewer) EditorUtils.getActiveXtextEditor().getInternalSourceViewer())
+//						.doOperation(ISourceViewer.FORMAT);
+//				if (saveAfterFormat) {
+//					saveChanges(false);
+//				}
+				return Status.OK_STATUS;
+			}
+		};
+		refreshJob.schedule(500);
 	}
 
 

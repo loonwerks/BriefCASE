@@ -26,17 +26,22 @@ public class ImportRequirementsHandler extends AbstractHandler {
 		final boolean importRequirements = (event.getCommand().getId().indexOf("Import") != -1);
 		final String filename = event.getParameter("filename");
 
-		return run(importRequirements, filename);
+		run(importRequirements, filename);
+
+		// Format and save
+		AadlHandler.format(true);
+
+		return null;
 	}
 
-	public Object run(final boolean importRequirements, final String filename) {
+	public void run(final boolean importRequirements, final String filename) {
 
 		// Get the current project
 		final IProject project = TraverseProject.getCurrentProject();
 		if (project == null) {
 			Dialog.showError("Requirements Manager",
 					"Unable to determine current project.  Open a project file in the editor.");
-			return null;
+			return;
 		}
 
 
@@ -61,7 +66,7 @@ public class ImportRequirementsHandler extends AbstractHandler {
 		final RequirementsManager reqMgr = RequirementsManager.getInstance();
 		if (!reqMgr.readRequirementFiles(importRequirements, filename)) {
 			// No requirement files were read
-			return null;
+			return;
 		}
 
 		final ImportRequirementsGUI wizard = new ImportRequirementsGUI(
@@ -77,7 +82,7 @@ public class ImportRequirementsHandler extends AbstractHandler {
 			BriefcaseNotifier.notify("Requirements Manager", "Requirements import complete.");
 		}
 
-		return null;
+		return;
 	}
 
 }

@@ -134,8 +134,11 @@ public class ProxyTransformHandler extends AadlHandler {
 		insertProxy(uri);
 		BriefcaseNotifier.notify("StairCASE - Proxy", "Proxy added to model.");
 
-		// Save
-		saveChanges(false);
+		// Format and save
+		format(true);
+
+//		// Save
+//		saveChanges(false);
 
 		return;
 
