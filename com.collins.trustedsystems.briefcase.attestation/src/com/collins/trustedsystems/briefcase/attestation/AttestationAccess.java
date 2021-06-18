@@ -43,9 +43,12 @@ import com.collins.trustedsystems.briefcase.util.TraverseProject;
 public class AttestationAccess {
 	public static boolean createSourceDirectory() {
 		IProject project = TraverseProject.getCurrentProject();
-		String kuImplFolderName = com.collins.trustedsystems.briefcase.Activator.getDefault().getPreferenceStore()
-				.getString(BriefcasePreferenceConstants.KU_IMPL_FOLDER);
-		URI uri = URI.createURI(project.getLocation().toString()).appendSegment(kuImplFolderName);
+		String componentSourceFolderName = Platform.getPreferencesService().getString(
+				"com.collins.trustedsystems.briefcase", BriefcasePreferenceConstants.COMPONENT_SOURCE_FOLDER, "", null);
+		String kuImplFolderName = Platform.getPreferencesService().getString("com.collins.trustedsystems.briefcase",
+				BriefcasePreferenceConstants.KU_IMPL_FOLDER, "", null);
+		URI uri = URI.createURI(project.getLocation().toString()).appendSegment(componentSourceFolderName)
+				.appendSegment(kuImplFolderName);
 		File destinationDirectory = new File(uri.toString());
 
 		// Copy attestation implementation

@@ -73,9 +73,13 @@ public class ResoluteToolCheck implements ResoluteExternalAnalysis {
 								+ evalContext.getThisInstance().getClassifier().getName() + ".",
 						evalContext.getThisInstance());
 			}
+			String componentSourceFolderName = Platform.getPreferencesService().getString(
+					"com.collins.trustedsystems.briefcase", BriefcasePreferenceConstants.COMPONENT_SOURCE_FOLDER, "",
+					null);
 			String kuFolderName = Platform.getPreferencesService().getString("com.collins.trustedsystems.briefcase",
 					BriefcasePreferenceConstants.KU_IMPL_FOLDER, "", null);
-			IFolder kuFolder = (IFolder) file.getProject().findMember(kuFolderName, false);
+			String path = componentSourceFolderName + File.separator + kuFolderName;
+			IFolder kuFolder = (IFolder) file.getProject().findMember(path, false);
 			if (kuFolder == null) {
 				return new BoolValue(false);
 			} else {

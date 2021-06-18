@@ -7,8 +7,10 @@ import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.FileFieldEditor;
 import org.eclipse.jface.preference.StringFieldEditor;
+import org.eclipse.jface.resource.FontDescriptor;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
@@ -30,11 +32,20 @@ public class BriefcasePreferencePage extends FieldEditorPreferencePage implement
 	@Override
 	public void createFieldEditors() {
 
+		Label label = new Label(getFieldEditorParent(), SWT.NONE);
+		label.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1));
+		FontDescriptor boldDescriptor = FontDescriptor.createFrom(label.getFont()).setStyle(SWT.BOLD);
+		Font boldFont = boldDescriptor.createFont(label.getDisplay());
+		label.setFont(boldFont);
+		label.addDisposeListener(e -> boldFont.dispose());
+
+		label.setText("SPLAT");
+
 		// Output folder name
 //		addField(new DirectoryFieldEditor(BriefcasePreferenceConstants.SPLAT_OUTPUT_FOLDER, "SPLAT output folder name",
 //				getFieldEditorParent()));
-		addField(new StringFieldEditor(BriefcasePreferenceConstants.SPLAT_OUTPUT_FOLDER, "SPLAT output folder name",
-				getFieldEditorParent()));
+//		addField(new StringFieldEditor(BriefcasePreferenceConstants.SPLAT_OUTPUT_FOLDER, "SPLAT output folder name",
+//				getFieldEditorParent()));
 
 		splatLogFieldEditor = new BooleanFieldEditor(BriefcasePreferenceConstants.SPLAT_GENERATE_LOG,
 				"Generate SPLAT run log",
@@ -85,8 +96,17 @@ public class BriefcasePreferencePage extends FieldEditorPreferencePage implement
 		};
 		addField(splatLogFileFieldEditor);
 
-		Label label = new Label(getFieldEditorParent(), SWT.SEPARATOR | SWT.HORIZONTAL);
-		label.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 2));
+		label = new Label(getFieldEditorParent(), SWT.SEPARATOR | SWT.HORIZONTAL);
+		label.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 5));
+
+		label = new Label(getFieldEditorParent(), SWT.NONE);
+		label.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
+		label.setFont(boldFont);
+		label.addDisposeListener(e -> boldFont.dispose());
+		label.setText("Component Source");
+
+		addField(new StringFieldEditor(BriefcasePreferenceConstants.COMPONENT_SOURCE_FOLDER,
+				"Component source folder name", getFieldEditorParent()));
 
 		addField(new StringFieldEditor(BriefcasePreferenceConstants.KU_IMPL_FOLDER,
 				"KU Attestation implementation folder name", getFieldEditorParent()));

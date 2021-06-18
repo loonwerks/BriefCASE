@@ -15,6 +15,7 @@ import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Path;
@@ -63,6 +64,7 @@ public class SplatHandler extends AbstractHandler {
 
 	static final String bundleId = "com.collins.trustedsystems.briefcase.splat";
 	private final static String FOLDER_PACKAGE_DELIMITER = "_";
+	private String outputDir = "";
 
 	private MessageConsole findConsole(String name) {
 		ConsolePlugin plugin = ConsolePlugin.getDefault();
@@ -164,8 +166,13 @@ public class SplatHandler extends AbstractHandler {
 //			if (!isLinuxrPlatformSelected) {
 //				cmdLineArgs.add("./");
 //			} else {
-				cmdLineArgs.add(Activator.getDefault().getPreferenceStore()
-						.getString(BriefcasePreferenceConstants.SPLAT_OUTPUT_FOLDER));
+			String componentSourceFolderName = Platform.getPreferencesService().getString(
+					"com.collins.trustedsystems.briefcase", BriefcasePreferenceConstants.COMPONENT_SOURCE_FOLDER, "",
+					null);
+			IProject project = TraverseProject.getCurrentProject();
+			outputDir = URI.createURI(project.getLocation().toString()).appendSegment(componentSourceFolderName)
+					.toString();
+			cmdLineArgs.add(outputDir);
 //			}
 
 //			cmdLineArgs.add("-intwidth");
@@ -363,8 +370,8 @@ public class SplatHandler extends AbstractHandler {
 	private void insertSourceCodeLocation(XtextEditor currentEditor) {
 
 		// Look in the SPLAT output directory for filters (each will be in its own folder)
-		String outputDir = Activator.getDefault().getPreferenceStore()
-				.getString(BriefcasePreferenceConstants.SPLAT_OUTPUT_FOLDER).replace("\\", "/") + "/";
+//		String outputDir = Activator.getDefault().getPreferenceStore()
+//				.getString(BriefcasePreferenceConstants.SPLAT_OUTPUT_FOLDER).replace("\\", "/") + "/";
 
 		// Get all the folders in the output directory
 		File dir = new File(outputDir);

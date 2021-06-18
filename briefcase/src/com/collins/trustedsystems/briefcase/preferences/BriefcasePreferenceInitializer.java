@@ -18,6 +18,7 @@ public class BriefcasePreferenceInitializer extends AbstractPreferenceInitialize
 		store.setDefault(BriefcasePreferenceConstants.SPLAT_GENERATE_LOG, true);
 		store.setDefault(BriefcasePreferenceConstants.SPLAT_LOG_FILENAME,
 				ResourcesPlugin.getWorkspace().getRoot().getLocation().toString() + "/splat.log");
+		store.setDefault(BriefcasePreferenceConstants.COMPONENT_SOURCE_FOLDER, "Component_Source");
 		store.setDefault(BriefcasePreferenceConstants.KU_IMPL_FOLDER, "KU_Attestation");
 	}
 }
