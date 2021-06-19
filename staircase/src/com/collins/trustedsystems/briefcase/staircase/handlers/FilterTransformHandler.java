@@ -445,7 +445,7 @@ public class FilterTransformHandler extends AadlHandler {
 			selectedConnection.getDestination().setConnectionEnd(connEndIn);
 
 			// AGREE
-			final String filterPolicyName = filterName + "_policy";
+//			final String filterPolicyName = filterName + "_policy";
 
 			if (filterPolicy.isEmpty()) {
 				filterPolicy = "false;";
@@ -457,7 +457,7 @@ public class FilterTransformHandler extends AadlHandler {
 			agreeClauses.append("{**" + System.lineSeparator());
 
 			// Filter policy
-			agreeClauses.append("property " + filterPolicyName + " = " + filterPolicy + System.lineSeparator());
+//			agreeClauses.append("property " + filterPolicyName + " = " + filterPolicy + System.lineSeparator());
 
 			// Filter guarantee
 			agreeClauses.append(
@@ -465,14 +465,14 @@ public class FilterTransformHandler extends AadlHandler {
 							+ System.lineSeparator());
 
 			if (connEndIn instanceof EventDataPort) {
-				agreeClauses.append("if event(" + connEndIn.getName() + ") and " + filterPolicyName + " then"
+				agreeClauses.append("if event(" + connEndIn.getName() + ") and " + filterPolicy + " then"
 						+ System.lineSeparator());
 				agreeClauses.append("event(" + connEndOut.getName() + ") and " + connEndOut.getName() + " = "
 						+ connEndIn.getName() + System.lineSeparator());
 				agreeClauses.append("else" + System.lineSeparator());
 				agreeClauses.append("not event(" + connEndOut.getName() + ");" + System.lineSeparator());
 			} else {
-				agreeClauses.append("if " + filterPolicyName + " then" + System.lineSeparator());
+				agreeClauses.append("if " + filterPolicy + " then" + System.lineSeparator());
 				agreeClauses.append(connEndOut.getName() + " = " + connEndIn.getName() + System.lineSeparator());
 				agreeClauses.append("else" + System.lineSeparator());
 				// User will need to put an expression after the 'else'

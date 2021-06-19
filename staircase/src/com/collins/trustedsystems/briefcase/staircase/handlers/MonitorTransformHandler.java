@@ -670,7 +670,7 @@ public class MonitorTransformHandler extends AadlHandler {
 				monitorAgreeProperty = monitorAgreeProperty.trim() + ";";
 			}
 
-			final String monitorPolicyName = monitorName + "_policy";
+//			final String monitorPolicyName = monitorName + "_policy";
 
 			String resetString = "";
 			if (resetPort != null) {
@@ -687,15 +687,15 @@ public class MonitorTransformHandler extends AadlHandler {
 			agreeClauses
 					.append("const is_latched : bool = " + (latched ? "true" : "false") + ";"
 					+ System.lineSeparator());
-			agreeClauses
-					.append("property " + monitorPolicyName + " = " + monitorAgreeProperty + System.lineSeparator());
+//			agreeClauses
+//					.append("property " + monitorPolicyName + " = " + monitorAgreeProperty + System.lineSeparator());
 
-			agreeClauses.append("property alerted = (not " + monitorPolicyName + ") -> ((" + resetString
+			agreeClauses.append("property alerted = (not " + monitorAgreeProperty + ") -> ((" + resetString
 					+ "is_latched and pre(alerted)) or (");
 			if (portObserved instanceof EventPort || portObserved instanceof EventDataPort) {
 				agreeClauses.append("event(" + observationPortName + ") and ");
 			}
-			agreeClauses.append("not " + monitorPolicyName + "));" + System.lineSeparator());
+			agreeClauses.append("not " + monitorAgreeProperty + "));" + System.lineSeparator());
 
 			String alertExpr = "";
 			if (monAlertPort instanceof EventPort || monAlertPort instanceof EventDataPort) {
@@ -720,7 +720,7 @@ public class MonitorTransformHandler extends AadlHandler {
 					agreeClauses.append("-- GUARANTEE EXPRESSION INCOMPLETE" + System.lineSeparator());
 				}
 				agreeClauses.append("guarantee " + monitorGatePropId
-						+ " \"A violation of the monitor policy shall prevent propagation of the Observed input.\" : "
+						+ " \"A violation of the monitor policy shall prevent propagation of the observed input.\" : "
 						+ gateExpr + ";" + System.lineSeparator());
 
 			}
