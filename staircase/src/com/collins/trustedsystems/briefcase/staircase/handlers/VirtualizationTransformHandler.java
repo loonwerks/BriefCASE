@@ -52,7 +52,7 @@ import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
 
 public class VirtualizationTransformHandler extends AadlHandler {
 
-	public static final String VIRTUAL_PROCESSOR_COMP_TYPE_NAME = "CASE_VirtualMachine";
+	public static final String VIRTUAL_PROCESSOR_COMP_TYPE_NAME = "VirtualMachine";
 	public static final String VIRTUAL_PROCESSOR_SUBCOMP_NAME = "VirtualMachine";
 	static final String CONNECTION_IMPL_NAME = "c";
 

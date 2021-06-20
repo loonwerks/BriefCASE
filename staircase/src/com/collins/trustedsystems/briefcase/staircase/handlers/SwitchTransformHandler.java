@@ -51,7 +51,7 @@ import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
 
 public class SwitchTransformHandler extends AadlHandler {
 
-	static final String SWITCH_COMP_TYPE_NAME = "CASE_Switch";
+	static final String SWITCH_COMP_TYPE_NAME = "Switch";
 	public static final String SWITCH_COMP_IMPL_NAME = "Switch";
 	public static final String SWITCH_INPUT_PORT_NAME = "input";
 	public static final String SWITCH_OUTPUT_PORT_NAME = "output";

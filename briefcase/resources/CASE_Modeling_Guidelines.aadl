@@ -8,7 +8,7 @@ annex resolute {**
 			-- The model must contain at least one process bound to a processor
 			error (one_process())
 			
-			-- A process must have at most one thread subcomponent
+			-- A seL4 process must have at most one thread subcomponent
 			error (one_thread())
 			
 			-- AADL modes are not currently supported by CASE tools
@@ -137,8 +137,8 @@ private
 			size(procs) > 0
 			
 		one_thread() <=
-			** "A process must have at most one thread subcomponent" **
-			let procs : {process} = {p for (p : process) | size(subcomponents(p)) > 1};
+			** "A seL4 process must have at most one thread subcomponent" **
+			let procs : {process} = {p for (p : process) | size(subcomponents(p)) > 1 and exists(pr : processor) . (is_sel4_processor(pr) and processor_bound(p, pr))};
 			lint_check_set(procs, size(procs) = 0)
 			
 		modes_ignored() <=
@@ -168,7 +168,7 @@ private
 			
 		process_periodic_protocol() <=
 			** "Processes containing periodic threads must be specified completely" **
-			forall (p : process) . lint_check(p, forall (t : subcomponents(p)) . (has_property(t, Thread_Properties::Dispatch_Protocol) and property(t, Thread_Properties::Dispatch_Protocol) = "Periodic") => has_property(p, CASE_Scheduling::Domain))
+			forall (p : process) . lint_check(p, (exists(pr : processor) . is_sel4_processor(pr) and processor_bound(p, pr)) => forall (t : subcomponents(p)) . (has_property(t, Thread_Properties::Dispatch_Protocol) and property(t, Thread_Properties::Dispatch_Protocol) = "Periodic") => has_property(p, CASE_Scheduling::Domain))
 			
 		consistent_dispatch_protocol() <=
 			** "All threads bound to a processor must have same Dispatch_Protocol" **
@@ -276,7 +276,7 @@ private
 		-- the CASE_Scheduling::Domain property value assignments must be sequential and non-repeating
 		consistent_sched_domain() <=
 			** "CASE_Scheduling::Domain property value assignments must be sequential and non-repeating" **
-			forall (p : processor) . lint_check(p, (has_property(p, CASE_Properties::OS) and property(p, CASE_Properties::OS) = "seL4") => consistent_domains(p))
+			forall (p : processor) . lint_check(p, is_sel4_processor(p) => consistent_domains(p))
 			
 		consistent_domains(p : processor) : bool =
 			let bound_processes : {process} = {proc for (proc : process) | is_bound_to(proc, p)};
@@ -301,15 +301,18 @@ private
 				
 		frame_period_property_set() <=
 			** "A bound process should have the Timing_Properties::Frame_Period property set" **
-			forall (p : processor) . lint_check(p, (has_property(p, CASE_Properties::OS) and property(p, CASE_Properties::OS) = "seL4" and (exists(proc : process) . processor_bound(proc, p))) => has_property(p, Timing_Properties::Frame_Period))
+			forall (p : processor) . lint_check(p, (is_sel4_processor(p) and (exists(proc : process) . processor_bound(proc, p))) => has_property(p, Timing_Properties::Frame_Period))
 			
 		clock_period_property_set() <=
 			** "A bound process should have the Timing_Properties::Clock_Period property set" **
-			forall (p : processor) . lint_check(p, (has_property(p, CASE_Properties::OS) and property(p, CASE_Properties::OS) = "seL4" and (exists(proc : process) . processor_bound(proc, p))) => has_property(p, Timing_Properties::Clock_Period))
+			forall (p : processor) . lint_check(p, (is_sel4_processor(p) and (exists(proc : process) . processor_bound(proc, p))) => has_property(p, Timing_Properties::Clock_Period))
 
 		thread_stack_size() <=
 			** "The maximum stack size requirements for each thread should be specified using the Memory_Properties::Stack_Size property" **
 			forall (t : thread) . lint_check(t, (exists(p : processor) . processor_bound(t, p)) => has_property(t, Memory_Properties::Stack_Size))
+			
+		is_sel4_processor(p : processor) : bool =
+			has_property(p, CASE_Properties::OS) and property(p, CASE_Properties::OS) = "seL4"
 			
 	**};
 	

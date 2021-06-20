@@ -57,7 +57,7 @@ import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
 
 public class FilterTransformHandler extends AadlHandler {
 
-	public static final String FILTER_COMP_TYPE_NAME = "CASE_Filter";
+	public static final String FILTER_COMP_TYPE_NAME = "Filter";
 	public static final String FILTER_PORT_IN_NAME = "Input";
 	public static final String FILTER_PORT_OUT_NAME = "Output";
 	public static final String FILTER_LOG_PORT_NAME = "LogMessage";
@@ -349,12 +349,12 @@ public class FilterTransformHandler extends AadlHandler {
 			if (!CasePropertyUtils.setMitigationType(filterType, MITIGATION_TYPE.FILTER)) {
 //				return;
 			}
-
-			// CASE::Component_Spec property
-			String filterPropId = filterName + "_" + connEndOut.getName();
-			if (!CasePropertyUtils.setCompSpec(filterType, filterPropId)) {
-//				return;
-			}
+//
+//			// CASE::Component_Spec property
+//			String filterPropId = filterName + "_" + connEndOut.getName();
+//			if (!CasePropertyUtils.setCompSpec(filterType, filterPropId)) {
+////				return;
+//			}
 
 			// Move filter to top of file
 //			pkgSection.getOwnedClassifiers().move(0, pkgSection.getOwnedClassifiers().size() - 1);
@@ -446,52 +446,56 @@ public class FilterTransformHandler extends AadlHandler {
 
 			// AGREE
 //			final String filterPolicyName = filterName + "_policy";
-
-			if (filterPolicy.isEmpty()) {
-				filterPolicy = "false;";
-			} else if (!filterPolicy.trim().endsWith(";")) {
-				filterPolicy = filterPolicy.trim() + ";";
-			}
-
 			final StringBuilder agreeClauses = new StringBuilder();
-			agreeClauses.append("{**" + System.lineSeparator());
+			if (!filterPolicy.isEmpty()) {
 
-			// Filter policy
-//			agreeClauses.append("property " + filterPolicyName + " = " + filterPolicy + System.lineSeparator());
+				// CASE::Component_Spec property
+				String filterPropId = filterName + "_" + connEndOut.getName();
+				if (!CasePropertyUtils.setCompSpec(filterType, filterPropId)) {
+//					return;
+				}
 
-			// Filter guarantee
-			agreeClauses.append(
-					"guarantee " + filterPropId + " \"The filter output shall be well-formed\" :"
-							+ System.lineSeparator());
+				filterPolicy = filterPolicy.trim();
 
-			if (connEndIn instanceof EventDataPort) {
-				agreeClauses.append("if event(" + connEndIn.getName() + ") and " + filterPolicy + " then"
+				agreeClauses.append("{**" + System.lineSeparator());
+
+				// Filter policy
+//				agreeClauses.append("property " + filterPolicyName + " = " + filterPolicy + System.lineSeparator());
+
+				// Filter guarantee
+				agreeClauses.append("guarantee " + filterPropId + " \"The filter output shall be well-formed\" :"
 						+ System.lineSeparator());
-				agreeClauses.append("event(" + connEndOut.getName() + ") and " + connEndOut.getName() + " = "
-						+ connEndIn.getName() + System.lineSeparator());
-				agreeClauses.append("else" + System.lineSeparator());
-				agreeClauses.append("not event(" + connEndOut.getName() + ");" + System.lineSeparator());
-			} else {
-				agreeClauses.append("if " + filterPolicy + " then" + System.lineSeparator());
-				agreeClauses.append(connEndOut.getName() + " = " + connEndIn.getName() + System.lineSeparator());
-				agreeClauses.append("else" + System.lineSeparator());
-				// User will need to put an expression after the 'else'
-				agreeClauses.append(";" + System.lineSeparator());
-			}
 
-			agreeClauses.append("**}");
+				if (connEndIn instanceof EventDataPort) {
+					agreeClauses.append("if event(" + connEndIn.getName() + ") and " + filterPolicy + " then"
+							+ System.lineSeparator());
+					agreeClauses.append("event(" + connEndOut.getName() + ") and " + connEndOut.getName() + " = "
+							+ connEndIn.getName() + System.lineSeparator());
+					agreeClauses.append("else" + System.lineSeparator());
+					agreeClauses.append("not event(" + connEndOut.getName() + ");" + System.lineSeparator());
+				} else {
+					agreeClauses.append("if " + filterPolicy + " then" + System.lineSeparator());
+					agreeClauses.append(connEndOut.getName() + " = " + connEndIn.getName() + System.lineSeparator());
+					agreeClauses.append("else" + System.lineSeparator());
+					// User will need to put an expression after the 'else'
+					agreeClauses.append(";" + System.lineSeparator());
+				}
 
-			if (isSel4Process) {
-				final DefaultAnnexSubclause annexSubclauseImpl = ComponentCreateHelper
-						.createOwnedAnnexSubclause(filterImpl);
-				annexSubclauseImpl.setName("agree");
-				annexSubclauseImpl.setSourceText(
-						"{**" + System.lineSeparator() + "lift contract;" + System.lineSeparator() + "**}");
-			} else {
-				final DefaultAnnexSubclause annexSubclauseImpl = ComponentCreateHelper
-						.createOwnedAnnexSubclause(filterType);
-				annexSubclauseImpl.setName("agree");
-				annexSubclauseImpl.setSourceText(agreeClauses.toString());
+				agreeClauses.append("**}");
+
+				if (isSel4Process) {
+					final DefaultAnnexSubclause annexSubclauseImpl = ComponentCreateHelper
+							.createOwnedAnnexSubclause(filterImpl);
+					annexSubclauseImpl.setName("agree");
+					annexSubclauseImpl.setSourceText(
+							"{**" + System.lineSeparator() + "lift contract;" + System.lineSeparator() + "**}");
+				} else {
+					final DefaultAnnexSubclause annexSubclauseImpl = ComponentCreateHelper
+							.createOwnedAnnexSubclause(filterType);
+					annexSubclauseImpl.setName("agree");
+					annexSubclauseImpl.setSourceText(agreeClauses.toString());
+				}
+
 			}
 
 			// Add thread if this is a seL4 process

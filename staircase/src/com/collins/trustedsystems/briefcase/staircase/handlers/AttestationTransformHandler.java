@@ -7,7 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.util.EcoreUtil;
@@ -63,7 +63,6 @@ import org.osate.xtext.aadl2.properties.util.TimingProperties;
 
 import com.collins.trustedsystems.briefcase.attestation.AttestationAccess;
 import com.collins.trustedsystems.briefcase.preferences.BriefcasePreferenceConstants;
-import com.collins.trustedsystems.briefcase.staircase.Activator;
 import com.collins.trustedsystems.briefcase.staircase.dialogs.AttestationTransformDialog;
 import com.collins.trustedsystems.briefcase.staircase.requirements.AddAttestationClaim;
 import com.collins.trustedsystems.briefcase.staircase.requirements.CyberRequirement;
@@ -74,7 +73,6 @@ import com.collins.trustedsystems.briefcase.staircase.utils.CaseUtils;
 import com.collins.trustedsystems.briefcase.staircase.utils.ComponentCreateHelper;
 import com.collins.trustedsystems.briefcase.staircase.utils.ModelTransformUtils;
 import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
-import com.collins.trustedsystems.briefcase.util.TraverseProject;
 import com.rockwellcollins.atc.agree.agree.AgreeContract;
 import com.rockwellcollins.atc.agree.agree.AgreeContractSubclause;
 import com.rockwellcollins.atc.agree.agree.NamedSpecStatement;
@@ -86,8 +84,8 @@ public class AttestationTransformHandler extends AadlHandler {
 //	static final String AM_RESPONSE_MSG_NAME = "CASE_AttestationResponseMsg";
 	static final String AM_REQUEST_MSG_IMPL_NAME = "CASE_AttestationRequestMsg.Impl";
 	static final String AM_RESPONSE_MSG_IMPL_NAME = "CASE_AttestationResponseMsg.Impl";
-	public static final String AM_COMP_TYPE_NAME = "CASE_AttestationManager";
-	public static final String AG_COMP_TYPE_NAME = "CASE_AttestationGate";
+	public static final String AM_COMP_TYPE_NAME = "AttestationManager";
+	public static final String AG_COMP_TYPE_NAME = "AttestationGate";
 	public static final String LOG_PORT_NAME = "LogMessage";
 	public static final String AM_PORT_ATTESTATION_REQUEST_NAME = "AttestationRequest";
 	public static final String AM_PORT_ATTESTATION_RESPONSE_NAME = "AttestationResponse";
@@ -829,14 +827,22 @@ public class AttestationTransformHandler extends AadlHandler {
 
 				final Property sourceTextProp = GetProperties.lookupPropertyDefinition(attestationManagerImpl,
 						ProgrammingProperties._NAME, ProgrammingProperties.SOURCE_TEXT);
-				final StringLiteral sourceTextLit = Aadl2Factory.eINSTANCE.createStringLiteral();
 
-				IProject project = TraverseProject.getCurrentProject();
-				String attestationImplPath = project.getLocation() + File.separator + Activator.getDefault()
-						.getPreferenceStore().getString(BriefcasePreferenceConstants.KU_IMPL_FOLDER) + File.separator;
-				// TODO: Add file name(s) to impl path
-				sourceTextLit.setValue(attestationImplPath);
+				String componentSourceFolderName = Platform.getPreferencesService().getString(
+						"com.collins.trustedsystems.briefcase", BriefcasePreferenceConstants.COMPONENT_SOURCE_FOLDER,
+						"", null);
+				String kuFolderName = Platform.getPreferencesService().getString("com.collins.trustedsystems.briefcase",
+						BriefcasePreferenceConstants.KU_IMPL_FOLDER, "", null);
+				String attestationImplPath = componentSourceFolderName + File.separator + kuFolderName + File.separator
+						+ "build" + File.separator;
+				// TODO: don't hardcode attestation impl path
+				StringLiteral sourceTextLit = Aadl2Factory.eINSTANCE.createStringLiteral();
+				sourceTextLit.setValue(attestationImplPath + "heli_am.S");
 				final List<StringLiteral> listVal = new ArrayList<>();
+				listVal.add(sourceTextLit);
+				sourceTextLit = Aadl2Factory.eINSTANCE.createStringLiteral();
+				sourceTextLit.setValue(attestationImplPath + "apps" + File.separator + "case-tool-assessment"
+						+ File.separator + "libheli_am_c.a");
 				listVal.add(sourceTextLit);
 				attestationManagerImpl.setPropertyValue(sourceTextProp, listVal);
 			}

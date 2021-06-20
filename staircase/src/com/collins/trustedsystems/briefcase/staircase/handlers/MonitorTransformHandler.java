@@ -58,7 +58,7 @@ import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
 
 public class MonitorTransformHandler extends AadlHandler {
 
-	public static final String MONITOR_COMP_TYPE_NAME = "CASE_Monitor";
+	public static final String MONITOR_COMP_TYPE_NAME = "Monitor";
 	public static final String MONITOR_OBSERVED_PORT_NAME = "Observed";
 	public static final String MONITOR_GATE_PORT_NAME = "Output";
 	public static final String MONITOR_ALERT_PORT_NAME = "Alert";
@@ -477,16 +477,16 @@ public class MonitorTransformHandler extends AadlHandler {
 //				return null;
 			}
 
-			// CASE_Properties::Component_Spec property
-			final String monitorAlertPropId = monitorName + "_" + alertPortName;
-			String monitorGatePropId = "";
-			if (observationGate) {
-				monitorGatePropId += monitorName + "_" + observationGatePortName;
-			}
-			if (!CasePropertyUtils.setCompSpec(monitorType,
-					monitorAlertPropId + (monitorGatePropId.isEmpty() ? "" : "," + monitorGatePropId))) {
-//				return null;
-			}
+//			// CASE_Properties::Component_Spec property
+//			final String monitorAlertPropId = monitorName + "_" + alertPortName;
+//			String monitorGatePropId = "";
+//			if (observationGate) {
+//				monitorGatePropId += monitorName + "_" + observationGatePortName;
+//			}
+//			if (!CasePropertyUtils.setCompSpec(monitorType,
+//					monitorAlertPropId + (monitorGatePropId.isEmpty() ? "" : "," + monitorGatePropId))) {
+////				return null;
+//			}
 
 //			// CASE_Properties::Monitor_Latched
 //			if (!CasePropertyUtils.setMonitorLatched(monitorType, latched)) {
@@ -664,80 +664,92 @@ public class MonitorTransformHandler extends AadlHandler {
 			}
 
 			// AGREE
-			if (monitorAgreeProperty.isEmpty()) {
-				monitorAgreeProperty = "false;";
-			} else if (!monitorAgreeProperty.trim().endsWith(";")) {
-				monitorAgreeProperty = monitorAgreeProperty.trim() + ";";
-			}
+			final StringBuilder agreeClauses = new StringBuilder();
+			if (!monitorAgreeProperty.isEmpty()) {
+
+				// CASE_Properties::Component_Spec property
+				final String monitorAlertPropId = monitorName + "_" + alertPortName;
+				String monitorGatePropId = "";
+				if (observationGate) {
+					monitorGatePropId += monitorName + "_" + observationGatePortName;
+				}
+				if (!CasePropertyUtils.setCompSpec(monitorType,
+						monitorAlertPropId + (monitorGatePropId.isEmpty() ? "" : "," + monitorGatePropId))) {
+//					return null;
+				}
+
+//				monitorAgreeProperty = "false";
+//			} else if (!monitorAgreeProperty.trim().endsWith(";")) {
+				monitorAgreeProperty = monitorAgreeProperty.trim();
+//			}
 
 //			final String monitorPolicyName = monitorName + "_policy";
 
-			String resetString = "";
-			if (resetPort != null) {
-				if (monResetPort instanceof EventPort || monResetPort instanceof EventDataPort) {
-					resetString = "not event(" + resetPortName + ") and ";
-				} else {
-					resetString = "not " + resetPortName + " and ";
+				String resetString = "";
+				if (resetPort != null) {
+					if (monResetPort instanceof EventPort || monResetPort instanceof EventDataPort) {
+						resetString = "not event(" + resetPortName + ") and ";
+					} else {
+						resetString = "not " + resetPortName + " and ";
+					}
 				}
-			}
 
-			final StringBuilder agreeClauses = new StringBuilder();
-			agreeClauses.append("{**" + System.lineSeparator());
+				agreeClauses.append("{**" + System.lineSeparator());
 
-			agreeClauses
-					.append("const is_latched : bool = " + (latched ? "true" : "false") + ";"
-					+ System.lineSeparator());
-//			agreeClauses
-//					.append("property " + monitorPolicyName + " = " + monitorAgreeProperty + System.lineSeparator());
+				agreeClauses.append(
+						"const is_latched : bool = " + (latched ? "true" : "false") + ";" + System.lineSeparator());
+//				agreeClauses
+//						.append("property " + monitorPolicyName + " = " + monitorAgreeProperty + System.lineSeparator());
 
-			agreeClauses.append("property alerted = (not " + monitorAgreeProperty + ") -> ((" + resetString
-					+ "is_latched and pre(alerted)) or (");
-			if (portObserved instanceof EventPort || portObserved instanceof EventDataPort) {
-				agreeClauses.append("event(" + observationPortName + ") and ");
-			}
-			agreeClauses.append("not " + monitorAgreeProperty + "));" + System.lineSeparator());
+				agreeClauses.append("property alerted = (not " + monitorAgreeProperty + ") -> ((" + resetString
+						+ "is_latched and pre(alerted)) or (");
+				if (portObserved instanceof EventPort || portObserved instanceof EventDataPort) {
+					agreeClauses.append("event(" + observationPortName + ") and ");
+				}
+				agreeClauses.append("not " + monitorAgreeProperty + "));" + System.lineSeparator());
 
-			String alertExpr = "";
-			if (monAlertPort instanceof EventPort || monAlertPort instanceof EventDataPort) {
-				alertExpr = "event(" + alertPortName + ") <=> alerted";
-			}
-			if (alertExpr.isEmpty()) {
-				alertExpr = "false";
-				agreeClauses.append("-- GUARANTEE EXPRESSION INCOMPLETE" + System.lineSeparator());
-			}
-			agreeClauses.append("guarantee " + monitorAlertPropId
-					+ " \"A violation of the monitor policy shall trigger an alert\" : " + alertExpr + ";"
-					+ System.lineSeparator());
-
-			if (observationGate) {
-				String gateExpr = "";
-				if (monGatePort instanceof EventPort || monGatePort instanceof EventDataPort) {
-					gateExpr = "if alerted then not event(" + observationGatePortName + ") else event("
-							+ observationGatePortName + ") and " + observationGatePortName + " = "
-							+ observationPortName;
-				} else {
-					gateExpr = "false";
+				String alertExpr = "";
+				if (monAlertPort instanceof EventPort || monAlertPort instanceof EventDataPort) {
+					alertExpr = "event(" + alertPortName + ") <=> alerted";
+				}
+				if (alertExpr.isEmpty()) {
+					alertExpr = "false";
 					agreeClauses.append("-- GUARANTEE EXPRESSION INCOMPLETE" + System.lineSeparator());
 				}
-				agreeClauses.append("guarantee " + monitorGatePropId
-						+ " \"A violation of the monitor policy shall prevent propagation of the observed input.\" : "
-						+ gateExpr + ";" + System.lineSeparator());
+				agreeClauses.append("guarantee " + monitorAlertPropId
+						+ " \"A violation of the monitor policy shall trigger an alert\" : " + alertExpr + ";"
+						+ System.lineSeparator());
 
-			}
+				if (observationGate) {
+					String gateExpr = "";
+					if (monGatePort instanceof EventPort || monGatePort instanceof EventDataPort) {
+						gateExpr = "if alerted then not event(" + observationGatePortName + ") else event("
+								+ observationGatePortName + ") and " + observationGatePortName + " = "
+								+ observationPortName;
+					} else {
+						gateExpr = "false";
+						agreeClauses.append("-- GUARANTEE EXPRESSION INCOMPLETE" + System.lineSeparator());
+					}
+					agreeClauses.append("guarantee " + monitorGatePropId
+							+ " \"A violation of the monitor policy shall prevent propagation of the observed input.\" : "
+							+ gateExpr + ";" + System.lineSeparator());
 
-			agreeClauses.append("**}");
+				}
 
-			if (isSel4Process) {
-				final DefaultAnnexSubclause annexSubclauseImpl = ComponentCreateHelper
-						.createOwnedAnnexSubclause(monitorImpl);
-				annexSubclauseImpl.setName("agree");
-				annexSubclauseImpl.setSourceText(
-						"{**" + System.lineSeparator() + "lift contract;" + System.lineSeparator() + "**}");
-			} else {
-				final DefaultAnnexSubclause annexSubclauseImpl = ComponentCreateHelper
-						.createOwnedAnnexSubclause(monitorType);
-				annexSubclauseImpl.setName("agree");
-				annexSubclauseImpl.setSourceText(agreeClauses.toString());
+				agreeClauses.append("**}");
+
+				if (isSel4Process) {
+					final DefaultAnnexSubclause annexSubclauseImpl = ComponentCreateHelper
+							.createOwnedAnnexSubclause(monitorImpl);
+					annexSubclauseImpl.setName("agree");
+					annexSubclauseImpl.setSourceText(
+							"{**" + System.lineSeparator() + "lift contract;" + System.lineSeparator() + "**}");
+				} else {
+					final DefaultAnnexSubclause annexSubclauseImpl = ComponentCreateHelper
+							.createOwnedAnnexSubclause(monitorType);
+					annexSubclauseImpl.setName("agree");
+					annexSubclauseImpl.setSourceText(agreeClauses.toString());
+				}
 			}
 
 			// Add thread if this is a seL4 process

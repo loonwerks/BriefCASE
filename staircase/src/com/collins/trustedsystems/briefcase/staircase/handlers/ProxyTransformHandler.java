@@ -51,8 +51,8 @@ import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
 
 public class ProxyTransformHandler extends AadlHandler {
 
-	public static final String HIGH_PROXY_COMP_TYPE_NAME = "CASE_HighProxy";
-	public static final String LOW_PROXY_COMP_TYPE_NAME = "CASE_LowProxy";
+	public static final String HIGH_PROXY_COMP_TYPE_NAME = "HighProxy";
+	public static final String LOW_PROXY_COMP_TYPE_NAME = "LowProxy";
 	public static final String HIGH_PROXY_SUBCOMP_NAME = "HighProxy";
 	public static final String LOW_PROXY_SUBCOMP_NAME = "LowProxy";
 //	public static final String PROXIED_COMP_TYPE_NAME = "CASE_Software";
