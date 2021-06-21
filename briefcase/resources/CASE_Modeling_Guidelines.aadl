@@ -122,6 +122,12 @@ annex resolute {**
 			-- The maximum stack size requirements for each thread should be specified using the Memory_Properties::Stack_Size property.
 			warning (thread_stack_size())
 			
+			-- Components that are bound to virtual processors that are bound to seL4 processors should have the HAMR::Component_Type => VIRTUAL_MACHINE property association
+			error (vm_property())
+			
+			-- seL4 platform
+--			error (seL4_platform())
+			
 		}
 
 	**};
@@ -313,6 +319,16 @@ private
 			
 		is_sel4_processor(p : processor) : bool =
 			has_property(p, CASE_Properties::OS) and property(p, CASE_Properties::OS) = "seL4"
+			
+		vm_property() <=
+			** "Components that are bound to virtual processors that are bound to seL4 processors should have the HAMR::Component_Type => VIRTUAL_MACHINE property association" **
+			let sel4_processors : {component} = {p for (p : processor) | is_sel4_processor(p)};
+			let vps : {component} = {c for (c : virtual_processor) | exists(p : sel4_processors) . processor_bound(c, p)};
+			forall (t : thread)(v : vps) . lint_check(t, processor_bound(t, v) => (has_property(t, HAMR::Component_Type) and property(t, HAMR::Component_Type) = "VIRTUAL_MACHINE"))
+		
+		seL4_platform() <=
+			** "systems containing seL4 processors should have the HAMR::Platform => (seL4) property association defined" **
+			forall (s : system)(p : processor) . lint_check(s, (is_sel4_processor(p) and member(p, s)) => (has_property(s, HAMR::Platform) and member(property(s, HAMR::Platform), "seL4")))
 			
 	**};
 	

@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 
 import org.eclipse.emf.common.command.Command;
@@ -75,9 +76,6 @@ import org.osate.xtext.aadl2.properties.util.GetProperties;
 import org.osate.xtext.aadl2.properties.util.ThreadProperties;
 
 import com.collins.trustedsystems.briefcase.staircase.dialogs.Sel4TransformDialog;
-import com.collins.trustedsystems.briefcase.staircase.requirements.CyberRequirement;
-import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsManager;
-import com.collins.trustedsystems.briefcase.staircase.requirements.Sel4TransformClaim;
 import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
 import com.collins.trustedsystems.briefcase.staircase.utils.ComponentCreateHelper;
 import com.collins.trustedsystems.briefcase.staircase.utils.ModelTransformUtils;
@@ -117,23 +115,55 @@ public class Sel4TransformHandler extends AadlHandler {
 		final Sel4TransformDialog wizard = new Sel4TransformDialog(
 				PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell());
 
-		wizard.create(selectedSubcomponent);
-		if (wizard.open() == Window.OK) {
-			sel4Subcomponent = wizard.getSelectedSubcomponent();
-			sel4Requirement = wizard.getRequirement();
+		if (selectedSubcomponent.getComponentType().getCategory() != ComponentCategory.SYSTEM
+				|| !isSoftwareSubcomponent(selectedSubcomponent)
+				|| selectedSubcomponent.getComponentImplementation().getOwnedSubcomponents().size() <= 1) {
+			sel4Subcomponent = selectedSubcomponent.getName();
 		} else {
-			return;
+
+			wizard.create(selectedSubcomponent);
+			if (wizard.open() == Window.OK) {
+				sel4Subcomponent = wizard.getSelectedSubcomponent();
+				sel4Requirement = wizard.getRequirement();
+			} else {
+				return;
+			}
 		}
 
-		final Subcomponent sub = getSubcomponentFromPath(si, sel4Subcomponent);
-		if (sub == null) {
+//		SystemInstance systemInstance = null;
+//		try {
+//			systemInstance = InstantiateModel.buildInstanceModelFile(si);
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
+//		if (systemInstance == null) {
+//			Dialog.showError("seL4 Transform", "Unable to instantiate model.");
+//			return;
+//		}
+
+//		final Subcomponent sub = getSubcomponentFromPath(si, sel4Subcomponent);
+		Subcomponent sub = null;
+		final List<Subcomponent> subs = getSubcomponentsFromPath(si, sel4Subcomponent);
+//		if (sub == null) {
+		if (subs.isEmpty()) {
 			Dialog.showError("seL4 Transform", "Selected subcomponent " + sel4Subcomponent + " cannot be found.");
 			return;
+		} else {
+			sub = subs.get(subs.size() - 1);
 		}
 
 		// Check that selected subcomponent is bound to a processor
 		// (could be specified on subcomponent or containing component impl)
-		final ContainmentPathElement processor = getProcessor(sub);
+//		final ContainmentPathElement processor = getProcessor(sub);
+		ContainmentPathElement proc = null;
+		final ListIterator<Subcomponent> subIterator = subs.listIterator(subs.size());
+		while (subIterator.hasPrevious()) {
+			proc = getProcessor(subIterator.previous());
+			if (proc != null) {
+				break;
+			}
+		}
+		final ContainmentPathElement processor = proc;
 		if (processor == null) {
 			Dialog.showError("seL4 Transform", "Selected subcomponent " + sel4Subcomponent
 					+ " must already be bound to a processor in order to perform the seL4 transform.");
@@ -181,19 +211,18 @@ public class Sel4TransformHandler extends AadlHandler {
 			transformSystem((SystemSubcomponent) sub);
 		}
 
+//		// Add sel4_transform claims to resolute prove statement, if applicable
+//		if (!sel4Requirement.isEmpty()) {
+//			final CyberRequirement req = RequirementsManager.getInstance().getRequirement(sel4Requirement);
+//			Sel4TransformClaim claim = new Sel4TransformClaim(req.getContext(),
+//					si, sel4Subcomponent);
+//			RequirementsManager.getInstance().modifyRequirement(sel4Requirement, claim);
+//		}
 
-		// Add sel4_transform claims to resolute prove statement, if applicable
-		if (!sel4Requirement.isEmpty()) {
-			final CyberRequirement req = RequirementsManager.getInstance().getRequirement(sel4Requirement);
-			Sel4TransformClaim claim = new Sel4TransformClaim(req.getContext(),
-					si, sel4Subcomponent);
-			RequirementsManager.getInstance().modifyRequirement(sel4Requirement, claim);
-		}
-
-		BriefcaseNotifier.notify("StairCASE - seL4 Transform", "Model transformed for seL4 build.");
+		BriefcaseNotifier.notify("BriefCASE - seL4 Transform", "Model transformed for seL4 build.");
 
 		// Format and save
-		format(true);
+//		format(true);
 
 //		saveChanges(false);
 
@@ -1227,14 +1256,50 @@ public class Sel4TransformHandler extends AadlHandler {
 	}
 
 
-	private Subcomponent getSubcomponentFromPath(ComponentImplementation rootImpl, String qualifiedName) {
+//	private Subcomponent getSubcomponentFromPath(ComponentImplementation rootImpl, String qualifiedName) {
+//
+//		final String[] subs = qualifiedName.split("\\.");
+//		Subcomponent currentSub = null;
+//
+//		for (Subcomponent s : rootImpl.getOwnedSubcomponents()) {
+//			if (s.getName().equalsIgnoreCase(subs[0])) {
+//				currentSub = s;
+//				break;
+//			}
+//		}
+//		if (currentSub == null) {
+//			return null;
+//		}
+//
+//		for (int i = 1; i < subs.length; ++i) {
+//
+//			boolean subFound = false;
+//			for (Subcomponent sub : currentSub.getComponentImplementation().getOwnedSubcomponents()) {
+//
+//				if (sub.getName().equalsIgnoreCase(subs[i])) {
+//					currentSub = sub;
+//					subFound = true;
+//					break;
+//				}
+//			}
+//			if (!subFound) {
+//				return null;
+//			}
+//
+//		}
+//
+//		return currentSub;
+//	}
 
+	private List<Subcomponent> getSubcomponentsFromPath(ComponentImplementation rootImpl, String qualifiedName) {
+		final List<Subcomponent> subcomponents = new ArrayList<>();
 		final String[] subs = qualifiedName.split("\\.");
 		Subcomponent currentSub = null;
 
 		for (Subcomponent s : rootImpl.getOwnedSubcomponents()) {
 			if (s.getName().equalsIgnoreCase(subs[0])) {
 				currentSub = s;
+				subcomponents.add(s);
 				break;
 			}
 		}
@@ -1249,6 +1314,7 @@ public class Sel4TransformHandler extends AadlHandler {
 
 				if (sub.getName().equalsIgnoreCase(subs[i])) {
 					currentSub = sub;
+					subcomponents.add(sub);
 					subFound = true;
 					break;
 				}
@@ -1259,7 +1325,7 @@ public class Sel4TransformHandler extends AadlHandler {
 
 		}
 
-		return currentSub;
+		return subcomponents;
 	}
 
 }

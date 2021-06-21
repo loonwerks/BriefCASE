@@ -193,7 +193,7 @@ public class MultiPortSelector {
 	}
 
 	private TableViewerColumn createTableViewerColumn(String title, int bound) {
-		final TableViewerColumn viewerColumn = new TableViewerColumn(tblPorts, SWT.NONE);
+		final TableViewerColumn viewerColumn = new TableViewerColumn(tblPorts, title.isEmpty() ? SWT.CENTER : SWT.NONE);
 		final TableColumn column = viewerColumn.getColumn();
 		column.setText(title);
 		column.setWidth(bound);

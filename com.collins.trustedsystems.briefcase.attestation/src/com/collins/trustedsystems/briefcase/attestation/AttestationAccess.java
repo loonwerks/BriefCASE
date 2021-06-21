@@ -38,16 +38,20 @@ import org.eclipse.emf.common.util.URI;
 import org.osgi.framework.Bundle;
 
 import com.collins.trustedsystems.briefcase.preferences.BriefcasePreferenceConstants;
+import com.collins.trustedsystems.briefcase.util.Filesystem;
 import com.collins.trustedsystems.briefcase.util.TraverseProject;
 
 public class AttestationAccess {
 	public static boolean createSourceDirectory() {
-		IProject project = TraverseProject.getCurrentProject();
-		String componentSourceFolderName = Platform.getPreferencesService().getString(
+		final IProject project = TraverseProject.getCurrentProject();
+		final String componentSourceFolderName = Platform.getPreferencesService().getString(
 				"com.collins.trustedsystems.briefcase", BriefcasePreferenceConstants.COMPONENT_SOURCE_FOLDER, "", null);
-		String kuImplFolderName = Platform.getPreferencesService().getString("com.collins.trustedsystems.briefcase",
+		final String kuImplFolderName = Platform.getPreferencesService().getString(
+				"com.collins.trustedsystems.briefcase",
 				BriefcasePreferenceConstants.KU_IMPL_FOLDER, "", null);
-		URI uri = URI.createURI(project.getLocation().toString()).appendSegment(componentSourceFolderName)
+		URI uri = URI.createPlatformResourceURI(project.getFullPath().toString(), true);
+		Filesystem.createFolder(uri, new String[] { componentSourceFolderName, kuImplFolderName });
+		uri = URI.createURI(project.getLocation().toString()).appendSegment(componentSourceFolderName)
 				.appendSegment(kuImplFolderName);
 		File destinationDirectory = new File(uri.toString());
 

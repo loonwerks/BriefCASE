@@ -23,27 +23,10 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.xtext.EcoreUtil2;
 import org.osate.aadl2.Classifier;
 import org.osate.aadl2.ComponentImplementation;
-import org.osate.aadl2.ComponentType;
-import org.osate.aadl2.DataPort;
-import org.osate.aadl2.DirectedFeature;
-import org.osate.aadl2.EnumerationLiteral;
-import org.osate.aadl2.EventDataPort;
-import org.osate.aadl2.EventPort;
-import org.osate.aadl2.Feature;
-import org.osate.aadl2.IntegerLiteral;
-import org.osate.aadl2.NamedValue;
 import org.osate.aadl2.PortCategory;
-import org.osate.aadl2.ProcessImplementation;
-import org.osate.aadl2.ProcessType;
-import org.osate.aadl2.Property;
-import org.osate.aadl2.PropertyExpression;
-import org.osate.aadl2.Subcomponent;
 import org.osate.aadl2.SystemImplementation;
 import org.osate.aadl2.modelsupport.util.AadlUtil;
 import org.osate.ui.dialogs.Dialog;
-import org.osate.xtext.aadl2.properties.util.GetProperties;
-import org.osate.xtext.aadl2.properties.util.ThreadProperties;
-import org.osate.xtext.aadl2.properties.util.TimingProperties;
 
 import com.collins.trustedsystems.briefcase.staircase.handlers.FilterTransformHandler;
 import com.collins.trustedsystems.briefcase.staircase.requirements.CyberRequirement;
@@ -58,7 +41,7 @@ import com.rockwellcollins.atc.resolute.resolute.FunctionDefinition;
 public class FilterTransformDialog extends TitleAreaDialog {
 
 	private ComponentImplementation context = null;
-	private Subcomponent compoundFilter = null;
+//	private Subcomponent compoundFilter = null;
 	private Text txtFilterComponentName;
 	private Text txtFilterSubcomponentName;
 	private Button btnCreateThread = null;
@@ -184,13 +167,13 @@ public class FilterTransformDialog extends TitleAreaDialog {
 		dataInfoField.horizontalAlignment = SWT.FILL;
 		txtFilterComponentName = new Text(container, SWT.BORDER);
 		txtFilterComponentName.setLayoutData(dataInfoField);
-		if (compoundFilter == null) {
+//		if (compoundFilter == null) {
 			txtFilterComponentName.setText(ModelTransformUtils.getUniqueName(FilterTransformHandler.FILTER_COMP_TYPE_NAME,
 					true, AadlUtil.getContainingPackageSection(context).getOwnedClassifiers()));
-		} else {
-			txtFilterComponentName.setText(compoundFilter.getComponentType().getName());
-			txtFilterComponentName.setEnabled(false);
-		}
+//		} else {
+//			txtFilterComponentName.setText(compoundFilter.getComponentType().getName());
+//			txtFilterComponentName.setEnabled(false);
+//		}
 	}
 
 	/**
@@ -206,13 +189,13 @@ public class FilterTransformDialog extends TitleAreaDialog {
 		dataInfoField.horizontalAlignment = SWT.FILL;
 		txtFilterSubcomponentName = new Text(container, SWT.BORDER);
 		txtFilterSubcomponentName.setLayoutData(dataInfoField);
-		if (compoundFilter == null) {
+//		if (compoundFilter == null) {
 			txtFilterSubcomponentName.setText(ModelTransformUtils.getUniqueName(FilterTransformHandler.FILTER_SUBCOMP_NAME,
 					true, context.getOwnedSubcomponents()));
-		} else {
-			txtFilterSubcomponentName.setText(compoundFilter.getName());
-			txtFilterSubcomponentName.setEnabled(false);
-		}
+//		} else {
+//			txtFilterSubcomponentName.setText(compoundFilter.getName());
+//			txtFilterSubcomponentName.setEnabled(false);
+//		}
 	}
 
 
@@ -256,10 +239,10 @@ public class FilterTransformDialog extends TitleAreaDialog {
 			}
 		});
 
-		if (compoundFilter != null) {
-			btnCreateThread
-					.setSelection(compoundFilter.getComponentImplementation().getOwnedSubcomponents().size() > 0);
-		}
+//		if (compoundFilter != null) {
+//			btnCreateThread
+//					.setSelection(compoundFilter.getComponentImplementation().getOwnedSubcomponents().size() > 0);
+//		}
 	}
 
 	/**
@@ -317,52 +300,52 @@ public class FilterTransformDialog extends TitleAreaDialog {
 		txtPeriod.setLayoutData(dataInfoField);
 		txtPeriod.setEnabled(false);
 
-		if (compoundFilter != null) {
-			Subcomponent filterSubcomponent = compoundFilter;
-			if (compoundFilter.getComponentType() instanceof ProcessType
-					&& compoundFilter.getComponentType().getName().endsWith("_seL4")) {
-				filterSubcomponent = ((ProcessImplementation) filterSubcomponent.getComponentImplementation())
-						.getOwnedThreadSubcomponents().get(0);
-			}
-			Property prop = GetProperties.lookupPropertyDefinition(filterSubcomponent, ThreadProperties._NAME,
-					ThreadProperties.DISPATCH_PROTOCOL);
-			final List<? extends PropertyExpression> protocol = filterSubcomponent.getPropertyValueList(prop);
-			if (!protocol.isEmpty()) {
-				final NamedValue nv = (NamedValue) protocol.get(0);
-				final EnumerationLiteral el = (EnumerationLiteral) nv.getNamedValue();
-				final String dispatchProtocol = el.getName();
-				if (dispatchProtocol.equalsIgnoreCase("Periodic")) {
-					btnNoProtocol.setSelection(false);
-					btnPeriodic.setSelection(true);
-				} else if (dispatchProtocol.equalsIgnoreCase("Sporadic")) {
-					btnNoProtocol.setSelection(false);
-					btnSporadic.setSelection(true);
-				} else {
-					btnNoProtocol.setSelection(true);
-				}
-			}
-
-			btnNoProtocol.setEnabled(false);
-			btnPeriodic.setEnabled(false);
-			btnSporadic.setEnabled(false);
-
-			prop = GetProperties.lookupPropertyDefinition(filterSubcomponent, TimingProperties._NAME,
-					TimingProperties.PERIOD);
-			final List<? extends PropertyExpression> periodVals = filterSubcomponent.getPropertyValueList(prop);
-			if (!periodVals.isEmpty()) {
-				String period = "";
-				if (periodVals.get(0) instanceof IntegerLiteral) {
-					final IntegerLiteral periodVal = (IntegerLiteral) periodVals.get(0);
-					period = Long.toString(periodVal.getValue());
-					if (periodVal.getUnit() != null) {
-						period += periodVal.getUnit().getName();
-					}
-				}
-				txtPeriod.setText(period);
-			}
-			lblPeriodField.setEnabled(false);
-			txtPeriod.setEnabled(false);
-		}
+//		if (compoundFilter != null) {
+//			Subcomponent filterSubcomponent = compoundFilter;
+//			if (compoundFilter.getComponentType() instanceof ProcessType
+//					&& compoundFilter.getComponentType().getName().endsWith("_seL4")) {
+//				filterSubcomponent = ((ProcessImplementation) filterSubcomponent.getComponentImplementation())
+//						.getOwnedThreadSubcomponents().get(0);
+//			}
+//			Property prop = GetProperties.lookupPropertyDefinition(filterSubcomponent, ThreadProperties._NAME,
+//					ThreadProperties.DISPATCH_PROTOCOL);
+//			final List<? extends PropertyExpression> protocol = filterSubcomponent.getPropertyValueList(prop);
+//			if (!protocol.isEmpty()) {
+//				final NamedValue nv = (NamedValue) protocol.get(0);
+//				final EnumerationLiteral el = (EnumerationLiteral) nv.getNamedValue();
+//				final String dispatchProtocol = el.getName();
+//				if (dispatchProtocol.equalsIgnoreCase("Periodic")) {
+//					btnNoProtocol.setSelection(false);
+//					btnPeriodic.setSelection(true);
+//				} else if (dispatchProtocol.equalsIgnoreCase("Sporadic")) {
+//					btnNoProtocol.setSelection(false);
+//					btnSporadic.setSelection(true);
+//				} else {
+//					btnNoProtocol.setSelection(true);
+//				}
+//			}
+//
+//			btnNoProtocol.setEnabled(false);
+//			btnPeriodic.setEnabled(false);
+//			btnSporadic.setEnabled(false);
+//
+//			prop = GetProperties.lookupPropertyDefinition(filterSubcomponent, TimingProperties._NAME,
+//					TimingProperties.PERIOD);
+//			final List<? extends PropertyExpression> periodVals = filterSubcomponent.getPropertyValueList(prop);
+//			if (!periodVals.isEmpty()) {
+//				String period = "";
+//				if (periodVals.get(0) instanceof IntegerLiteral) {
+//					final IntegerLiteral periodVal = (IntegerLiteral) periodVals.get(0);
+//					period = Long.toString(periodVal.getValue());
+//					if (periodVal.getUnit() != null) {
+//						period += periodVal.getUnit().getName();
+//					}
+//				}
+//				txtPeriod.setText(period);
+//			}
+//			lblPeriodField.setEnabled(false);
+//			txtPeriod.setEnabled(false);
+//		}
 
 		btnDispatchProtocol.add(btnNoProtocol);
 		btnDispatchProtocol.add(btnPeriodic);
@@ -399,25 +382,25 @@ public class FilterTransformDialog extends TitleAreaDialog {
 		txtOutputPortName = new Text(portNames, SWT.BORDER);
 		txtOutputPortName.setLayoutData(dataInfoField);
 
-		if (compoundFilter == null) {
+//		if (compoundFilter == null) {
 			txtInputPortName.setText(FilterTransformHandler.FILTER_PORT_IN_NAME);
 			txtOutputPortName.setText(FilterTransformHandler.FILTER_PORT_OUT_NAME);
-		} else {
-			for (Feature f : compoundFilter.getComponentType().getOwnedFeatures()) {
-				if (f instanceof DirectedFeature) {
-					DirectedFeature df = (DirectedFeature) f;
-					if (df.isIn()) {
-						txtInputPortName.setText(df.getName());
-					} else if (df.isOut()) {
-						txtOutputPortName.setText(df.getName());
-					}
-				}
-			}
-			lblInputPortName.setEnabled(false);
-			lblOutputPortName.setEnabled(false);
-			txtInputPortName.setEnabled(false);
-			txtOutputPortName.setEnabled(false);
-		}
+//		} else {
+//			for (Feature f : compoundFilter.getComponentType().getOwnedFeatures()) {
+//				if (f instanceof DirectedFeature) {
+//					DirectedFeature df = (DirectedFeature) f;
+//					if (df.isIn()) {
+//						txtInputPortName.setText(df.getName());
+//					} else if (df.isOut()) {
+//						txtOutputPortName.setText(df.getName());
+//					}
+//				}
+//			}
+//			lblInputPortName.setEnabled(false);
+//			lblOutputPortName.setEnabled(false);
+//			txtInputPortName.setEnabled(false);
+//			txtOutputPortName.setEnabled(false);
+//		}
 
 	}
 
@@ -454,26 +437,26 @@ public class FilterTransformDialog extends TitleAreaDialog {
 		btnEventDataLogPort.setText("Event Data");
 		btnEventDataLogPort.setSelection(false);
 
-		if (compoundFilter != null) {
-			final ComponentType ct = compoundFilter.getComponentType();
-			for (Feature f : ct.getOwnedFeatures()) {
-				if (f.getName().equalsIgnoreCase(FilterTransformHandler.FILTER_LOG_PORT_NAME)) {
-					btnNoLogPort.setSelection(false);
-					if (f instanceof DataPort) {
-						btnDataLogPort.setSelection(true);
-					} else if (f instanceof EventPort) {
-						btnEventLogPort.setSelection(true);
-					} else if (f instanceof EventDataPort) {
-						btnEventDataLogPort.setSelection(true);
-					}
-					break;
-				}
-			}
-			btnDataLogPort.setEnabled(false);
-			btnEventLogPort.setEnabled(false);
-			btnEventDataLogPort.setEnabled(false);
-			btnNoLogPort.setEnabled(false);
-		}
+//		if (compoundFilter != null) {
+//			final ComponentType ct = compoundFilter.getComponentType();
+//			for (Feature f : ct.getOwnedFeatures()) {
+//				if (f.getName().equalsIgnoreCase(FilterTransformHandler.FILTER_LOG_PORT_NAME)) {
+//					btnNoLogPort.setSelection(false);
+//					if (f instanceof DataPort) {
+//						btnDataLogPort.setSelection(true);
+//					} else if (f instanceof EventPort) {
+//						btnEventLogPort.setSelection(true);
+//					} else if (f instanceof EventDataPort) {
+//						btnEventDataLogPort.setSelection(true);
+//					}
+//					break;
+//				}
+//			}
+//			btnDataLogPort.setEnabled(false);
+//			btnEventLogPort.setEnabled(false);
+//			btnEventDataLogPort.setEnabled(false);
+//			btnNoLogPort.setEnabled(false);
+//		}
 
 		btnLogPortType.add(btnDataLogPort);
 		btnLogPortType.add(btnEventLogPort);
@@ -531,7 +514,9 @@ public class FilterTransformDialog extends TitleAreaDialog {
 			Dialog.showError("Filter Transform", "Filter component name " + txtFilterComponentName.getText()
 					+ " contains invalid characters. Only 'A..Z', 'a..z', '0..9', and '_' are permitted");
 			return false;
-		} else if (compoundFilter == null && !txtFilterComponentName.getText().isEmpty()
+//		} else if (compoundFilter == null && !txtFilterComponentName.getText().isEmpty()
+//				&& AadlUtil.findNamedElementInList(componentsInPackage, txtFilterComponentName.getText()) != null) {
+		} else if (!txtFilterComponentName.getText().isEmpty()
 				&& AadlUtil.findNamedElementInList(componentsInPackage, txtFilterComponentName.getText()) != null) {
 			Dialog.showError("Filter Transform", "Component " + txtFilterComponentName.getText()
 					+ " already exists in model. Use the suggested name or enter a new one.");
@@ -549,7 +534,10 @@ public class FilterTransformDialog extends TitleAreaDialog {
 					"Filter subcomponent instance name " + txtFilterSubcomponentName.getText()
 					+ " contains invalid characters. Only 'A..Z', 'a..z', '0..9', and '_' are permitted");
 			return false;
-		} else if (compoundFilter == null && !txtFilterSubcomponentName.getText().isEmpty()
+//		} else if (compoundFilter == null && !txtFilterSubcomponentName.getText().isEmpty()
+//				&& AadlUtil.findNamedElementInList(context.getAllSubcomponents(),
+//				txtFilterSubcomponentName.getText()) != null) {
+		} else if (!txtFilterSubcomponentName.getText().isEmpty()
 				&& AadlUtil.findNamedElementInList(context.getAllSubcomponents(),
 				txtFilterSubcomponentName.getText()) != null) {
 			Dialog.showError("Filter Transform", "Subcomponent " + txtFilterSubcomponentName.getText()
@@ -681,8 +669,8 @@ public class FilterTransformDialog extends TitleAreaDialog {
 		return filterRequirement;
 	}
 
-	public void createCompoundFilter(Subcomponent comp) {
-		this.compoundFilter = comp;
-	}
+//	public void createCompoundFilter(Subcomponent comp) {
+//		this.compoundFilter = comp;
+//	}
 
 }

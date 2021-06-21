@@ -4,7 +4,6 @@ import java.util.Iterator;
 
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
-import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.jface.window.Window;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.xtext.ui.editor.XtextEditor;
@@ -105,68 +104,45 @@ public class FilterTransformHandler extends AadlHandler {
 			return;
 		}
 
-//		// Check that a filter isn't being added to a thread in a seL4 process
-//		if (subcomponent.getContainingComponentImpl() instanceof ProcessImplementation
-//				&& subcomponent.getContainingComponentImpl().getTypeName().endsWith("_seL4")) {
-//			Dialog.showError("Filter Transform", "An seL4 process cannot contain multiple components.");
-//			return;
-//		}
-
-//		isSel4Process = subcomponent.getComponentImplementation() instanceof ProcessImplementation
-//				&& subcomponent.getContainingComponentImpl().getTypeName().endsWith("_seL4");
-
-		boolean createCompoundFilter = false;
-		Connection filterOutConn = null;
-		if (CasePropertyUtils.hasMitigationType(subcomponent.getClassifier(), MITIGATION_TYPE.FILTER)) {
-			if (Dialog.askQuestion("Filter Transform",
-					"A CASE Filter cannot be inserted next to another CASE Filter.  Would you like to add a new filter specification to the existing filter instead?")) {
-
-				createCompoundFilter = true;
-				// Get filter outgoing connection
-				final ComponentImplementation ci = subcomponent.getContainingComponentImpl();
-				for (Connection conn : ci.getOwnedConnections()) {
-					final Subcomponent src = (Subcomponent) conn.getSource().getContext();
-					if (src != null && src.getName().equalsIgnoreCase(subcomponent.getName())) {
-						filterOutConn = conn;
-						break;
-					}
-				}
-
-				if (filterOutConn == null) {
-					Dialog.showError("Filter Transform",
-							"Unable to find the outgoing connection of the existing CASE Filter.");
-					return;
-				}
-
-			} else {
-				return;
-			}
-		} else {
-
-			subcomponent = (Subcomponent) selectedConnection.getSource().getContext();
-			if (subcomponent != null) {
-				if (CasePropertyUtils.hasMitigationType(subcomponent.getClassifier(), MITIGATION_TYPE.FILTER)) {
-					if (Dialog.askQuestion("Filter Transform",
-							"A CASE Filter cannot be inserted next to another CASE Filter.  Would you like to add a new filter specification to the existing filter instead?")) {
-						createCompoundFilter = true;
-						filterOutConn = selectedConnection;
-					} else {
-						return;
-					}
-				}
-			}
-		}
-//		if (createCompoundFilter && isSel4Process) {
-//			// Make sure seL4 process contains a filter thread
-//			ProcessImplementation pi = (ProcessImplementation) subcomponent.getComponentImplementation();
-//			if (pi.getOwnedThreadSubcomponents().size() != 1) {
-//				Dialog.showError("Filter Transform", "seL4 filter does not contain a single thread.");
+//		boolean createCompoundFilter = false;
+//		Connection filterOutConn = null;
+//		if (CasePropertyUtils.hasMitigationType(subcomponent.getClassifier(), MITIGATION_TYPE.FILTER)) {
+//			if (Dialog.askQuestion("Filter Transform",
+//					"A CASE Filter cannot be inserted next to another CASE Filter.  Would you like to add a new filter specification to the existing filter instead?")) {
+//
+//				createCompoundFilter = true;
+//				// Get filter outgoing connection
+//				final ComponentImplementation ci = subcomponent.getContainingComponentImpl();
+//				for (Connection conn : ci.getOwnedConnections()) {
+//					final Subcomponent src = (Subcomponent) conn.getSource().getContext();
+//					if (src != null && src.getName().equalsIgnoreCase(subcomponent.getName())) {
+//						filterOutConn = conn;
+//						break;
+//					}
+//				}
+//
+//				if (filterOutConn == null) {
+//					Dialog.showError("Filter Transform",
+//							"Unable to find the outgoing connection of the existing CASE Filter.");
+//					return;
+//				}
+//
+//			} else {
 //				return;
 //			}
-//			if (!CasePropertyUtils.hasMitigationType(pi.getOwnedThreadSubcomponents().get(0).getClassifier(),
-//					MITIGATION_TYPE.FILTER)) {
-//				Dialog.showError("Filter Transform", "seL4 process does not contain a filter thread.");
-//				return;
+//		} else {
+//
+//			subcomponent = (Subcomponent) selectedConnection.getSource().getContext();
+//			if (subcomponent != null) {
+//				if (CasePropertyUtils.hasMitigationType(subcomponent.getClassifier(), MITIGATION_TYPE.FILTER)) {
+//					if (Dialog.askQuestion("Filter Transform",
+//							"A CASE Filter cannot be inserted next to another CASE Filter.  Would you like to add a new filter specification to the existing filter instead?")) {
+//						createCompoundFilter = true;
+//						filterOutConn = selectedConnection;
+//					} else {
+//						return;
+//					}
+//				}
 //			}
 //		}
 
@@ -174,9 +150,9 @@ public class FilterTransformHandler extends AadlHandler {
 		final FilterTransformDialog wizard = new FilterTransformDialog(
 				PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell());
 
-		if (createCompoundFilter) {
-			wizard.createCompoundFilter(subcomponent);
-		}
+//		if (createCompoundFilter) {
+//			wizard.createCompoundFilter(subcomponent);
+//		}
 		wizard.create(selectedConnection.getContainingComponentImpl());
 		if (wizard.open() == Window.OK) {
 			filterComponentName = wizard.getFilterComponentName();
@@ -206,13 +182,13 @@ public class FilterTransformHandler extends AadlHandler {
 		}
 
 		// Insert the filter component
-		if (createCompoundFilter) {
-			addFilterSpec(EcoreUtil.getURI(subcomponent), EcoreUtil.getURI(filterOutConn));
-			BriefcaseNotifier.notify("StairCASE - Filter Transform", "New requirement associated with Filter.");
-		} else {
+//		if (createCompoundFilter) {
+//			addFilterSpec(EcoreUtil.getURI(subcomponent), EcoreUtil.getURI(filterOutConn));
+//			BriefcaseNotifier.notify("StairCASE - Filter Transform", "New requirement associated with Filter.");
+//		} else {
 			insertFilterComponent(uri);
 			BriefcaseNotifier.notify("StairCASE - Filter Transform", "Filter added to model.");
-		}
+//		}
 
 		// Format and save
 		format(true);
