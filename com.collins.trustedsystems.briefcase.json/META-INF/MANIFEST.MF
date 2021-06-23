@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Automatic-Module-Name: com.collins.trustedsystems.briefcase.json
 Bundle-ManifestVersion: 2
 Bundle-Name: com.collins.trustedsystems.briefcase.json
-Bundle-Version: 0.5.0
+Bundle-Version: 0.5.1.qualifier
 Bundle-SymbolicName: com.collins.trustedsystems.briefcase.json;singleton:=true
 Bundle-ActivationPolicy: lazy
 Require-Bundle: org.eclipse.xtext,
