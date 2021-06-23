@@ -1,3 +1,0 @@
-repository='https://github.com/project-everest/hacl-star/'
-module=''
-tag=''

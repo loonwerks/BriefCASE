@@ -1,1 +1,0 @@
-This code was primarily written by Santiago Zanella-Beguelin (MSR).
