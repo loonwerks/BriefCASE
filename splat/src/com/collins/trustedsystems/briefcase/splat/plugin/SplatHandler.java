@@ -16,8 +16,10 @@ import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.emf.common.util.URI;
@@ -128,7 +130,7 @@ public class SplatHandler extends AbstractHandler {
 
 			// acquiring user preferences and setting them up accordingly for the exec command
 //			if (isLinuxrPlatformSelected) {
-//				cmdLineArgs.add(splatPath);
+			cmdLineArgs.add(splatPath);
 //			}
 //			String assuranceLevel = Activator.getDefault().getPreferenceStore()
 //					.getString(SplatPreferenceConstants.ASSURANCE_LEVEL);
@@ -340,6 +342,9 @@ public class SplatHandler extends AbstractHandler {
 			int exitVal = ClientProcess.waitFor();
 			if (exitVal == 0) {
 
+				// refresh project directory
+				project.refreshLocal(IResource.DEPTH_INFINITE, new NullProgressMonitor());
+
 				// Insert the location of the source code into the filter component implementations in the model
 				insertSourceCodeLocation(xtextEditor);
 
@@ -360,7 +365,7 @@ public class SplatHandler extends AbstractHandler {
 			return null;
 		}
 
-		BriefcaseNotifier.notify("SPLAT", "SPLAT completed successfully.");
+		BriefcaseNotifier.notify("SPLAT", "SPLAT completed.");
 
 		return null;
 	}
@@ -375,30 +380,27 @@ public class SplatHandler extends AbstractHandler {
 
 		// Get all the folders in the output directory
 		File dir = new File(outputDir);
-		String[] filterDirs = dir.list((current, name) -> new File(current, name).isDirectory());
+		String[] compDirs = dir.list((current, name) -> new File(current, name).isDirectory());
 		Map<AadlPackage, List<String>> pkgMap = new HashMap<>();
 
 		for (AadlPackage pkg : TraverseProject.getPackagesInProject(TraverseProject.getCurrentProject())) {
-			AadlPackage aadlPackage = null;
-			String filterName = null;
-			for (String f : filterDirs) {
-				if (f.startsWith(pkg.getName())) {
-					aadlPackage = pkg;
-					filterName = f.substring(pkg.getName().length() + 1);
-					break;
+			List<String> compNames = new ArrayList<>();
+			for (String d : compDirs) {
+				if (d.startsWith(pkg.getName())) {
+					compNames.add(d.substring(pkg.getName().length() + 1));
 				}
 			}
 
-			if (aadlPackage == null || filterName == null) {
+			if (compNames.isEmpty()) {
 				continue;
 			}
 
-			List<String> filters = new ArrayList<>();
-			if (pkgMap.containsKey(aadlPackage)) {
-				filters = pkgMap.get(aadlPackage);
+			List<String> pkgComps = new ArrayList<>();
+			if (pkgMap.containsKey(pkg)) {
+				pkgComps = pkgMap.get(pkg);
 			}
-			filters.add(filterName);
-			pkgMap.put(aadlPackage, filters);
+			pkgComps.addAll(compNames);
+			pkgMap.put(pkg, pkgComps);
 
 		}
 
@@ -425,8 +427,9 @@ public class SplatHandler extends AbstractHandler {
 							}
 
 							// Insert source text property
-							String sourceText = outputDir + aadlPackage.getName() + FOLDER_PACKAGE_DELIMITER
-									+ ci.getType().getName() + "/" + ci.getType().getName();
+							String sourceText = outputDir + File.separator + aadlPackage.getName()
+									+ FOLDER_PACKAGE_DELIMITER + ci.getType().getName() + File.separator
+									+ ci.getType().getName();
 							if (implLang.equalsIgnoreCase("c")) {
 								sourceText += ".c";
 							} else if (implLang.equalsIgnoreCase("cakeml")) {

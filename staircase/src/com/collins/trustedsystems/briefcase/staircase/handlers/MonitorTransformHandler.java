@@ -723,9 +723,9 @@ public class MonitorTransformHandler extends AadlHandler {
 				if (observationGate) {
 					String gateExpr = "";
 					if (monGatePort instanceof EventPort || monGatePort instanceof EventDataPort) {
-						gateExpr = "if alerted then not event(" + observationGatePortName + ") else event("
+						gateExpr = "if event(" + observationPortName + ") and not alerted then event("
 								+ observationGatePortName + ") and " + observationGatePortName + " = "
-								+ observationPortName;
+								+ observationPortName + " else not event(" + observationGatePortName + ")";
 					} else {
 						gateExpr = "false";
 						agreeClauses.append("-- GUARANTEE EXPRESSION INCOMPLETE" + System.lineSeparator());
