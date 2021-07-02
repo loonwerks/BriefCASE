@@ -18,6 +18,7 @@ import org.eclipse.xtext.ui.editor.utils.EditorUtils;
 import org.osate.aadl2.AadlPackage;
 import org.osate.aadl2.ModelUnit;
 import org.osate.aadl2.NamedElement;
+import org.osate.aadl2.PackageRename;
 import org.osate.aadl2.PropertySet;
 import org.osate.aadl2.modelsupport.util.AadlUtil;
 
@@ -669,12 +670,18 @@ public class Aadl2Json {
 				for (ModelUnit mu : pkg.getPrivateSection().getImportedUnits()) {
 					getModelDependencies(mu, modelUnits);
 				}
+				for (PackageRename pr : pkg.getPublicSection().getOwnedPackageRenames()) {
+					getModelDependencies(pr.getRenamedPackage(), modelUnits);
+				}
 			}
 
 			// Look at direct dependencies in public section
 			if (pkg.getPublicSection() != null) {
 				for (ModelUnit mu : pkg.getPublicSection().getImportedUnits()) {
 					getModelDependencies(mu, modelUnits);
+				}
+				for (PackageRename pr : pkg.getPublicSection().getOwnedPackageRenames()) {
+					getModelDependencies(pr.getRenamedPackage(), modelUnits);
 				}
 			}
 		}
