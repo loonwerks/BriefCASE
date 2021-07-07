@@ -511,29 +511,29 @@
       </instructions>
     </touchpointData>
   </unit>
-  <unit id='202107071706.case.source' version='1.0.0.0793cLGUf5773753G3G5G3E'>
+  <unit id='202107072340.case.source' version='1.0.0.0793cLGUf5773753G3G79A3'>
     <properties size='2'>
       <property name='org.eclipse.equinox.p2.name' value='BriefCASE Source Code'/>
       <property name='org.eclipse.equinox.p2.type.category' value='true'/>
     </properties>
     <provides size='1'>
-      <provided namespace='org.eclipse.equinox.p2.iu' name='202107071706.case.source' version='1.0.0.0793cLGUf5773753G3G5G3E'/>
+      <provided namespace='org.eclipse.equinox.p2.iu' name='202107072340.case.source' version='1.0.0.0793cLGUf5773753G3G79A3'/>
     </provides>
     <requires size='1'>
-      <required namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.feature.source.feature.group' range='[0.5.2.202107071706,0.5.2.202107071706]'/>
+      <required namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.feature.source.feature.group' range='[0.5.2.202107072340,0.5.2.202107072340]'/>
     </requires>
     <touchpoint id='null' version='0.0.0'/>
   </unit>
-  <unit id='202107071706.case' version='1.0.0.0793cLGUU6773753G3G5G3E'>
+  <unit id='202107072340.case' version='1.0.0.0793cLGUU6773753G3G79A3'>
     <properties size='2'>
       <property name='org.eclipse.equinox.p2.name' value='BriefCASE (by Collins Aerospace)'/>
       <property name='org.eclipse.equinox.p2.type.category' value='true'/>
     </properties>
     <provides size='1'>
-      <provided namespace='org.eclipse.equinox.p2.iu' name='202107071706.case' version='1.0.0.0793cLGUU6773753G3G5G3E'/>
+      <provided namespace='org.eclipse.equinox.p2.iu' name='202107072340.case' version='1.0.0.0793cLGUU6773753G3G79A3'/>
     </provides>
     <requires size='1'>
-      <required namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.feature.feature.group' range='[0.5.2.202107071706,0.5.2.202107071706]'/>
+      <required namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.feature.feature.group' range='[0.5.2.202107072340,0.5.2.202107072340]'/>
     </requires>
     <touchpoint id='null' version='0.0.0'/>
   </unit>

@@ -468,6 +468,49 @@
         </instructions>
       </touchpointData>
     </unit>
+    <unit id='com.collins.trustedsystems.briefcase.toolcheck' version='0.5.2.202107072340' generation='2'>
+      <update id='com.collins.trustedsystems.briefcase.toolcheck' range='[0.0.0,0.5.2.202107072340)' severity='0'/>
+      <properties size='5'>
+        <property name='org.eclipse.equinox.p2.name' value='com.collins.trustedsystems.briefcase.toolcheck'/>
+        <property name='org.eclipse.equinox.p2.provider' value='Collins Aerospace'/>
+        <property name='maven-groupId' value='com.collins.trustedsystems.briefcase'/>
+        <property name='maven-artifactId' value='com.collins.trustedsystems.briefcase.toolcheck'/>
+        <property name='maven-version' value='0.5.2-SNAPSHOT'/>
+      </properties>
+      <provides size='4'>
+        <provided namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.toolcheck' version='0.5.2.202107072340'/>
+        <provided namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase.toolcheck' version='0.5.2.202107072340'/>
+        <provided namespace='osgi.identity' name='com.collins.trustedsystems.briefcase.toolcheck' version='0.5.2.202107072340'>
+          <properties size='1'>
+            <property name='type' value='osgi.bundle'/>
+          </properties>
+        </provided>
+        <provided namespace='org.eclipse.equinox.p2.eclipse.type' name='bundle' version='1.0.0'/>
+      </provides>
+      <requires size='10'>
+        <required namespace='osgi.bundle' name='org.osate.aadl2' range='[4.0.0,5.0.0)'/>
+        <required namespace='osgi.bundle' name='org.eclipse.ui' range='0.0.0'/>
+        <required namespace='osgi.bundle' name='org.eclipse.core.runtime' range='0.0.0'/>
+        <required namespace='osgi.bundle' name='org.eclipse.core.resources' range='0.0.0'/>
+        <required namespace='osgi.bundle' name='com.rockwellcollins.atc.resolute' range='[2.4.2,3.0.0)'/>
+        <required namespace='osgi.bundle' name='com.rockwellcollins.atc.resolute.analysis' range='[2.4.2,3.0.0)'/>
+        <required namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase.splat' range='0.0.0'/>
+        <required namespace='java.package' name='com.collins.trustedsystems.briefcase.preferences' range='0.0.0'/>
+        <required namespace='java.package' name='com.collins.trustedsystems.briefcase.util' range='0.0.0'/>
+        <requiredProperties namespace='osgi.ee' match='(&amp;(osgi.ee=JavaSE)(version=1.8))'/>
+      </requires>
+      <artifacts size='1'>
+        <artifact classifier='osgi.bundle' id='com.collins.trustedsystems.briefcase.toolcheck' version='0.5.2.202107072340'/>
+      </artifacts>
+      <touchpoint id='org.eclipse.equinox.p2.osgi' version='1.0.0'/>
+      <touchpointData size='1'>
+        <instructions size='1'>
+          <instruction key='manifest'>
+            Bundle-SymbolicName: com.collins.trustedsystems.briefcase.toolcheck;singleton:=true&#xA;Bundle-Version: 0.5.2.202107072340
+          </instruction>
+        </instructions>
+      </touchpointData>
+    </unit>
     <unit id='org.eclipse.ui.navigator' version='3.9.300.v20200513-0930' generation='2'>
       <update id='org.eclipse.ui.navigator' range='[0.0.0,3.9.300.v20200513-0930)' severity='0'/>
       <properties size='8'>
@@ -519,23 +562,23 @@
         </instructions>
       </touchpointData>
     </unit>
-    <unit id='com.collins.trustedsystems.briefcase.json.export.source' version='0.5.2.202107071706' singleton='false'>
-      <update id='com.collins.trustedsystems.briefcase.json.export.source' range='[0.0.0,0.5.2.202107071706)' severity='0'/>
+    <unit id='com.collins.trustedsystems.briefcase.json.ui.source' version='0.5.2.202107072340' singleton='false'>
+      <update id='com.collins.trustedsystems.briefcase.json.ui.source' range='[0.0.0,0.5.2.202107072340)' severity='0'/>
       <properties size='9'>
         <property name='df_LT.bundleVendor' value='unknown'/>
-        <property name='df_LT.bundleName' value='com.collins.trustedsystems.briefcase.json.export Source'/>
+        <property name='df_LT.bundleName' value='com.collins.trustedsystems.briefcase.json.ui Source'/>
         <property name='org.eclipse.equinox.p2.name' value='%bundleName'/>
         <property name='org.eclipse.equinox.p2.provider' value='%bundleVendor'/>
         <property name='org.eclipse.equinox.p2.bundle.localization' value='OSGI-INF/l10n/bundle-src'/>
         <property name='maven-groupId' value='com.collins.trustedsystems.briefcase'/>
-        <property name='maven-artifactId' value='com.collins.trustedsystems.briefcase.json.export'/>
+        <property name='maven-artifactId' value='com.collins.trustedsystems.briefcase.json.ui'/>
         <property name='maven-version' value='0.5.2-SNAPSHOT'/>
         <property name='maven-classifier' value='sources'/>
       </properties>
       <provides size='5'>
-        <provided namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.json.export.source' version='0.5.2.202107071706'/>
-        <provided namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase.json.export.source' version='0.5.2.202107071706'/>
-        <provided namespace='osgi.identity' name='com.collins.trustedsystems.briefcase.json.export.source' version='0.5.2.202107071706'>
+        <provided namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.json.ui.source' version='0.5.2.202107072340'/>
+        <provided namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase.json.ui.source' version='0.5.2.202107072340'/>
+        <provided namespace='osgi.identity' name='com.collins.trustedsystems.briefcase.json.ui.source' version='0.5.2.202107072340'>
           <properties size='1'>
             <property name='type' value='osgi.bundle'/>
           </properties>
@@ -544,13 +587,13 @@
         <provided namespace='org.eclipse.equinox.p2.localization' name='df_LT' version='1.0.0'/>
       </provides>
       <artifacts size='1'>
-        <artifact classifier='osgi.bundle' id='com.collins.trustedsystems.briefcase.json.export.source' version='0.5.2.202107071706'/>
+        <artifact classifier='osgi.bundle' id='com.collins.trustedsystems.briefcase.json.ui.source' version='0.5.2.202107072340'/>
       </artifacts>
       <touchpoint id='org.eclipse.equinox.p2.osgi' version='1.0.0'/>
       <touchpointData size='1'>
         <instructions size='1'>
           <instruction key='manifest'>
-            Bundle-SymbolicName: com.collins.trustedsystems.briefcase.json.export.source&#xA;Bundle-Version: 0.5.2.202107071706
+            Bundle-SymbolicName: com.collins.trustedsystems.briefcase.json.ui.source&#xA;Bundle-Version: 0.5.2.202107072340
           </instruction>
         </instructions>
       </touchpointData>
@@ -811,42 +854,6 @@
         </instructions>
       </touchpointData>
     </unit>
-    <unit id='com.collins.trustedsystems.briefcase.json.ui.source' version='0.5.2.202107071706' singleton='false'>
-      <update id='com.collins.trustedsystems.briefcase.json.ui.source' range='[0.0.0,0.5.2.202107071706)' severity='0'/>
-      <properties size='9'>
-        <property name='df_LT.bundleVendor' value='unknown'/>
-        <property name='df_LT.bundleName' value='com.collins.trustedsystems.briefcase.json.ui Source'/>
-        <property name='org.eclipse.equinox.p2.name' value='%bundleName'/>
-        <property name='org.eclipse.equinox.p2.provider' value='%bundleVendor'/>
-        <property name='org.eclipse.equinox.p2.bundle.localization' value='OSGI-INF/l10n/bundle-src'/>
-        <property name='maven-groupId' value='com.collins.trustedsystems.briefcase'/>
-        <property name='maven-artifactId' value='com.collins.trustedsystems.briefcase.json.ui'/>
-        <property name='maven-version' value='0.5.2-SNAPSHOT'/>
-        <property name='maven-classifier' value='sources'/>
-      </properties>
-      <provides size='5'>
-        <provided namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.json.ui.source' version='0.5.2.202107071706'/>
-        <provided namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase.json.ui.source' version='0.5.2.202107071706'/>
-        <provided namespace='osgi.identity' name='com.collins.trustedsystems.briefcase.json.ui.source' version='0.5.2.202107071706'>
-          <properties size='1'>
-            <property name='type' value='osgi.bundle'/>
-          </properties>
-        </provided>
-        <provided namespace='org.eclipse.equinox.p2.eclipse.type' name='source' version='1.0.0'/>
-        <provided namespace='org.eclipse.equinox.p2.localization' name='df_LT' version='1.0.0'/>
-      </provides>
-      <artifacts size='1'>
-        <artifact classifier='osgi.bundle' id='com.collins.trustedsystems.briefcase.json.ui.source' version='0.5.2.202107071706'/>
-      </artifacts>
-      <touchpoint id='org.eclipse.equinox.p2.osgi' version='1.0.0'/>
-      <touchpointData size='1'>
-        <instructions size='1'>
-          <instruction key='manifest'>
-            Bundle-SymbolicName: com.collins.trustedsystems.briefcase.json.ui.source&#xA;Bundle-Version: 0.5.2.202107071706
-          </instruction>
-        </instructions>
-      </touchpointData>
-    </unit>
     <unit id='org.eclipse.mylyn.resources.ui' version='3.25.1.v20200512-2113'>
       <update id='org.eclipse.mylyn.resources.ui' range='[0.0.0,3.25.1.v20200512-2113)' severity='0'/>
       <properties size='5'>
@@ -1086,6 +1093,52 @@
         <instructions size='1'>
           <instruction key='manifest'>
             Bundle-SymbolicName: com.google.guava&#xA;Bundle-Version: 27.1.0.v20190517-1946
+          </instruction>
+        </instructions>
+      </touchpointData>
+    </unit>
+    <unit id='com.collins.trustedsystems.briefcase.splat' version='0.5.2.202107072340' generation='2'>
+      <update id='com.collins.trustedsystems.briefcase.splat' range='[0.0.0,0.5.2.202107072340)' severity='0'/>
+      <properties size='4'>
+        <property name='org.eclipse.equinox.p2.name' value='com.collins.trustedsystems.briefcase.splat'/>
+        <property name='maven-groupId' value='com.collins.trustedsystems.briefcase'/>
+        <property name='maven-artifactId' value='com.collins.trustedsystems.briefcase.splat'/>
+        <property name='maven-version' value='0.5.2-SNAPSHOT'/>
+      </properties>
+      <provides size='5'>
+        <provided namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.splat' version='0.5.2.202107072340'/>
+        <provided namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase.splat' version='0.5.2.202107072340'/>
+        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.splat.preferences' version='0.0.0'/>
+        <provided namespace='osgi.identity' name='com.collins.trustedsystems.briefcase.splat' version='0.5.2.202107072340'>
+          <properties size='1'>
+            <property name='type' value='osgi.bundle'/>
+          </properties>
+        </provided>
+        <provided namespace='org.eclipse.equinox.p2.eclipse.type' name='bundle' version='1.0.0'/>
+      </provides>
+      <requires size='13'>
+        <required namespace='osgi.bundle' name='org.osate.aadl2' range='[4.0.0,5.0.0)'/>
+        <required namespace='osgi.bundle' name='org.eclipse.xtext.ui' range='0.0.0'/>
+        <required namespace='osgi.bundle' name='org.eclipse.ui.console' range='0.0.0'/>
+        <required namespace='osgi.bundle' name='org.eclipse.ui.workbench' range='0.0.0'/>
+        <required namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase' range='0.0.0'/>
+        <required namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase.json.export' range='0.0.0'/>
+        <required namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase.staircase' range='0.0.0'/>
+        <required namespace='osgi.bundle' name='org.osate.aadl2.modelsupport' range='[5.0.0,6.0.0)'/>
+        <required namespace='osgi.bundle' name='org.osate.ui' range='[5.0.0,6.0.0)'/>
+        <required namespace='osgi.bundle' name='org.osate.xtext.aadl2.properties' range='[3.0.0,4.0.0)'/>
+        <required namespace='java.package' name='org.eclipse.ui' range='0.0.0'/>
+        <required namespace='java.package' name='org.eclipse.ui.part' range='0.0.0'/>
+        <requiredProperties namespace='osgi.ee' match='(&amp;(osgi.ee=JavaSE)(version=1.8))'/>
+      </requires>
+      <artifacts size='1'>
+        <artifact classifier='osgi.bundle' id='com.collins.trustedsystems.briefcase.splat' version='0.5.2.202107072340'/>
+      </artifacts>
+      <touchpoint id='org.eclipse.equinox.p2.osgi' version='1.0.0'/>
+      <touchpointData size='1'>
+        <instructions size='1'>
+          <instruction key='manifest'>
+            Bundle-SymbolicName: com.collins.trustedsystems.briefcase.splat;singleton:=true&#xA;Bundle-Version: 0.5.2.202107072340
           </instruction>
         </instructions>
       </touchpointData>
@@ -1671,6 +1724,42 @@
         </instructions>
       </touchpointData>
     </unit>
+    <unit id='com.collins.trustedsystems.briefcase.splat.source' version='0.5.2.202107072340' singleton='false'>
+      <update id='com.collins.trustedsystems.briefcase.splat.source' range='[0.0.0,0.5.2.202107072340)' severity='0'/>
+      <properties size='9'>
+        <property name='df_LT.bundleVendor' value='unknown'/>
+        <property name='df_LT.bundleName' value='com.collins.trustedsystems.briefcase.splat Source'/>
+        <property name='org.eclipse.equinox.p2.name' value='%bundleName'/>
+        <property name='org.eclipse.equinox.p2.provider' value='%bundleVendor'/>
+        <property name='org.eclipse.equinox.p2.bundle.localization' value='OSGI-INF/l10n/bundle-src'/>
+        <property name='maven-groupId' value='com.collins.trustedsystems.briefcase'/>
+        <property name='maven-artifactId' value='com.collins.trustedsystems.briefcase.splat'/>
+        <property name='maven-version' value='0.5.2-SNAPSHOT'/>
+        <property name='maven-classifier' value='sources'/>
+      </properties>
+      <provides size='5'>
+        <provided namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.splat.source' version='0.5.2.202107072340'/>
+        <provided namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase.splat.source' version='0.5.2.202107072340'/>
+        <provided namespace='osgi.identity' name='com.collins.trustedsystems.briefcase.splat.source' version='0.5.2.202107072340'>
+          <properties size='1'>
+            <property name='type' value='osgi.bundle'/>
+          </properties>
+        </provided>
+        <provided namespace='org.eclipse.equinox.p2.eclipse.type' name='source' version='1.0.0'/>
+        <provided namespace='org.eclipse.equinox.p2.localization' name='df_LT' version='1.0.0'/>
+      </provides>
+      <artifacts size='1'>
+        <artifact classifier='osgi.bundle' id='com.collins.trustedsystems.briefcase.splat.source' version='0.5.2.202107072340'/>
+      </artifacts>
+      <touchpoint id='org.eclipse.equinox.p2.osgi' version='1.0.0'/>
+      <touchpointData size='1'>
+        <instructions size='1'>
+          <instruction key='manifest'>
+            Bundle-SymbolicName: com.collins.trustedsystems.briefcase.splat.source&#xA;Bundle-Version: 0.5.2.202107072340
+          </instruction>
+        </instructions>
+      </touchpointData>
+    </unit>
     <unit id='org.eclipse.equinox.p2.metadata.repository' version='1.3.400.v20191211-1528' generation='2'>
       <update id='org.eclipse.equinox.p2.metadata.repository' range='[0.0.0,1.3.400.v20191211-1528)' severity='0'/>
       <properties size='8'>
@@ -1734,42 +1823,6 @@
         <instructions size='1'>
           <instruction key='manifest'>
             Bundle-SymbolicName: org.eclipse.equinox.p2.metadata.repository;singleton:=true&#xA;Bundle-Version: 1.3.400.v20191211-1528
-          </instruction>
-        </instructions>
-      </touchpointData>
-    </unit>
-    <unit id='com.collins.trustedsystems.briefcase.json.source' version='0.5.2.202107071706' singleton='false'>
-      <update id='com.collins.trustedsystems.briefcase.json.source' range='[0.0.0,0.5.2.202107071706)' severity='0'/>
-      <properties size='9'>
-        <property name='df_LT.bundleVendor' value='unknown'/>
-        <property name='df_LT.bundleName' value='com.collins.trustedsystems.briefcase.json Source'/>
-        <property name='org.eclipse.equinox.p2.name' value='%bundleName'/>
-        <property name='org.eclipse.equinox.p2.provider' value='%bundleVendor'/>
-        <property name='org.eclipse.equinox.p2.bundle.localization' value='OSGI-INF/l10n/bundle-src'/>
-        <property name='maven-groupId' value='com.collins.trustedsystems.briefcase'/>
-        <property name='maven-artifactId' value='com.collins.trustedsystems.briefcase.json'/>
-        <property name='maven-version' value='0.5.2-SNAPSHOT'/>
-        <property name='maven-classifier' value='sources'/>
-      </properties>
-      <provides size='5'>
-        <provided namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.json.source' version='0.5.2.202107071706'/>
-        <provided namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase.json.source' version='0.5.2.202107071706'/>
-        <provided namespace='osgi.identity' name='com.collins.trustedsystems.briefcase.json.source' version='0.5.2.202107071706'>
-          <properties size='1'>
-            <property name='type' value='osgi.bundle'/>
-          </properties>
-        </provided>
-        <provided namespace='org.eclipse.equinox.p2.eclipse.type' name='source' version='1.0.0'/>
-        <provided namespace='org.eclipse.equinox.p2.localization' name='df_LT' version='1.0.0'/>
-      </provides>
-      <artifacts size='1'>
-        <artifact classifier='osgi.bundle' id='com.collins.trustedsystems.briefcase.json.source' version='0.5.2.202107071706'/>
-      </artifacts>
-      <touchpoint id='org.eclipse.equinox.p2.osgi' version='1.0.0'/>
-      <touchpointData size='1'>
-        <instructions size='1'>
-          <instruction key='manifest'>
-            Bundle-SymbolicName: com.collins.trustedsystems.briefcase.json.source&#xA;Bundle-Version: 0.5.2.202107071706
           </instruction>
         </instructions>
       </touchpointData>
@@ -1888,49 +1941,6 @@
         <instructions size='1'>
           <instruction key='manifest'>
             Bundle-SymbolicName: org.apache.log4j&#xA;Bundle-Version: 1.2.15.v201012070815
-          </instruction>
-        </instructions>
-      </touchpointData>
-    </unit>
-    <unit id='com.collins.trustedsystems.briefcase.toolcheck' version='0.5.2.202107071706' generation='2'>
-      <update id='com.collins.trustedsystems.briefcase.toolcheck' range='[0.0.0,0.5.2.202107071706)' severity='0'/>
-      <properties size='5'>
-        <property name='org.eclipse.equinox.p2.name' value='com.collins.trustedsystems.briefcase.toolcheck'/>
-        <property name='org.eclipse.equinox.p2.provider' value='Collins Aerospace'/>
-        <property name='maven-groupId' value='com.collins.trustedsystems.briefcase'/>
-        <property name='maven-artifactId' value='com.collins.trustedsystems.briefcase.toolcheck'/>
-        <property name='maven-version' value='0.5.2-SNAPSHOT'/>
-      </properties>
-      <provides size='4'>
-        <provided namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.toolcheck' version='0.5.2.202107071706'/>
-        <provided namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase.toolcheck' version='0.5.2.202107071706'/>
-        <provided namespace='osgi.identity' name='com.collins.trustedsystems.briefcase.toolcheck' version='0.5.2.202107071706'>
-          <properties size='1'>
-            <property name='type' value='osgi.bundle'/>
-          </properties>
-        </provided>
-        <provided namespace='org.eclipse.equinox.p2.eclipse.type' name='bundle' version='1.0.0'/>
-      </provides>
-      <requires size='10'>
-        <required namespace='osgi.bundle' name='org.osate.aadl2' range='[4.0.0,5.0.0)'/>
-        <required namespace='osgi.bundle' name='org.eclipse.ui' range='0.0.0'/>
-        <required namespace='osgi.bundle' name='org.eclipse.core.runtime' range='0.0.0'/>
-        <required namespace='osgi.bundle' name='org.eclipse.core.resources' range='0.0.0'/>
-        <required namespace='osgi.bundle' name='com.rockwellcollins.atc.resolute' range='[2.4.2,3.0.0)'/>
-        <required namespace='osgi.bundle' name='com.rockwellcollins.atc.resolute.analysis' range='[2.4.2,3.0.0)'/>
-        <required namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase.splat' range='0.0.0'/>
-        <required namespace='java.package' name='com.collins.trustedsystems.briefcase.preferences' range='0.0.0'/>
-        <required namespace='java.package' name='com.collins.trustedsystems.briefcase.util' range='0.0.0'/>
-        <requiredProperties namespace='osgi.ee' match='(&amp;(osgi.ee=JavaSE)(version=1.8))'/>
-      </requires>
-      <artifacts size='1'>
-        <artifact classifier='osgi.bundle' id='com.collins.trustedsystems.briefcase.toolcheck' version='0.5.2.202107071706'/>
-      </artifacts>
-      <touchpoint id='org.eclipse.equinox.p2.osgi' version='1.0.0'/>
-      <touchpointData size='1'>
-        <instructions size='1'>
-          <instruction key='manifest'>
-            Bundle-SymbolicName: com.collins.trustedsystems.briefcase.toolcheck;singleton:=true&#xA;Bundle-Version: 0.5.2.202107071706
           </instruction>
         </instructions>
       </touchpointData>
@@ -2118,6 +2128,45 @@
           </instruction>
         </instructions>
       </touchpointData>
+    </unit>
+    <unit id='com.collins.trustedsystems.briefcase.feature.source.feature.jar' version='0.5.2.202107072340'>
+      <properties size='8'>
+        <property name='org.eclipse.equinox.p2.name' value='BriefCASE Developer Resources'/>
+        <property name='org.eclipse.equinox.p2.description' value='[Enter Feature Description here.]'/>
+        <property name='org.eclipse.equinox.p2.description.url' value='http://www.example.com/description'/>
+        <property name='org.eclipse.equinox.p2.provider' value='ROCKWELLCOLLINS'/>
+        <property name='maven-groupId' value='com.collins.trustedsystems.briefcase'/>
+        <property name='maven-artifactId' value='com.collins.trustedsystems.briefcase.feature'/>
+        <property name='maven-version' value='0.5.2-SNAPSHOT'/>
+        <property name='maven-classifier' value='sources-feature'/>
+      </properties>
+      <provides size='3'>
+        <provided namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.feature.source.feature.jar' version='0.5.2.202107072340'/>
+        <provided namespace='org.eclipse.equinox.p2.eclipse.type' name='feature' version='1.0.0'/>
+        <provided namespace='org.eclipse.update.feature' name='com.collins.trustedsystems.briefcase.feature.source' version='0.5.2.202107072340'/>
+      </provides>
+      <filter>
+        (org.eclipse.update.install.features=true)
+      </filter>
+      <artifacts size='1'>
+        <artifact classifier='org.eclipse.update.feature' id='com.collins.trustedsystems.briefcase.feature.source' version='0.5.2.202107072340'/>
+      </artifacts>
+      <touchpoint id='org.eclipse.equinox.p2.osgi' version='1.0.0'/>
+      <touchpointData size='1'>
+        <instructions size='1'>
+          <instruction key='zipped'>
+            true
+          </instruction>
+        </instructions>
+      </touchpointData>
+      <licenses size='1'>
+        <license uri='http://www.example.com/license' url='http://www.example.com/license'>
+          [Enter License Description here.]
+        </license>
+      </licenses>
+      <copyright uri='http://www.example.com/copyright' url='http://www.example.com/copyright'>
+        [Enter Copyright Description here.]
+      </copyright>
     </unit>
     <unit id='org.eclipse.equinox.bidi' version='1.2.300.v20191213-1901' generation='2'>
       <update id='org.eclipse.equinox.bidi' range='[0.0.0,1.2.300.v20191213-1901)' severity='0'/>
@@ -2338,6 +2387,59 @@
         </instructions>
       </touchpointData>
     </unit>
+    <unit id='com.collins.trustedsystems.briefcase.json.ui' version='0.5.2.202107072340' generation='2'>
+      <update id='com.collins.trustedsystems.briefcase.json.ui' range='[0.0.0,0.5.2.202107072340)' severity='0'/>
+      <properties size='4'>
+        <property name='org.eclipse.equinox.p2.name' value='com.collins.trustedsystems.briefcase.json.ui'/>
+        <property name='maven-groupId' value='com.collins.trustedsystems.briefcase'/>
+        <property name='maven-artifactId' value='com.collins.trustedsystems.briefcase.json.ui'/>
+        <property name='maven-version' value='0.5.2-SNAPSHOT'/>
+      </properties>
+      <provides size='7'>
+        <provided namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.json.ui' version='0.5.2.202107072340'/>
+        <provided namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase.json.ui' version='0.5.2.202107072340'/>
+        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.json.ui' version='0.0.0'/>
+        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.json.ui.contentassist' version='0.0.0'/>
+        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.json.ui.quickfix' version='0.0.0'/>
+        <provided namespace='osgi.identity' name='com.collins.trustedsystems.briefcase.json.ui' version='0.5.2.202107072340'>
+          <properties size='1'>
+            <property name='type' value='osgi.bundle'/>
+          </properties>
+        </provided>
+        <provided namespace='org.eclipse.equinox.p2.eclipse.type' name='bundle' version='1.0.0'/>
+      </provides>
+      <requires size='18'>
+        <required namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase.json' range='0.0.0'/>
+        <required namespace='osgi.bundle' name='org.eclipse.xtext.ui' range='0.0.0'/>
+        <required namespace='osgi.bundle' name='org.eclipse.xtext.ui.shared' range='0.0.0'/>
+        <required namespace='osgi.bundle' name='org.eclipse.xtext.ui.codetemplates.ui' range='0.0.0'/>
+        <required namespace='osgi.bundle' name='org.eclipse.ui.editors' range='3.5.0'/>
+        <required namespace='osgi.bundle' name='org.eclipse.ui.ide' range='3.5.0'/>
+        <required namespace='osgi.bundle' name='org.eclipse.ui' range='0.0.0'/>
+        <required namespace='osgi.bundle' name='org.eclipse.xtext.builder' range='0.0.0'/>
+        <required namespace='osgi.bundle' name='org.antlr.runtime' range='0.0.0'/>
+        <required namespace='osgi.bundle' name='org.osate.xtext.aadl2.properties' range='[3.0.0,4.0.0)'/>
+        <required namespace='osgi.bundle' name='org.osate.xtext.aadl2.properties.ui' range='[4.0.0,5.0.0)'/>
+        <required namespace='osgi.bundle' name='org.osate.annexsupport' range='[3.0.0,4.0.0)'/>
+        <required namespace='osgi.bundle' name='org.osate.aadl2' range='[4.0.0,5.0.0)'/>
+        <required namespace='osgi.bundle' name='org.osate.aadl2.modelsupport' range='[5.0.0,6.0.0)'/>
+        <required namespace='osgi.bundle' name='org.osate.xtext.aadl2.ui' range='[5.0.0,6.0.0)'/>
+        <required namespace='osgi.bundle' name='org.apache.log4j' range='1.2.0'/>
+        <required namespace='java.package' name='org.apache.log4j' range='0.0.0'/>
+        <requiredProperties namespace='osgi.ee' match='(&amp;(osgi.ee=JavaSE)(version=1.8))'/>
+      </requires>
+      <artifacts size='1'>
+        <artifact classifier='osgi.bundle' id='com.collins.trustedsystems.briefcase.json.ui' version='0.5.2.202107072340'/>
+      </artifacts>
+      <touchpoint id='org.eclipse.equinox.p2.osgi' version='1.0.0'/>
+      <touchpointData size='1'>
+        <instructions size='1'>
+          <instruction key='manifest'>
+            Bundle-SymbolicName: com.collins.trustedsystems.briefcase.json.ui;singleton:=true&#xA;Bundle-Version: 0.5.2.202107072340
+          </instruction>
+        </instructions>
+      </touchpointData>
+    </unit>
     <unit id='org.eclipse.emf.mwe.utils' version='1.5.3.v20200520-0756' singleton='false' generation='2'>
       <update id='org.eclipse.emf.mwe.utils' range='[0.0.0,1.5.3.v20200520-0756)' severity='0'/>
       <properties size='8'>
@@ -2495,42 +2597,6 @@
         <instructions size='1'>
           <instruction key='manifest'>
             Bundle-SymbolicName: org.eclipse.equinox.p2.engine;singleton:=true&#xA;Bundle-Version: 2.6.700.v20200511-1530
-          </instruction>
-        </instructions>
-      </touchpointData>
-    </unit>
-    <unit id='com.collins.trustedsystems.briefcase.splat.source' version='0.5.2.202107071706' singleton='false'>
-      <update id='com.collins.trustedsystems.briefcase.splat.source' range='[0.0.0,0.5.2.202107071706)' severity='0'/>
-      <properties size='9'>
-        <property name='df_LT.bundleVendor' value='unknown'/>
-        <property name='df_LT.bundleName' value='com.collins.trustedsystems.briefcase.splat Source'/>
-        <property name='org.eclipse.equinox.p2.name' value='%bundleName'/>
-        <property name='org.eclipse.equinox.p2.provider' value='%bundleVendor'/>
-        <property name='org.eclipse.equinox.p2.bundle.localization' value='OSGI-INF/l10n/bundle-src'/>
-        <property name='maven-groupId' value='com.collins.trustedsystems.briefcase'/>
-        <property name='maven-artifactId' value='com.collins.trustedsystems.briefcase.splat'/>
-        <property name='maven-version' value='0.5.2-SNAPSHOT'/>
-        <property name='maven-classifier' value='sources'/>
-      </properties>
-      <provides size='5'>
-        <provided namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.splat.source' version='0.5.2.202107071706'/>
-        <provided namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase.splat.source' version='0.5.2.202107071706'/>
-        <provided namespace='osgi.identity' name='com.collins.trustedsystems.briefcase.splat.source' version='0.5.2.202107071706'>
-          <properties size='1'>
-            <property name='type' value='osgi.bundle'/>
-          </properties>
-        </provided>
-        <provided namespace='org.eclipse.equinox.p2.eclipse.type' name='source' version='1.0.0'/>
-        <provided namespace='org.eclipse.equinox.p2.localization' name='df_LT' version='1.0.0'/>
-      </provides>
-      <artifacts size='1'>
-        <artifact classifier='osgi.bundle' id='com.collins.trustedsystems.briefcase.splat.source' version='0.5.2.202107071706'/>
-      </artifacts>
-      <touchpoint id='org.eclipse.equinox.p2.osgi' version='1.0.0'/>
-      <touchpointData size='1'>
-        <instructions size='1'>
-          <instruction key='manifest'>
-            Bundle-SymbolicName: com.collins.trustedsystems.briefcase.splat.source&#xA;Bundle-Version: 0.5.2.202107071706
           </instruction>
         </instructions>
       </touchpointData>
@@ -2829,6 +2895,42 @@
         </instructions>
       </touchpointData>
     </unit>
+    <unit id='com.collins.trustedsystems.briefcase.json.source' version='0.5.2.202107072340' singleton='false'>
+      <update id='com.collins.trustedsystems.briefcase.json.source' range='[0.0.0,0.5.2.202107072340)' severity='0'/>
+      <properties size='9'>
+        <property name='df_LT.bundleVendor' value='unknown'/>
+        <property name='df_LT.bundleName' value='com.collins.trustedsystems.briefcase.json Source'/>
+        <property name='org.eclipse.equinox.p2.name' value='%bundleName'/>
+        <property name='org.eclipse.equinox.p2.provider' value='%bundleVendor'/>
+        <property name='org.eclipse.equinox.p2.bundle.localization' value='OSGI-INF/l10n/bundle-src'/>
+        <property name='maven-groupId' value='com.collins.trustedsystems.briefcase'/>
+        <property name='maven-artifactId' value='com.collins.trustedsystems.briefcase.json'/>
+        <property name='maven-version' value='0.5.2-SNAPSHOT'/>
+        <property name='maven-classifier' value='sources'/>
+      </properties>
+      <provides size='5'>
+        <provided namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.json.source' version='0.5.2.202107072340'/>
+        <provided namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase.json.source' version='0.5.2.202107072340'/>
+        <provided namespace='osgi.identity' name='com.collins.trustedsystems.briefcase.json.source' version='0.5.2.202107072340'>
+          <properties size='1'>
+            <property name='type' value='osgi.bundle'/>
+          </properties>
+        </provided>
+        <provided namespace='org.eclipse.equinox.p2.eclipse.type' name='source' version='1.0.0'/>
+        <provided namespace='org.eclipse.equinox.p2.localization' name='df_LT' version='1.0.0'/>
+      </provides>
+      <artifacts size='1'>
+        <artifact classifier='osgi.bundle' id='com.collins.trustedsystems.briefcase.json.source' version='0.5.2.202107072340'/>
+      </artifacts>
+      <touchpoint id='org.eclipse.equinox.p2.osgi' version='1.0.0'/>
+      <touchpointData size='1'>
+        <instructions size='1'>
+          <instruction key='manifest'>
+            Bundle-SymbolicName: com.collins.trustedsystems.briefcase.json.source&#xA;Bundle-Version: 0.5.2.202107072340
+          </instruction>
+        </instructions>
+      </touchpointData>
+    </unit>
     <unit id='org.osate.aadl2.instance.textual' version='2.0.4.v20200824-1409' generation='2'>
       <update id='org.osate.aadl2.instance.textual' range='[0.0.0,2.0.4.v20200824-1409)' severity='0'/>
       <properties size='5'>
@@ -2995,52 +3097,6 @@
         <instructions size='1'>
           <instruction key='manifest'>
             Bundle-SymbolicName: org.eclipse.xtext.ui.codetemplates.ui;singleton:=true&#xA;Bundle-Version: 2.22.0.v20200602-1242
-          </instruction>
-        </instructions>
-      </touchpointData>
-    </unit>
-    <unit id='com.collins.trustedsystems.briefcase.splat' version='0.5.2.202107071706' generation='2'>
-      <update id='com.collins.trustedsystems.briefcase.splat' range='[0.0.0,0.5.2.202107071706)' severity='0'/>
-      <properties size='4'>
-        <property name='org.eclipse.equinox.p2.name' value='com.collins.trustedsystems.briefcase.splat'/>
-        <property name='maven-groupId' value='com.collins.trustedsystems.briefcase'/>
-        <property name='maven-artifactId' value='com.collins.trustedsystems.briefcase.splat'/>
-        <property name='maven-version' value='0.5.2-SNAPSHOT'/>
-      </properties>
-      <provides size='5'>
-        <provided namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.splat' version='0.5.2.202107071706'/>
-        <provided namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase.splat' version='0.5.2.202107071706'/>
-        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.splat.preferences' version='0.0.0'/>
-        <provided namespace='osgi.identity' name='com.collins.trustedsystems.briefcase.splat' version='0.5.2.202107071706'>
-          <properties size='1'>
-            <property name='type' value='osgi.bundle'/>
-          </properties>
-        </provided>
-        <provided namespace='org.eclipse.equinox.p2.eclipse.type' name='bundle' version='1.0.0'/>
-      </provides>
-      <requires size='13'>
-        <required namespace='osgi.bundle' name='org.osate.aadl2' range='[4.0.0,5.0.0)'/>
-        <required namespace='osgi.bundle' name='org.eclipse.xtext.ui' range='0.0.0'/>
-        <required namespace='osgi.bundle' name='org.eclipse.ui.console' range='0.0.0'/>
-        <required namespace='osgi.bundle' name='org.eclipse.ui.workbench' range='0.0.0'/>
-        <required namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase' range='0.0.0'/>
-        <required namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase.json.export' range='0.0.0'/>
-        <required namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase.staircase' range='0.0.0'/>
-        <required namespace='osgi.bundle' name='org.osate.aadl2.modelsupport' range='[5.0.0,6.0.0)'/>
-        <required namespace='osgi.bundle' name='org.osate.ui' range='[5.0.0,6.0.0)'/>
-        <required namespace='osgi.bundle' name='org.osate.xtext.aadl2.properties' range='[3.0.0,4.0.0)'/>
-        <required namespace='java.package' name='org.eclipse.ui' range='0.0.0'/>
-        <required namespace='java.package' name='org.eclipse.ui.part' range='0.0.0'/>
-        <requiredProperties namespace='osgi.ee' match='(&amp;(osgi.ee=JavaSE)(version=1.8))'/>
-      </requires>
-      <artifacts size='1'>
-        <artifact classifier='osgi.bundle' id='com.collins.trustedsystems.briefcase.splat' version='0.5.2.202107071706'/>
-      </artifacts>
-      <touchpoint id='org.eclipse.equinox.p2.osgi' version='1.0.0'/>
-      <touchpointData size='1'>
-        <instructions size='1'>
-          <instruction key='manifest'>
-            Bundle-SymbolicName: com.collins.trustedsystems.briefcase.splat;singleton:=true&#xA;Bundle-Version: 0.5.2.202107071706
           </instruction>
         </instructions>
       </touchpointData>
@@ -3214,6 +3270,42 @@
         </instructions>
       </touchpointData>
     </unit>
+    <unit id='com.collins.trustedsystems.briefcase.source' version='0.5.2.202107072340' singleton='false'>
+      <update id='com.collins.trustedsystems.briefcase.source' range='[0.0.0,0.5.2.202107072340)' severity='0'/>
+      <properties size='9'>
+        <property name='df_LT.bundleVendor' value='unknown'/>
+        <property name='df_LT.bundleName' value='com.collins.trustedsystems.briefcase Source'/>
+        <property name='org.eclipse.equinox.p2.name' value='%bundleName'/>
+        <property name='org.eclipse.equinox.p2.provider' value='%bundleVendor'/>
+        <property name='org.eclipse.equinox.p2.bundle.localization' value='OSGI-INF/l10n/bundle-src'/>
+        <property name='maven-groupId' value='com.collins.trustedsystems.briefcase'/>
+        <property name='maven-artifactId' value='com.collins.trustedsystems.briefcase'/>
+        <property name='maven-version' value='0.5.2-SNAPSHOT'/>
+        <property name='maven-classifier' value='sources'/>
+      </properties>
+      <provides size='5'>
+        <provided namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.source' version='0.5.2.202107072340'/>
+        <provided namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase.source' version='0.5.2.202107072340'/>
+        <provided namespace='osgi.identity' name='com.collins.trustedsystems.briefcase.source' version='0.5.2.202107072340'>
+          <properties size='1'>
+            <property name='type' value='osgi.bundle'/>
+          </properties>
+        </provided>
+        <provided namespace='org.eclipse.equinox.p2.eclipse.type' name='source' version='1.0.0'/>
+        <provided namespace='org.eclipse.equinox.p2.localization' name='df_LT' version='1.0.0'/>
+      </provides>
+      <artifacts size='1'>
+        <artifact classifier='osgi.bundle' id='com.collins.trustedsystems.briefcase.source' version='0.5.2.202107072340'/>
+      </artifacts>
+      <touchpoint id='org.eclipse.equinox.p2.osgi' version='1.0.0'/>
+      <touchpointData size='1'>
+        <instructions size='1'>
+          <instruction key='manifest'>
+            Bundle-SymbolicName: com.collins.trustedsystems.briefcase.source&#xA;Bundle-Version: 0.5.2.202107072340
+          </instruction>
+        </instructions>
+      </touchpointData>
+    </unit>
     <unit id='org.eclipse.ease.classloader' version='0.7.0.I201906281229' singleton='false'>
       <update id='org.eclipse.ease.classloader' range='[0.0.0,0.7.0.I201906281229)' severity='0'/>
       <properties size='5'>
@@ -3371,6 +3463,49 @@
         <instructions size='1'>
           <instruction key='manifest'>
             Bundle-SymbolicName: com.google.inject&#xA;Bundle-Version: 3.0.0.v201605172100
+          </instruction>
+        </instructions>
+      </touchpointData>
+    </unit>
+    <unit id='com.collins.trustedsystems.briefcase.attestation' version='0.5.2.202107072340' generation='2'>
+      <update id='com.collins.trustedsystems.briefcase.attestation' range='[0.0.0,0.5.2.202107072340)' severity='0'/>
+      <properties size='5'>
+        <property name='org.eclipse.equinox.p2.name' value='com.collins.trustedsystems.briefcase.attestation'/>
+        <property name='org.eclipse.equinox.p2.provider' value='COLLINS'/>
+        <property name='maven-groupId' value='com.collins.trustedsystems.briefcase'/>
+        <property name='maven-artifactId' value='com.collins.trustedsystems.briefcase.attestation'/>
+        <property name='maven-version' value='0.5.2-SNAPSHOT'/>
+      </properties>
+      <provides size='5'>
+        <provided namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.attestation' version='0.5.2.202107072340'/>
+        <provided namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase.attestation' version='0.5.2.202107072340'/>
+        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.attestation' version='0.0.0'/>
+        <provided namespace='osgi.identity' name='com.collins.trustedsystems.briefcase.attestation' version='0.5.2.202107072340'>
+          <properties size='1'>
+            <property name='type' value='osgi.bundle'/>
+          </properties>
+        </provided>
+        <provided namespace='org.eclipse.equinox.p2.eclipse.type' name='bundle' version='1.0.0'/>
+      </provides>
+      <requires size='9'>
+        <required namespace='osgi.bundle' name='org.eclipse.ui' range='0.0.0'/>
+        <required namespace='osgi.bundle' name='org.eclipse.core.runtime' range='0.0.0'/>
+        <required namespace='java.package' name='com.collins.trustedsystems.briefcase' range='0.0.0'/>
+        <required namespace='java.package' name='com.collins.trustedsystems.briefcase.preferences' range='0.0.0'/>
+        <required namespace='java.package' name='com.collins.trustedsystems.briefcase.util' range='0.0.0'/>
+        <required namespace='java.package' name='org.eclipse.core.resources' range='0.0.0'/>
+        <required namespace='java.package' name='org.eclipse.emf.common.util' range='0.0.0'/>
+        <required namespace='java.package' name='org.eclipse.emf.ecore.resource' range='0.0.0'/>
+        <requiredProperties namespace='osgi.ee' match='(&amp;(osgi.ee=JavaSE)(version=1.8))'/>
+      </requires>
+      <artifacts size='1'>
+        <artifact classifier='osgi.bundle' id='com.collins.trustedsystems.briefcase.attestation' version='0.5.2.202107072340'/>
+      </artifacts>
+      <touchpoint id='org.eclipse.equinox.p2.osgi' version='1.0.0'/>
+      <touchpointData size='1'>
+        <instructions size='1'>
+          <instruction key='manifest'>
+            Bundle-SymbolicName: com.collins.trustedsystems.briefcase.attestation;singleton:=true&#xA;Bundle-Version: 0.5.2.202107072340
           </instruction>
         </instructions>
       </touchpointData>
@@ -3643,6 +3778,95 @@
           </instruction>
         </instructions>
       </touchpointData>
+    </unit>
+    <unit id='com.collins.trustedsystems.briefcase.feature.feature.group' version='0.5.2.202107072340' singleton='false'>
+      <update id='com.collins.trustedsystems.briefcase.feature.feature.group' range='[0.0.0,0.5.2.202107072340)' severity='0'/>
+      <properties size='8'>
+        <property name='org.eclipse.equinox.p2.name' value='BriefCASE'/>
+        <property name='org.eclipse.equinox.p2.description' value='[Enter Feature Description here.]'/>
+        <property name='org.eclipse.equinox.p2.description.url' value='http://www.example.com/description'/>
+        <property name='org.eclipse.equinox.p2.provider' value='ROCKWELLCOLLINS'/>
+        <property name='org.eclipse.equinox.p2.type.group' value='true'/>
+        <property name='maven-groupId' value='com.collins.trustedsystems.briefcase'/>
+        <property name='maven-artifactId' value='com.collins.trustedsystems.briefcase.feature'/>
+        <property name='maven-version' value='0.5.2-SNAPSHOT'/>
+      </properties>
+      <provides size='1'>
+        <provided namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.feature.feature.group' version='0.5.2.202107072340'/>
+      </provides>
+      <requires size='58'>
+        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.jface' range='0.0.0'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='org.osate.aadl2' range='[4.0.0,5.0.0)'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.xtext.ui' range='0.0.0'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.emf.common' range='0.0.0'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.ui.console' range='0.0.0'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='org.osate.aadl2.instantiation' range='[1.0.1,2.0.0)'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.mylyn.commons.ui' range='0.0.0'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.debug.ui' range='0.0.0'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.ui.ide' range='0.0.0'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='org.osate.workspace' range='0.0.0'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.ui.workbench' range='0.0.0'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.xtext.ui' range='2.12.0'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.ui.navigator' range='[3.7.0,4.0.0)'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.emf.ecore' range='0.0.0'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='com.rockwellcollins.atc.resolute.analysis' range='[2.4.2,3.0.0)'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='com.rockwellcollins.atc.agree.ui' range='[2.4.2,3.0.0)'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='org.osate.ge.diagram' range='[2.0.0,3.0.0)'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.ui.ide' range='3.16.100'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.ui.console' range='[3.9.0,4.0.0)'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='com.rockwellcollins.atc.resolute' range='[2.4.2,3.0.0)'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='com.rockwellcollins.atc.resolute.ui' range='[2.4.2,3.0.0)'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.emf.transaction' range='0.0.0'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.ui' range='0.0.0'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.core.runtime' range='0.0.0'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.core.resources' range='0.0.0'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.xtext' range='0.0.0'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.xtext.xbase' range='0.0.0'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.equinox.common' range='3.5.0'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.xtext.generator' range='2.17.0'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.xtext.util' range='0.0.0'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='org.antlr.runtime' range='0.0.0'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='org.apache.log4j' range='0.0.0'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.xtext.ui.shared' range='0.0.0'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.xtext.ui.codetemplates.ui' range='0.0.0'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.ui.editors' range='3.5.0'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.ui.ide' range='3.5.0'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.xtext.builder' range='0.0.0'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='org.apache.log4j' range='1.2.0'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='com.rockwellcollins.atc.agree' range='[2.4.2,3.0.0)'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='org.osate.core.feature.feature.group' range='2.7.0'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='org.osate.pluginsupport' range='[5.0.0,6.0.0)'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='org.osate.aadl2.modelsupport' range='[5.0.0,6.0.0)'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='org.osate.annexsupport' range='[3.0.0,4.0.0)'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='org.osate.ui' range='[5.0.0,6.0.0)'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='org.osate.xtext.aadl2.properties' range='[3.0.0,4.0.0)'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='org.osate.xtext.aadl2.ui' range='[5.0.0,6.0.0)'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='org.osate.ge' range='[2.0.0,3.0.0)'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='org.osate.xtext.aadl2' range='[5.0.0,6.0.0)'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='org.osate.xtext.aadl2.properties.ui' range='[4.0.0,5.0.0)'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase' range='[0.5.2.202107072340,0.5.2.202107072340]'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.attestation' range='[0.5.2.202107072340,0.5.2.202107072340]'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.splat' range='[0.5.2.202107072340,0.5.2.202107072340]'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.staircase' range='[0.5.2.202107072340,0.5.2.202107072340]'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.toolcheck' range='[0.5.2.202107072340,0.5.2.202107072340]'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.json' range='[0.5.2.202107072340,0.5.2.202107072340]'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.json.ui' range='[0.5.2.202107072340,0.5.2.202107072340]'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.json.export' range='[0.5.2.202107072340,0.5.2.202107072340]'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.feature.feature.jar' range='[0.5.2.202107072340,0.5.2.202107072340]'>
+          <filter>
+            (org.eclipse.update.install.features=true)
+          </filter>
+        </required>
+      </requires>
+      <touchpoint id='null' version='0.0.0'/>
+      <licenses size='1'>
+        <license uri='http://www.example.com/license' url='http://www.example.com/license'>
+          [Enter License Description here.]
+        </license>
+      </licenses>
+      <copyright uri='http://www.example.com/copyright' url='http://www.example.com/copyright'>
+        [Enter Copyright Description here.]
+      </copyright>
     </unit>
     <unit id='org.antlr.runtime' version='3.2.0.v201101311130' singleton='false'>
       <update id='org.antlr.runtime' range='[0.0.0,3.2.0.v201101311130)' severity='0'/>
@@ -4073,95 +4297,6 @@
           </instruction>
         </instructions>
       </touchpointData>
-    </unit>
-    <unit id='com.collins.trustedsystems.briefcase.feature.feature.group' version='0.5.2.202107071706' singleton='false'>
-      <update id='com.collins.trustedsystems.briefcase.feature.feature.group' range='[0.0.0,0.5.2.202107071706)' severity='0'/>
-      <properties size='8'>
-        <property name='org.eclipse.equinox.p2.name' value='BriefCASE'/>
-        <property name='org.eclipse.equinox.p2.description' value='[Enter Feature Description here.]'/>
-        <property name='org.eclipse.equinox.p2.description.url' value='http://www.example.com/description'/>
-        <property name='org.eclipse.equinox.p2.provider' value='ROCKWELLCOLLINS'/>
-        <property name='org.eclipse.equinox.p2.type.group' value='true'/>
-        <property name='maven-groupId' value='com.collins.trustedsystems.briefcase'/>
-        <property name='maven-artifactId' value='com.collins.trustedsystems.briefcase.feature'/>
-        <property name='maven-version' value='0.5.2-SNAPSHOT'/>
-      </properties>
-      <provides size='1'>
-        <provided namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.feature.feature.group' version='0.5.2.202107071706'/>
-      </provides>
-      <requires size='58'>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.jface' range='0.0.0'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.osate.aadl2' range='[4.0.0,5.0.0)'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.xtext.ui' range='0.0.0'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.emf.common' range='0.0.0'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.ui.console' range='0.0.0'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.osate.aadl2.instantiation' range='[1.0.1,2.0.0)'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.mylyn.commons.ui' range='0.0.0'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.debug.ui' range='0.0.0'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.ui.ide' range='0.0.0'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.osate.workspace' range='0.0.0'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.ui.workbench' range='0.0.0'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.xtext.ui' range='2.12.0'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.ui.navigator' range='[3.7.0,4.0.0)'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.emf.ecore' range='0.0.0'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='com.rockwellcollins.atc.resolute.analysis' range='[2.4.2,3.0.0)'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='com.rockwellcollins.atc.agree.ui' range='[2.4.2,3.0.0)'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.osate.ge.diagram' range='[2.0.0,3.0.0)'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.ui.ide' range='3.16.100'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.ui.console' range='[3.9.0,4.0.0)'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='com.rockwellcollins.atc.resolute' range='[2.4.2,3.0.0)'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='com.rockwellcollins.atc.resolute.ui' range='[2.4.2,3.0.0)'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.emf.transaction' range='0.0.0'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.ui' range='0.0.0'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.core.runtime' range='0.0.0'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.core.resources' range='0.0.0'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.xtext' range='0.0.0'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.xtext.xbase' range='0.0.0'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.equinox.common' range='3.5.0'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.xtext.generator' range='2.17.0'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.xtext.util' range='0.0.0'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.antlr.runtime' range='0.0.0'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.apache.log4j' range='0.0.0'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.xtext.ui.shared' range='0.0.0'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.xtext.ui.codetemplates.ui' range='0.0.0'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.ui.editors' range='3.5.0'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.ui.ide' range='3.5.0'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.xtext.builder' range='0.0.0'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.apache.log4j' range='1.2.0'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='com.rockwellcollins.atc.agree' range='[2.4.2,3.0.0)'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.osate.core.feature.feature.group' range='2.7.0'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.osate.pluginsupport' range='[5.0.0,6.0.0)'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.osate.aadl2.modelsupport' range='[5.0.0,6.0.0)'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.osate.annexsupport' range='[3.0.0,4.0.0)'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.osate.ui' range='[5.0.0,6.0.0)'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.osate.xtext.aadl2.properties' range='[3.0.0,4.0.0)'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.osate.xtext.aadl2.ui' range='[5.0.0,6.0.0)'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.osate.ge' range='[2.0.0,3.0.0)'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.osate.xtext.aadl2' range='[5.0.0,6.0.0)'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.osate.xtext.aadl2.properties.ui' range='[4.0.0,5.0.0)'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase' range='[0.5.2.202107071706,0.5.2.202107071706]'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.attestation' range='[0.5.2.202107071706,0.5.2.202107071706]'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.splat' range='[0.5.2.202107071706,0.5.2.202107071706]'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.staircase' range='[0.5.2.202107071706,0.5.2.202107071706]'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.toolcheck' range='[0.5.2.202107071706,0.5.2.202107071706]'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.json' range='[0.5.2.202107071706,0.5.2.202107071706]'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.json.ui' range='[0.5.2.202107071706,0.5.2.202107071706]'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.json.export' range='[0.5.2.202107071706,0.5.2.202107071706]'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.feature.feature.jar' range='[0.5.2.202107071706,0.5.2.202107071706]'>
-          <filter>
-            (org.eclipse.update.install.features=true)
-          </filter>
-        </required>
-      </requires>
-      <touchpoint id='null' version='0.0.0'/>
-      <licenses size='1'>
-        <license uri='http://www.example.com/license' url='http://www.example.com/license'>
-          [Enter License Description here.]
-        </license>
-      </licenses>
-      <copyright uri='http://www.example.com/copyright' url='http://www.example.com/copyright'>
-        [Enter Copyright Description here.]
-      </copyright>
     </unit>
     <unit id='org.eclipse.ui.editors' version='3.13.200.v20200501-2307' generation='2'>
       <update id='org.eclipse.ui.editors' range='[0.0.0,3.13.200.v20200501-2307)' severity='0'/>
@@ -5419,23 +5554,23 @@
         </instructions>
       </touchpointData>
     </unit>
-    <unit id='com.collins.trustedsystems.briefcase.staircase.source' version='0.5.2.202107071706' singleton='false'>
-      <update id='com.collins.trustedsystems.briefcase.staircase.source' range='[0.0.0,0.5.2.202107071706)' severity='0'/>
+    <unit id='com.collins.trustedsystems.briefcase.json.export.source' version='0.5.2.202107072340' singleton='false'>
+      <update id='com.collins.trustedsystems.briefcase.json.export.source' range='[0.0.0,0.5.2.202107072340)' severity='0'/>
       <properties size='9'>
         <property name='df_LT.bundleVendor' value='unknown'/>
-        <property name='df_LT.bundleName' value='com.collins.trustedsystems.briefcase.staircase Source'/>
+        <property name='df_LT.bundleName' value='com.collins.trustedsystems.briefcase.json.export Source'/>
         <property name='org.eclipse.equinox.p2.name' value='%bundleName'/>
         <property name='org.eclipse.equinox.p2.provider' value='%bundleVendor'/>
         <property name='org.eclipse.equinox.p2.bundle.localization' value='OSGI-INF/l10n/bundle-src'/>
         <property name='maven-groupId' value='com.collins.trustedsystems.briefcase'/>
-        <property name='maven-artifactId' value='com.collins.trustedsystems.briefcase.staircase'/>
+        <property name='maven-artifactId' value='com.collins.trustedsystems.briefcase.json.export'/>
         <property name='maven-version' value='0.5.2-SNAPSHOT'/>
         <property name='maven-classifier' value='sources'/>
       </properties>
       <provides size='5'>
-        <provided namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.staircase.source' version='0.5.2.202107071706'/>
-        <provided namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase.staircase.source' version='0.5.2.202107071706'/>
-        <provided namespace='osgi.identity' name='com.collins.trustedsystems.briefcase.staircase.source' version='0.5.2.202107071706'>
+        <provided namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.json.export.source' version='0.5.2.202107072340'/>
+        <provided namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase.json.export.source' version='0.5.2.202107072340'/>
+        <provided namespace='osgi.identity' name='com.collins.trustedsystems.briefcase.json.export.source' version='0.5.2.202107072340'>
           <properties size='1'>
             <property name='type' value='osgi.bundle'/>
           </properties>
@@ -5444,13 +5579,13 @@
         <provided namespace='org.eclipse.equinox.p2.localization' name='df_LT' version='1.0.0'/>
       </provides>
       <artifacts size='1'>
-        <artifact classifier='osgi.bundle' id='com.collins.trustedsystems.briefcase.staircase.source' version='0.5.2.202107071706'/>
+        <artifact classifier='osgi.bundle' id='com.collins.trustedsystems.briefcase.json.export.source' version='0.5.2.202107072340'/>
       </artifacts>
       <touchpoint id='org.eclipse.equinox.p2.osgi' version='1.0.0'/>
       <touchpointData size='1'>
         <instructions size='1'>
           <instruction key='manifest'>
-            Bundle-SymbolicName: com.collins.trustedsystems.briefcase.staircase.source&#xA;Bundle-Version: 0.5.2.202107071706
+            Bundle-SymbolicName: com.collins.trustedsystems.briefcase.json.export.source&#xA;Bundle-Version: 0.5.2.202107072340
           </instruction>
         </instructions>
       </touchpointData>
@@ -5948,49 +6083,6 @@
         </instructions>
       </touchpointData>
     </unit>
-    <unit id='com.collins.trustedsystems.briefcase.attestation' version='0.5.2.202107071706' generation='2'>
-      <update id='com.collins.trustedsystems.briefcase.attestation' range='[0.0.0,0.5.2.202107071706)' severity='0'/>
-      <properties size='5'>
-        <property name='org.eclipse.equinox.p2.name' value='com.collins.trustedsystems.briefcase.attestation'/>
-        <property name='org.eclipse.equinox.p2.provider' value='COLLINS'/>
-        <property name='maven-groupId' value='com.collins.trustedsystems.briefcase'/>
-        <property name='maven-artifactId' value='com.collins.trustedsystems.briefcase.attestation'/>
-        <property name='maven-version' value='0.5.2-SNAPSHOT'/>
-      </properties>
-      <provides size='5'>
-        <provided namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.attestation' version='0.5.2.202107071706'/>
-        <provided namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase.attestation' version='0.5.2.202107071706'/>
-        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.attestation' version='0.0.0'/>
-        <provided namespace='osgi.identity' name='com.collins.trustedsystems.briefcase.attestation' version='0.5.2.202107071706'>
-          <properties size='1'>
-            <property name='type' value='osgi.bundle'/>
-          </properties>
-        </provided>
-        <provided namespace='org.eclipse.equinox.p2.eclipse.type' name='bundle' version='1.0.0'/>
-      </provides>
-      <requires size='9'>
-        <required namespace='osgi.bundle' name='org.eclipse.ui' range='0.0.0'/>
-        <required namespace='osgi.bundle' name='org.eclipse.core.runtime' range='0.0.0'/>
-        <required namespace='java.package' name='com.collins.trustedsystems.briefcase' range='0.0.0'/>
-        <required namespace='java.package' name='com.collins.trustedsystems.briefcase.preferences' range='0.0.0'/>
-        <required namespace='java.package' name='com.collins.trustedsystems.briefcase.util' range='0.0.0'/>
-        <required namespace='java.package' name='org.eclipse.core.resources' range='0.0.0'/>
-        <required namespace='java.package' name='org.eclipse.emf.common.util' range='0.0.0'/>
-        <required namespace='java.package' name='org.eclipse.emf.ecore.resource' range='0.0.0'/>
-        <requiredProperties namespace='osgi.ee' match='(&amp;(osgi.ee=JavaSE)(version=1.8))'/>
-      </requires>
-      <artifacts size='1'>
-        <artifact classifier='osgi.bundle' id='com.collins.trustedsystems.briefcase.attestation' version='0.5.2.202107071706'/>
-      </artifacts>
-      <touchpoint id='org.eclipse.equinox.p2.osgi' version='1.0.0'/>
-      <touchpointData size='1'>
-        <instructions size='1'>
-          <instruction key='manifest'>
-            Bundle-SymbolicName: com.collins.trustedsystems.briefcase.attestation;singleton:=true&#xA;Bundle-Version: 0.5.2.202107071706
-          </instruction>
-        </instructions>
-      </touchpointData>
-    </unit>
     <unit id='org.osate.branding' version='1.0.2.v20200824-1409'>
       <update id='org.osate.branding' range='[0.0.0,1.0.2.v20200824-1409)' severity='0'/>
       <properties size='7'>
@@ -6368,56 +6460,6 @@
         </instructions>
       </touchpointData>
     </unit>
-    <unit id='com.collins.trustedsystems.briefcase' version='0.5.2.202107071706' generation='2'>
-      <update id='com.collins.trustedsystems.briefcase' range='[0.0.0,0.5.2.202107071706)' severity='0'/>
-      <properties size='4'>
-        <property name='org.eclipse.equinox.p2.name' value='com.collins.trustedsystems.briefcase'/>
-        <property name='maven-groupId' value='com.collins.trustedsystems.briefcase'/>
-        <property name='maven-artifactId' value='com.collins.trustedsystems.briefcase'/>
-        <property name='maven-version' value='0.5.2-SNAPSHOT'/>
-      </properties>
-      <provides size='7'>
-        <provided namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase' version='0.5.2.202107071706'/>
-        <provided namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase' version='0.5.2.202107071706'/>
-        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase' version='0.0.0'/>
-        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.preferences' version='0.0.0'/>
-        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.util' version='0.0.0'/>
-        <provided namespace='osgi.identity' name='com.collins.trustedsystems.briefcase' version='0.5.2.202107071706'>
-          <properties size='1'>
-            <property name='type' value='osgi.bundle'/>
-          </properties>
-        </provided>
-        <provided namespace='org.eclipse.equinox.p2.eclipse.type' name='bundle' version='1.0.0'/>
-      </provides>
-      <requires size='15'>
-        <required namespace='osgi.bundle' name='org.eclipse.jface' range='0.0.0'/>
-        <required namespace='osgi.bundle' name='org.osate.aadl2' range='[4.0.0,5.0.0)'/>
-        <required namespace='osgi.bundle' name='org.eclipse.xtext.ui' range='0.0.0'/>
-        <required namespace='osgi.bundle' name='org.eclipse.emf.common' range='0.0.0'/>
-        <required namespace='osgi.bundle' name='org.eclipse.ui.console' range='0.0.0'/>
-        <required namespace='osgi.bundle' name='org.osate.pluginsupport' range='[5.0.0,6.0.0)'/>
-        <required namespace='osgi.bundle' name='org.osate.aadl2.instantiation' range='[1.0.1,2.0.0)'/>
-        <required namespace='osgi.bundle' name='org.osate.aadl2.modelsupport' range='[5.0.0,6.0.0)'/>
-        <required namespace='osgi.bundle' name='org.osate.annexsupport' range='[3.0.0,4.0.0)'/>
-        <required namespace='osgi.bundle' name='org.eclipse.mylyn.commons.ui' range='0.0.0'/>
-        <required namespace='java.package' name='org.eclipse.debug.ui.console' range='0.0.0'/>
-        <required namespace='java.package' name='org.eclipse.ui' range='0.0.0'/>
-        <required namespace='java.package' name='org.osate.ui.dialogs' range='0.0.0'/>
-        <required namespace='java.package' name='org.osate.workspace' range='0.0.0'/>
-        <requiredProperties namespace='osgi.ee' match='(&amp;(osgi.ee=JavaSE)(version=1.8))'/>
-      </requires>
-      <artifacts size='1'>
-        <artifact classifier='osgi.bundle' id='com.collins.trustedsystems.briefcase' version='0.5.2.202107071706'/>
-      </artifacts>
-      <touchpoint id='org.eclipse.equinox.p2.osgi' version='1.0.0'/>
-      <touchpointData size='1'>
-        <instructions size='1'>
-          <instruction key='manifest'>
-            Bundle-SymbolicName: com.collins.trustedsystems.briefcase;singleton:=true&#xA;Bundle-Version: 0.5.2.202107071706
-          </instruction>
-        </instructions>
-      </touchpointData>
-    </unit>
     <unit id='org.eclipse.help' version='3.8.800.v20200525-0755' generation='2'>
       <update id='org.eclipse.help' range='[0.0.0,3.8.800.v20200525-0755)' severity='0'/>
       <properties size='8'>
@@ -6545,6 +6587,42 @@
         <instructions size='1'>
           <instruction key='manifest'>
             Bundle-SymbolicName: org.eclipse.xtext.ide;singleton:=true&#xA;Bundle-Version: 2.22.0.v20200602-1352
+          </instruction>
+        </instructions>
+      </touchpointData>
+    </unit>
+    <unit id='com.collins.trustedsystems.briefcase.staircase.source' version='0.5.2.202107072340' singleton='false'>
+      <update id='com.collins.trustedsystems.briefcase.staircase.source' range='[0.0.0,0.5.2.202107072340)' severity='0'/>
+      <properties size='9'>
+        <property name='df_LT.bundleVendor' value='unknown'/>
+        <property name='df_LT.bundleName' value='com.collins.trustedsystems.briefcase.staircase Source'/>
+        <property name='org.eclipse.equinox.p2.name' value='%bundleName'/>
+        <property name='org.eclipse.equinox.p2.provider' value='%bundleVendor'/>
+        <property name='org.eclipse.equinox.p2.bundle.localization' value='OSGI-INF/l10n/bundle-src'/>
+        <property name='maven-groupId' value='com.collins.trustedsystems.briefcase'/>
+        <property name='maven-artifactId' value='com.collins.trustedsystems.briefcase.staircase'/>
+        <property name='maven-version' value='0.5.2-SNAPSHOT'/>
+        <property name='maven-classifier' value='sources'/>
+      </properties>
+      <provides size='5'>
+        <provided namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.staircase.source' version='0.5.2.202107072340'/>
+        <provided namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase.staircase.source' version='0.5.2.202107072340'/>
+        <provided namespace='osgi.identity' name='com.collins.trustedsystems.briefcase.staircase.source' version='0.5.2.202107072340'>
+          <properties size='1'>
+            <property name='type' value='osgi.bundle'/>
+          </properties>
+        </provided>
+        <provided namespace='org.eclipse.equinox.p2.eclipse.type' name='source' version='1.0.0'/>
+        <provided namespace='org.eclipse.equinox.p2.localization' name='df_LT' version='1.0.0'/>
+      </provides>
+      <artifacts size='1'>
+        <artifact classifier='osgi.bundle' id='com.collins.trustedsystems.briefcase.staircase.source' version='0.5.2.202107072340'/>
+      </artifacts>
+      <touchpoint id='org.eclipse.equinox.p2.osgi' version='1.0.0'/>
+      <touchpointData size='1'>
+        <instructions size='1'>
+          <instruction key='manifest'>
+            Bundle-SymbolicName: com.collins.trustedsystems.briefcase.staircase.source&#xA;Bundle-Version: 0.5.2.202107072340
           </instruction>
         </instructions>
       </touchpointData>
@@ -7714,56 +7792,6 @@
         </instructions>
       </touchpointData>
     </unit>
-    <unit id='com.collins.trustedsystems.briefcase.json.export' version='0.5.2.202107071706' generation='2'>
-      <update id='com.collins.trustedsystems.briefcase.json.export' range='[0.0.0,0.5.2.202107071706)' severity='0'/>
-      <properties size='4'>
-        <property name='org.eclipse.equinox.p2.name' value='com.collins.trustedsystems.briefcase.json.export'/>
-        <property name='maven-groupId' value='com.collins.trustedsystems.briefcase'/>
-        <property name='maven-artifactId' value='com.collins.trustedsystems.briefcase.json.export'/>
-        <property name='maven-version' value='0.5.2-SNAPSHOT'/>
-      </properties>
-      <provides size='6'>
-        <provided namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.json.export' version='0.5.2.202107071706'/>
-        <provided namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase.json.export' version='0.5.2.202107071706'/>
-        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.json.export' version='0.0.0'/>
-        <provided namespace='java.package' name='com.google.gson' version='0.0.0'/>
-        <provided namespace='osgi.identity' name='com.collins.trustedsystems.briefcase.json.export' version='0.5.2.202107071706'>
-          <properties size='1'>
-            <property name='type' value='osgi.bundle'/>
-          </properties>
-        </provided>
-        <provided namespace='org.eclipse.equinox.p2.eclipse.type' name='bundle' version='1.0.0'/>
-      </provides>
-      <requires size='16'>
-        <required namespace='osgi.bundle' name='org.eclipse.jface' range='0.0.0'/>
-        <required namespace='osgi.bundle' name='org.osate.aadl2' range='[4.0.0,5.0.0)'/>
-        <required namespace='osgi.bundle' name='org.eclipse.xtext.ui' range='0.0.0'/>
-        <required namespace='osgi.bundle' name='org.eclipse.emf.common' range='0.0.0'/>
-        <required namespace='osgi.bundle' name='org.eclipse.ui.console' range='0.0.0'/>
-        <required namespace='osgi.bundle' name='org.osate.ui' range='[5.0.0,6.0.0)'/>
-        <required namespace='osgi.bundle' name='org.osate.aadl2.instantiation' range='[1.0.1,2.0.0)'/>
-        <required namespace='osgi.bundle' name='org.osate.aadl2.modelsupport' range='[5.0.0,6.0.0)'/>
-        <required namespace='osgi.bundle' name='org.osate.annexsupport' range='[3.0.0,4.0.0)'/>
-        <required namespace='osgi.bundle' name='org.osate.ge' range='[2.0.0,3.0.0)'/>
-        <required namespace='osgi.bundle' name='com.rockwellcollins.atc.agree' range='[2.4.2,3.0.0)'/>
-        <required namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase' range='0.0.0'/>
-        <required namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase.json' range='0.0.0'/>
-        <required namespace='java.package' name='org.eclipse.mylyn.commons.ui.dialogs' range='0.0.0'/>
-        <required namespace='java.package' name='org.eclipse.ui' range='0.0.0'/>
-        <requiredProperties namespace='osgi.ee' match='(&amp;(osgi.ee=JavaSE)(version=1.8))'/>
-      </requires>
-      <artifacts size='1'>
-        <artifact classifier='osgi.bundle' id='com.collins.trustedsystems.briefcase.json.export' version='0.5.2.202107071706'/>
-      </artifacts>
-      <touchpoint id='org.eclipse.equinox.p2.osgi' version='1.0.0'/>
-      <touchpointData size='1'>
-        <instructions size='1'>
-          <instruction key='manifest'>
-            Bundle-SymbolicName: com.collins.trustedsystems.briefcase.json.export;singleton:=true&#xA;Bundle-Version: 0.5.2.202107071706
-          </instruction>
-        </instructions>
-      </touchpointData>
-    </unit>
     <unit id='com.google.guava' version='21.0.0.v20170206-1425' singleton='false'>
       <update id='com.google.guava' range='[0.0.0,21.0.0.v20170206-1425)' severity='0'/>
       <properties size='9'>
@@ -7830,6 +7858,98 @@
           </instruction>
         </instructions>
       </touchpointData>
+    </unit>
+    <unit id='com.collins.trustedsystems.briefcase' version='0.5.2.202107072340' generation='2'>
+      <update id='com.collins.trustedsystems.briefcase' range='[0.0.0,0.5.2.202107072340)' severity='0'/>
+      <properties size='4'>
+        <property name='org.eclipse.equinox.p2.name' value='com.collins.trustedsystems.briefcase'/>
+        <property name='maven-groupId' value='com.collins.trustedsystems.briefcase'/>
+        <property name='maven-artifactId' value='com.collins.trustedsystems.briefcase'/>
+        <property name='maven-version' value='0.5.2-SNAPSHOT'/>
+      </properties>
+      <provides size='7'>
+        <provided namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase' version='0.5.2.202107072340'/>
+        <provided namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase' version='0.5.2.202107072340'/>
+        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase' version='0.0.0'/>
+        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.preferences' version='0.0.0'/>
+        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.util' version='0.0.0'/>
+        <provided namespace='osgi.identity' name='com.collins.trustedsystems.briefcase' version='0.5.2.202107072340'>
+          <properties size='1'>
+            <property name='type' value='osgi.bundle'/>
+          </properties>
+        </provided>
+        <provided namespace='org.eclipse.equinox.p2.eclipse.type' name='bundle' version='1.0.0'/>
+      </provides>
+      <requires size='15'>
+        <required namespace='osgi.bundle' name='org.eclipse.jface' range='0.0.0'/>
+        <required namespace='osgi.bundle' name='org.osate.aadl2' range='[4.0.0,5.0.0)'/>
+        <required namespace='osgi.bundle' name='org.eclipse.xtext.ui' range='0.0.0'/>
+        <required namespace='osgi.bundle' name='org.eclipse.emf.common' range='0.0.0'/>
+        <required namespace='osgi.bundle' name='org.eclipse.ui.console' range='0.0.0'/>
+        <required namespace='osgi.bundle' name='org.osate.pluginsupport' range='[5.0.0,6.0.0)'/>
+        <required namespace='osgi.bundle' name='org.osate.aadl2.instantiation' range='[1.0.1,2.0.0)'/>
+        <required namespace='osgi.bundle' name='org.osate.aadl2.modelsupport' range='[5.0.0,6.0.0)'/>
+        <required namespace='osgi.bundle' name='org.osate.annexsupport' range='[3.0.0,4.0.0)'/>
+        <required namespace='osgi.bundle' name='org.eclipse.mylyn.commons.ui' range='0.0.0'/>
+        <required namespace='java.package' name='org.eclipse.debug.ui.console' range='0.0.0'/>
+        <required namespace='java.package' name='org.eclipse.ui' range='0.0.0'/>
+        <required namespace='java.package' name='org.osate.ui.dialogs' range='0.0.0'/>
+        <required namespace='java.package' name='org.osate.workspace' range='0.0.0'/>
+        <requiredProperties namespace='osgi.ee' match='(&amp;(osgi.ee=JavaSE)(version=1.8))'/>
+      </requires>
+      <artifacts size='1'>
+        <artifact classifier='osgi.bundle' id='com.collins.trustedsystems.briefcase' version='0.5.2.202107072340'/>
+      </artifacts>
+      <touchpoint id='org.eclipse.equinox.p2.osgi' version='1.0.0'/>
+      <touchpointData size='1'>
+        <instructions size='1'>
+          <instruction key='manifest'>
+            Bundle-SymbolicName: com.collins.trustedsystems.briefcase;singleton:=true&#xA;Bundle-Version: 0.5.2.202107072340
+          </instruction>
+        </instructions>
+      </touchpointData>
+    </unit>
+    <unit id='com.collins.trustedsystems.briefcase.feature.source.feature.group' version='0.5.2.202107072340' singleton='false'>
+      <update id='com.collins.trustedsystems.briefcase.feature.source.feature.group' range='[0.0.0,0.5.2.202107072340)' severity='0'/>
+      <properties size='9'>
+        <property name='org.eclipse.equinox.p2.name' value='BriefCASE Developer Resources'/>
+        <property name='org.eclipse.equinox.p2.description' value='[Enter Feature Description here.]'/>
+        <property name='org.eclipse.equinox.p2.description.url' value='http://www.example.com/description'/>
+        <property name='org.eclipse.equinox.p2.provider' value='ROCKWELLCOLLINS'/>
+        <property name='org.eclipse.equinox.p2.type.group' value='true'/>
+        <property name='maven-groupId' value='com.collins.trustedsystems.briefcase'/>
+        <property name='maven-artifactId' value='com.collins.trustedsystems.briefcase.feature'/>
+        <property name='maven-version' value='0.5.2-SNAPSHOT'/>
+        <property name='maven-classifier' value='sources-feature'/>
+      </properties>
+      <provides size='1'>
+        <provided namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.feature.source.feature.group' version='0.5.2.202107072340'/>
+      </provides>
+      <requires size='10'>
+        <required namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.feature.feature.group' range='[0.5.2.202107072340,0.5.2.202107072340]'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.source' range='[0.5.2.202107072340,0.5.2.202107072340]'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.attestation.source' range='[0.5.2.202107072340,0.5.2.202107072340]'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.splat.source' range='[0.5.2.202107072340,0.5.2.202107072340]'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.staircase.source' range='[0.5.2.202107072340,0.5.2.202107072340]'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.toolcheck.source' range='[0.5.2.202107072340,0.5.2.202107072340]'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.json.source' range='[0.5.2.202107072340,0.5.2.202107072340]'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.json.ui.source' range='[0.5.2.202107072340,0.5.2.202107072340]'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.json.export.source' range='[0.5.2.202107072340,0.5.2.202107072340]'/>
+        <required namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.feature.source.feature.jar' range='[0.5.2.202107072340,0.5.2.202107072340]'>
+          <filter>
+            (org.eclipse.update.install.features=true)
+          </filter>
+        </required>
+      </requires>
+      <touchpoint id='null' version='0.0.0'/>
+      <licenses size='1'>
+        <license uri='http://www.example.com/license' url='http://www.example.com/license'>
+          [Enter License Description here.]
+        </license>
+      </licenses>
+      <copyright uri='http://www.example.com/copyright' url='http://www.example.com/copyright'>
+        [Enter Copyright Description here.]
+      </copyright>
     </unit>
     <unit id='org.eclipse.jdt.launching' version='3.17.100.v20200526-1503' generation='2'>
       <update id='org.eclipse.jdt.launching' range='[0.0.0,3.17.100.v20200526-1503)' severity='0'/>
@@ -8508,42 +8628,6 @@
         </instructions>
       </touchpointData>
     </unit>
-    <unit id='com.collins.trustedsystems.briefcase.attestation.source' version='0.5.2.202107071706' singleton='false'>
-      <update id='com.collins.trustedsystems.briefcase.attestation.source' range='[0.0.0,0.5.2.202107071706)' severity='0'/>
-      <properties size='9'>
-        <property name='df_LT.bundleVendor' value='COLLINS'/>
-        <property name='df_LT.bundleName' value='com.collins.trustedsystems.briefcase.attestation Source'/>
-        <property name='org.eclipse.equinox.p2.name' value='%bundleName'/>
-        <property name='org.eclipse.equinox.p2.provider' value='%bundleVendor'/>
-        <property name='org.eclipse.equinox.p2.bundle.localization' value='OSGI-INF/l10n/bundle-src'/>
-        <property name='maven-groupId' value='com.collins.trustedsystems.briefcase'/>
-        <property name='maven-artifactId' value='com.collins.trustedsystems.briefcase.attestation'/>
-        <property name='maven-version' value='0.5.2-SNAPSHOT'/>
-        <property name='maven-classifier' value='sources'/>
-      </properties>
-      <provides size='5'>
-        <provided namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.attestation.source' version='0.5.2.202107071706'/>
-        <provided namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase.attestation.source' version='0.5.2.202107071706'/>
-        <provided namespace='osgi.identity' name='com.collins.trustedsystems.briefcase.attestation.source' version='0.5.2.202107071706'>
-          <properties size='1'>
-            <property name='type' value='osgi.bundle'/>
-          </properties>
-        </provided>
-        <provided namespace='org.eclipse.equinox.p2.eclipse.type' name='source' version='1.0.0'/>
-        <provided namespace='org.eclipse.equinox.p2.localization' name='df_LT' version='1.0.0'/>
-      </provides>
-      <artifacts size='1'>
-        <artifact classifier='osgi.bundle' id='com.collins.trustedsystems.briefcase.attestation.source' version='0.5.2.202107071706'/>
-      </artifacts>
-      <touchpoint id='org.eclipse.equinox.p2.osgi' version='1.0.0'/>
-      <touchpointData size='1'>
-        <instructions size='1'>
-          <instruction key='manifest'>
-            Bundle-SymbolicName: com.collins.trustedsystems.briefcase.attestation.source&#xA;Bundle-Version: 0.5.2.202107071706
-          </instruction>
-        </instructions>
-      </touchpointData>
-    </unit>
     <unit id='org.eclipse.e4.ui.workbench.addons.swt' version='1.3.1000.v20200517-1848' generation='2'>
       <update id='org.eclipse.e4.ui.workbench.addons.swt' range='[0.0.0,1.3.1000.v20200517-1848)' severity='0'/>
       <properties size='8'>
@@ -8759,42 +8843,6 @@
         <instructions size='1'>
           <instruction key='manifest'>
             Bundle-SymbolicName: org.eclipse.uml2.types;singleton:=true&#xA;Bundle-Version: 2.5.0.v20200302-1312
-          </instruction>
-        </instructions>
-      </touchpointData>
-    </unit>
-    <unit id='com.collins.trustedsystems.briefcase.toolcheck.source' version='0.5.2.202107071706' singleton='false'>
-      <update id='com.collins.trustedsystems.briefcase.toolcheck.source' range='[0.0.0,0.5.2.202107071706)' severity='0'/>
-      <properties size='9'>
-        <property name='df_LT.bundleVendor' value='Collins Aerospace'/>
-        <property name='df_LT.bundleName' value='com.collins.trustedsystems.briefcase.toolcheck Source'/>
-        <property name='org.eclipse.equinox.p2.name' value='%bundleName'/>
-        <property name='org.eclipse.equinox.p2.provider' value='%bundleVendor'/>
-        <property name='org.eclipse.equinox.p2.bundle.localization' value='OSGI-INF/l10n/bundle-src'/>
-        <property name='maven-groupId' value='com.collins.trustedsystems.briefcase'/>
-        <property name='maven-artifactId' value='com.collins.trustedsystems.briefcase.toolcheck'/>
-        <property name='maven-version' value='0.5.2-SNAPSHOT'/>
-        <property name='maven-classifier' value='sources'/>
-      </properties>
-      <provides size='5'>
-        <provided namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.toolcheck.source' version='0.5.2.202107071706'/>
-        <provided namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase.toolcheck.source' version='0.5.2.202107071706'/>
-        <provided namespace='osgi.identity' name='com.collins.trustedsystems.briefcase.toolcheck.source' version='0.5.2.202107071706'>
-          <properties size='1'>
-            <property name='type' value='osgi.bundle'/>
-          </properties>
-        </provided>
-        <provided namespace='org.eclipse.equinox.p2.eclipse.type' name='source' version='1.0.0'/>
-        <provided namespace='org.eclipse.equinox.p2.localization' name='df_LT' version='1.0.0'/>
-      </provides>
-      <artifacts size='1'>
-        <artifact classifier='osgi.bundle' id='com.collins.trustedsystems.briefcase.toolcheck.source' version='0.5.2.202107071706'/>
-      </artifacts>
-      <touchpoint id='org.eclipse.equinox.p2.osgi' version='1.0.0'/>
-      <touchpointData size='1'>
-        <instructions size='1'>
-          <instruction key='manifest'>
-            Bundle-SymbolicName: com.collins.trustedsystems.briefcase.toolcheck.source&#xA;Bundle-Version: 0.5.2.202107071706
           </instruction>
         </instructions>
       </touchpointData>
@@ -9373,6 +9421,42 @@
         </instructions>
       </touchpointData>
     </unit>
+    <unit id='com.collins.trustedsystems.briefcase.attestation.source' version='0.5.2.202107072340' singleton='false'>
+      <update id='com.collins.trustedsystems.briefcase.attestation.source' range='[0.0.0,0.5.2.202107072340)' severity='0'/>
+      <properties size='9'>
+        <property name='df_LT.bundleVendor' value='COLLINS'/>
+        <property name='df_LT.bundleName' value='com.collins.trustedsystems.briefcase.attestation Source'/>
+        <property name='org.eclipse.equinox.p2.name' value='%bundleName'/>
+        <property name='org.eclipse.equinox.p2.provider' value='%bundleVendor'/>
+        <property name='org.eclipse.equinox.p2.bundle.localization' value='OSGI-INF/l10n/bundle-src'/>
+        <property name='maven-groupId' value='com.collins.trustedsystems.briefcase'/>
+        <property name='maven-artifactId' value='com.collins.trustedsystems.briefcase.attestation'/>
+        <property name='maven-version' value='0.5.2-SNAPSHOT'/>
+        <property name='maven-classifier' value='sources'/>
+      </properties>
+      <provides size='5'>
+        <provided namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.attestation.source' version='0.5.2.202107072340'/>
+        <provided namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase.attestation.source' version='0.5.2.202107072340'/>
+        <provided namespace='osgi.identity' name='com.collins.trustedsystems.briefcase.attestation.source' version='0.5.2.202107072340'>
+          <properties size='1'>
+            <property name='type' value='osgi.bundle'/>
+          </properties>
+        </provided>
+        <provided namespace='org.eclipse.equinox.p2.eclipse.type' name='source' version='1.0.0'/>
+        <provided namespace='org.eclipse.equinox.p2.localization' name='df_LT' version='1.0.0'/>
+      </provides>
+      <artifacts size='1'>
+        <artifact classifier='osgi.bundle' id='com.collins.trustedsystems.briefcase.attestation.source' version='0.5.2.202107072340'/>
+      </artifacts>
+      <touchpoint id='org.eclipse.equinox.p2.osgi' version='1.0.0'/>
+      <touchpointData size='1'>
+        <instructions size='1'>
+          <instruction key='manifest'>
+            Bundle-SymbolicName: com.collins.trustedsystems.briefcase.attestation.source&#xA;Bundle-Version: 0.5.2.202107072340
+          </instruction>
+        </instructions>
+      </touchpointData>
+    </unit>
     <unit id='org.eclipse.ui.navigator.resources' version='3.7.300.v20200417-1241' generation='2'>
       <update id='org.eclipse.ui.navigator.resources' range='[0.0.0,3.7.300.v20200417-1241)' severity='0'/>
       <properties size='8'>
@@ -9476,47 +9560,55 @@
         </instructions>
       </touchpointData>
     </unit>
-    <unit id='com.collins.trustedsystems.briefcase.feature.source.feature.group' version='0.5.2.202107071706' singleton='false'>
-      <update id='com.collins.trustedsystems.briefcase.feature.source.feature.group' range='[0.0.0,0.5.2.202107071706)' severity='0'/>
-      <properties size='9'>
-        <property name='org.eclipse.equinox.p2.name' value='BriefCASE Developer Resources'/>
-        <property name='org.eclipse.equinox.p2.description' value='[Enter Feature Description here.]'/>
-        <property name='org.eclipse.equinox.p2.description.url' value='http://www.example.com/description'/>
-        <property name='org.eclipse.equinox.p2.provider' value='ROCKWELLCOLLINS'/>
-        <property name='org.eclipse.equinox.p2.type.group' value='true'/>
+    <unit id='com.collins.trustedsystems.briefcase.json.export' version='0.5.2.202107072340' generation='2'>
+      <update id='com.collins.trustedsystems.briefcase.json.export' range='[0.0.0,0.5.2.202107072340)' severity='0'/>
+      <properties size='4'>
+        <property name='org.eclipse.equinox.p2.name' value='com.collins.trustedsystems.briefcase.json.export'/>
         <property name='maven-groupId' value='com.collins.trustedsystems.briefcase'/>
-        <property name='maven-artifactId' value='com.collins.trustedsystems.briefcase.feature'/>
+        <property name='maven-artifactId' value='com.collins.trustedsystems.briefcase.json.export'/>
         <property name='maven-version' value='0.5.2-SNAPSHOT'/>
-        <property name='maven-classifier' value='sources-feature'/>
       </properties>
-      <provides size='1'>
-        <provided namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.feature.source.feature.group' version='0.5.2.202107071706'/>
+      <provides size='6'>
+        <provided namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.json.export' version='0.5.2.202107072340'/>
+        <provided namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase.json.export' version='0.5.2.202107072340'/>
+        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.json.export' version='0.0.0'/>
+        <provided namespace='java.package' name='com.google.gson' version='0.0.0'/>
+        <provided namespace='osgi.identity' name='com.collins.trustedsystems.briefcase.json.export' version='0.5.2.202107072340'>
+          <properties size='1'>
+            <property name='type' value='osgi.bundle'/>
+          </properties>
+        </provided>
+        <provided namespace='org.eclipse.equinox.p2.eclipse.type' name='bundle' version='1.0.0'/>
       </provides>
-      <requires size='10'>
-        <required namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.feature.feature.group' range='[0.5.2.202107071706,0.5.2.202107071706]'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.source' range='[0.5.2.202107071706,0.5.2.202107071706]'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.attestation.source' range='[0.5.2.202107071706,0.5.2.202107071706]'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.splat.source' range='[0.5.2.202107071706,0.5.2.202107071706]'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.staircase.source' range='[0.5.2.202107071706,0.5.2.202107071706]'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.toolcheck.source' range='[0.5.2.202107071706,0.5.2.202107071706]'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.json.source' range='[0.5.2.202107071706,0.5.2.202107071706]'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.json.ui.source' range='[0.5.2.202107071706,0.5.2.202107071706]'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.json.export.source' range='[0.5.2.202107071706,0.5.2.202107071706]'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.feature.source.feature.jar' range='[0.5.2.202107071706,0.5.2.202107071706]'>
-          <filter>
-            (org.eclipse.update.install.features=true)
-          </filter>
-        </required>
+      <requires size='16'>
+        <required namespace='osgi.bundle' name='org.eclipse.jface' range='0.0.0'/>
+        <required namespace='osgi.bundle' name='org.osate.aadl2' range='[4.0.0,5.0.0)'/>
+        <required namespace='osgi.bundle' name='org.eclipse.xtext.ui' range='0.0.0'/>
+        <required namespace='osgi.bundle' name='org.eclipse.emf.common' range='0.0.0'/>
+        <required namespace='osgi.bundle' name='org.eclipse.ui.console' range='0.0.0'/>
+        <required namespace='osgi.bundle' name='org.osate.ui' range='[5.0.0,6.0.0)'/>
+        <required namespace='osgi.bundle' name='org.osate.aadl2.instantiation' range='[1.0.1,2.0.0)'/>
+        <required namespace='osgi.bundle' name='org.osate.aadl2.modelsupport' range='[5.0.0,6.0.0)'/>
+        <required namespace='osgi.bundle' name='org.osate.annexsupport' range='[3.0.0,4.0.0)'/>
+        <required namespace='osgi.bundle' name='org.osate.ge' range='[2.0.0,3.0.0)'/>
+        <required namespace='osgi.bundle' name='com.rockwellcollins.atc.agree' range='[2.4.2,3.0.0)'/>
+        <required namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase' range='0.0.0'/>
+        <required namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase.json' range='0.0.0'/>
+        <required namespace='java.package' name='org.eclipse.mylyn.commons.ui.dialogs' range='0.0.0'/>
+        <required namespace='java.package' name='org.eclipse.ui' range='0.0.0'/>
+        <requiredProperties namespace='osgi.ee' match='(&amp;(osgi.ee=JavaSE)(version=1.8))'/>
       </requires>
-      <touchpoint id='null' version='0.0.0'/>
-      <licenses size='1'>
-        <license uri='http://www.example.com/license' url='http://www.example.com/license'>
-          [Enter License Description here.]
-        </license>
-      </licenses>
-      <copyright uri='http://www.example.com/copyright' url='http://www.example.com/copyright'>
-        [Enter Copyright Description here.]
-      </copyright>
+      <artifacts size='1'>
+        <artifact classifier='osgi.bundle' id='com.collins.trustedsystems.briefcase.json.export' version='0.5.2.202107072340'/>
+      </artifacts>
+      <touchpoint id='org.eclipse.equinox.p2.osgi' version='1.0.0'/>
+      <touchpointData size='1'>
+        <instructions size='1'>
+          <instruction key='manifest'>
+            Bundle-SymbolicName: com.collins.trustedsystems.briefcase.json.export;singleton:=true&#xA;Bundle-Version: 0.5.2.202107072340
+          </instruction>
+        </instructions>
+      </touchpointData>
     </unit>
     <unit id='org.eclipse.e4.ui.css.core' version='0.12.1200.v20200513-0930' generation='2'>
       <update id='org.eclipse.e4.ui.css.core' range='[0.0.0,0.12.1200.v20200513-0930)' severity='0'/>
@@ -9659,42 +9751,6 @@
         <instructions size='1'>
           <instruction key='manifest'>
             Bundle-SymbolicName: org.eclipse.uml2.uml.edit; singleton:=true&#xA;Bundle-Version: 5.5.0.v20200302-1312
-          </instruction>
-        </instructions>
-      </touchpointData>
-    </unit>
-    <unit id='com.collins.trustedsystems.briefcase.source' version='0.5.2.202107071706' singleton='false'>
-      <update id='com.collins.trustedsystems.briefcase.source' range='[0.0.0,0.5.2.202107071706)' severity='0'/>
-      <properties size='9'>
-        <property name='df_LT.bundleVendor' value='unknown'/>
-        <property name='df_LT.bundleName' value='com.collins.trustedsystems.briefcase Source'/>
-        <property name='org.eclipse.equinox.p2.name' value='%bundleName'/>
-        <property name='org.eclipse.equinox.p2.provider' value='%bundleVendor'/>
-        <property name='org.eclipse.equinox.p2.bundle.localization' value='OSGI-INF/l10n/bundle-src'/>
-        <property name='maven-groupId' value='com.collins.trustedsystems.briefcase'/>
-        <property name='maven-artifactId' value='com.collins.trustedsystems.briefcase'/>
-        <property name='maven-version' value='0.5.2-SNAPSHOT'/>
-        <property name='maven-classifier' value='sources'/>
-      </properties>
-      <provides size='5'>
-        <provided namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.source' version='0.5.2.202107071706'/>
-        <provided namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase.source' version='0.5.2.202107071706'/>
-        <provided namespace='osgi.identity' name='com.collins.trustedsystems.briefcase.source' version='0.5.2.202107071706'>
-          <properties size='1'>
-            <property name='type' value='osgi.bundle'/>
-          </properties>
-        </provided>
-        <provided namespace='org.eclipse.equinox.p2.eclipse.type' name='source' version='1.0.0'/>
-        <provided namespace='org.eclipse.equinox.p2.localization' name='df_LT' version='1.0.0'/>
-      </provides>
-      <artifacts size='1'>
-        <artifact classifier='osgi.bundle' id='com.collins.trustedsystems.briefcase.source' version='0.5.2.202107071706'/>
-      </artifacts>
-      <touchpoint id='org.eclipse.equinox.p2.osgi' version='1.0.0'/>
-      <touchpointData size='1'>
-        <instructions size='1'>
-          <instruction key='manifest'>
-            Bundle-SymbolicName: com.collins.trustedsystems.briefcase.source&#xA;Bundle-Version: 0.5.2.202107071706
           </instruction>
         </instructions>
       </touchpointData>
@@ -10131,59 +10187,6 @@
         </instructions>
       </touchpointData>
     </unit>
-    <unit id='com.collins.trustedsystems.briefcase.json.ui' version='0.5.2.202107071706' generation='2'>
-      <update id='com.collins.trustedsystems.briefcase.json.ui' range='[0.0.0,0.5.2.202107071706)' severity='0'/>
-      <properties size='4'>
-        <property name='org.eclipse.equinox.p2.name' value='com.collins.trustedsystems.briefcase.json.ui'/>
-        <property name='maven-groupId' value='com.collins.trustedsystems.briefcase'/>
-        <property name='maven-artifactId' value='com.collins.trustedsystems.briefcase.json.ui'/>
-        <property name='maven-version' value='0.5.2-SNAPSHOT'/>
-      </properties>
-      <provides size='7'>
-        <provided namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.json.ui' version='0.5.2.202107071706'/>
-        <provided namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase.json.ui' version='0.5.2.202107071706'/>
-        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.json.ui' version='0.0.0'/>
-        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.json.ui.contentassist' version='0.0.0'/>
-        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.json.ui.quickfix' version='0.0.0'/>
-        <provided namespace='osgi.identity' name='com.collins.trustedsystems.briefcase.json.ui' version='0.5.2.202107071706'>
-          <properties size='1'>
-            <property name='type' value='osgi.bundle'/>
-          </properties>
-        </provided>
-        <provided namespace='org.eclipse.equinox.p2.eclipse.type' name='bundle' version='1.0.0'/>
-      </provides>
-      <requires size='18'>
-        <required namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase.json' range='0.0.0'/>
-        <required namespace='osgi.bundle' name='org.eclipse.xtext.ui' range='0.0.0'/>
-        <required namespace='osgi.bundle' name='org.eclipse.xtext.ui.shared' range='0.0.0'/>
-        <required namespace='osgi.bundle' name='org.eclipse.xtext.ui.codetemplates.ui' range='0.0.0'/>
-        <required namespace='osgi.bundle' name='org.eclipse.ui.editors' range='3.5.0'/>
-        <required namespace='osgi.bundle' name='org.eclipse.ui.ide' range='3.5.0'/>
-        <required namespace='osgi.bundle' name='org.eclipse.ui' range='0.0.0'/>
-        <required namespace='osgi.bundle' name='org.eclipse.xtext.builder' range='0.0.0'/>
-        <required namespace='osgi.bundle' name='org.antlr.runtime' range='0.0.0'/>
-        <required namespace='osgi.bundle' name='org.osate.xtext.aadl2.properties' range='[3.0.0,4.0.0)'/>
-        <required namespace='osgi.bundle' name='org.osate.xtext.aadl2.properties.ui' range='[4.0.0,5.0.0)'/>
-        <required namespace='osgi.bundle' name='org.osate.annexsupport' range='[3.0.0,4.0.0)'/>
-        <required namespace='osgi.bundle' name='org.osate.aadl2' range='[4.0.0,5.0.0)'/>
-        <required namespace='osgi.bundle' name='org.osate.aadl2.modelsupport' range='[5.0.0,6.0.0)'/>
-        <required namespace='osgi.bundle' name='org.osate.xtext.aadl2.ui' range='[5.0.0,6.0.0)'/>
-        <required namespace='osgi.bundle' name='org.apache.log4j' range='1.2.0'/>
-        <required namespace='java.package' name='org.apache.log4j' range='0.0.0'/>
-        <requiredProperties namespace='osgi.ee' match='(&amp;(osgi.ee=JavaSE)(version=1.8))'/>
-      </requires>
-      <artifacts size='1'>
-        <artifact classifier='osgi.bundle' id='com.collins.trustedsystems.briefcase.json.ui' version='0.5.2.202107071706'/>
-      </artifacts>
-      <touchpoint id='org.eclipse.equinox.p2.osgi' version='1.0.0'/>
-      <touchpointData size='1'>
-        <instructions size='1'>
-          <instruction key='manifest'>
-            Bundle-SymbolicName: com.collins.trustedsystems.briefcase.json.ui;singleton:=true&#xA;Bundle-Version: 0.5.2.202107071706
-          </instruction>
-        </instructions>
-      </touchpointData>
-    </unit>
     <unit id='org.eclipse.debug.core' version='3.15.100.v20200514-0816' generation='2'>
       <update id='org.eclipse.debug.core' range='[0.0.0,3.15.100.v20200514-0816)' severity='0'/>
       <properties size='8'>
@@ -10357,44 +10360,6 @@
           </instruction>
         </instructions>
       </touchpointData>
-    </unit>
-    <unit id='com.collins.trustedsystems.briefcase.feature.feature.jar' version='0.5.2.202107071706'>
-      <properties size='7'>
-        <property name='org.eclipse.equinox.p2.name' value='BriefCASE'/>
-        <property name='org.eclipse.equinox.p2.description' value='[Enter Feature Description here.]'/>
-        <property name='org.eclipse.equinox.p2.description.url' value='http://www.example.com/description'/>
-        <property name='org.eclipse.equinox.p2.provider' value='ROCKWELLCOLLINS'/>
-        <property name='maven-groupId' value='com.collins.trustedsystems.briefcase'/>
-        <property name='maven-artifactId' value='com.collins.trustedsystems.briefcase.feature'/>
-        <property name='maven-version' value='0.5.2-SNAPSHOT'/>
-      </properties>
-      <provides size='3'>
-        <provided namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.feature.feature.jar' version='0.5.2.202107071706'/>
-        <provided namespace='org.eclipse.equinox.p2.eclipse.type' name='feature' version='1.0.0'/>
-        <provided namespace='org.eclipse.update.feature' name='com.collins.trustedsystems.briefcase.feature' version='0.5.2.202107071706'/>
-      </provides>
-      <filter>
-        (org.eclipse.update.install.features=true)
-      </filter>
-      <artifacts size='1'>
-        <artifact classifier='org.eclipse.update.feature' id='com.collins.trustedsystems.briefcase.feature' version='0.5.2.202107071706'/>
-      </artifacts>
-      <touchpoint id='org.eclipse.equinox.p2.osgi' version='1.0.0'/>
-      <touchpointData size='1'>
-        <instructions size='1'>
-          <instruction key='zipped'>
-            true
-          </instruction>
-        </instructions>
-      </touchpointData>
-      <licenses size='1'>
-        <license uri='http://www.example.com/license' url='http://www.example.com/license'>
-          [Enter License Description here.]
-        </license>
-      </licenses>
-      <copyright uri='http://www.example.com/copyright' url='http://www.example.com/copyright'>
-        [Enter Copyright Description here.]
-      </copyright>
     </unit>
     <unit id='org.osate.help' version='2.9.0.vfinal'>
       <update id='org.osate.help' range='[0.0.0,2.9.0.vfinal)' severity='0'/>
@@ -10665,44 +10630,63 @@
         </instructions>
       </touchpointData>
     </unit>
-    <unit id='com.collins.trustedsystems.briefcase.feature.source.feature.jar' version='0.5.2.202107071706'>
-      <properties size='8'>
-        <property name='org.eclipse.equinox.p2.name' value='BriefCASE Developer Resources'/>
-        <property name='org.eclipse.equinox.p2.description' value='[Enter Feature Description here.]'/>
-        <property name='org.eclipse.equinox.p2.description.url' value='http://www.example.com/description'/>
-        <property name='org.eclipse.equinox.p2.provider' value='ROCKWELLCOLLINS'/>
+    <unit id='com.collins.trustedsystems.briefcase.json' version='0.5.2.202107072340' generation='2'>
+      <update id='com.collins.trustedsystems.briefcase.json' range='[0.0.0,0.5.2.202107072340)' severity='0'/>
+      <properties size='4'>
+        <property name='org.eclipse.equinox.p2.name' value='com.collins.trustedsystems.briefcase.json'/>
         <property name='maven-groupId' value='com.collins.trustedsystems.briefcase'/>
-        <property name='maven-artifactId' value='com.collins.trustedsystems.briefcase.feature'/>
+        <property name='maven-artifactId' value='com.collins.trustedsystems.briefcase.json'/>
         <property name='maven-version' value='0.5.2-SNAPSHOT'/>
-        <property name='maven-classifier' value='sources-feature'/>
       </properties>
-      <provides size='3'>
-        <provided namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.feature.source.feature.jar' version='0.5.2.202107071706'/>
-        <provided namespace='org.eclipse.equinox.p2.eclipse.type' name='feature' version='1.0.0'/>
-        <provided namespace='org.eclipse.update.feature' name='com.collins.trustedsystems.briefcase.feature.source' version='0.5.2.202107071706'/>
+      <provides size='16'>
+        <provided namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.json' version='0.5.2.202107072340'/>
+        <provided namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase.json' version='0.5.2.202107072340'/>
+        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.json' version='0.0.0'/>
+        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.json.services' version='0.0.0'/>
+        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.json.json' version='0.0.0'/>
+        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.json.json.impl' version='0.0.0'/>
+        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.json.json.util' version='0.0.0'/>
+        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.json.serializer' version='0.0.0'/>
+        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.json.parser.antlr' version='0.0.0'/>
+        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.json.parser.antlr.internal' version='0.0.0'/>
+        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.json.parser.antlr.lexer' version='0.0.0'/>
+        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.json.validation' version='0.0.0'/>
+        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.json.scoping' version='0.0.0'/>
+        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.json.formatting' version='0.0.0'/>
+        <provided namespace='osgi.identity' name='com.collins.trustedsystems.briefcase.json' version='0.5.2.202107072340'>
+          <properties size='1'>
+            <property name='type' value='osgi.bundle'/>
+          </properties>
+        </provided>
+        <provided namespace='org.eclipse.equinox.p2.eclipse.type' name='bundle' version='1.0.0'/>
       </provides>
-      <filter>
-        (org.eclipse.update.install.features=true)
-      </filter>
+      <requires size='14'>
+        <required namespace='osgi.bundle' name='org.eclipse.xtext' range='0.0.0'/>
+        <required namespace='osgi.bundle' name='org.eclipse.xtext.xbase' range='0.0.0'/>
+        <required namespace='osgi.bundle' name='org.eclipse.equinox.common' range='3.5.0'/>
+        <required namespace='osgi.bundle' name='org.osate.aadl2' range='[4.0.0,5.0.0)'/>
+        <required namespace='osgi.bundle' name='org.osate.xtext.aadl2' range='[5.0.0,6.0.0)'/>
+        <required namespace='osgi.bundle' name='org.osate.xtext.aadl2.properties' range='[3.0.0,4.0.0)'/>
+        <required namespace='osgi.bundle' name='org.eclipse.xtext.generator' range='2.17.0'/>
+        <required namespace='osgi.bundle' name='org.eclipse.xtext.util' range='0.0.0'/>
+        <required namespace='osgi.bundle' name='org.eclipse.emf.ecore' range='0.0.0'/>
+        <required namespace='osgi.bundle' name='org.eclipse.emf.common' range='0.0.0'/>
+        <required namespace='osgi.bundle' name='org.antlr.runtime' range='0.0.0'/>
+        <required namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase.json' range='0.0.0'/>
+        <required namespace='java.package' name='org.apache.log4j' range='0.0.0'/>
+        <requiredProperties namespace='osgi.ee' match='(&amp;(osgi.ee=JavaSE)(version=1.8))'/>
+      </requires>
       <artifacts size='1'>
-        <artifact classifier='org.eclipse.update.feature' id='com.collins.trustedsystems.briefcase.feature.source' version='0.5.2.202107071706'/>
+        <artifact classifier='osgi.bundle' id='com.collins.trustedsystems.briefcase.json' version='0.5.2.202107072340'/>
       </artifacts>
       <touchpoint id='org.eclipse.equinox.p2.osgi' version='1.0.0'/>
       <touchpointData size='1'>
         <instructions size='1'>
-          <instruction key='zipped'>
-            true
+          <instruction key='manifest'>
+            Bundle-SymbolicName: com.collins.trustedsystems.briefcase.json;singleton:=true&#xA;Bundle-Version: 0.5.2.202107072340
           </instruction>
         </instructions>
       </touchpointData>
-      <licenses size='1'>
-        <license uri='http://www.example.com/license' url='http://www.example.com/license'>
-          [Enter License Description here.]
-        </license>
-      </licenses>
-      <copyright uri='http://www.example.com/copyright' url='http://www.example.com/copyright'>
-        [Enter Copyright Description here.]
-      </copyright>
     </unit>
     <unit id='org.eclipse.text' version='3.10.200.v20200428-0633' singleton='false' generation='2'>
       <update id='org.eclipse.text' range='[0.0.0,3.10.200.v20200428-0633)' severity='0'/>
@@ -11274,6 +11258,42 @@
         </instructions>
       </touchpointData>
     </unit>
+    <unit id='com.collins.trustedsystems.briefcase.toolcheck.source' version='0.5.2.202107072340' singleton='false'>
+      <update id='com.collins.trustedsystems.briefcase.toolcheck.source' range='[0.0.0,0.5.2.202107072340)' severity='0'/>
+      <properties size='9'>
+        <property name='df_LT.bundleVendor' value='Collins Aerospace'/>
+        <property name='df_LT.bundleName' value='com.collins.trustedsystems.briefcase.toolcheck Source'/>
+        <property name='org.eclipse.equinox.p2.name' value='%bundleName'/>
+        <property name='org.eclipse.equinox.p2.provider' value='%bundleVendor'/>
+        <property name='org.eclipse.equinox.p2.bundle.localization' value='OSGI-INF/l10n/bundle-src'/>
+        <property name='maven-groupId' value='com.collins.trustedsystems.briefcase'/>
+        <property name='maven-artifactId' value='com.collins.trustedsystems.briefcase.toolcheck'/>
+        <property name='maven-version' value='0.5.2-SNAPSHOT'/>
+        <property name='maven-classifier' value='sources'/>
+      </properties>
+      <provides size='5'>
+        <provided namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.toolcheck.source' version='0.5.2.202107072340'/>
+        <provided namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase.toolcheck.source' version='0.5.2.202107072340'/>
+        <provided namespace='osgi.identity' name='com.collins.trustedsystems.briefcase.toolcheck.source' version='0.5.2.202107072340'>
+          <properties size='1'>
+            <property name='type' value='osgi.bundle'/>
+          </properties>
+        </provided>
+        <provided namespace='org.eclipse.equinox.p2.eclipse.type' name='source' version='1.0.0'/>
+        <provided namespace='org.eclipse.equinox.p2.localization' name='df_LT' version='1.0.0'/>
+      </provides>
+      <artifacts size='1'>
+        <artifact classifier='osgi.bundle' id='com.collins.trustedsystems.briefcase.toolcheck.source' version='0.5.2.202107072340'/>
+      </artifacts>
+      <touchpoint id='org.eclipse.equinox.p2.osgi' version='1.0.0'/>
+      <touchpointData size='1'>
+        <instructions size='1'>
+          <instruction key='manifest'>
+            Bundle-SymbolicName: com.collins.trustedsystems.briefcase.toolcheck.source&#xA;Bundle-Version: 0.5.2.202107072340
+          </instruction>
+        </instructions>
+      </touchpointData>
+    </unit>
     <unit id='org.eclipse.emf.ecore.xmi' version='2.16.0.v20190528-0725' generation='2'>
       <update id='org.eclipse.emf.ecore.xmi' range='[0.0.0,2.16.0.v20190528-0725)' severity='0'/>
       <properties size='8'>
@@ -11518,65 +11538,6 @@
         <instructions size='1'>
           <instruction key='manifest'>
             Bundle-SymbolicName: org.eclipse.ui.workbench; singleton:=true&#xA;Bundle-Version: 3.119.0.v20200521-1247
-          </instruction>
-        </instructions>
-      </touchpointData>
-    </unit>
-    <unit id='com.collins.trustedsystems.briefcase.staircase' version='0.5.2.202107071706' generation='2'>
-      <update id='com.collins.trustedsystems.briefcase.staircase' range='[0.0.0,0.5.2.202107071706)' severity='0'/>
-      <properties size='4'>
-        <property name='org.eclipse.equinox.p2.name' value='com.collins.trustedsystems.briefcase.staircase'/>
-        <property name='maven-groupId' value='com.collins.trustedsystems.briefcase'/>
-        <property name='maven-artifactId' value='com.collins.trustedsystems.briefcase.staircase'/>
-        <property name='maven-version' value='0.5.2-SNAPSHOT'/>
-      </properties>
-      <provides size='8'>
-        <provided namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.staircase' version='0.5.2.202107071706'/>
-        <provided namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase.staircase' version='0.5.2.202107071706'/>
-        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.staircase' version='0.0.0'/>
-        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.staircase.handlers' version='0.0.0'/>
-        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.staircase.requirements' version='0.0.0'/>
-        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.staircase.utils' version='0.0.0'/>
-        <provided namespace='osgi.identity' name='com.collins.trustedsystems.briefcase.staircase' version='0.5.2.202107071706'>
-          <properties size='1'>
-            <property name='type' value='osgi.bundle'/>
-          </properties>
-        </provided>
-        <provided namespace='org.eclipse.equinox.p2.eclipse.type' name='bundle' version='1.0.0'/>
-      </provides>
-      <requires size='23'>
-        <required namespace='osgi.bundle' name='org.osate.aadl2' range='[4.0.0,5.0.0)'/>
-        <required namespace='osgi.bundle' name='org.eclipse.xtext.ui' range='2.12.0'/>
-        <required namespace='osgi.bundle' name='org.eclipse.ui.navigator' range='[3.7.0,4.0.0)'/>
-        <required namespace='osgi.bundle' name='org.eclipse.emf.ecore' range='0.0.0'/>
-        <required namespace='osgi.bundle' name='com.rockwellcollins.atc.resolute.analysis' range='[2.4.2,3.0.0)'/>
-        <required namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase.json.export' range='0.0.0'/>
-        <required namespace='osgi.bundle' name='com.rockwellcollins.atc.agree.ui' range='[2.4.2,3.0.0)'/>
-        <required namespace='osgi.bundle' name='org.osate.xtext.aadl2.ui' range='[5.0.0,6.0.0)'/>
-        <required namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase' range='0.0.0'/>
-        <required namespace='osgi.bundle' name='org.osate.ge' range='[2.0.0,3.0.0)'/>
-        <required namespace='osgi.bundle' name='org.osate.ge.diagram' range='[2.0.0,3.0.0)'/>
-        <required namespace='osgi.bundle' name='org.osate.aadl2.instantiation' range='[1.0.1,2.0.0)'/>
-        <required namespace='osgi.bundle' name='org.osate.annexsupport' range='[3.0.0,4.0.0)'/>
-        <required namespace='osgi.bundle' name='org.osate.pluginsupport' range='[5.0.0,6.0.0)'/>
-        <required namespace='osgi.bundle' name='org.osate.ui' range='[5.0.0,6.0.0)'/>
-        <required namespace='osgi.bundle' name='org.eclipse.ui.ide' range='3.16.100'/>
-        <required namespace='osgi.bundle' name='org.eclipse.ui.console' range='[3.9.0,4.0.0)'/>
-        <required namespace='osgi.bundle' name='com.rockwellcollins.atc.resolute' range='[2.4.2,3.0.0)'/>
-        <required namespace='osgi.bundle' name='com.rockwellcollins.atc.resolute.ui' range='[2.4.2,3.0.0)'/>
-        <required namespace='osgi.bundle' name='org.eclipse.mylyn.commons.ui' range='0.0.0'/>
-        <required namespace='java.package' name='com.collins.trustedsystems.briefcase.attestation' range='0.0.0'/>
-        <required namespace='java.package' name='org.eclipse.emf.transaction' range='0.0.0'/>
-        <requiredProperties namespace='osgi.ee' match='(&amp;(osgi.ee=JavaSE)(version=1.8))'/>
-      </requires>
-      <artifacts size='1'>
-        <artifact classifier='osgi.bundle' id='com.collins.trustedsystems.briefcase.staircase' version='0.5.2.202107071706'/>
-      </artifacts>
-      <touchpoint id='org.eclipse.equinox.p2.osgi' version='1.0.0'/>
-      <touchpointData size='1'>
-        <instructions size='1'>
-          <instruction key='manifest'>
-            Bundle-SymbolicName: com.collins.trustedsystems.briefcase.staircase;singleton:=true&#xA;Bundle-Version: 0.5.2.202107071706
           </instruction>
         </instructions>
       </touchpointData>
@@ -12235,64 +12196,6 @@
       <copyright>
         Copyright (c) 2004-2020 by Carnegie Mellon University. All rights reserved.
       </copyright>
-    </unit>
-    <unit id='com.collins.trustedsystems.briefcase.json' version='0.5.2.202107071706' generation='2'>
-      <update id='com.collins.trustedsystems.briefcase.json' range='[0.0.0,0.5.2.202107071706)' severity='0'/>
-      <properties size='4'>
-        <property name='org.eclipse.equinox.p2.name' value='com.collins.trustedsystems.briefcase.json'/>
-        <property name='maven-groupId' value='com.collins.trustedsystems.briefcase'/>
-        <property name='maven-artifactId' value='com.collins.trustedsystems.briefcase.json'/>
-        <property name='maven-version' value='0.5.2-SNAPSHOT'/>
-      </properties>
-      <provides size='16'>
-        <provided namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.json' version='0.5.2.202107071706'/>
-        <provided namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase.json' version='0.5.2.202107071706'/>
-        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.json' version='0.0.0'/>
-        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.json.services' version='0.0.0'/>
-        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.json.json' version='0.0.0'/>
-        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.json.json.impl' version='0.0.0'/>
-        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.json.json.util' version='0.0.0'/>
-        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.json.serializer' version='0.0.0'/>
-        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.json.parser.antlr' version='0.0.0'/>
-        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.json.parser.antlr.internal' version='0.0.0'/>
-        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.json.parser.antlr.lexer' version='0.0.0'/>
-        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.json.validation' version='0.0.0'/>
-        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.json.scoping' version='0.0.0'/>
-        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.json.formatting' version='0.0.0'/>
-        <provided namespace='osgi.identity' name='com.collins.trustedsystems.briefcase.json' version='0.5.2.202107071706'>
-          <properties size='1'>
-            <property name='type' value='osgi.bundle'/>
-          </properties>
-        </provided>
-        <provided namespace='org.eclipse.equinox.p2.eclipse.type' name='bundle' version='1.0.0'/>
-      </provides>
-      <requires size='14'>
-        <required namespace='osgi.bundle' name='org.eclipse.xtext' range='0.0.0'/>
-        <required namespace='osgi.bundle' name='org.eclipse.xtext.xbase' range='0.0.0'/>
-        <required namespace='osgi.bundle' name='org.eclipse.equinox.common' range='3.5.0'/>
-        <required namespace='osgi.bundle' name='org.osate.aadl2' range='[4.0.0,5.0.0)'/>
-        <required namespace='osgi.bundle' name='org.osate.xtext.aadl2' range='[5.0.0,6.0.0)'/>
-        <required namespace='osgi.bundle' name='org.osate.xtext.aadl2.properties' range='[3.0.0,4.0.0)'/>
-        <required namespace='osgi.bundle' name='org.eclipse.xtext.generator' range='2.17.0'/>
-        <required namespace='osgi.bundle' name='org.eclipse.xtext.util' range='0.0.0'/>
-        <required namespace='osgi.bundle' name='org.eclipse.emf.ecore' range='0.0.0'/>
-        <required namespace='osgi.bundle' name='org.eclipse.emf.common' range='0.0.0'/>
-        <required namespace='osgi.bundle' name='org.antlr.runtime' range='0.0.0'/>
-        <required namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase.json' range='0.0.0'/>
-        <required namespace='java.package' name='org.apache.log4j' range='0.0.0'/>
-        <requiredProperties namespace='osgi.ee' match='(&amp;(osgi.ee=JavaSE)(version=1.8))'/>
-      </requires>
-      <artifacts size='1'>
-        <artifact classifier='osgi.bundle' id='com.collins.trustedsystems.briefcase.json' version='0.5.2.202107071706'/>
-      </artifacts>
-      <touchpoint id='org.eclipse.equinox.p2.osgi' version='1.0.0'/>
-      <touchpointData size='1'>
-        <instructions size='1'>
-          <instruction key='manifest'>
-            Bundle-SymbolicName: com.collins.trustedsystems.briefcase.json;singleton:=true&#xA;Bundle-Version: 0.5.2.202107071706
-          </instruction>
-        </instructions>
-      </touchpointData>
     </unit>
     <unit id='org.apache.batik.constants' version='1.11.0.v20190515-0436' singleton='false' generation='2'>
       <update id='org.apache.batik.constants' range='[0.0.0,1.11.0.v20190515-0436)' severity='0'/>
@@ -13947,6 +13850,44 @@
         </instructions>
       </touchpointData>
     </unit>
+    <unit id='com.collins.trustedsystems.briefcase.feature.feature.jar' version='0.5.2.202107072340'>
+      <properties size='7'>
+        <property name='org.eclipse.equinox.p2.name' value='BriefCASE'/>
+        <property name='org.eclipse.equinox.p2.description' value='[Enter Feature Description here.]'/>
+        <property name='org.eclipse.equinox.p2.description.url' value='http://www.example.com/description'/>
+        <property name='org.eclipse.equinox.p2.provider' value='ROCKWELLCOLLINS'/>
+        <property name='maven-groupId' value='com.collins.trustedsystems.briefcase'/>
+        <property name='maven-artifactId' value='com.collins.trustedsystems.briefcase.feature'/>
+        <property name='maven-version' value='0.5.2-SNAPSHOT'/>
+      </properties>
+      <provides size='3'>
+        <provided namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.feature.feature.jar' version='0.5.2.202107072340'/>
+        <provided namespace='org.eclipse.equinox.p2.eclipse.type' name='feature' version='1.0.0'/>
+        <provided namespace='org.eclipse.update.feature' name='com.collins.trustedsystems.briefcase.feature' version='0.5.2.202107072340'/>
+      </provides>
+      <filter>
+        (org.eclipse.update.install.features=true)
+      </filter>
+      <artifacts size='1'>
+        <artifact classifier='org.eclipse.update.feature' id='com.collins.trustedsystems.briefcase.feature' version='0.5.2.202107072340'/>
+      </artifacts>
+      <touchpoint id='org.eclipse.equinox.p2.osgi' version='1.0.0'/>
+      <touchpointData size='1'>
+        <instructions size='1'>
+          <instruction key='zipped'>
+            true
+          </instruction>
+        </instructions>
+      </touchpointData>
+      <licenses size='1'>
+        <license uri='http://www.example.com/license' url='http://www.example.com/license'>
+          [Enter License Description here.]
+        </license>
+      </licenses>
+      <copyright uri='http://www.example.com/copyright' url='http://www.example.com/copyright'>
+        [Enter Copyright Description here.]
+      </copyright>
+    </unit>
     <unit id='org.eclipse.xtend.typesystem.emf' version='2.2.0.v201605260315'>
       <update id='org.eclipse.xtend.typesystem.emf' range='[0.0.0,2.2.0.v201605260315)' severity='0'/>
       <properties size='5'>
@@ -14014,6 +13955,65 @@
         <instructions size='1'>
           <instruction key='manifest'>
             Bundle-SymbolicName: org.osate.aadl2.errormodel.contrib;singleton:=true&#xA;Bundle-Version: 1.0.4.v20200824-1409
+          </instruction>
+        </instructions>
+      </touchpointData>
+    </unit>
+    <unit id='com.collins.trustedsystems.briefcase.staircase' version='0.5.2.202107072340' generation='2'>
+      <update id='com.collins.trustedsystems.briefcase.staircase' range='[0.0.0,0.5.2.202107072340)' severity='0'/>
+      <properties size='4'>
+        <property name='org.eclipse.equinox.p2.name' value='com.collins.trustedsystems.briefcase.staircase'/>
+        <property name='maven-groupId' value='com.collins.trustedsystems.briefcase'/>
+        <property name='maven-artifactId' value='com.collins.trustedsystems.briefcase.staircase'/>
+        <property name='maven-version' value='0.5.2-SNAPSHOT'/>
+      </properties>
+      <provides size='8'>
+        <provided namespace='org.eclipse.equinox.p2.iu' name='com.collins.trustedsystems.briefcase.staircase' version='0.5.2.202107072340'/>
+        <provided namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase.staircase' version='0.5.2.202107072340'/>
+        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.staircase' version='0.0.0'/>
+        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.staircase.handlers' version='0.0.0'/>
+        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.staircase.requirements' version='0.0.0'/>
+        <provided namespace='java.package' name='com.collins.trustedsystems.briefcase.staircase.utils' version='0.0.0'/>
+        <provided namespace='osgi.identity' name='com.collins.trustedsystems.briefcase.staircase' version='0.5.2.202107072340'>
+          <properties size='1'>
+            <property name='type' value='osgi.bundle'/>
+          </properties>
+        </provided>
+        <provided namespace='org.eclipse.equinox.p2.eclipse.type' name='bundle' version='1.0.0'/>
+      </provides>
+      <requires size='23'>
+        <required namespace='osgi.bundle' name='org.osate.aadl2' range='[4.0.0,5.0.0)'/>
+        <required namespace='osgi.bundle' name='org.eclipse.xtext.ui' range='2.12.0'/>
+        <required namespace='osgi.bundle' name='org.eclipse.ui.navigator' range='[3.7.0,4.0.0)'/>
+        <required namespace='osgi.bundle' name='org.eclipse.emf.ecore' range='0.0.0'/>
+        <required namespace='osgi.bundle' name='com.rockwellcollins.atc.resolute.analysis' range='[2.4.2,3.0.0)'/>
+        <required namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase.json.export' range='0.0.0'/>
+        <required namespace='osgi.bundle' name='com.rockwellcollins.atc.agree.ui' range='[2.4.2,3.0.0)'/>
+        <required namespace='osgi.bundle' name='org.osate.xtext.aadl2.ui' range='[5.0.0,6.0.0)'/>
+        <required namespace='osgi.bundle' name='com.collins.trustedsystems.briefcase' range='0.0.0'/>
+        <required namespace='osgi.bundle' name='org.osate.ge' range='[2.0.0,3.0.0)'/>
+        <required namespace='osgi.bundle' name='org.osate.ge.diagram' range='[2.0.0,3.0.0)'/>
+        <required namespace='osgi.bundle' name='org.osate.aadl2.instantiation' range='[1.0.1,2.0.0)'/>
+        <required namespace='osgi.bundle' name='org.osate.annexsupport' range='[3.0.0,4.0.0)'/>
+        <required namespace='osgi.bundle' name='org.osate.pluginsupport' range='[5.0.0,6.0.0)'/>
+        <required namespace='osgi.bundle' name='org.osate.ui' range='[5.0.0,6.0.0)'/>
+        <required namespace='osgi.bundle' name='org.eclipse.ui.ide' range='3.16.100'/>
+        <required namespace='osgi.bundle' name='org.eclipse.ui.console' range='[3.9.0,4.0.0)'/>
+        <required namespace='osgi.bundle' name='com.rockwellcollins.atc.resolute' range='[2.4.2,3.0.0)'/>
+        <required namespace='osgi.bundle' name='com.rockwellcollins.atc.resolute.ui' range='[2.4.2,3.0.0)'/>
+        <required namespace='osgi.bundle' name='org.eclipse.mylyn.commons.ui' range='0.0.0'/>
+        <required namespace='java.package' name='com.collins.trustedsystems.briefcase.attestation' range='0.0.0'/>
+        <required namespace='java.package' name='org.eclipse.emf.transaction' range='0.0.0'/>
+        <requiredProperties namespace='osgi.ee' match='(&amp;(osgi.ee=JavaSE)(version=1.8))'/>
+      </requires>
+      <artifacts size='1'>
+        <artifact classifier='osgi.bundle' id='com.collins.trustedsystems.briefcase.staircase' version='0.5.2.202107072340'/>
+      </artifacts>
+      <touchpoint id='org.eclipse.equinox.p2.osgi' version='1.0.0'/>
+      <touchpointData size='1'>
+        <instructions size='1'>
+          <instruction key='manifest'>
+            Bundle-SymbolicName: com.collins.trustedsystems.briefcase.staircase;singleton:=true&#xA;Bundle-Version: 0.5.2.202107072340
           </instruction>
         </instructions>
       </touchpointData>
