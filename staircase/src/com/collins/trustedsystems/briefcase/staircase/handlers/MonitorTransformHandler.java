@@ -701,7 +701,12 @@ public class MonitorTransformHandler extends AadlHandler {
 //				agreeClauses
 //						.append("property " + monitorPolicyName + " = " + monitorAgreeProperty + System.lineSeparator());
 
-				agreeClauses.append("property alerted = (not " + monitorAgreeProperty + ") -> ((" + resetString
+				agreeClauses.append("property alerted = (");
+				if (portObserved instanceof EventPort || portObserved instanceof EventDataPort) {
+					agreeClauses.append("event(" + observationPortName + ") and ");
+				}
+				agreeClauses.append(
+						"not " + monitorAgreeProperty + ") -> ((" + resetString
 						+ "is_latched and pre(alerted)) or (");
 				if (portObserved instanceof EventPort || portObserved instanceof EventDataPort) {
 					agreeClauses.append("event(" + observationPortName + ") and ");
