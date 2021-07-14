@@ -7,6 +7,7 @@ import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.ui.PlatformUI;
 import org.osate.ui.dialogs.Dialog;
 
@@ -24,7 +25,26 @@ public class ImportRequirementsHandler extends AbstractHandler {
 
 		// Determine if this should run in "Requirements Manager" mode or "Import Requirements" mode.
 		final boolean importRequirements = (event.getCommand().getId().indexOf("Import") != -1);
-		final String filename = event.getParameter("filename");
+		String filename = event.getParameter("filename");
+
+		// Get the current project
+		final IProject project = TraverseProject.getCurrentProject();
+		if (project == null) {
+			Dialog.showError("Requirements Manager",
+					"Unable to determine current project.  Open a project file in the editor.");
+			return null;
+		}
+
+		if (importRequirements) {
+			final FileDialog dlgReqFile = new FileDialog(
+					PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), SWT.OPEN);
+			dlgReqFile.setFilterPath(project.getLocation().append("Requirements").toString());
+			dlgReqFile.setText("Select requirements file to import.");
+			filename = dlgReqFile.open();
+			if (filename == null) {
+				return null;
+			}
+		}
 
 		run(importRequirements, filename);
 
@@ -35,15 +55,6 @@ public class ImportRequirementsHandler extends AbstractHandler {
 	}
 
 	public void run(final boolean importRequirements, final String filename) {
-
-		// Get the current project
-		final IProject project = TraverseProject.getCurrentProject();
-		if (project == null) {
-			Dialog.showError("Requirements Manager",
-					"Unable to determine current project.  Open a project file in the editor.");
-			return;
-		}
-
 
 		/*
 		 * Steps for requirements manager:
