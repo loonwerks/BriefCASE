@@ -134,13 +134,15 @@ public
 		-- Check to see if there is a filter immediately before 
 		-- the component on the communication pathway.
 		filter_exists(filter : component, comp_context : component, conn : connection) <=
-			** "A CASE_Filter " filter " is connected to component " comp_context " by connection " conn **
+			** "A filter " filter " is connected to component " comp_context " by connection " conn **
 			let filters : {component} = recursive_backwards_filter_reach({comp_context});
+			let filter_parents : {component} = {(component)parent(f) for (f : filters) | has_parent(f) and (parent(f) instanceof component) and has_mitigation_type((component)parent(f), CASE_Properties::Filtering)};
+			let all_filters : {component} = union(filters, filter_parents);			
 			has_mitigation_type(filter, CASE_Properties::Filtering) and --connected(filter, conn, comp_context)
-			member(filter, filters) and exists(c : filters) . member(conn, connections(c)) --connected(c, conn, comp_context)
-						
+			member(filter, all_filters) and exists(c : all_filters) . is_source_component(conn, c)						
+		
 		recursive_backwards_filter_reach(curr : {component}) : {component} = 
-			let p_reach : {component} = {c for (c : prev_reach(curr) | has_mitigation_type(c, CASE_Properties::Filtering)};
+			let p_reach : {component} = {c for (c : prev_reach(curr)) | has_mitigation_type(c, CASE_Properties::Filtering)};
 			let prev : {component} = union(curr, p_reach); 
 			if prev = curr then 
 				curr
@@ -203,7 +205,8 @@ public
 		
 		backwards_reachable_components_via_connection(comp : component, conn : connection) : {component} = 
 			if is_port_connection(conn) then 
-				if destination_component(conn) = comp and has_parent(comp) and not (source_component(conn) = parent(comp)) then 
+--				if destination_component(conn) = comp and has_parent(comp) and not (source_component(conn) = parent(comp)) then 
+				if is_destination_component(conn, comp) and not is_source_component(conn, comp) then
 					{source_component(conn)} 
 				else 
 					{} 
@@ -263,7 +266,13 @@ public
 			
 		implementation_language_assurance(comp : component) <=
 			** comp " implementation is appropriate for OS" **
-			is_seL4_component(comp) => (has_property(comp, CASE_Properties::Component_Language) and property(comp, CASE_Properties::Component_Language) = "CakeML")
+--			is_seL4_component(comp) => (has_property(comp, CASE_Properties::Component_Language) and property(comp, CASE_Properties::Component_Language) = "CakeML")
+			is_seL4_component(comp) => is_cakeml_component(comp)
+			
+		is_cakeml_component(comp : component) : bool =
+			if is_thread(comp) then (has_property(comp, CASE_Properties::Component_Language) and property(comp, CASE_Properties::Component_Language) = "CakeML")
+			else if is_process(comp) then size(subcomponents(comp)) > 0 and forall(t : subcomponents(comp)) . is_cakeml_component(t)
+			else false
 			
 		-- checks that a component will run on seL4 by checking that the processors it is bound to have the seL4 OS property
 		is_seL4_component(comp : component) : bool =

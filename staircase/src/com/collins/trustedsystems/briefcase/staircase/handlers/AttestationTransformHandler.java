@@ -840,10 +840,10 @@ public class AttestationTransformHandler extends AadlHandler {
 				sourceTextLit.setValue(attestationImplPath + "heli_am.S");
 				final List<StringLiteral> listVal = new ArrayList<>();
 				listVal.add(sourceTextLit);
-				sourceTextLit = Aadl2Factory.eINSTANCE.createStringLiteral();
-				sourceTextLit.setValue(attestationImplPath + "apps" + File.separator + "case-tool-assessment"
-						+ File.separator + "libheli_am_c.a");
-				listVal.add(sourceTextLit);
+//				sourceTextLit = Aadl2Factory.eINSTANCE.createStringLiteral();
+//				sourceTextLit.setValue(attestationImplPath + "apps" + File.separator + "case-tool-assessment"
+//						+ File.separator + "libheli_am_c.a");
+//				listVal.add(sourceTextLit);
 				attestationManagerImpl.setPropertyValue(sourceTextProp, listVal);
 			}
 
