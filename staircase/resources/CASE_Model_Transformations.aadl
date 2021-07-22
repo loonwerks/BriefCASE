@@ -298,7 +298,7 @@ public
 			has_mitigation_type(comp, CASE_Properties::Filtering) or has_mitigation_type(comp, CASE_Properties::Monitoring) or has_mitigation_type(comp, CASE_Properties::Gating)
 			
 		each_thread_in_separate_process(root : component) <=
-			** "Each thread is in a separate process" **
+			** "Each thread runs in a separate process" **
 			let comps : {component} = get_subcomponents({root});
 			forall (c : comps) . ((is_system(c) or is_thread(c) or is_process(c)) and is_process(c) => (length(subcomponents(c)) = 1 and is_thread(head(as_list(subcomponents(c))))))
 		
