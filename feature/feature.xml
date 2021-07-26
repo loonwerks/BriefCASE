@@ -2,7 +2,7 @@
 <feature
       id="com.collins.trustedsystems.briefcase.feature"
       label="BriefCASE"
-      version="0.5.2"
+      version="0.5.3.qualifier"
       provider-name="ROCKWELLCOLLINS">
 
    <description url="http://www.example.com/description">
