@@ -4,11 +4,11 @@
 	<parent>
 		<groupId>com.collins.trustedsystems.briefcase</groupId>
 		<artifactId>com.collins.trustedsystems.briefcase.parent</artifactId>
-		<version>0.5.2-SNAPSHOT</version>
+		<version>0.5.2</version>
 	</parent>
 	<groupId>com.collins.trustedsystems.briefcase</groupId>
 	<artifactId>com.collins.trustedsystems.briefcase.repository</artifactId>
-	<version>0.5.2-SNAPSHOT</version>
+	<version>0.5.2</version>
 	<packaging>eclipse-repository</packaging>
 
 	<build>
