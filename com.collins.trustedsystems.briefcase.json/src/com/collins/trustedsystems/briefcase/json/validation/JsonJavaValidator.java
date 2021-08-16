@@ -3,22 +3,14 @@
  */
 package com.collins.trustedsystems.briefcase.json.validation;
 
-import java.util.Map;
-
-import org.eclipse.emf.ecore.EObject;
-
-import com.collins.trustedsystems.briefcase.json.json.JsonPackage;
-
 /**
  * This class contains custom validation rules.
+ * @deprecated
+ * This class is replaced by the {@link JsonValidator} class and will be removed in 1.0.0.
  *
  * See https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#validation
  */
-public class JsonJavaValidator extends com.collins.trustedsystems.briefcase.json.validation.AbstractJsonJavaValidator {
-
-	@Override
-	protected boolean isResponsible(Map<Object, Object> context, EObject eObject) {
-		return (eObject.eClass().getEPackage() == JsonPackage.eINSTANCE);
-	}
+@Deprecated
+public class JsonJavaValidator extends JsonValidator {
 
 }
