@@ -58,14 +58,14 @@
       <import plugin="org.apache.log4j" version="1.2.0" match="greaterOrEqual"/>
       <import plugin="com.rockwellcollins.atc.agree" version="2.4.2" match="compatible"/>
       <import feature="org.osate.core.feature" version="2.7.0" match="greaterOrEqual"/>
-      <import plugin="org.osate.pluginsupport" version="5.0.0" match="compatible"/>
-      <import plugin="org.osate.aadl2.modelsupport" version="5.0.0" match="compatible"/>
+      <import plugin="org.osate.pluginsupport" version="5.0.0" match="greaterOrEqual"/>
+      <import plugin="org.osate.aadl2.modelsupport" version="5.0.0" match="greaterOrEqual"/>
       <import plugin="org.osate.annexsupport" version="3.0.0" match="compatible"/>
-      <import plugin="org.osate.ui" version="5.0.0" match="compatible"/>
+      <import plugin="org.osate.ui" version="6.0.0" match="compatible"/>
       <import plugin="org.osate.xtext.aadl2.properties" version="3.0.0" match="compatible"/>
-      <import plugin="org.osate.xtext.aadl2.ui" version="5.0.0" match="compatible"/>
-      <import plugin="org.osate.ge" version="2.0.0" match="compatible"/>
-      <import plugin="org.osate.xtext.aadl2" version="5.0.0" match="compatible"/>
+      <import plugin="org.osate.xtext.aadl2.ui" version="6.0.0" match="compatible"/>
+      <import plugin="org.osate.ge" version="3.0.0" match="compatible"/>
+      <import plugin="org.osate.xtext.aadl2" version="6.0.0" match="compatible"/>
       <import plugin="org.osate.xtext.aadl2.properties.ui" version="4.0.0" match="compatible"/>
    </requires>
 
