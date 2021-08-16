@@ -15,8 +15,9 @@ Require-Bundle: org.eclipse.xtext,
  org.eclipse.xtext.util,
  org.eclipse.emf.ecore,
  org.eclipse.emf.common,
- org.antlr.runtime,
- com.collins.trustedsystems.briefcase.json
+ org.antlr.runtime;bundle-version="[3.2.0,3.2.1)",
+ com.collins.trustedsystems.briefcase.json,
+ org.eclipse.xtext.xbase.lib;bundle-version="2.14.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Export-Package: com.collins.trustedsystems.briefcase.json,
  com.collins.trustedsystems.briefcase.json.services,
@@ -29,5 +30,5 @@ Export-Package: com.collins.trustedsystems.briefcase.json,
  com.collins.trustedsystems.briefcase.json.parser.antlr.lexer,
  com.collins.trustedsystems.briefcase.json.validation,
  com.collins.trustedsystems.briefcase.json.scoping,
- com.collins.trustedsystems.briefcase.json.formatting
+ com.collins.trustedsystems.briefcase.json.formatting2
 Import-Package: org.apache.log4j
