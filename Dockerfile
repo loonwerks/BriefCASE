@@ -1,4 +1,4 @@
-ARG BASE_IMG=maven:3.6.0-jdk-8
+ARG BASE_IMG=maven:3.6.3-jdk-11
 #ARG BASE_IMG=ubuntu:18.04
 FROM $BASE_IMG
 
@@ -19,6 +19,7 @@ VOLUME /home/${UNAME}
 
 RUN apt-get -q update \
   && apt-get -y -q install curl pandoc sudo vim wget \
+  && apt-get install -y --no-install-recommends xvfb openjfx \
   && apt-get clean autoclean \
   && apt-get autoremove --purge --yes \
   && rm -rf /var/lib/apt/lists/*
