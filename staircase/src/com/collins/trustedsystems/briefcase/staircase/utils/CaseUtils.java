@@ -6,6 +6,7 @@ import java.io.InputStream;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.emf.common.util.URI;
@@ -140,15 +141,8 @@ public class CaseUtils {
 		if (!caseReqFile.exists()) {
 
 			// Create Requirements directory, if it doesn't exist
-			final IFolder reqFolder = TraverseProject.getCurrentProject().getFolder(CASE_REQUIREMENTS_DIR);
-			if (!reqFolder.exists()) {
-				try {
-					reqFolder.create(false, true, new NullProgressMonitor());
-				} catch (CoreException e) {
-					System.out.println("CASE_Requirements package not created successfully.");
-					e.printStackTrace();
-					return null;
-				}
+			if (createRequirementsFolder(TraverseProject.getCurrentProject()) == null) {
+				return null;
 			}
 
 			final String newline = System.lineSeparator();
@@ -196,6 +190,25 @@ public class CaseUtils {
 		assert (pkg != null);
 
 		return pkg;
+	}
+
+	/**
+	 * Create Requirements folder in specified project if it doesn't exist
+	 * @param project
+	 * @return Requirements folder or null if not created
+	 */
+	public static IFolder createRequirementsFolder(IProject project) {
+		final IFolder reqFolder = project.getFolder(CASE_REQUIREMENTS_DIR);
+		if (!reqFolder.exists()) {
+			try {
+				reqFolder.create(false, true, new NullProgressMonitor());
+			} catch (CoreException e) {
+				System.out.println("CASE_Requirements package not created successfully.");
+				e.printStackTrace();
+				return null;
+			}
+		}
+		return reqFolder;
 	}
 
 	public static IFile getCaseRequirementsFile() {

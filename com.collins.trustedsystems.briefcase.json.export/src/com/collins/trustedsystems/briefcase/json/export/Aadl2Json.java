@@ -99,6 +99,25 @@ public class Aadl2Json {
 		return jsonURI;
 	}
 
+	public static JsonElement generateJson(JsonObject header, AgreePrintOption agreePrintOption) throws Exception {
+		XtextEditor xtextEditor = EditorUtils.getActiveXtextEditor();
+
+		if (xtextEditor == null) {
+			throw new Exception("An AADL editor must be active in order to generate JSON.");
+		}
+
+		EObject original = xtextEditor.getDocument().readOnly(resource -> resource.getContents().get(0));
+
+		JsonElement je = toJson(original, agreePrintOption);
+
+		if (header != null) {
+			header.add("modelUnits", je);
+			je = header;
+		}
+
+		return je;
+	}
+
 	public static ModelUnit getContainingModelUnit(NamedElement ne) {
 
 		EObject o = ne.eContainer();
