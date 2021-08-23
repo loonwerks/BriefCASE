@@ -118,6 +118,19 @@ public class Aadl2Json {
 		return je;
 	}
 
+	public static JsonElement generateJson(AadlPackage pkg, JsonObject header, AgreePrintOption agreePrintOption)
+			throws Exception {
+
+		JsonElement je = toJson(pkg, agreePrintOption);
+
+		if (header != null) {
+			header.add("modelUnits", je);
+			je = header;
+		}
+
+		return je;
+	}
+
 	public static ModelUnit getContainingModelUnit(NamedElement ne) {
 
 		EObject o = ne.eContainer();

@@ -15,13 +15,15 @@ import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.resources.WorkspaceJob;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
-import org.eclipse.ui.ide.ResourceUtil;
 import org.osate.aadl2.ComponentImplementation;
+import org.osate.aadl2.modelsupport.util.AadlUtil;
 import org.osate.ui.dialogs.Dialog;
 
 import com.collins.trustedsystems.briefcase.json.export.Aadl2Json;
@@ -37,7 +39,7 @@ import com.google.gson.JsonParser;
 
 public class RunDcryppsHandler extends AadlHandler {
 
-	private final static String DCRYPPS_GET_REQUIREMENTS_ENDPOINT = "https://localhost:8080/routers/DCRYPPSRoute/getRequirements";
+	private final static String DCRYPPS_GET_REQUIREMENTS_ENDPOINT = "http://localhost/routers/DCRYPPSRoute/getRequirements";
 	private final static String JOB_NAME = "Running DCRYPPS";
 	private final static String REQ_FILE_NAME = "DCRYPPS_Cyber_Requirements.json";
 
@@ -73,15 +75,18 @@ public class RunDcryppsHandler extends AadlHandler {
 
 		final JsonObject request = new JsonObject();
 		final JsonObject header = new JsonObject();
-		final IProject project = ResourceUtil.getResource(ci).getProject();
+
+		final IPath path = new Path(ci.eResource().getURI().toPlatformString(true));
+		final IProject project = ResourcesPlugin.getWorkspace().getRoot().getFile(path).getProject();
 		header.addProperty("project", project.getName());
 		header.addProperty("implementation", ci.getQualifiedName());
 		header.addProperty("date", System.currentTimeMillis());
 
 		try {
 			// Generate json
-			final JsonElement json = Aadl2Json.generateJson(null, AgreePrintOption.BOTH);
-			header.addProperty("modelHash", json.getAsString().hashCode());
+			final JsonElement json = Aadl2Json.generateJson(AadlUtil.getContainingPackage(ci), null,
+					AgreePrintOption.BOTH);
+			header.addProperty("hash", json.toString().hashCode());
 			header.add("modelUnits", json);
 
 		} catch (Exception e) {
@@ -90,7 +95,7 @@ public class RunDcryppsHandler extends AadlHandler {
 		}
 
 		request.add("model", header);
-		final JsonObject results = postDcryppsRequest(request.getAsString());
+		final JsonObject results = postDcryppsRequest(request.toString());
 		// TODO: Check results status
 		if (!checkResults(results)) {
 			return false;
@@ -115,10 +120,11 @@ public class RunDcryppsHandler extends AadlHandler {
 		StringEntity stringEntity;
 		try {
 			stringEntity = new StringEntity(requestBody);
-		} catch (UnsupportedEncodingException e1) {
+		} catch (UnsupportedEncodingException e) {
 			return null;
 		}
 		httpPost.setEntity(stringEntity);
+
 		try {
 			final CloseableHttpResponse response = httpClient.execute(httpPost);
 			final int statusCode = response.getStatusLine().getStatusCode();
@@ -129,9 +135,11 @@ public class RunDcryppsHandler extends AadlHandler {
 				final JsonObject responseJsonObject = parser.parse(responseString).getAsJsonObject();
 
 				return responseJsonObject;
+			} else {
+				System.out.println("Error code " + statusCode);
 			}
 		} catch (IOException e) {
-
+			Dialog.showError("Run DCRYPPS", "Unable to connect to DCRYPPS.\n\n" + e.getMessage());
 		}
 		return null;
 
