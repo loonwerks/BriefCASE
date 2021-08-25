@@ -24,7 +24,9 @@ Require-Bundle: org.osate.aadl2;bundle-version="[4.0.0,5.0.0)",
  org.eclipse.ui.console;bundle-version="[3.9.0,4.0.0)",
  com.rockwellcollins.atc.resolute;bundle-version="[2.4.2,3.0.0)",
  com.rockwellcollins.atc.resolute.ui;bundle-version="[2.4.2,3.0.0)",
- org.eclipse.mylyn.commons.ui
+ org.eclipse.mylyn.commons.ui,
+ org.apache.httpcomponents.httpclient,
+ org.apache.httpcomponents.httpcore
 Import-Package: com.collins.trustedsystems.briefcase.attestation,
  org.eclipse.emf.transaction
 Bundle-Activator: com.collins.trustedsystems.briefcase.staircase.Activator

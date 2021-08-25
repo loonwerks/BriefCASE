@@ -1,3 +1,22 @@
+-- Copyright © 2021 Collins Aerospace
+-- Developed with the sponsorship of Defense Advanced Research Projects Agency (DARPA).
+-- 
+-- Permission is hereby granted, free of charge, to any person obtaining a copy of this data,
+-- including any software or models in source or binary form, as well as any drawings, specifications,
+-- and documentation (collectively "the Data"), to deal in the Data without restriction, including
+-- without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+-- and/or sell copies of the Data, and to permit persons to whom the Data is furnished to do so,
+-- subject to the following conditions:
+-- 
+-- The above copyright notice and this permission notice shall be included in all copies or
+-- substantial portions of the Data.
+-- 
+-- THE DATA IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+-- LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+-- IN NO EVENT SHALL THE AUTHORS, SPONSORS, DEVELOPERS, CONTRIBUTORS, OR COPYRIGHT HOLDERS BE LIABLE
+-- FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+-- ARISING FROM, OUT OF OR IN CONNECTION WITH THE DATA OR THE USE OR OTHER DEALINGS IN THE DATA.
+
 property set CASE_Properties is
 	
 	--- The <b>Component_Language</b> property specifies the language for the component (e.g. c or CakeML).
@@ -21,7 +40,7 @@ property set CASE_Properties is
 	Comm_Modality: inherit enumeration (RF, WIFI, WIRED_ETHERNET, SERIAL, BT, 
 		NFC) applies to (bus, virtual bus);
 
-	--- The <b>OS</b> property specifies the operating system (e.g. seL4, Linux, Andoird, LynxOS, or other).
+	--- The <b>OS</b> property specifies the operating system (e.g. seL4, Linux, Android, LynxOS, or other).
 	OS: enumeration(seL4, Linux, Android, LynxOS, other) applies to (processor, 
 		virtual processor);
 	
@@ -303,7 +322,7 @@ property set CASE_Properties is
     	(subcomponent, System, Thread, Thread Group, Process, Subprogram, processor,
          virtual processor, Memory, device, bus, virtual bus);            
 
-    --- The <b>Component_Category</b> property specifies additional details about the component are defined below:
+    --- The <b>Component_Category</b> property specifies additional details about the component as defined below:
     --- <ul>
     --- 	<li><b>NavigationalSensor</b>: These are component types that act as navigational sensors.
     --- 	<li><b>NavigationalSensorNotDependentOnRadio</b>: These are component types that are navigational
@@ -331,6 +350,20 @@ property set CASE_Properties is
     Component_Category: enumeration (NavigationalSensor, NavigationalSensorNotDependentOnRadio, Workstation, 
     	Router, SmartController, SmartCamera, SmartRadio, Actuator, SmartActuator, Sensor, SmartSensor)
         applies to (subcomponent, System, Thread, Thread Group, Process, Subprogram, processor,
+                    virtual processor, Memory, device, bus, virtual bus);
+                    
+    --- The <b>Cost_Behavior</b> property specifies cost guidance for the component and its details are defined below:
+    --- <ul>
+    --- 	<li><b>No_Changes</b>: This should inhibit all requirements.
+    --- 	<li><b>Modify_Software_Allowed</b>: This should allow software to be modified.
+    --- 	<li><b>Replace_Software_Allowed</b>: This should allow software to be replaced or added.
+    --- 	<li><b>Modify_Hardware_Allowed</b>: This should allow hardware to be modified.
+    --- 	<li><b>Replace_Hardware_Allowed</b>: This should allow hardware to be replaced or added.
+    --- 	<li><b>No_Cost_Guidance</b>: This requirement allows all modifications and is the implied default value
+    ---			if no guidance is provided.
+    --- 	</ul>                      
+	Cost_Behavior: enumeration (No_Changes, Modify_Software_Allowed, Replace_Software_Allowed, Modify_Hardware_Allowed, Replace_Hardware_Allowed, No_Cost_Guidance)
+		applies to (subcomponent, System, Thread, Thread Group, Process, Subprogram, processor,
                     virtual processor, Memory, device, bus, virtual bus);
 
 end CASE_Properties;

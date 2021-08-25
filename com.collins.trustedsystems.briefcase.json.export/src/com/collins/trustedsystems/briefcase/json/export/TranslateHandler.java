@@ -34,6 +34,7 @@ public class TranslateHandler extends AbstractHandler {
 
 		final URI uri = getSelectionURI(HandlerUtil.getCurrentSelection(event));
 		if (uri == null) {
+			Dialog.showError("Export to JSON", "Select a component implementation for export");
 			return null;
 		}
 

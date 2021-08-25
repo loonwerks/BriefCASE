@@ -464,7 +464,7 @@
             commandId="com.collins.trustedsystems.briefcase.staircase.commands.ImportRequirements">
       </handler>
       <handler
-            class="com.collins.trustedsystems.briefcase.staircase.handlers.GenerateRequirementsHandler"
+            class="com.collins.trustedsystems.briefcase.staircase.handlers.RunDcryppsHandler"
             commandId="com.collins.trustedsystems.briefcase.staircase.commands.GenerateRequirements">
       </handler>
       <handler

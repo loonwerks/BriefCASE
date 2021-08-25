@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="com.rockwellcollins.atc.resolute.analysis.external.resoluteExternalFunctionLibrary">
+      <externalLibrary
+            libraryClass="com.collins.trustedsystems.briefcase.agreelib.ResoluteAgreeFunctions"
+            name="AgreeLib"
+            typeClass="com.collins.trustedsystems.briefcase.agreelib.ResoluteAgreeFunctionsType">
+      </externalLibrary>
+   </extension>
+
+</plugin>
