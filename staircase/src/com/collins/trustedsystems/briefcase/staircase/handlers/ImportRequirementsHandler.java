@@ -38,7 +38,7 @@ public class ImportRequirementsHandler extends AbstractHandler {
 		if (importRequirements) {
 			final FileDialog dlgReqFile = new FileDialog(
 					PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), SWT.OPEN);
-			dlgReqFile.setFilterPath(project.getLocation().append("Requirements").toString());
+			dlgReqFile.setFilterPath(project.getLocation().append("Requirements").toOSString());
 			dlgReqFile.setText("Select requirements file to import.");
 			filename = dlgReqFile.open();
 			if (filename == null) {

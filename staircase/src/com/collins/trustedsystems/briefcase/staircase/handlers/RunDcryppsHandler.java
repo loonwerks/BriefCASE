@@ -49,8 +49,7 @@ public class RunDcryppsHandler extends AadlHandler {
 		// Check if a component implementation is selected
 		final EObject eObj = getEObject(uri);
 		if (!(eObj instanceof ComponentImplementation)) {
-			Dialog.showError("Run DCRYPPS",
-					"Select the top-level component implementation for analysis.");
+			Dialog.showError("Run DCRYPPS", "Select the top-level component implementation for analysis.");
 			return;
 		}
 		final ComponentImplementation ci = (ComponentImplementation) eObj;
@@ -137,6 +136,7 @@ public class RunDcryppsHandler extends AadlHandler {
 				return responseJsonObject;
 			} else {
 				System.out.println("Error code " + statusCode);
+				Dialog.showError("Run DCRYPPS", "DCRYPPS returned error code " + statusCode + ".");
 			}
 		} catch (IOException e) {
 			Dialog.showError("Run DCRYPPS", "Unable to connect to DCRYPPS.\n\n" + e.getMessage());
