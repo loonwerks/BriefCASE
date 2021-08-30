@@ -32,6 +32,7 @@ import org.eclipse.xtext.ui.editor.outline.impl.EObjectNode;
 import org.eclipse.xtext.ui.editor.utils.EditorUtils;
 import org.osate.aadl2.NamedElement;
 import org.osate.aadl2.Realization;
+import org.osate.ui.dialogs.Dialog;
 
 public abstract class AadlHandler extends AbstractHandler {
 
@@ -65,6 +66,7 @@ public abstract class AadlHandler extends AbstractHandler {
 		// TODO: Handle same functionality in the Graphical Editor?
 		final URI uri = getSelectionURI(selection);
 		if (uri == null) {
+			Dialog.showError("BriefCASE", "A model element must be selected to perform this action.");
 			return null;
 		}
 

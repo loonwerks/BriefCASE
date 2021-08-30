@@ -28,6 +28,7 @@ Require-Bundle: org.osate.aadl2;bundle-version="[4.0.0,5.0.0)",
  org.apache.httpcomponents.httpclient,
  org.apache.httpcomponents.httpcore
 Import-Package: com.collins.trustedsystems.briefcase.attestation,
+ com.collins.trustedsystems.briefcase.json.json,
  org.eclipse.emf.transaction
 Bundle-Activator: com.collins.trustedsystems.briefcase.staircase.Activator
 Export-Package: com.collins.trustedsystems.briefcase.staircase,
