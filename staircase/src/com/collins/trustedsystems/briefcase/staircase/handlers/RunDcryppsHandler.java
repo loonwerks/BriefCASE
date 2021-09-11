@@ -2,8 +2,7 @@ package com.collins.trustedsystems.briefcase.staircase.handlers;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Map;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -26,21 +25,18 @@ import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.osate.aadl2.AnnexSubclause;
 import org.osate.aadl2.ComponentImplementation;
-import org.osate.aadl2.DefaultAnnexSubclause;
 import org.osate.aadl2.modelsupport.util.AadlUtil;
 import org.osate.ui.dialogs.Dialog;
 
 import com.collins.trustedsystems.briefcase.json.export.Aadl2Json;
 import com.collins.trustedsystems.briefcase.json.export.AadlTranslate.AgreePrintOption;
-import com.collins.trustedsystems.briefcase.json.json.JsonAnnexElement;
-import com.collins.trustedsystems.briefcase.json.json.JsonAnnexMember;
-import com.collins.trustedsystems.briefcase.json.json.JsonAnnexObject;
-import com.collins.trustedsystems.briefcase.json.json.JsonAnnexSubclause;
+import com.collins.trustedsystems.briefcase.json.export.JsonTranslate;
 import com.collins.trustedsystems.briefcase.staircase.utils.CaseUtils;
 import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
 import com.collins.trustedsystems.briefcase.util.Filesystem;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -54,6 +50,15 @@ public class RunDcryppsHandler extends AadlHandler {
 	private final static String DESIRABLE_PROPERTIES = "desirableProperties";
 	private final static String ATTACKER_DESCRIPTION = "attackerDescription";
 	private final static String CLASS_DICTIONARY = "classDictionary";
+	private final static String TOOL = "tool";
+	private final static String PROJECT = "project";
+	private final static String IMPLEMENTATION = "implementation";
+	private final static String DATE = "date";
+	private final static String HASH = "hash";
+	private final static String MODEL_UNITS = "modelUnits";
+	private final static String MODEL = "model";
+	private final static String REQUIREMENT = "requirement";
+	private final static String REQUIREMENTS = "requirements";
 
 	@Override
 	protected void runCommand(URI uri) {
@@ -89,48 +94,53 @@ public class RunDcryppsHandler extends AadlHandler {
 
 		final IPath path = new Path(ci.eResource().getURI().toPlatformString(true));
 		final IProject project = ResourcesPlugin.getWorkspace().getRoot().getFile(path).getProject();
-		header.addProperty("project", project.getName());
-		header.addProperty("implementation", ci.getQualifiedName());
-		header.addProperty("date", System.currentTimeMillis());
+		header.addProperty(PROJECT, project.getName());
+		header.addProperty(IMPLEMENTATION, ci.getQualifiedName());
+		header.addProperty(DATE, System.currentTimeMillis());
 
 		try {
 			// Generate json
 			final JsonElement json = Aadl2Json.generateJson(AadlUtil.getContainingPackage(ci), null,
 					AgreePrintOption.BOTH);
-			header.addProperty("hash", Integer.toString(json.toString().hashCode()));
-			header.add("modelUnits", json);
+			header.addProperty(HASH, Integer.toString(json.toString().hashCode()));
+			header.add(MODEL_UNITS, json);
 
 		} catch (Exception e) {
 			Dialog.showError("Run DCRYPPS", "Unable to export model to JSON format.");
 			return false;
 		}
 
-		request.add("model", header);
+		request.add(MODEL, header);
 
-		final Set<String> inputs = getInputsFromModel(ci);
-		if (!inputs.contains(DESIRABLE_PROPERTIES)) {
+		final JsonObject inputs = getInputsFromModel(ci);
+		if (!inputs.has(DESIRABLE_PROPERTIES)) {
 			Dialog.showError("Run DCRYPPS", "Component implementation " + ci.getName()
 					+ " must include a JSON annex containing the " + DESIRABLE_PROPERTIES + " array.");
 			return false;
-		} else if (!inputs.contains(ATTACKER_DESCRIPTION)) {
+		} else if (!inputs.has(ATTACKER_DESCRIPTION)) {
 			Dialog.showError("Run DCRYPPS", "Component implementation " + ci.getName()
 					+ " must include a JSON annex containing the " + ATTACKER_DESCRIPTION + " array.");
 			return false;
-		} else if (!inputs.contains(CLASS_DICTIONARY)) {
+		} else if (!inputs.has(CLASS_DICTIONARY)) {
 			Dialog.showError("Run DCRYPPS", "Component implementation " + ci.getName()
 					+ " must include a JSON annex containing the " + CLASS_DICTIONARY + " object.");
 			return false;
 		}
 
+		// TODO: Remove after Tamas fixes bug
+		for (Map.Entry<String, JsonElement> input : inputs.entrySet()) {
+			request.add(input.getKey(), input.getValue());
+		}
+
 		final JsonObject results = postDcryppsRequest(request.toString());
-		writeRequirementsFile(project, request);
+//		writeRequirementsFile(project, request);
 		// TODO: Check results status
 		if (!checkResults(results)) {
 			return false;
 		}
 
 		// Save results
-		if (writeRequirementsFile(project, results) == null) {
+		if (writeRequirementsFile(project, header, results) == null) {
 			return false;
 		}
 
@@ -139,18 +149,24 @@ public class RunDcryppsHandler extends AadlHandler {
 		return true;
 	}
 
-	private Set<String> getInputsFromModel(ComponentImplementation ci) {
-		Set<String> inputs = new HashSet<>();
+	private JsonObject getInputsFromModel(ComponentImplementation ci) {
+//		Set<String> inputs = new HashSet<>();
+		JsonObject inputs = new JsonObject();
 		for (AnnexSubclause annexSubclause : ci.getOwnedAnnexSubclauses()) {
 			if (annexSubclause.getName().equalsIgnoreCase("json")) {
-				final DefaultAnnexSubclause defaultAnnexSubclause = (DefaultAnnexSubclause) annexSubclause;
-				final JsonAnnexSubclause jsonAnnexSubclause = (JsonAnnexSubclause) defaultAnnexSubclause.getParsedAnnexSubclause();
-				JsonAnnexElement jsonAnnexElement = jsonAnnexSubclause.getJsonAnnexElement();
-				if (jsonAnnexElement instanceof JsonAnnexObject) {
-					for (JsonAnnexMember jsonAnnexMember : ((JsonAnnexObject) jsonAnnexElement).getJsonAnnexMembers()) {
-						inputs.add(jsonAnnexMember.getKey().getValue().replace("\"", ""));
-					}
+//				final DefaultAnnexSubclause defaultAnnexSubclause = (DefaultAnnexSubclause) annexSubclause;
+//				final JsonAnnexSubclause jsonAnnexSubclause = (JsonAnnexSubclause) defaultAnnexSubclause.getParsedAnnexSubclause();
+				JsonElement jsonElement = JsonTranslate.genAnnexSubclause(annexSubclause);
+				if (jsonElement instanceof JsonObject) {
+					return jsonElement.getAsJsonObject();
 				}
+//				JsonAnnexElement jsonAnnexElement = jsonAnnexSubclause.getJsonAnnexElement();
+//				if (jsonAnnexElement instanceof JsonAnnexObject) {
+//					for (JsonAnnexMember jsonAnnexMember : ((JsonAnnexObject) jsonAnnexElement).getJsonAnnexMembers()) {
+//						inputs.add(jsonAnnexMember.getKey().getValue().replace("\"", ""));
+//
+//					}
+//				}
 				break;
 			}
 		}
@@ -199,9 +215,25 @@ public class RunDcryppsHandler extends AadlHandler {
 		return true;
 	}
 
-	private IFile writeRequirementsFile(IProject project, JsonObject reqs) {
+	private IFile writeRequirementsFile(IProject project, JsonObject header, JsonObject reqs) {
 
-		Gson gson = new GsonBuilder().serializeNulls().disableHtmlEscaping().setPrettyPrinting().create();
+		final JsonObject contents = header;
+		contents.addProperty(TOOL, "DCRYPPS");
+
+		final JsonArray requirements = new JsonArray();
+		if (!(reqs.has(REQUIREMENTS) && reqs.get(REQUIREMENTS).isJsonArray())) {
+			for (JsonElement reqElement : reqs.get(REQUIREMENTS).getAsJsonArray()) {
+				if (reqElement.isJsonObject()) {
+					final JsonObject req = reqElement.getAsJsonObject();
+					if (req.has(REQUIREMENT) && req.get(REQUIREMENT).isJsonArray()) {
+
+					}
+				}
+			}
+		}
+		contents.add(REQUIREMENTS, requirements);
+
+		final Gson gson = new GsonBuilder().serializeNulls().disableHtmlEscaping().setPrettyPrinting().create();
 
 		IFile reqFile = null;
 		try {

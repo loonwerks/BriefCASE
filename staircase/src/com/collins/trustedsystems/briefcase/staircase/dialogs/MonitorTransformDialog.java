@@ -10,8 +10,6 @@ import java.util.Set;
 import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -66,6 +64,7 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 	private List<Button> btnDispatchProtocol = new ArrayList<>();
 	private Label lblPeriodField;
 	private Text txtPeriod;
+	private Text txtStackSize;
 	private Combo cboMonitorRequirement;
 	private Text txtAgreeProperty;
 
@@ -85,6 +84,7 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 	private boolean createThread = false;
 	private String dispatchProtocol = "";
 	private String period = "";
+	private String stackSize = "";
 	private String monitorRequirement = "";
 	private String agreeProperty = "";
 
@@ -147,27 +147,6 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 		createPortsTab(folder);
 		folder.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, true));
 
-//		Composite area = (Composite) super.createDialogArea(parent);
-//		Composite container = new Composite(area, SWT.NONE);
-//		container.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-//		GridLayout layout = new GridLayout(2, false);
-//		container.setLayout(layout);
-//
-//		// Add monitor information fields
-//		createMonitorComponentNameField(container);
-//		createMonitorSubcomponentNameField(container);
-//		createLatchedField(container);
-//		createResetPortField(container);
-//		createReferencePortsField(container);
-//		createAlertPortField(container);
-//		createObservationGateField(container);
-//		// Only display dispatch protocol if filter is a thread
-//		if (context instanceof ProcessImplementation || context instanceof ThreadGroupImplementation) {
-//			createDispatchProtocolField(container);
-//		}
-//		createRequirementField(container);
-//		createAgreeField(container);
-
 		return area;
 	}
 
@@ -181,20 +160,28 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 		final TabItem genTab = new TabItem(folder, SWT.NONE);
 		genTab.setText("General");
 
-		createMonitorComponentNameField(container);
-		createMonitorSubcomponentNameField(container);
-		createLatchedField(container);
+//		createMonitorComponentNameField(container);
+		TransformDialogUtil.createTextField(container, "Monitor component name", txtMonitorComponentName,
+				ModelTransformUtils.getUniqueName(MonitorTransformHandler.MONITOR_COMP_TYPE_NAME, true,
+						AadlUtil.getContainingPackageSection(context).getOwnedClassifiers()));
+//		createMonitorSubcomponentNameField(container);
+		TransformDialogUtil.createTextField(container, "Monitor subcomponent name", txtMonitorSubcomponentName,
+				ModelTransformUtils.getUniqueName(MonitorTransformHandler.MONITOR_SUBCOMP_NAME, true,
+						context.getOwnedSubcomponents()));
+//		createLatchedField(container);
+		TransformDialogUtil.createCheckboxField(container, "Latched", btnLatched, false);
 		createObservationGateField(container);
 		if (context instanceof SystemImplementation) {
 			createCreateThreadField(container);
 		}
-//		// Only display dispatch protocol if monitor is a thread
-//		if (context instanceof ProcessImplementation || context instanceof ThreadGroupImplementation
-//				|| (context instanceof SystemImplementation && context.getTypeName().endsWith("_seL4"))) {
-			createDispatchProtocolField(container);
-//		}
-		createRequirementField(container);
-		createAgreeField(container);
+//		createDispatchProtocolField(container);
+		TransformDialogUtil.createDispatchProtocolField(container, lblDispatchProtocolField, protocolGroup,
+				btnDispatchProtocol, lblPeriodField, txtPeriod);
+		TransformDialogUtil.createTextField(container, "Stack size", txtStackSize, "");
+//		createRequirementField(container);
+		TransformDialogUtil.createRequirementField(container, cboMonitorRequirement, requirements);
+//		createAgreeField(container);
+		TransformDialogUtil.createTextField(container, "Monitor policy", txtAgreeProperty, "");
 
 		genTab.setControl(container);
 	}
@@ -209,83 +196,90 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 		final TabItem portsTab = new TabItem(folder, SWT.NONE);
 		portsTab.setText("Ports");
 
-		createObservationPortNameField(container);
-		createObservationGatePortNameField(container);
+//		createObservationPortNameField(container);
+		TransformDialogUtil.createTextField(container, "Observation port name", txtObservationPortName,
+				MonitorTransformHandler.MONITOR_OBSERVED_PORT_NAME);
+//		createObservationGatePortNameField(container);
+		TransformDialogUtil.createTextField(container, "Observation gate port name", txtObservationGatePortName,
+				MonitorTransformHandler.MONITOR_GATE_PORT_NAME);
 		createResetPortField(container);
 		createReferencePortsField(container);
 
-		createAlertPortNameField(container);
+//		createAlertPortNameField(container);
+		TransformDialogUtil.createTextField(container, "Alert port name", txtAlertPortName,
+				MonitorTransformHandler.MONITOR_ALERT_PORT_NAME);
 		createAlertPortField(container);
 		createAlertPortCategoryField(container);
-		createAlertPortDataTypeField(container);
+//		createAlertPortDataTypeField(container);
+		TransformDialogUtil.createDataTypeField(container, "Alert port data type", txtAlertPortDataType, types);
 
 		portsTab.setControl(container);
 	}
 
-	/**
-	 * Creates the input text field for specifying the monitor component name
-	 * @param container
-	 */
-	private void createMonitorComponentNameField(Composite container) {
-		final Label lblMonitorComponentNameField = new Label(container, SWT.NONE);
-		lblMonitorComponentNameField.setText("Monitor component instance name");
+//	/**
+//	 * Creates the input text field for specifying the monitor component name
+//	 * @param container
+//	 */
+//	private void createMonitorComponentNameField(Composite container) {
+//		final Label lblMonitorComponentNameField = new Label(container, SWT.NONE);
+//		lblMonitorComponentNameField.setText("Monitor component instance name");
+//
+//		final GridData dataInfoField = new GridData();
+//		dataInfoField.grabExcessHorizontalSpace = true;
+//		dataInfoField.horizontalAlignment = GridData.FILL;
+//		txtMonitorComponentName = new Text(container, SWT.BORDER);
+//		txtMonitorComponentName.setLayoutData(dataInfoField);
+//		txtMonitorComponentName.setText(MonitorTransformHandler.MONITOR_COMP_TYPE_NAME);
+//	}
 
-		final GridData dataInfoField = new GridData();
-		dataInfoField.grabExcessHorizontalSpace = true;
-		dataInfoField.horizontalAlignment = GridData.FILL;
-		txtMonitorComponentName = new Text(container, SWT.BORDER);
-		txtMonitorComponentName.setLayoutData(dataInfoField);
-		txtMonitorComponentName.setText(MonitorTransformHandler.MONITOR_COMP_TYPE_NAME);
-	}
+//	/**
+//	 * Creates the input text field for specifying the monitor subcomponent instance name
+//	 * @param container
+//	 */
+//	private void createMonitorSubcomponentNameField(Composite container) {
+//		final Label lblMonitorSubcomponentNameField = new Label(container, SWT.NONE);
+//		lblMonitorSubcomponentNameField.setText("Monitor subcomponent instance name");
+//
+//		final GridData dataInfoField = new GridData();
+//		dataInfoField.grabExcessHorizontalSpace = true;
+//		dataInfoField.horizontalAlignment = GridData.FILL;
+//		txtMonitorSubcomponentName = new Text(container, SWT.BORDER);
+//		txtMonitorSubcomponentName.setLayoutData(dataInfoField);
+//		txtMonitorSubcomponentName.setText(MonitorTransformHandler.MONITOR_SUBCOMP_NAME);
+//	}
 
-	/**
-	 * Creates the input text field for specifying the monitor subcomponent instance name
-	 * @param container
-	 */
-	private void createMonitorSubcomponentNameField(Composite container) {
-		final Label lblMonitorSubcomponentNameField = new Label(container, SWT.NONE);
-		lblMonitorSubcomponentNameField.setText("Monitor subcomponent instance name");
+//	/**
+//	 * Creates the input text field for specifying the monitor observation port name
+//	 * @param container
+//	 */
+//	private void createObservationPortNameField(Composite container) {
+//		final Label lblObservationPortNameField = new Label(container, SWT.NONE);
+//		lblObservationPortNameField.setText("Observation port name");
+//
+//		final GridData dataInfoField = new GridData();
+//		dataInfoField.grabExcessHorizontalSpace = true;
+//		dataInfoField.horizontalAlignment = GridData.FILL;
+//		txtObservationPortName = new Text(container, SWT.BORDER);
+//		txtObservationPortName.setLayoutData(dataInfoField);
+//		txtObservationPortName.setText(MonitorTransformHandler.MONITOR_OBSERVED_PORT_NAME);
+//	}
 
-		final GridData dataInfoField = new GridData();
-		dataInfoField.grabExcessHorizontalSpace = true;
-		dataInfoField.horizontalAlignment = GridData.FILL;
-		txtMonitorSubcomponentName = new Text(container, SWT.BORDER);
-		txtMonitorSubcomponentName.setLayoutData(dataInfoField);
-		txtMonitorSubcomponentName.setText(MonitorTransformHandler.MONITOR_SUBCOMP_NAME);
-	}
-
-	/**
-	 * Creates the input text field for specifying the monitor observation port name
-	 * @param container
-	 */
-	private void createObservationPortNameField(Composite container) {
-		final Label lblObservationPortNameField = new Label(container, SWT.NONE);
-		lblObservationPortNameField.setText("Observation port name");
-
-		final GridData dataInfoField = new GridData();
-		dataInfoField.grabExcessHorizontalSpace = true;
-		dataInfoField.horizontalAlignment = GridData.FILL;
-		txtObservationPortName = new Text(container, SWT.BORDER);
-		txtObservationPortName.setLayoutData(dataInfoField);
-		txtObservationPortName.setText(MonitorTransformHandler.MONITOR_OBSERVED_PORT_NAME);
-	}
-
-	/**
-	 * Creates the input text field for specifying the monitor observation gate port name
-	 * @param container
-	 */
-	private void createObservationGatePortNameField(Composite container) {
-		lblObservationGatePortNameField = new Label(container, SWT.NONE);
-		lblObservationGatePortNameField.setText("Observation gate port name");
-
-		final GridData dataInfoField = new GridData();
-		dataInfoField.grabExcessHorizontalSpace = true;
-		dataInfoField.horizontalAlignment = GridData.FILL;
-		txtObservationGatePortName = new Text(container, SWT.BORDER);
-		txtObservationGatePortName.setLayoutData(dataInfoField);
-		lblObservationGatePortNameField.setEnabled(false);
-		txtObservationGatePortName.setEnabled(false);
-	}
+//	/**
+//	 * Creates the input text field for specifying the monitor observation gate port name
+//	 * @param container
+//	 */
+//	private void createObservationGatePortNameField(Composite container) {
+//		lblObservationGatePortNameField = new Label(container, SWT.NONE);
+//		lblObservationGatePortNameField.setText("Observation gate port name");
+//
+//		final GridData dataInfoField = new GridData();
+//		dataInfoField.grabExcessHorizontalSpace = true;
+//		dataInfoField.horizontalAlignment = GridData.FILL;
+//		txtObservationGatePortName = new Text(container, SWT.BORDER);
+//		txtObservationGatePortName.setLayoutData(dataInfoField);
+//		lblObservationGatePortNameField.setEnabled(false);
+//		txtObservationGatePortName.setEnabled(false);
+//	}
 
 	/**
 	 * Creates the checkbox field for adding a reset port
@@ -343,23 +337,23 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 	}
 
 
-	/**
-	 * Creates the checkbox field for specifying if the monitor is latched
-	 * @param container
-	 */
-	private void createLatchedField(Composite container) {
-
-		final Label lblLatchedField = new Label(container, SWT.NONE);
-		lblLatchedField.setText("Latched");
-
-		final GridData dataInfoField = new GridData();
-		dataInfoField.grabExcessHorizontalSpace = true;
-		dataInfoField.horizontalAlignment = SWT.FILL;
-		btnLatched = new Button(container, SWT.CHECK);
-		btnLatched.setSelection(false);
-		btnLatched.setLayoutData(dataInfoField);
-
-	}
+//	/**
+//	 * Creates the checkbox field for specifying if the monitor is latched
+//	 * @param container
+//	 */
+//	private void createLatchedField(Composite container) {
+//
+//		final Label lblLatchedField = new Label(container, SWT.NONE);
+//		lblLatchedField.setText("Latched");
+//
+//		final GridData dataInfoField = new GridData();
+//		dataInfoField.grabExcessHorizontalSpace = true;
+//		dataInfoField.horizontalAlignment = SWT.FILL;
+//		btnLatched = new Button(container, SWT.CHECK);
+//		btnLatched.setSelection(false);
+//		btnLatched.setLayoutData(dataInfoField);
+//
+//	}
 
 	/**
 	 * Creates the input field for specifying what to connect the 'reference' ports to
@@ -378,21 +372,21 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 				MONITOR_REFERENCE_PORT_NAME, "Monitor");
 	}
 
-	/**
-	 * Creates the input text field for specifying the monitor alert port name
-	 * @param container
-	 */
-	private void createAlertPortNameField(Composite container) {
-		final Label lblAlertPortNameField = new Label(container, SWT.NONE);
-		lblAlertPortNameField.setText("Alert port name");
-
-		final GridData dataInfoField = new GridData();
-		dataInfoField.grabExcessHorizontalSpace = true;
-		dataInfoField.horizontalAlignment = GridData.FILL;
-		txtAlertPortName = new Text(container, SWT.BORDER);
-		txtAlertPortName.setLayoutData(dataInfoField);
-		txtAlertPortName.setText(MonitorTransformHandler.MONITOR_ALERT_PORT_NAME);
-	}
+//	/**
+//	 * Creates the input text field for specifying the monitor alert port name
+//	 * @param container
+//	 */
+//	private void createAlertPortNameField(Composite container) {
+//		final Label lblAlertPortNameField = new Label(container, SWT.NONE);
+//		lblAlertPortNameField.setText("Alert port name");
+//
+//		final GridData dataInfoField = new GridData();
+//		dataInfoField.grabExcessHorizontalSpace = true;
+//		dataInfoField.horizontalAlignment = GridData.FILL;
+//		txtAlertPortName = new Text(container, SWT.BORDER);
+//		txtAlertPortName.setLayoutData(dataInfoField);
+//		txtAlertPortName.setText(MonitorTransformHandler.MONITOR_ALERT_PORT_NAME);
+//	}
 
 	/**
 	 * Creates the input field for specifying what to connect the 'alert' port to
@@ -490,24 +484,18 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 
 	}
 
-	/**
-	 * Creates the input field for specifying the monitor alert port data type
-	 * @param container
-	 */
-	private void createAlertPortDataTypeField(Composite container) {
-
-		lblAlertPortDataTypeField = new Label(container, SWT.NONE);
-		lblAlertPortDataTypeField.setText("Alert port data type");
-
-//		final GridData dataInfoField = new GridData();
-//		dataInfoField.grabExcessHorizontalSpace = true;
-//		dataInfoField.horizontalAlignment = SWT.FILL;
-//		dataInfoField.grabExcessVerticalSpace = false;
-//		txtAlertPortDataType = new Text(container, SWT.BORDER);
-//		txtAlertPortDataType.setLayoutData(dataInfoField);
-		txtAlertPortDataType = new MenuCombo(container, types);
-
-	}
+//	/**
+//	 * Creates the input field for specifying the monitor alert port data type
+//	 * @param container
+//	 */
+//	private void createAlertPortDataTypeField(Composite container) {
+//
+//		lblAlertPortDataTypeField = new Label(container, SWT.NONE);
+//		lblAlertPortDataTypeField.setText("Alert port data type");
+//
+//		txtAlertPortDataType = new MenuCombo(container, types);
+//
+//	}
 
 	/**
 	 * Creates the checkbox field for specifying if the monitor
@@ -519,9 +507,6 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 		final Label lblObservationGateField = new Label(container, SWT.NONE);
 		lblObservationGateField.setText("Gate Observed connection");
 
-//		final GridData dataInfoField = new GridData();
-//		dataInfoField.grabExcessHorizontalSpace = true;
-//		dataInfoField.horizontalAlignment = SWT.FILL;
 		btnObservationGate = new Button(container, SWT.CHECK);
 		btnObservationGate.setSelection(false);
 		btnObservationGate.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
@@ -547,11 +532,7 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 	private void createCreateThreadField(Composite container) {
 		final Label lblCreateThreadField = new Label(container, SWT.NONE);
 		lblCreateThreadField.setText("Create internal thread component");
-//		lblCreateThreadField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
-//		GridData dataInfoField = new GridData();
-//		dataInfoField.grabExcessHorizontalSpace = true;
-//		dataInfoField.horizontalAlignment = SWT.FILL;
 		btnCreateThread = new Button(container, SWT.CHECK);
 		btnCreateThread.setSelection(true);
 		btnCreateThread.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
@@ -582,101 +563,101 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 	}
 
 
-	/**
-	 * Creates the input field for selecting the dispatch protocol
-	 * @param container
-	 */
-	private void createDispatchProtocolField(Composite container) {
-		lblDispatchProtocolField = new Label(container, SWT.NONE);
-		lblDispatchProtocolField.setText("Dispatch protocol");
-		lblDispatchProtocolField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+//	/**
+//	 * Creates the input field for selecting the dispatch protocol
+//	 * @param container
+//	 */
+//	private void createDispatchProtocolField(Composite container) {
+//		lblDispatchProtocolField = new Label(container, SWT.NONE);
+//		lblDispatchProtocolField.setText("Dispatch protocol");
+//		lblDispatchProtocolField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+//
+//		// Create a group to contain the log port options
+//		protocolGroup = new Group(container, SWT.NONE);
+//		protocolGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+//		protocolGroup.setLayout(new RowLayout(SWT.HORIZONTAL));
+//
+//		btnDispatchProtocol.clear();
+//
+//		final Button btnNoProtocol = new Button(protocolGroup, SWT.RADIO);
+//		btnNoProtocol.setText("None");
+//		btnNoProtocol.setSelection(true);
+//		btnNoProtocol.addSelectionListener(new SelectionListener() {
+//
+//			@Override
+//			public void widgetSelected(SelectionEvent e) {
+//				lblPeriodField.setEnabled(!btnNoProtocol.getSelection());
+//				txtPeriod.setEnabled(!btnNoProtocol.getSelection());
+//				if (btnNoProtocol.getSelection()) {
+//					txtPeriod.setText("");
+//				}
+//			}
+//
+//			@Override
+//			public void widgetDefaultSelected(SelectionEvent e) {
+//				widgetSelected(e);
+//			}
+//		});
+//
+//		final Button btnPeriodic = new Button(protocolGroup, SWT.RADIO);
+//		btnPeriodic.setText("Periodic");
+//		btnPeriodic.setSelection(false);
+//
+//		final Button btnSporadic = new Button(protocolGroup, SWT.RADIO);
+//		btnSporadic.setText("Sporadic");
+//		btnSporadic.setSelection(false);
+//
+//		lblPeriodField = new Label(container, SWT.NONE);
+//		lblPeriodField.setText("Period");
+//		lblPeriodField.setEnabled(false);
+//		lblPeriodField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+//
+//		final GridData dataInfoField = new GridData();
+//		dataInfoField.grabExcessHorizontalSpace = true;
+//		dataInfoField.horizontalAlignment = SWT.FILL;
+//		txtPeriod = new Text(container, SWT.BORDER);
+//		txtPeriod.setLayoutData(dataInfoField);
+//		txtPeriod.setEnabled(false);
+//
+//		btnDispatchProtocol.add(btnNoProtocol);
+//		btnDispatchProtocol.add(btnPeriodic);
+//		btnDispatchProtocol.add(btnSporadic);
+//
+//	}
 
-		// Create a group to contain the log port options
-		protocolGroup = new Group(container, SWT.NONE);
-		protocolGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		protocolGroup.setLayout(new RowLayout(SWT.HORIZONTAL));
+//	/**
+//	 * Creates the input field for selecting the resolute clause that drives
+//	 * the addition of this monitor to the design
+//	 * @param container
+//	 */
+//	private void createRequirementField(Composite container) {
+//		final Label lblResoluteField = new Label(container, SWT.NONE);
+//		lblResoluteField.setText("Requirement");
+//
+//		final GridData dataInfoField = new GridData();
+//		dataInfoField.grabExcessHorizontalSpace = true;
+//		dataInfoField.horizontalAlignment = GridData.FILL;
+//		cboMonitorRequirement = new Combo(container, SWT.BORDER);
+//		cboMonitorRequirement.setLayoutData(dataInfoField);
+//		cboMonitorRequirement.add(NO_REQUIREMENT_SELECTED);
+//		requirements.forEach(r -> cboMonitorRequirement.add(r));
+//		cboMonitorRequirement.setText(NO_REQUIREMENT_SELECTED);
+//
+//	}
 
-		btnDispatchProtocol.clear();
-
-		final Button btnNoProtocol = new Button(protocolGroup, SWT.RADIO);
-		btnNoProtocol.setText("None");
-		btnNoProtocol.setSelection(true);
-		btnNoProtocol.addSelectionListener(new SelectionListener() {
-
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				lblPeriodField.setEnabled(!btnNoProtocol.getSelection());
-				txtPeriod.setEnabled(!btnNoProtocol.getSelection());
-				if (btnNoProtocol.getSelection()) {
-					txtPeriod.setText("");
-				}
-			}
-
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e) {
-				widgetSelected(e);
-			}
-		});
-
-		final Button btnPeriodic = new Button(protocolGroup, SWT.RADIO);
-		btnPeriodic.setText("Periodic");
-		btnPeriodic.setSelection(false);
-
-		final Button btnSporadic = new Button(protocolGroup, SWT.RADIO);
-		btnSporadic.setText("Sporadic");
-		btnSporadic.setSelection(false);
-
-		lblPeriodField = new Label(container, SWT.NONE);
-		lblPeriodField.setText("Period");
-		lblPeriodField.setEnabled(false);
-		lblPeriodField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-
-		final GridData dataInfoField = new GridData();
-		dataInfoField.grabExcessHorizontalSpace = true;
-		dataInfoField.horizontalAlignment = SWT.FILL;
-		txtPeriod = new Text(container, SWT.BORDER);
-		txtPeriod.setLayoutData(dataInfoField);
-		txtPeriod.setEnabled(false);
-
-		btnDispatchProtocol.add(btnNoProtocol);
-		btnDispatchProtocol.add(btnPeriodic);
-		btnDispatchProtocol.add(btnSporadic);
-
-	}
-
-	/**
-	 * Creates the input field for selecting the resolute clause that drives
-	 * the addition of this monitor to the design
-	 * @param container
-	 */
-	private void createRequirementField(Composite container) {
-		final Label lblResoluteField = new Label(container, SWT.NONE);
-		lblResoluteField.setText("Requirement");
-
-		final GridData dataInfoField = new GridData();
-		dataInfoField.grabExcessHorizontalSpace = true;
-		dataInfoField.horizontalAlignment = GridData.FILL;
-		cboMonitorRequirement = new Combo(container, SWT.BORDER);
-		cboMonitorRequirement.setLayoutData(dataInfoField);
-		cboMonitorRequirement.add(NO_REQUIREMENT_SELECTED);
-		requirements.forEach(r -> cboMonitorRequirement.add(r));
-		cboMonitorRequirement.setText(NO_REQUIREMENT_SELECTED);
-
-	}
-
-	/**
-	 * Creates the input text field for specifying the monitor agree property
-	 * @param container
-	 */
-	private void createAgreeField(Composite container) {
-		final Label lblAgreeField = new Label(container, SWT.NONE);
-		lblAgreeField.setText("Monitor policy");
-
-		final GridData dataInfoField = new GridData(SWT.FILL, SWT.FILL, true, false);
-		txtAgreeProperty = new Text(container, SWT.BORDER);
-		txtAgreeProperty.setLayoutData(dataInfoField);
-
-	}
+//	/**
+//	 * Creates the input text field for specifying the monitor agree property
+//	 * @param container
+//	 */
+//	private void createAgreeField(Composite container) {
+//		final Label lblAgreeField = new Label(container, SWT.NONE);
+//		lblAgreeField.setText("Monitor policy");
+//
+//		final GridData dataInfoField = new GridData(SWT.FILL, SWT.FILL, true, false);
+//		txtAgreeProperty = new Text(container, SWT.BORDER);
+//		txtAgreeProperty.setLayoutData(dataInfoField);
+//
+//	}
 
 	/**
 	 * Saves information entered into the text fields.  This is needed because the
@@ -723,7 +704,6 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 		} else {
 			monitorSubcomponentName = txtMonitorSubcomponentName.getText();
 		}
-//		monitorSubcomponentName = txtMonitorSubcomponentName.getText();
 
 		// Observation Port
 		if (!txtObservationPortName.getText().isEmpty()
@@ -829,10 +809,6 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 								+ AadlUtil.getContainingPackage(context).getName()
 								+ ". Enter the data type's qualified name if it is defined in a different package.");
 				return false;
-//			} else {
-//				// Add the package name
-//				txtAlertPortDataType.setText(
-//						AadlUtil.getContainingPackage(context).getName() + "::" + txtAlertPortDataType.getText());
 			}
 		}
 		if (txtAlertPortDataType.getText().contains("[")) {
@@ -887,6 +863,16 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 				}
 				break;
 			}
+		}
+
+		// Stack Size
+		if (txtStackSize.getText().isEmpty()
+				|| txtStackSize.getSelectionText().matches("((\\d)+(\\s)*(bits|Bytes|KByte|MByte|GByte|TByte)?)")) {
+			stackSize = txtStackSize.getText();
+		} else {
+			Dialog.showError("Monitor Transform", "Monitor stack size " + txtStackSize.getText()
+					+ " is malformed. See the AADL definition of Stack_Size in Memory_Properties.aadl.");
+			return false;
 		}
 
 		// Requirement
@@ -977,6 +963,10 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 
 	public String getPeriod() {
 		return period;
+	}
+
+	public String getStackSize() {
+		return stackSize;
 	}
 
 	public String getAgreeProperty() {

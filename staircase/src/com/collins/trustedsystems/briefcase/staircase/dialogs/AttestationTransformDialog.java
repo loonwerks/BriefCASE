@@ -10,12 +10,9 @@ import java.util.Set;
 import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
@@ -63,18 +60,19 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 	private List<Button> btnMgrDispatchProtocol = new ArrayList<>();
 	private Label lblMgrPeriodField;
 	private Text txtMgrPeriod;
+	private Text txtMgrStackSize;
 	private Label lblGateDispatchProtocolField;
 	private Group gateProtocolGroup;
 	private List<Button> btnGateDispatchProtocol = new ArrayList<>();
 	private Label lblGatePeriodField;
 	private Text txtGatePeriod;
+	private Text txtGateStackSize;
 	private List<Button> btnMgrLogPortType = new ArrayList<>();
 	private List<Button> btnGateLogPortType = new ArrayList<>();
 	private Button btnCreateThread = null;
 	private Label lblUseKUImplementationField;
 	private Button btnUseKUImplementation;
 	private Combo cboRequirement;
-//	private Button btnPropagateGuarantees;
 //	private Text txtMgrAgreeProperty;
 //	private Text txtGateAgreeProperty;
 	private String attestationManagerComponentName;
@@ -89,8 +87,10 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 	private Map<String, List<String>> gatePortNames = new HashMap<>();
 	private String mgrDispatchProtocol = "";
 	private String mgrPeriod = "";
+	private String mgrStackSize = "";
 	private String gateDispatchProtocol = "";
 	private String gatePeriod = "";
+	private String gateStackSize = "";
 	private PortCategory mgrLogPortType = null;
 	private PortCategory gateLogPortType = null;
 	private String requirement;
@@ -184,7 +184,8 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		if (context instanceof SystemImplementation) {
 			createCreateThreadField(container);
 		}
-		createRequirementField(container);
+//		createRequirementField(container);
+		TransformDialogUtil.createRequirementField(container, cboRequirement, requirements);
 
 		return area;
 	}
@@ -199,18 +200,31 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		final TabItem mgrTab = new TabItem(folder, SWT.NONE);
 		mgrTab.setText("Manager");
 
-		createMgrComponentNameField(container);
-		createMgrSubcomponentNameField(container);
-		createRequestMessageDataTypeField(container);
-		createResponseMessageDataTypeField(container);
+//		createMgrComponentNameField(container);
+		TransformDialogUtil.createTextField(container, "Attestation Manager component name", txtMgrComponentName,
+				ModelTransformUtils.getUniqueName(AttestationTransformHandler.AM_COMP_TYPE_NAME, true,
+						AadlUtil.getContainingPackageSection(context).getOwnedClassifiers()));
+//		createMgrSubcomponentNameField(container);
+		TransformDialogUtil.createTextField(container, "Attestation Manager subcomponent name", txtMgrSubcomponentName,
+				ModelTransformUtils.getUniqueName(AttestationTransformHandler.AM_SUBCOMP_NAME, true,
+						context.getOwnedSubcomponents()));
+//		createRequestMessageDataTypeField(container);
+		TransformDialogUtil.createDataTypeField(container, "Request Message data type", txtRequestMessageDataType,
+				types);
+//		createResponseMessageDataTypeField(container);
+		TransformDialogUtil.createDataTypeField(container, "Response Message data type", txtResponseMessageDataType,
+				types);
 //		createCacheTimeoutField(container);
 //		createCacheSizeField(container);
-		createIdListDataTypeField(container);
-//		if (context instanceof ProcessImplementation || context instanceof ThreadGroupImplementation
-//				|| (context instanceof SystemImplementation && context.getTypeName().endsWith("_seL4"))) {
-			createMgrDispatchProtocolField(container);
-//		}
-		createMgrLogPortField(container);
+//		createIdListDataTypeField(container);
+		TransformDialogUtil.createDataTypeField(container, "ID list data type", txtIdListDataType, types);
+//		createMgrDispatchProtocolField(container);
+		TransformDialogUtil.createDispatchProtocolField(container, lblMgrDispatchProtocolField, mgrProtocolGroup,
+				btnMgrDispatchProtocol, lblMgrPeriodField, txtMgrPeriod);
+//		createMgrStackSizeField(container);
+		TransformDialogUtil.createTextField(container, "Stack size", txtMgrStackSize, "");
+//		createMgrLogPortField(container);
+		TransformDialogUtil.createLogPortField(container, btnMgrLogPortType);
 //		createMgrAgreePropertyField(container);
 		createUseKUImplementationField(container);
 
@@ -230,8 +244,14 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		namesContainer.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 		namesContainer.setLayout(new GridLayout(2, false));
 
-		createGateComponentNameField(namesContainer);
-		createGateSubcomponentNameField(namesContainer);
+//		createGateComponentNameField(namesContainer);
+		TransformDialogUtil.createTextField(container, "Attestation Gate component name", txtGateComponentName,
+				ModelTransformUtils.getUniqueName(AttestationTransformHandler.AG_COMP_TYPE_NAME, true,
+						AadlUtil.getContainingPackageSection(context).getOwnedClassifiers()));
+//		createGateSubcomponentNameField(namesContainer);
+		TransformDialogUtil.createTextField(container, "Attestation Gate subcomponent name", txtGateSubcomponentName,
+				ModelTransformUtils.getUniqueName(AttestationTransformHandler.AG_SUBCOMP_NAME, true,
+						context.getOwnedSubcomponents()));
 
 		final Composite portsContainer = new Composite(container, SWT.NONE);
 		portsContainer.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
@@ -241,172 +261,106 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		final Composite miscContainer = new Composite(container, SWT.NONE);
 		miscContainer.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 		miscContainer.setLayout(new GridLayout(2, false));
-//		if (context instanceof ProcessImplementation || context instanceof ThreadGroupImplementation
-//				|| (context instanceof SystemImplementation && context.getTypeName().endsWith("_seL4"))) {
-			createGateDispatchProtocolField(miscContainer);
-//		}
-		createGateLogPortField(miscContainer);
+//		createGateDispatchProtocolField(miscContainer);
+		TransformDialogUtil.createDispatchProtocolField(container, lblGateDispatchProtocolField, gateProtocolGroup,
+				btnGateDispatchProtocol, lblGatePeriodField, txtGatePeriod);
+//		createGateStackSizeField(miscContainer);
+		TransformDialogUtil.createTextField(container, "Stack size", txtGateStackSize, "");
+//		createGateLogPortField(miscContainer);
+		TransformDialogUtil.createLogPortField(container, btnGateLogPortType);
 //		createGateAgreePropertyField(miscContainer);
 
 		gateTab.setControl(container);
 	}
 
-	private void createMgrComponentNameField(Composite container) {
-
-		final Label lblComponentNameField = new Label(container, SWT.NONE);
-		lblComponentNameField.setText("Attestation Manager component name");
-
-		final GridData dataInfoField = new GridData();
-		dataInfoField.grabExcessHorizontalSpace = true;
-		dataInfoField.horizontalAlignment = SWT.FILL;
-		dataInfoField.grabExcessVerticalSpace = false;
-		txtMgrComponentName = new Text(container, SWT.BORDER);
-		txtMgrComponentName.setLayoutData(dataInfoField);
-//		if (attestationManager == null) {
-			txtMgrComponentName
-					.setText(ModelTransformUtils.getUniqueName(AttestationTransformHandler.AM_COMP_TYPE_NAME, true,
-							AadlUtil.getContainingPackageSection(context).getOwnedClassifiers()));
-//		} else {
-//			txtMgrComponentName.setText(attestationManager.getComponentType().getName());
-//			txtMgrComponentName.setEnabled(false);
-//		}
-
-	}
-
-	private void createMgrSubcomponentNameField(Composite container) {
-
-		final Label lblSubcomponentNameField = new Label(container, SWT.NONE);
-		lblSubcomponentNameField.setText("Attestation Manager subcomponent name");
-
-		final GridData dataInfoField = new GridData();
-		dataInfoField.grabExcessHorizontalSpace = true;
-		dataInfoField.horizontalAlignment = SWT.FILL;
-		dataInfoField.grabExcessVerticalSpace = false;
-		txtMgrSubcomponentName = new Text(container, SWT.BORDER);
-		txtMgrSubcomponentName.setLayoutData(dataInfoField);
-//		if (attestationManager == null) {
-			txtMgrSubcomponentName.setText(ModelTransformUtils.getUniqueName(
-					AttestationTransformHandler.AM_SUBCOMP_NAME, true, context.getOwnedSubcomponents()));
-//		} else {
-//			txtMgrSubcomponentName.setText(attestationManager.getName());
-//			txtMgrSubcomponentName.setEnabled(false);
-//		}
-
-	}
-
-
-	private void createGateComponentNameField(Composite container) {
-
-		final Label lblComponentNameField = new Label(container, SWT.NONE);
-		lblComponentNameField.setText("Attestation Gate component name");
-
-		final GridData dataInfoField = new GridData();
-		dataInfoField.grabExcessHorizontalSpace = true;
-		dataInfoField.horizontalAlignment = SWT.FILL;
-		dataInfoField.grabExcessVerticalSpace = false;
-		txtGateComponentName = new Text(container, SWT.BORDER);
-		txtGateComponentName.setLayoutData(dataInfoField);
-//		if (attestationGate == null) {
-			txtGateComponentName
-					.setText(ModelTransformUtils.getUniqueName(AttestationTransformHandler.AG_COMP_TYPE_NAME, true,
-							AadlUtil.getContainingPackageSection(context).getOwnedClassifiers()));
-//		} else {
-//			txtGateComponentName.setText(attestationGate.getComponentType().getName());
-//			txtGateComponentName.setEnabled(false);
-//		}
-
-	}
-
-	private void createGateSubcomponentNameField(Composite container) {
-
-		final Label lblSubcomponentNameField = new Label(container, SWT.NONE);
-		lblSubcomponentNameField.setText("Attestation Gate subcomponent name");
-
-		final GridData dataInfoField = new GridData();
-		dataInfoField.grabExcessHorizontalSpace = true;
-		dataInfoField.horizontalAlignment = SWT.FILL;
-		dataInfoField.grabExcessVerticalSpace = false;
-		txtGateSubcomponentName = new Text(container, SWT.BORDER);
-		txtGateSubcomponentName.setLayoutData(dataInfoField);
-//		if (attestationGate == null) {
-			txtGateSubcomponentName.setText(ModelTransformUtils.getUniqueName(
-					AttestationTransformHandler.AG_SUBCOMP_NAME, true, context.getOwnedSubcomponents()));
-//		} else {
-//			txtGateSubcomponentName.setText(attestationGate.getName());
-//			txtGateSubcomponentName.setEnabled(false);
-//		}
-
-	}
-
-	private void createRequestMessageDataTypeField(Composite container) {
-
-		final Label lblRequestMessageDataTypeField = new Label(container, SWT.NONE);
-		lblRequestMessageDataTypeField.setText("Request Message data type");
-
-		final GridData dataInfoField = new GridData();
-		dataInfoField.grabExcessHorizontalSpace = true;
-		dataInfoField.horizontalAlignment = SWT.FILL;
-		dataInfoField.grabExcessVerticalSpace = false;
-		txtRequestMessageDataType = new MenuCombo(container, types);
-//		txtRequestMessageDataType = new Text(container, SWT.BORDER);
-//		txtRequestMessageDataType.setLayoutData(dataInfoField);
-
-//		if (attestationManager != null) {
+//	private void createMgrComponentNameField(Composite container) {
 //
-//			final ComponentType ct = attestationManager.getComponentType();
-//			for (Feature f : ct.getOwnedFeatures()) {
-//				if (f.getName().equalsIgnoreCase(AttestationTransformHandler.AM_PORT_ATTESTATION_REQUEST_NAME)) {
-//					String dataType = "";
-//					if (f instanceof EventDataPort) {
-//						final EventDataPort port = (EventDataPort) f;
-//						dataType = port.getDataFeatureClassifier().getQualifiedName();
-//					} else if (f instanceof DataPort) {
-//						final DataPort port = (DataPort) f;
-//						dataType = port.getDataFeatureClassifier().getQualifiedName();
-//					}
-//					txtRequestMessageDataType.setText(dataType);
-//				}
-//			}
+//		final Label lblComponentNameField = new Label(container, SWT.NONE);
+//		lblComponentNameField.setText("Attestation Manager component name");
 //
-//			txtRequestMessageDataType.setEnabled(false);
-//		}
+//		final GridData dataInfoField = new GridData();
+//		dataInfoField.grabExcessHorizontalSpace = true;
+//		dataInfoField.horizontalAlignment = SWT.FILL;
+//		dataInfoField.grabExcessVerticalSpace = false;
+//		txtMgrComponentName = new Text(container, SWT.BORDER);
+//		txtMgrComponentName.setLayoutData(dataInfoField);
+//		txtMgrComponentName.setText(ModelTransformUtils.getUniqueName(AttestationTransformHandler.AM_COMP_TYPE_NAME,
+//				true, AadlUtil.getContainingPackageSection(context).getOwnedClassifiers()));
+//	}
 
-	}
-
-	private void createResponseMessageDataTypeField(Composite container) {
-
-		final Label lblResponseMessageDataTypeField = new Label(container, SWT.NONE);
-		lblResponseMessageDataTypeField.setText("Response Message data type");
-
-		final GridData dataInfoField = new GridData();
-		dataInfoField.grabExcessHorizontalSpace = true;
-		dataInfoField.horizontalAlignment = SWT.FILL;
-		dataInfoField.grabExcessVerticalSpace = false;
-		txtResponseMessageDataType = new MenuCombo(container, types);
-//		txtResponseMessageDataType = new Text(container, SWT.BORDER);
-//		txtResponseMessageDataType.setLayoutData(dataInfoField);
-
-//		if (attestationManager != null) {
+//	private void createMgrSubcomponentNameField(Composite container) {
 //
-//			final ComponentType ct = attestationManager.getComponentType();
-//			for (Feature f : ct.getOwnedFeatures()) {
-//				if (f.getName().equalsIgnoreCase(AttestationTransformHandler.AM_PORT_ATTESTATION_RESPONSE_NAME)) {
-//					String dataType = "";
-//					if (f instanceof EventDataPort) {
-//						final EventDataPort port = (EventDataPort) f;
-//						dataType = port.getDataFeatureClassifier().getQualifiedName();
-//					} else if (f instanceof DataPort) {
-//						final DataPort port = (DataPort) f;
-//						dataType = port.getDataFeatureClassifier().getQualifiedName();
-//					}
-//					txtResponseMessageDataType.setText(dataType);
-//				}
-//			}
+//		final Label lblSubcomponentNameField = new Label(container, SWT.NONE);
+//		lblSubcomponentNameField.setText("Attestation Manager subcomponent name");
 //
-//			txtResponseMessageDataType.setEnabled(false);
-//		}
+//		final GridData dataInfoField = new GridData();
+//		dataInfoField.grabExcessHorizontalSpace = true;
+//		dataInfoField.horizontalAlignment = SWT.FILL;
+//		dataInfoField.grabExcessVerticalSpace = false;
+//		txtMgrSubcomponentName = new Text(container, SWT.BORDER);
+//		txtMgrSubcomponentName.setLayoutData(dataInfoField);
+//		txtMgrSubcomponentName.setText(ModelTransformUtils
+//				.getUniqueName(AttestationTransformHandler.AM_SUBCOMP_NAME, true, context.getOwnedSubcomponents()));
+//	}
 
-	}
+
+//	private void createGateComponentNameField(Composite container) {
+//
+//		final Label lblComponentNameField = new Label(container, SWT.NONE);
+//		lblComponentNameField.setText("Attestation Gate component name");
+//
+//		final GridData dataInfoField = new GridData();
+//		dataInfoField.grabExcessHorizontalSpace = true;
+//		dataInfoField.horizontalAlignment = SWT.FILL;
+//		dataInfoField.grabExcessVerticalSpace = false;
+//		txtGateComponentName = new Text(container, SWT.BORDER);
+//		txtGateComponentName.setLayoutData(dataInfoField);
+//		txtGateComponentName
+//			.setText(ModelTransformUtils.getUniqueName(AttestationTransformHandler.AG_COMP_TYPE_NAME, true,
+//					AadlUtil.getContainingPackageSection(context).getOwnedClassifiers()));
+//	}
+
+//	private void createGateSubcomponentNameField(Composite container) {
+//
+//		final Label lblSubcomponentNameField = new Label(container, SWT.NONE);
+//		lblSubcomponentNameField.setText("Attestation Gate subcomponent name");
+//
+//		final GridData dataInfoField = new GridData();
+//		dataInfoField.grabExcessHorizontalSpace = true;
+//		dataInfoField.horizontalAlignment = SWT.FILL;
+//		dataInfoField.grabExcessVerticalSpace = false;
+//		txtGateSubcomponentName = new Text(container, SWT.BORDER);
+//		txtGateSubcomponentName.setLayoutData(dataInfoField);
+//		txtGateSubcomponentName.setText(ModelTransformUtils.getUniqueName(AttestationTransformHandler.AG_SUBCOMP_NAME,
+//				true, context.getOwnedSubcomponents()));
+//
+//	}
+
+//	private void createRequestMessageDataTypeField(Composite container) {
+//
+//		final Label lblRequestMessageDataTypeField = new Label(container, SWT.NONE);
+//		lblRequestMessageDataTypeField.setText("Request Message data type");
+//
+//		final GridData dataInfoField = new GridData();
+//		dataInfoField.grabExcessHorizontalSpace = true;
+//		dataInfoField.horizontalAlignment = SWT.FILL;
+//		dataInfoField.grabExcessVerticalSpace = false;
+//		txtRequestMessageDataType = new MenuCombo(container, types);
+//
+//	}
+
+//	private void createResponseMessageDataTypeField(Composite container) {
+//
+//		final Label lblResponseMessageDataTypeField = new Label(container, SWT.NONE);
+//		lblResponseMessageDataTypeField.setText("Response Message data type");
+//
+//		final GridData dataInfoField = new GridData();
+//		dataInfoField.grabExcessHorizontalSpace = true;
+//		dataInfoField.horizontalAlignment = SWT.FILL;
+//		dataInfoField.grabExcessVerticalSpace = false;
+//		txtResponseMessageDataType = new MenuCombo(container, types);
+//
+//	}
 
 
 	private void createCacheTimeoutField(Composite container) {
@@ -420,23 +374,6 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		dataInfoField.grabExcessVerticalSpace = false;
 		txtCacheTimeout = new Text(container, SWT.BORDER);
 		txtCacheTimeout.setLayoutData(dataInfoField);
-
-//		if (attestationManager != null) {
-//			final ComponentImplementation ci = attestationManager.getComponentImplementation();
-//			final Property prop = Aadl2GlobalScopeUtil.get(ci, Aadl2Package.eINSTANCE.getProperty(),
-//					CasePropertyUtils.CASE_PROPSET_NAME + "::" + CasePropertyUtils.CACHE_TIMEOUT);
-//			final List<? extends PropertyExpression> propVals = ci.getPropertyValueList(prop);
-//
-//			if (propVals != null) {
-//				// There should be only one property value
-//				final PropertyExpression expr = propVals.get(0);
-//				if (expr instanceof IntegerLiteral) {
-//					txtCacheTimeout.setText(Long.toString(((IntegerLiteral) expr).getValue()));
-//				}
-//			}
-//			txtCacheTimeout.setEnabled(false);
-//		}
-
 	}
 
 //	private void createCacheSizeField(Composite container) {
@@ -472,41 +409,17 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 //
 //	}
 
-	private void createIdListDataTypeField(Composite container) {
-
-		final Label lblIdListDataTypeField = new Label(container, SWT.NONE);
-		lblIdListDataTypeField.setText("ID list data type");
-
-		final GridData dataInfoField = new GridData();
-		dataInfoField.grabExcessHorizontalSpace = true;
-		dataInfoField.horizontalAlignment = SWT.FILL;
-		dataInfoField.grabExcessVerticalSpace = false;
-
-//		txtIdListDataType = new Text(container, SWT.BORDER);
-		txtIdListDataType = new MenuCombo(container, types);
-//		txtIdListDataType.setLayoutData(dataInfoField);
-
-//		if (attestationManager != null) {
+//	private void createIdListDataTypeField(Composite container) {
 //
-//			final ComponentType ct = attestationManager.getComponentType();
-//			for (Feature f : ct.getOwnedFeatures()) {
-//				if (f.getName().equalsIgnoreCase(AttestationTransformHandler.AM_PORT_TRUSTED_IDS_NAME)) {
-//					String dataType = "";
-//					if (f instanceof EventDataPort) {
-//						final EventDataPort port = (EventDataPort) f;
-//						dataType = port.getDataFeatureClassifier().getQualifiedName();
-//					} else if (f instanceof DataPort) {
-//						final DataPort port = (DataPort) f;
-//						dataType = port.getDataFeatureClassifier().getQualifiedName();
-//					}
-//					txtIdListDataType.setText(dataType);
-//				}
-//			}
+//		final Label lblIdListDataTypeField = new Label(container, SWT.NONE);
+//		lblIdListDataTypeField.setText("ID list data type");
 //
-//			txtIdListDataType.setEnabled(false);
-//		}
-
-	}
+//		final GridData dataInfoField = new GridData();
+//		dataInfoField.grabExcessHorizontalSpace = true;
+//		dataInfoField.horizontalAlignment = SWT.FILL;
+//		dataInfoField.grabExcessVerticalSpace = false;
+//		txtIdListDataType = new MenuCombo(container, types);
+//	}
 
 	private void createGatePortNamesField(Composite container) {
 		final Label lblPortNamesField = new Label(container, SWT.NONE);
@@ -554,350 +467,225 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		return false;
 	}
 
-	/**
-	 * Creates the input field for selecting the Manager dispatch protocol
-	 * @param container
-	 */
-	private void createMgrDispatchProtocolField(Composite container) {
-		lblMgrDispatchProtocolField = new Label(container, SWT.NONE);
-		lblMgrDispatchProtocolField.setText("Dispatch protocol");
-		lblMgrDispatchProtocolField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-
-		// Create a group to contain the log port options
-		mgrProtocolGroup = new Group(container, SWT.NONE);
-		mgrProtocolGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		mgrProtocolGroup.setLayout(new RowLayout(SWT.HORIZONTAL));
-
-		btnMgrDispatchProtocol.clear();
-
-		final Button btnNoProtocol = new Button(mgrProtocolGroup, SWT.RADIO);
-		btnNoProtocol.setText("None");
-		btnNoProtocol.setSelection(true);
-		btnNoProtocol.addSelectionListener(new SelectionListener() {
-
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				lblMgrPeriodField.setEnabled(!btnNoProtocol.getSelection());
-				txtMgrPeriod.setEnabled(!btnNoProtocol.getSelection());
-				if (btnNoProtocol.getSelection()) {
-					txtMgrPeriod.setText("");
-				}
-			}
-
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e) {
-				widgetSelected(e);
-			}
-		});
-
-		final Button btnPeriodic = new Button(mgrProtocolGroup, SWT.RADIO);
-		btnPeriodic.setText("Periodic");
-		btnPeriodic.setSelection(false);
-
-		final Button btnSporadic = new Button(mgrProtocolGroup, SWT.RADIO);
-		btnSporadic.setText("Sporadic");
-		btnSporadic.setSelection(false);
-
-		final GridData dataInfoField = new GridData();
-		dataInfoField.grabExcessHorizontalSpace = true;
-		dataInfoField.horizontalAlignment = SWT.FILL;
-		dataInfoField.grabExcessVerticalSpace = false;
-
-		lblMgrPeriodField = new Label(container, SWT.NONE);
-		lblMgrPeriodField.setLayoutData(dataInfoField);
-		lblMgrPeriodField.setText("Period");
-		lblMgrPeriodField.setEnabled(false);
-
-		txtMgrPeriod = new Text(container, SWT.BORDER);
-		txtMgrPeriod.setLayoutData(dataInfoField);
-		txtMgrPeriod.setEnabled(false);
-
-//		if (attestationManager != null) {
-//			Subcomponent mgrSubcomponent = attestationManager;
-//			if (attestationManager.getComponentType() instanceof ProcessType
-//					&& attestationManager.getComponentType().getName().endsWith("_seL4")) {
-//				mgrSubcomponent = ((ProcessImplementation) mgrSubcomponent.getComponentImplementation())
-//						.getOwnedThreadSubcomponents().get(0);
-//			}
-//			Property prop = GetProperties.lookupPropertyDefinition(mgrSubcomponent, ThreadProperties._NAME,
-//					ThreadProperties.DISPATCH_PROTOCOL);
-//			final List<? extends PropertyExpression> protocol = mgrSubcomponent.getPropertyValueList(prop);
-//			if (!protocol.isEmpty()) {
-//				final NamedValue nv = (NamedValue) protocol.get(0);
-//				final EnumerationLiteral el = (EnumerationLiteral) nv.getNamedValue();
-//				final String dispatchProtocol = el.getName();
-//				if (dispatchProtocol.equalsIgnoreCase("Periodic")) {
-//					btnNoProtocol.setSelection(false);
-//					btnPeriodic.setSelection(true);
-//				} else if (dispatchProtocol.equalsIgnoreCase("Sporadic")) {
-//					btnNoProtocol.setSelection(false);
-//					btnSporadic.setSelection(true);
-//				} else {
-//					btnNoProtocol.setSelection(true);
+//	/**
+//	 * Creates the input field for selecting the Manager dispatch protocol
+//	 * @param container
+//	 */
+//	private void createMgrDispatchProtocolField(Composite container) {
+//		lblMgrDispatchProtocolField = new Label(container, SWT.NONE);
+//		lblMgrDispatchProtocolField.setText("Dispatch protocol");
+//		lblMgrDispatchProtocolField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+//
+//		// Create a group to contain the log port options
+//		mgrProtocolGroup = new Group(container, SWT.NONE);
+//		mgrProtocolGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+//		mgrProtocolGroup.setLayout(new RowLayout(SWT.HORIZONTAL));
+//
+//		btnMgrDispatchProtocol.clear();
+//
+//		final Button btnNoProtocol = new Button(mgrProtocolGroup, SWT.RADIO);
+//		btnNoProtocol.setText("None");
+//		btnNoProtocol.setSelection(true);
+//		btnNoProtocol.addSelectionListener(new SelectionListener() {
+//
+//			@Override
+//			public void widgetSelected(SelectionEvent e) {
+//				lblMgrPeriodField.setEnabled(!btnNoProtocol.getSelection());
+//				txtMgrPeriod.setEnabled(!btnNoProtocol.getSelection());
+//				if (btnNoProtocol.getSelection()) {
+//					txtMgrPeriod.setText("");
 //				}
 //			}
 //
-//			btnNoProtocol.setEnabled(false);
-//			btnPeriodic.setEnabled(false);
-//			btnSporadic.setEnabled(false);
+//			@Override
+//			public void widgetDefaultSelected(SelectionEvent e) {
+//				widgetSelected(e);
+//			}
+//		});
 //
-//			prop = GetProperties.lookupPropertyDefinition(mgrSubcomponent, TimingProperties._NAME,
-//					TimingProperties.PERIOD);
-//			final List<? extends PropertyExpression> periodVals = mgrSubcomponent.getPropertyValueList(prop);
-//			if (!periodVals.isEmpty()) {
-//				String period = "";
-//				if (periodVals.get(0) instanceof IntegerLiteral) {
-//					final IntegerLiteral periodVal = (IntegerLiteral) periodVals.get(0);
-//					period = Long.toString(periodVal.getValue());
-//					if (periodVal.getUnit() != null) {
-//						period += periodVal.getUnit().getName();
-//					}
-//				}
-//				txtMgrPeriod.setText(period);
-//			}
-//			lblMgrPeriodField.setEnabled(false);
-//			txtMgrPeriod.setEnabled(false);
-//		}
+//		final Button btnPeriodic = new Button(mgrProtocolGroup, SWT.RADIO);
+//		btnPeriodic.setText("Periodic");
+//		btnPeriodic.setSelection(false);
+//
+//		final Button btnSporadic = new Button(mgrProtocolGroup, SWT.RADIO);
+//		btnSporadic.setText("Sporadic");
+//		btnSporadic.setSelection(false);
+//
+//		final GridData dataInfoField = new GridData();
+//		dataInfoField.grabExcessHorizontalSpace = true;
+//		dataInfoField.horizontalAlignment = SWT.FILL;
+//		dataInfoField.grabExcessVerticalSpace = false;
+//
+//		lblMgrPeriodField = new Label(container, SWT.NONE);
+//		lblMgrPeriodField.setLayoutData(dataInfoField);
+//		lblMgrPeriodField.setText("Period");
+//		lblMgrPeriodField.setEnabled(false);
+//
+//		txtMgrPeriod = new Text(container, SWT.BORDER);
+//		txtMgrPeriod.setLayoutData(dataInfoField);
+//		txtMgrPeriod.setEnabled(false);
+//
+//		btnMgrDispatchProtocol.add(btnNoProtocol);
+//		btnMgrDispatchProtocol.add(btnPeriodic);
+//		btnMgrDispatchProtocol.add(btnSporadic);
+//
+//	}
 
-		btnMgrDispatchProtocol.add(btnNoProtocol);
-		btnMgrDispatchProtocol.add(btnPeriodic);
-		btnMgrDispatchProtocol.add(btnSporadic);
+//	private void createMgrStackSizeField(Composite container) {
+//		final Label lblStackSizeField = new Label(container, SWT.NONE);
+//		lblStackSizeField.setText("Stack size");
+//
+//		final GridData dataInfoField = new GridData();
+//		dataInfoField.grabExcessHorizontalSpace = true;
+//		dataInfoField.horizontalAlignment = SWT.FILL;
+//		dataInfoField.grabExcessVerticalSpace = false;
+//		txtMgrStackSize = new Text(container, SWT.BORDER);
+//		txtMgrStackSize.setLayoutData(dataInfoField);
+//	}
 
-	}
-
-	/**
-	 * Creates the input field for selecting the Gate dispatch protocol
-	 * @param container
-	 */
-	private void createGateDispatchProtocolField(Composite container) {
-		lblGateDispatchProtocolField = new Label(container, SWT.NONE);
-		lblGateDispatchProtocolField.setText("Dispatch protocol");
-		lblGateDispatchProtocolField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-
-		// Create a group to contain the log port options
-		gateProtocolGroup = new Group(container, SWT.NONE);
-		gateProtocolGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		gateProtocolGroup.setLayout(new RowLayout(SWT.HORIZONTAL));
-
-		btnGateDispatchProtocol.clear();
-
-		final Button btnNoProtocol = new Button(gateProtocolGroup, SWT.RADIO);
-		btnNoProtocol.setText("None");
-		btnNoProtocol.setSelection(true);
-		btnNoProtocol.addSelectionListener(new SelectionListener() {
-
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				lblGatePeriodField.setEnabled(!btnNoProtocol.getSelection());
-				txtGatePeriod.setEnabled(!btnNoProtocol.getSelection());
-				if (btnNoProtocol.getSelection()) {
-					txtGatePeriod.setText("");
-				}
-			}
-
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e) {
-				widgetSelected(e);
-			}
-		});
-
-		final Button btnPeriodic = new Button(gateProtocolGroup, SWT.RADIO);
-		btnPeriodic.setText("Periodic");
-		btnPeriodic.setSelection(false);
-
-		final Button btnSporadic = new Button(gateProtocolGroup, SWT.RADIO);
-		btnSporadic.setText("Sporadic");
-		btnSporadic.setSelection(false);
-
-		final GridData dataInfoField = new GridData();
-		dataInfoField.grabExcessHorizontalSpace = true;
-		dataInfoField.horizontalAlignment = SWT.FILL;
-		dataInfoField.grabExcessVerticalSpace = false;
-
-		lblGatePeriodField = new Label(container, SWT.NONE);
-		lblGatePeriodField.setLayoutData(dataInfoField);
-		lblGatePeriodField.setText("Period");
-		lblGatePeriodField.setEnabled(false);
-
-		txtGatePeriod = new Text(container, SWT.BORDER);
-		txtGatePeriod.setLayoutData(dataInfoField);
-		txtGatePeriod.setEnabled(false);
-
-//		if (attestationGate != null) {
-//			Subcomponent gateSubcomponent = attestationGate;
-//			if (attestationGate.getComponentType() instanceof ProcessType
-//					&& attestationGate.getComponentType().getName().endsWith("_seL4")) {
-//				gateSubcomponent = ((ProcessImplementation) gateSubcomponent.getComponentImplementation())
-//						.getOwnedThreadSubcomponents().get(0);
-//			}
-//			Property prop = GetProperties.lookupPropertyDefinition(gateSubcomponent, ThreadProperties._NAME,
-//					ThreadProperties.DISPATCH_PROTOCOL);
-//			final List<? extends PropertyExpression> protocol = gateSubcomponent.getPropertyValueList(prop);
-//			if (!protocol.isEmpty()) {
-//				final NamedValue nv = (NamedValue) protocol.get(0);
-//				final EnumerationLiteral el = (EnumerationLiteral) nv.getNamedValue();
-//				final String dispatchProtocol = el.getName();
-//				if (dispatchProtocol.equalsIgnoreCase("Periodic")) {
-//					btnNoProtocol.setSelection(false);
-//					btnPeriodic.setSelection(true);
-//				} else if (dispatchProtocol.equalsIgnoreCase("Sporadic")) {
-//					btnNoProtocol.setSelection(false);
-//					btnSporadic.setSelection(true);
-//				} else {
-//					btnNoProtocol.setSelection(true);
+//	/**
+//	 * Creates the input field for selecting the Gate dispatch protocol
+//	 * @param container
+//	 */
+//	private void createGateDispatchProtocolField(Composite container) {
+//		lblGateDispatchProtocolField = new Label(container, SWT.NONE);
+//		lblGateDispatchProtocolField.setText("Dispatch protocol");
+//		lblGateDispatchProtocolField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+//
+//		// Create a group to contain the log port options
+//		gateProtocolGroup = new Group(container, SWT.NONE);
+//		gateProtocolGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+//		gateProtocolGroup.setLayout(new RowLayout(SWT.HORIZONTAL));
+//
+//		btnGateDispatchProtocol.clear();
+//
+//		final Button btnNoProtocol = new Button(gateProtocolGroup, SWT.RADIO);
+//		btnNoProtocol.setText("None");
+//		btnNoProtocol.setSelection(true);
+//		btnNoProtocol.addSelectionListener(new SelectionListener() {
+//
+//			@Override
+//			public void widgetSelected(SelectionEvent e) {
+//				lblGatePeriodField.setEnabled(!btnNoProtocol.getSelection());
+//				txtGatePeriod.setEnabled(!btnNoProtocol.getSelection());
+//				if (btnNoProtocol.getSelection()) {
+//					txtGatePeriod.setText("");
 //				}
 //			}
 //
-//			btnNoProtocol.setEnabled(false);
-//			btnPeriodic.setEnabled(false);
-//			btnSporadic.setEnabled(false);
+//			@Override
+//			public void widgetDefaultSelected(SelectionEvent e) {
+//				widgetSelected(e);
+//			}
+//		});
 //
-//			prop = GetProperties.lookupPropertyDefinition(gateSubcomponent, TimingProperties._NAME,
-//					TimingProperties.PERIOD);
-//			final List<? extends PropertyExpression> periodVals = gateSubcomponent.getPropertyValueList(prop);
-//			if (!periodVals.isEmpty()) {
-//				String period = "";
-//				if (periodVals.get(0) instanceof IntegerLiteral) {
-//					final IntegerLiteral periodVal = (IntegerLiteral) periodVals.get(0);
-//					period = Long.toString(periodVal.getValue());
-//					if (periodVal.getUnit() != null) {
-//						period += periodVal.getUnit().getName();
-//					}
-//				}
-//				txtGatePeriod.setText(period);
-//			}
-//			lblGatePeriodField.setEnabled(false);
-//			txtGatePeriod.setEnabled(false);
-//		}
+//		final Button btnPeriodic = new Button(gateProtocolGroup, SWT.RADIO);
+//		btnPeriodic.setText("Periodic");
+//		btnPeriodic.setSelection(false);
+//
+//		final Button btnSporadic = new Button(gateProtocolGroup, SWT.RADIO);
+//		btnSporadic.setText("Sporadic");
+//		btnSporadic.setSelection(false);
+//
+//		final GridData dataInfoField = new GridData();
+//		dataInfoField.grabExcessHorizontalSpace = true;
+//		dataInfoField.horizontalAlignment = SWT.FILL;
+//		dataInfoField.grabExcessVerticalSpace = false;
+//
+//		lblGatePeriodField = new Label(container, SWT.NONE);
+//		lblGatePeriodField.setLayoutData(dataInfoField);
+//		lblGatePeriodField.setText("Period");
+//		lblGatePeriodField.setEnabled(false);
+//
+//		txtGatePeriod = new Text(container, SWT.BORDER);
+//		txtGatePeriod.setLayoutData(dataInfoField);
+//		txtGatePeriod.setEnabled(false);
+//
+//		btnGateDispatchProtocol.add(btnNoProtocol);
+//		btnGateDispatchProtocol.add(btnPeriodic);
+//		btnGateDispatchProtocol.add(btnSporadic);
+//
+//	}
 
-		btnGateDispatchProtocol.add(btnNoProtocol);
-		btnGateDispatchProtocol.add(btnPeriodic);
-		btnGateDispatchProtocol.add(btnSporadic);
+//	/**
+//	 * Creates the input field for specifying if the attestation manager should contain
+//	 * a port for logging messages
+//	 * @param container
+//	 */
+//	private void createMgrLogPortField(Composite container) {
+//		final Label lblLogField = new Label(container, SWT.NONE);
+//		lblLogField.setText("Create log port");
+//		lblLogField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+//
+//		// Create a group to contain the log port options
+//		final Group logGroup = new Group(container, SWT.NONE);
+//		logGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+//		logGroup.setLayout(new RowLayout(SWT.HORIZONTAL));
+//
+//		btnMgrLogPortType.clear();
+//
+//		final Button btnNoLogPort = new Button(logGroup, SWT.RADIO);
+//		btnNoLogPort.setText("None");
+//		btnNoLogPort.setSelection(true);
+//
+//		final Button btnEventLogPort = new Button(logGroup, SWT.RADIO);
+//		btnEventLogPort.setText("Event");
+//		btnEventLogPort.setSelection(false);
+//
+//		final Button btnDataLogPort = new Button(logGroup, SWT.RADIO);
+//		btnDataLogPort.setText("Data");
+//		btnDataLogPort.setSelection(false);
+//
+//		final Button btnEventDataLogPort = new Button(logGroup, SWT.RADIO);
+//		btnEventDataLogPort.setText("Event Data");
+//		btnEventDataLogPort.setSelection(false);
+//
+//		btnMgrLogPortType.add(btnDataLogPort);
+//		btnMgrLogPortType.add(btnEventLogPort);
+//		btnMgrLogPortType.add(btnEventDataLogPort);
+//		btnMgrLogPortType.add(btnNoLogPort);
+//
+//	}
 
-	}
-
-
-	/**
-	 * Creates the input field for specifying if the attestation manager should contain
-	 * a port for logging messages
-	 * @param container
-	 */
-	private void createMgrLogPortField(Composite container) {
-		final Label lblLogField = new Label(container, SWT.NONE);
-		lblLogField.setText("Create log port");
-		lblLogField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-
-		// Create a group to contain the log port options
-		final Group logGroup = new Group(container, SWT.NONE);
-		logGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		logGroup.setLayout(new RowLayout(SWT.HORIZONTAL));
-
-		btnMgrLogPortType.clear();
-
-		final Button btnNoLogPort = new Button(logGroup, SWT.RADIO);
-		btnNoLogPort.setText("None");
-		btnNoLogPort.setSelection(true);
-
-		final Button btnEventLogPort = new Button(logGroup, SWT.RADIO);
-		btnEventLogPort.setText("Event");
-		btnEventLogPort.setSelection(false);
-
-		final Button btnDataLogPort = new Button(logGroup, SWT.RADIO);
-		btnDataLogPort.setText("Data");
-		btnDataLogPort.setSelection(false);
-
-		final Button btnEventDataLogPort = new Button(logGroup, SWT.RADIO);
-		btnEventDataLogPort.setText("Event Data");
-		btnEventDataLogPort.setSelection(false);
-
-//		if (attestationManager != null) {
-//			final ComponentType ct = attestationManager.getComponentType();
-//			for (Feature f : ct.getOwnedFeatures()) {
-//				if (f.getName().equalsIgnoreCase(AttestationTransformHandler.LOG_PORT_NAME)) {
-//					btnNoLogPort.setSelection(false);
-//					if (f instanceof DataPort) {
-//						btnDataLogPort.setSelection(true);
-//					} else if (f instanceof EventPort) {
-//						btnEventLogPort.setSelection(true);
-//					} else if (f instanceof EventDataPort) {
-//						btnEventDataLogPort.setSelection(true);
-//					}
-//					break;
-//				}
-//			}
-//			btnDataLogPort.setEnabled(false);
-//			btnEventLogPort.setEnabled(false);
-//			btnEventDataLogPort.setEnabled(false);
-//			btnNoLogPort.setEnabled(false);
-//		}
-
-		btnMgrLogPortType.add(btnDataLogPort);
-		btnMgrLogPortType.add(btnEventLogPort);
-		btnMgrLogPortType.add(btnEventDataLogPort);
-		btnMgrLogPortType.add(btnNoLogPort);
-
-	}
-
-	/**
-	 * Creates the input field for specifying if the attestation gate should contain
-	 * a port for logging messages
-	 * @param container
-	 */
-	private void createGateLogPortField(Composite container) {
-		final Label lblLogField = new Label(container, SWT.NONE);
-		lblLogField.setText("Create log port");
-		lblLogField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-
-		// Create a group to contain the log port options
-		final Group logGroup = new Group(container, SWT.NONE);
-		logGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		logGroup.setLayout(new RowLayout(SWT.HORIZONTAL));
-
-		btnGateLogPortType.clear();
-
-		final Button btnNoLogPort = new Button(logGroup, SWT.RADIO);
-		btnNoLogPort.setText("None");
-		btnNoLogPort.setSelection(true);
-
-		final Button btnEventLogPort = new Button(logGroup, SWT.RADIO);
-		btnEventLogPort.setText("Event");
-		btnEventLogPort.setSelection(false);
-
-		final Button btnDataLogPort = new Button(logGroup, SWT.RADIO);
-		btnDataLogPort.setText("Data");
-		btnDataLogPort.setSelection(false);
-
-		final Button btnEventDataLogPort = new Button(logGroup, SWT.RADIO);
-		btnEventDataLogPort.setText("Event Data");
-		btnEventDataLogPort.setSelection(false);
-
-//		if (attestationGate != null) {
-//			final ComponentType ct = attestationGate.getComponentType();
-//			for (Feature f : ct.getOwnedFeatures()) {
-//				if (f.getName().equalsIgnoreCase(AttestationTransformHandler.LOG_PORT_NAME)) {
-//					btnNoLogPort.setSelection(false);
-//					if (f instanceof DataPort) {
-//						btnDataLogPort.setSelection(true);
-//					} else if (f instanceof EventPort) {
-//						btnEventLogPort.setSelection(true);
-//					} else if (f instanceof EventDataPort) {
-//						btnEventDataLogPort.setSelection(true);
-//					}
-//					break;
-//				}
-//			}
-//			btnDataLogPort.setEnabled(false);
-//			btnEventLogPort.setEnabled(false);
-//			btnEventDataLogPort.setEnabled(false);
-//			btnNoLogPort.setEnabled(false);
-//		}
-
-		btnGateLogPortType.add(btnDataLogPort);
-		btnGateLogPortType.add(btnEventLogPort);
-		btnGateLogPortType.add(btnEventDataLogPort);
-		btnGateLogPortType.add(btnNoLogPort);
-
-	}
+//	/**
+//	 * Creates the input field for specifying if the attestation gate should contain
+//	 * a port for logging messages
+//	 * @param container
+//	 */
+//	private void createGateLogPortField(Composite container) {
+//		final Label lblLogField = new Label(container, SWT.NONE);
+//		lblLogField.setText("Create log port");
+//		lblLogField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+//
+//		// Create a group to contain the log port options
+//		final Group logGroup = new Group(container, SWT.NONE);
+//		logGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+//		logGroup.setLayout(new RowLayout(SWT.HORIZONTAL));
+//
+//		btnGateLogPortType.clear();
+//
+//		final Button btnNoLogPort = new Button(logGroup, SWT.RADIO);
+//		btnNoLogPort.setText("None");
+//		btnNoLogPort.setSelection(true);
+//
+//		final Button btnEventLogPort = new Button(logGroup, SWT.RADIO);
+//		btnEventLogPort.setText("Event");
+//		btnEventLogPort.setSelection(false);
+//
+//		final Button btnDataLogPort = new Button(logGroup, SWT.RADIO);
+//		btnDataLogPort.setText("Data");
+//		btnDataLogPort.setSelection(false);
+//
+//		final Button btnEventDataLogPort = new Button(logGroup, SWT.RADIO);
+//		btnEventDataLogPort.setText("Event Data");
+//		btnEventDataLogPort.setSelection(false);
+//
+//		btnGateLogPortType.add(btnDataLogPort);
+//		btnGateLogPortType.add(btnEventLogPort);
+//		btnGateLogPortType.add(btnEventDataLogPort);
+//		btnGateLogPortType.add(btnNoLogPort);
+//
+//	}
 
 	/**
 	 * Creates the input field for specifying the KU remote attestation
@@ -927,9 +715,6 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		lblCreateThreadField.setText("Create internal thread components");
 		lblCreateThreadField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true));
 
-//		GridData dataInfoField = new GridData();
-//		dataInfoField.grabExcessHorizontalSpace = true;
-//		dataInfoField.horizontalAlignment = SWT.FILL;
 		btnCreateThread = new Button(container, SWT.CHECK);
 		btnCreateThread.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		btnCreateThread.addListener(SWT.Selection, e -> {
@@ -982,44 +767,28 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 	}
 
 
-	/**
-	 * Creates the input field for selecting the resolute clause that drives
-	 * the addition of this filter to the design
-	 * @param container
-	 */
-	private void createRequirementField(Composite container) {
-		final Label lblResoluteField = new Label(container, SWT.NONE);
-		lblResoluteField.setText("Requirement");
-
-		final GridData dataInfoField = new GridData();
-		dataInfoField.grabExcessHorizontalSpace = true;
-		dataInfoField.horizontalAlignment = GridData.FILL;
-		dataInfoField.grabExcessVerticalSpace = false;
-		cboRequirement = new Combo(container, SWT.BORDER);
-		cboRequirement.setLayoutData(dataInfoField);
-		cboRequirement.add(NO_REQUIREMENT_SELECTED);
-		requirements.forEach(r -> cboRequirement.add(r));
-		cboRequirement.setText(NO_REQUIREMENT_SELECTED);
-
-	}
-
-
 //	/**
-//	 * Creates the input text field for specifying the attestation manager agree property
+//	 * Creates the input field for selecting the resolute clause that drives
+//	 * the addition of this filter to the design
 //	 * @param container
 //	 */
-//	private void createMgrAgreePropertyField(Composite container) {
-//		Label lblAgreeField = new Label(container, SWT.NONE);
-//		lblAgreeField.setText("Attestation Manager AGREE contract");
+//	private void createRequirementField(Composite container) {
+//		final Label lblResoluteField = new Label(container, SWT.NONE);
+//		lblResoluteField.setText("Requirement");
 //
-//		GridData dataInfoField = new GridData();
+//		final GridData dataInfoField = new GridData();
 //		dataInfoField.grabExcessHorizontalSpace = true;
 //		dataInfoField.horizontalAlignment = GridData.FILL;
 //		dataInfoField.grabExcessVerticalSpace = false;
-//		txtMgrAgreeProperty = new Text(container, SWT.BORDER);
-//		txtMgrAgreeProperty.setLayoutData(dataInfoField);
-//	}
+//		cboRequirement = new Combo(container, SWT.BORDER);
+//		cboRequirement.setLayoutData(dataInfoField);
+//		cboRequirement.add(NO_REQUIREMENT_SELECTED);
+//		requirements.forEach(r -> cboRequirement.add(r));
+//		cboRequirement.setText(NO_REQUIREMENT_SELECTED);
 //
+//	}
+
+
 //	/**
 //	 * Creates the input text field for specifying the attestation gate agree property
 //	 * @param container
@@ -1060,7 +829,6 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 					"Attestation Manager component name " + txtMgrComponentName.getText()
 					+ " contains invalid characters. Only 'A..Z', 'a..z', '0..9', and '_' are permitted");
 			return false;
-//		} else if (attestationManager == null && !txtMgrComponentName.getText().isEmpty()
 		} else if (!txtMgrComponentName.getText().isEmpty()
 				&& AadlUtil.findNamedElementInList(componentsInPackage, txtMgrComponentName.getText()) != null) {
 			Dialog.showError("Attestation Transform", "Component " + txtMgrComponentName.getText()
@@ -1079,7 +847,6 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 					"Attestation Gate component name " + txtGateComponentName.getText()
 					+ " contains invalid characters. Only 'A..Z', 'a..z', '0..9', and '_' are permitted");
 			return false;
-//		} else if (attestationGate == null && !txtGateComponentName.getText().isEmpty()
 		} else if (!txtGateComponentName.getText().isEmpty()
 				&& AadlUtil.findNamedElementInList(componentsInPackage, txtGateComponentName.getText()) != null) {
 			Dialog.showError("Attestation Transform", "Component " + txtGateComponentName.getText()
@@ -1098,7 +865,6 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 					"Attestation Manager subcomponent instance name " + txtMgrSubcomponentName.getText()
 							+ " contains invalid characters. Only 'A..Z', 'a..z', '0..9', and '_' are permitted");
 			return false;
-//		} else if (attestationManager == null && !txtMgrSubcomponentName.getText().isEmpty()
 		} else if (!txtMgrSubcomponentName.getText().isEmpty()
 				&& AadlUtil.findNamedElementInList(context.getAllSubcomponents(),
 				txtMgrSubcomponentName.getText()) != null) {
@@ -1118,7 +884,6 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 					"Attestation Gate subcomponent instance name " + txtGateSubcomponentName.getText()
 							+ " contains invalid characters. Only 'A..Z', 'a..z', '0..9', and '_' are permitted");
 			return false;
-//		} else if (attestationGate == null && !txtGateSubcomponentName.getText().isEmpty()
 		} else if (!txtGateSubcomponentName.getText().isEmpty()
 				&& AadlUtil.findNamedElementInList(context.getAllSubcomponents(),
 				txtGateSubcomponentName.getText()) != null) {
@@ -1140,10 +905,6 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 								+ AadlUtil.getContainingPackage(context).getName()
 								+ ". Enter the data type's qualified name if it is defined in a different package.");
 				return false;
-//			} else {
-//				// Add the package name
-//				txtRequestMessageDataType.setText(
-//						AadlUtil.getContainingPackage(context).getName() + "::" + txtRequestMessageDataType.getText());
 			}
 		}
 		requestMessageDataType = txtRequestMessageDataType.getText();
@@ -1157,10 +918,6 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 								+ AadlUtil.getContainingPackage(context).getName()
 								+ ". Enter the data type's qualified name if it is defined in a different package.");
 				return false;
-//			} else {
-//				// Add the package name
-//				txtResponseMessageDataType.setText(
-//						AadlUtil.getContainingPackage(context).getName() + "::" + txtResponseMessageDataType.getText());
 			}
 		}
 		responseMessageDataType = txtResponseMessageDataType.getText();
@@ -1192,10 +949,6 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 						"ID list data type was not found in package " + AadlUtil.getContainingPackage(context).getName()
 								+ ". Enter the data type's qualified name if it is defined in a different package.");
 				return false;
-//			} else {
-//				// Add the package name
-//				txtIdListDataType
-//						.setText(AadlUtil.getContainingPackage(context).getName() + "::" + txtIdListDataType.getText());
 			}
 		}
 		idListDataType = txtIdListDataType.getText();
@@ -1259,6 +1012,26 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 			}
 		}
 
+		// Mgr Stack Size
+		if (txtMgrStackSize.getText().isEmpty()
+				|| txtMgrStackSize.getSelectionText().matches("((\\d)+(\\s)*(bits|Bytes|KByte|MByte|GByte|TByte)?)")) {
+			mgrStackSize = txtMgrStackSize.getText();
+		} else {
+			Dialog.showError("Attestation Transform", "Attestation Manager stack size " + txtMgrStackSize.getText()
+					+ " is malformed. See the AADL definition of Stack_Size in Memory_Properties.aadl.");
+			return false;
+		}
+
+		// Gate Stack Size
+		if (txtGateStackSize.getText().isEmpty()
+				|| txtGateStackSize.getSelectionText().matches("((\\d)+(\\s)*(bits|Bytes|KByte|MByte|GByte|TByte)?)")) {
+			gateStackSize = txtGateStackSize.getText();
+		} else {
+			Dialog.showError("Attestation Transform", "Attestation Gate stack size " + txtGateStackSize.getText()
+					+ " is malformed. See the AADL definition of Stack_Size in Memory_Properties.aadl.");
+			return false;
+		}
+
 		// Mgr Log Port
 		mgrLogPortType = null;
 		for (int i = 0; i < btnMgrLogPortType.size(); i++) {
@@ -1292,11 +1065,8 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		}
 
 //		// AGREE
-//		if (attestationManager == null) {
-//			mgrAgreeProperty = txtMgrAgreeProperty.getText();
-//			gateAgreeProperty = txtGateAgreeProperty.getText();
-////			propagateGuarantees = btnPropagateGuarantees.getSelection();
-//		}
+//		gateAgreeProperty = txtGateAgreeProperty.getText();
+
 		return true;
 	}
 
@@ -1352,12 +1122,20 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		return mgrPeriod;
 	}
 
+	public String getMgrStackSize() {
+		return mgrStackSize;
+	}
+
 	public String getGateDispatchProtocol() {
 		return gateDispatchProtocol;
 	}
 
 	public String getGatePeriod() {
 		return gatePeriod;
+	}
+
+	public String getGateStackSize() {
+		return gateStackSize;
 	}
 
 	public PortCategory getMgrLogPortType() {
@@ -1368,10 +1146,6 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		return gateLogPortType;
 	}
 
-//	public boolean getPropagateGuarantees() {
-//		return propagateGuarantees;
-//	}
-
 	public boolean useKUImplementation() {
 		return useKUImplementation;
 	}
@@ -1380,10 +1154,6 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		return requirement;
 	}
 
-//	public String getMgrAgreeProperty() {
-//		return mgrAgreeProperty;
-//	}
-//
 //	public String getGateAgreeProperty() {
 //		return gateAgreeProperty;
 //	}

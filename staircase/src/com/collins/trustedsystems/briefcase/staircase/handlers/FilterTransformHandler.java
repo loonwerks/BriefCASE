@@ -1,7 +1,5 @@
 package com.collins.trustedsystems.briefcase.staircase.handlers;
 
-import java.util.Iterator;
-
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.jface.window.Window;
@@ -9,8 +7,6 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.xtext.ui.editor.XtextEditor;
 import org.eclipse.xtext.ui.editor.utils.EditorUtils;
 import org.osate.aadl2.Aadl2Factory;
-import org.osate.aadl2.Aadl2Package;
-import org.osate.aadl2.AnnexSubclause;
 import org.osate.aadl2.ArrayDimension;
 import org.osate.aadl2.ComponentCategory;
 import org.osate.aadl2.ComponentImplementation;
@@ -41,6 +37,7 @@ import org.osate.aadl2.UnitLiteral;
 import org.osate.aadl2.modelsupport.util.AadlUtil;
 import org.osate.ui.dialogs.Dialog;
 import org.osate.xtext.aadl2.properties.util.GetProperties;
+import org.osate.xtext.aadl2.properties.util.MemoryProperties;
 import org.osate.xtext.aadl2.properties.util.ThreadProperties;
 import org.osate.xtext.aadl2.properties.util.TimingProperties;
 
@@ -67,6 +64,7 @@ public class FilterTransformHandler extends AadlHandler {
 	private String filterSubcomponentName;
 	private String filterDispatchProtocol;
 	private String filterPeriod;
+	private String filterStackSize;
 	private String inputPortName;
 	private String outputPortName;
 	private PortCategory logPortType;
@@ -104,55 +102,10 @@ public class FilterTransformHandler extends AadlHandler {
 			return;
 		}
 
-//		boolean createCompoundFilter = false;
-//		Connection filterOutConn = null;
-//		if (CasePropertyUtils.hasMitigationType(subcomponent.getClassifier(), MITIGATION_TYPE.FILTER)) {
-//			if (Dialog.askQuestion("Filter Transform",
-//					"A CASE Filter cannot be inserted next to another CASE Filter.  Would you like to add a new filter specification to the existing filter instead?")) {
-//
-//				createCompoundFilter = true;
-//				// Get filter outgoing connection
-//				final ComponentImplementation ci = subcomponent.getContainingComponentImpl();
-//				for (Connection conn : ci.getOwnedConnections()) {
-//					final Subcomponent src = (Subcomponent) conn.getSource().getContext();
-//					if (src != null && src.getName().equalsIgnoreCase(subcomponent.getName())) {
-//						filterOutConn = conn;
-//						break;
-//					}
-//				}
-//
-//				if (filterOutConn == null) {
-//					Dialog.showError("Filter Transform",
-//							"Unable to find the outgoing connection of the existing CASE Filter.");
-//					return;
-//				}
-//
-//			} else {
-//				return;
-//			}
-//		} else {
-//
-//			subcomponent = (Subcomponent) selectedConnection.getSource().getContext();
-//			if (subcomponent != null) {
-//				if (CasePropertyUtils.hasMitigationType(subcomponent.getClassifier(), MITIGATION_TYPE.FILTER)) {
-//					if (Dialog.askQuestion("Filter Transform",
-//							"A CASE Filter cannot be inserted next to another CASE Filter.  Would you like to add a new filter specification to the existing filter instead?")) {
-//						createCompoundFilter = true;
-//						filterOutConn = selectedConnection;
-//					} else {
-//						return;
-//					}
-//				}
-//			}
-//		}
-
 		// Open wizard to enter filter info
 		final FilterTransformDialog wizard = new FilterTransformDialog(
 				PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell());
 
-//		if (createCompoundFilter) {
-//			wizard.createCompoundFilter(subcomponent);
-//		}
 		wizard.create(selectedConnection.getContainingComponentImpl());
 		if (wizard.open() == Window.OK) {
 			filterComponentName = wizard.getFilterComponentName();
@@ -166,6 +119,7 @@ public class FilterTransformHandler extends AadlHandler {
 			isSel4Process = wizard.createThread();
 			filterDispatchProtocol = wizard.getDispatchProtocol();
 			filterPeriod = wizard.getPeriod();
+			filterStackSize = wizard.getStackSize();
 			inputPortName = wizard.getInputPortName();
 			if (inputPortName == "") {
 				inputPortName = FILTER_PORT_IN_NAME;
@@ -182,13 +136,8 @@ public class FilterTransformHandler extends AadlHandler {
 		}
 
 		// Insert the filter component
-//		if (createCompoundFilter) {
-//			addFilterSpec(EcoreUtil.getURI(subcomponent), EcoreUtil.getURI(filterOutConn));
-//			BriefcaseNotifier.notify("StairCASE - Filter Transform", "New requirement associated with Filter.");
-//		} else {
-			insertFilterComponent(uri);
-			BriefcaseNotifier.notify("StairCASE - Filter Transform", "Filter added to model.");
-//		}
+		insertFilterComponent(uri);
+		BriefcaseNotifier.notify("StairCASE - Filter Transform", "Filter added to model.");
 
 		// Format and save
 		format(true);
@@ -373,6 +322,19 @@ public class FilterTransformHandler extends AadlHandler {
 				filterImpl.setPropertyValue(periodProp, periodLit);
 			}
 
+			// Stack Size
+			if (!filterStackSize.isEmpty()) {
+				final Property stackSizeProp = GetProperties.lookupPropertyDefinition(filterImpl,
+						MemoryProperties._NAME, MemoryProperties.STACK_SIZE);
+				final IntegerLiteral stackSizeLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
+				final UnitLiteral unit = Aadl2Factory.eINSTANCE.createUnitLiteral();
+				unit.setName(filterStackSize.replaceAll("[\\d]", "").trim());
+				stackSizeLit.setBase(0);
+				stackSizeLit.setValue(Long.parseLong(filterStackSize.replaceAll("[\\D]", "").trim()));
+				stackSizeLit.setUnit(unit);
+				filterImpl.setPropertyValue(stackSizeProp, stackSizeLit);
+			}
+
 			// Add it to proper place (just below component type)
 //			pkgSection.getOwnedClassifiers().move(1, pkgSection.getOwnedClassifiers().size() - 1);
 			try {
@@ -495,87 +457,6 @@ public class FilterTransformHandler extends AadlHandler {
 			RequirementsManager.getInstance().modifyRequirement(filterRequirement, claim);
 		}
 
-	}
-
-
-
-	/**
-	 * Adds a new spec to the specified filter
-	 * @param uri
-	 */
-	private void addFilterSpec(URI subURI, URI connURI) {
-		// Get the active xtext editor so we can make modifications
-		final XtextEditor xtextEditor = EditorUtils.getActiveXtextEditor();
-
-		final AddFilterClaim claim = xtextEditor.getDocument().modify(resource -> {
-
-			final Subcomponent subcomponent = (Subcomponent) resource.getEObject(subURI.fragment());
-			ComponentType filter = null;
-			// If it's an seL4 process, get the contained thread type instead
-			if (isSel4Process) {
-				ProcessImplementation pi = (ProcessImplementation) subcomponent.getComponentImplementation();
-				filter = pi.getOwnedThreadSubcomponents().get(0).getComponentType();
-			} else {
-				filter = subcomponent.getComponentType();
-			}
-
-			final Connection connection = (Connection) resource.getEObject(connURI.fragment());
-			final ConnectionEnd connectionEnd = connection.getSource().getConnectionEnd();
-			NamedElement featureClassifier = null;
-			if (connectionEnd instanceof EventDataPort) {
-				featureClassifier = ((EventDataPort) connectionEnd).getDataFeatureClassifier();
-			} else if (connectionEnd instanceof DataPort) {
-				featureClassifier = ((DataPort) connectionEnd).getDataFeatureClassifier();
-			} else if (connectionEnd instanceof FeatureGroup) {
-				featureClassifier = ((FeatureGroup) connectionEnd).getFeatureGroupType();
-			} else {
-				Dialog.showError("Filter Transform", "Could not determine the port type of the filter.");
-				return null;
-			}
-
-			// Add AGREE spec
-			DefaultAnnexSubclause subclause = null;
-			String agreeClauses = "{** **}";
-			for (AnnexSubclause sc : filter.getOwnedAnnexSubclauses()) {
-				if (sc instanceof DefaultAnnexSubclause && sc.getName().equalsIgnoreCase("agree")) {
-					subclause = (DefaultAnnexSubclause) sc;
-					break;
-				}
-			}
-
-			if (subclause != null) {
-				agreeClauses = subclause.getSourceText();
-			}
-
-			// Remove current agree annex. The modified one will be added below.
-			final Iterator<AnnexSubclause> i = filter.getOwnedAnnexSubclauses().iterator();
-			while (i.hasNext()) {
-				subclause = (DefaultAnnexSubclause) i.next();
-				if (subclause.getName().equalsIgnoreCase("agree")) {
-					i.remove();
-					break;
-				}
-			}
-
-			String filterPropId = "property " + filter.getName() + "_policy = ";
-			filterPolicy = filterPolicy.replace(";", "").trim();
-			agreeClauses = agreeClauses.replace(filterPropId, filterPropId + filterPolicy + " and ");
-			final DefaultAnnexSubclause newSubclause = (DefaultAnnexSubclause) filter
-					.createOwnedAnnexSubclause(Aadl2Package.eINSTANCE.getDefaultAnnexSubclause());
-			newSubclause.setName("agree");
-			newSubclause.setSourceText(agreeClauses);
-
-			// Add add_filter claims to resolute prove statement, if applicable
-			if (!filterRequirement.isEmpty()) {
-				final CyberRequirement req = RequirementsManager.getInstance().getRequirement(filterRequirement);
-				return new AddFilterClaim(req.getContext(), subcomponent, connection, featureClassifier);
-			}
-			return null;
-		});
-
-		if (claim != null) {
-			RequirementsManager.getInstance().modifyRequirement(filterRequirement, claim);
-		}
 	}
 
 }

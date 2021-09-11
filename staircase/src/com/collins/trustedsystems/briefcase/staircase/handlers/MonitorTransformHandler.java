@@ -43,6 +43,7 @@ import org.osate.aadl2.modelsupport.scoping.Aadl2GlobalScopeUtil;
 import org.osate.aadl2.modelsupport.util.AadlUtil;
 import org.osate.ui.dialogs.Dialog;
 import org.osate.xtext.aadl2.properties.util.GetProperties;
+import org.osate.xtext.aadl2.properties.util.MemoryProperties;
 import org.osate.xtext.aadl2.properties.util.ThreadProperties;
 import org.osate.xtext.aadl2.properties.util.TimingProperties;
 
@@ -72,6 +73,7 @@ public class MonitorTransformHandler extends AadlHandler {
 	private String observationGatePortName;
 	private String dispatchProtocol;
 	private String period;
+	private String stackSize;
 	private String resetPortName;
 	private String resetPort;
 	private boolean latched;
@@ -106,14 +108,6 @@ public class MonitorTransformHandler extends AadlHandler {
 		if (subcomponent == null) {
 			subcomponent = (Subcomponent) selectedConnection.getDestination().getContext();
 		}
-//		if (subcomponent.getContainingComponentImpl() instanceof ProcessImplementation
-//				&& subcomponent.getContainingComponentImpl().getTypeName().endsWith("_seL4")) {
-//			Dialog.showError("Monitor Transform", "An seL4 process cannot contain multiple components.");
-//			return;
-//		}
-
-//		isSel4Process = subcomponent.getComponentImplementation() instanceof ProcessImplementation
-//				&& subcomponent.getContainingComponentImpl().getTypeName().endsWith("_seL4");
 
 		// Open wizard to enter monitor info
 		MonitorTransformDialog wizard = new MonitorTransformDialog(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell());
@@ -145,6 +139,7 @@ public class MonitorTransformHandler extends AadlHandler {
 			isSel4Process = wizard.createThread();
 			dispatchProtocol = wizard.getDispatchProtocol();
 			period = wizard.getPeriod();
+			stackSize = wizard.getStackSize();
 			referencePorts = wizard.getReferencePorts();
 			alertPortName = wizard.getAlertPortName();
 			if (alertPortName.isEmpty()) {
@@ -542,6 +537,19 @@ public class MonitorTransformHandler extends AadlHandler {
 				periodLit.setValue(Long.parseLong(period.replaceAll("[\\D]", "").trim()));
 				periodLit.setUnit(unit);
 				monitorImpl.setPropertyValue(periodProp, periodLit);
+			}
+
+			// Stack Size
+			if (!stackSize.isEmpty()) {
+				final Property stackSizeProp = GetProperties.lookupPropertyDefinition(monitorImpl,
+						MemoryProperties._NAME, MemoryProperties.STACK_SIZE);
+				final IntegerLiteral stackSizeLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
+				final UnitLiteral unit = Aadl2Factory.eINSTANCE.createUnitLiteral();
+				unit.setName(stackSize.replaceAll("[\\d]", "").trim());
+				stackSizeLit.setBase(0);
+				stackSizeLit.setValue(Long.parseLong(stackSize.replaceAll("[\\D]", "").trim()));
+				stackSizeLit.setUnit(unit);
+				monitorImpl.setPropertyValue(stackSizeProp, stackSizeLit);
 			}
 
 			// Insert monitor subcomponent in containing component implementation

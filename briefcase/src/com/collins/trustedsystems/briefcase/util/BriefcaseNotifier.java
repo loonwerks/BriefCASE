@@ -7,12 +7,56 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.console.ConsolePlugin;
+import org.eclipse.ui.console.IConsole;
+import org.eclipse.ui.console.IConsoleConstants;
+import org.eclipse.ui.console.IConsoleManager;
+import org.eclipse.ui.console.IConsoleView;
+import org.eclipse.ui.console.MessageConsole;
+import org.eclipse.ui.console.MessageConsoleStream;
 
 public class BriefcaseNotifier {
 
+	public final static String CONSOLE_NAME = "BriefCASE";
+
 	public static void notify(String title, String message) {
-		AbstractNotificationPopup popup = new BriefcasePopup(title, message);
-		popup.open();
+
+		Display.getDefault().asyncExec(() -> {
+			final AbstractNotificationPopup popup = new BriefcasePopup(title, message);
+			popup.open();
+		});
+	}
+
+	public static void println(String text) {
+
+		Display.getDefault().asyncExec(() -> {
+			final MessageConsole console = findConsole(CONSOLE_NAME);
+			final MessageConsoleStream out = console.newMessageStream();
+			out.println(text);
+
+			try {
+				final IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
+				final IConsoleView view = (IConsoleView) page.showView(IConsoleConstants.ID_CONSOLE_VIEW);
+				view.display(console);
+			} catch (Exception e) {
+
+			}
+		});
+
+	}
+
+	public static void printInfo(String text) {
+		println("[ Info ]\t" + text);
+	}
+
+	public static void printWarning(String text) {
+		println("[ Warning ]\t" + text);
+	}
+
+	public static void printError(String text) {
+		println("[ Error ]\t" + text);
 	}
 
 	static class BriefcasePopup extends AbstractNotificationPopup {
@@ -31,13 +75,13 @@ public class BriefcaseNotifier {
 		@Override
 		protected void createContentArea(Composite parent) {
 
-			Composite container = new Composite(parent, SWT.NULL);
+			final Composite container = new Composite(parent, SWT.NULL);
 
-			GridData data = new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1);
+			final GridData data = new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1);
 			container.setLayoutData(data);
 			container.setLayout(new GridLayout(1, false));
 
-			Label lblMsg = new Label(container, SWT.NULL);
+			final Label lblMsg = new Label(container, SWT.NULL);
 			lblMsg.setText(message);
 
 		}
@@ -46,5 +90,20 @@ public class BriefcaseNotifier {
 		protected String getPopupShellTitle() {
 			return title;
 		}
+	}
+
+	public static MessageConsole findConsole(String name) {
+		final ConsolePlugin plugin = ConsolePlugin.getDefault();
+		final IConsoleManager conMan = plugin.getConsoleManager();
+		final IConsole[] existing = conMan.getConsoles();
+		for (int i = 0; i < existing.length; i++) {
+			if (name.equals(existing[i].getName())) {
+				return (MessageConsole) existing[i];
+			}
+		}
+		// no console found, so create a new one
+		final MessageConsole myConsole = new MessageConsole(name, null);
+		conMan.addConsoles(new IConsole[] { myConsole });
+		return myConsole;
 	}
 }
