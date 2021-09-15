@@ -127,6 +127,17 @@ public class PortNamesControl {
 
 	}
 
+	public void reset(String keyName, List<String> keyPorts, List<String> inputPorts, List<String> outputPorts) {
+		tblPorts.getTable().getColumn(0).setText(keyName);
+		PortNameItems.INSTANCE.getPortNames().clear();
+		for (int i = 0; i < keyPorts.size(); ++i) {
+			PortNameItems.INSTANCE.getPortNames()
+					.add(new PortNameItem(keyPorts.get(i), inputPorts.get(i), outputPorts.get(i)));
+		}
+		tblPorts.setInput(PortNameItems.INSTANCE.getPortNames());
+	}
+
+
 	private TableViewerColumn createTableViewerColumn(String title, int bound) {
 		final TableViewerColumn viewerColumn = new TableViewerColumn(tblPorts, SWT.NONE);
 		final TableColumn column = viewerColumn.getColumn();

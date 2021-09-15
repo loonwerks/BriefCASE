@@ -1,11 +1,10 @@
 package com.collins.trustedsystems.briefcase.staircase.dialogs;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
@@ -17,9 +16,7 @@ import org.eclipse.swt.widgets.Text;
 
 public class TransformDialogUtil {
 
-	private static final String NO_REQUIREMENT_SELECTED = "<No requirement selected>";
-
-	public static void createTextField(Composite container, String labelText, Text text, String defaultText) {
+	public static Text createTextField(Composite container, String labelText, String defaultText) {
 
 		final Label lblTextField = new Label(container, SWT.NONE);
 		lblTextField.setText(labelText);
@@ -28,12 +25,13 @@ public class TransformDialogUtil {
 		dataInfoField.grabExcessHorizontalSpace = true;
 		dataInfoField.horizontalAlignment = SWT.FILL;
 		dataInfoField.grabExcessVerticalSpace = false;
-		text = new Text(container, SWT.BORDER);
+		final Text text = new Text(container, SWT.BORDER);
 		text.setLayoutData(dataInfoField);
 		text.setText(defaultText);
+		return text;
 	}
 
-	public static void createCheckboxField(Composite container, String labelText, Button btnCheckbox,
+	public static Button createCheckboxField(Composite container, String labelText,
 			boolean selection) {
 
 		final Label lblCheckboxField = new Label(container, SWT.NONE);
@@ -42,13 +40,13 @@ public class TransformDialogUtil {
 		final GridData dataInfoField = new GridData();
 		dataInfoField.grabExcessHorizontalSpace = true;
 		dataInfoField.horizontalAlignment = SWT.FILL;
-		btnCheckbox = new Button(container, SWT.CHECK);
+		final Button btnCheckbox = new Button(container, SWT.CHECK);
 		btnCheckbox.setSelection(selection);
 		btnCheckbox.setLayoutData(dataInfoField);
-
+		return btnCheckbox;
 	}
 
-	public static void createDataTypeField(Composite container, String labelText, MenuCombo menuCombo,
+	public static MenuCombo createDataTypeField(Composite container, String labelText,
 			Map<String, List<String>> types) {
 
 		final Label lblRequestMessageDataTypeField = new Label(container, SWT.NONE);
@@ -58,58 +56,11 @@ public class TransformDialogUtil {
 		dataInfoField.grabExcessHorizontalSpace = true;
 		dataInfoField.horizontalAlignment = SWT.FILL;
 		dataInfoField.grabExcessVerticalSpace = false;
-		menuCombo = new MenuCombo(container, types);
+		return new MenuCombo(container, types);
 	}
 
-	public static void createDispatchProtocolField(Composite container, Label lblDispatchProtocol,
-			Group grpDispatchProtocol, List<Button> btnDispatchProtocol, Label lblPeriod, Text txtPeriod) {
-		lblDispatchProtocol = new Label(container, SWT.NONE);
-		lblDispatchProtocol.setText("Dispatch protocol");
-		lblDispatchProtocol.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
-		// Create a group to contain the log port options
-		grpDispatchProtocol = new Group(container, SWT.NONE);
-		grpDispatchProtocol.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		grpDispatchProtocol.setLayout(new RowLayout(SWT.HORIZONTAL));
-
-		btnDispatchProtocol.clear();
-
-
-
-		final Button btnNoProtocol = new Button(grpDispatchProtocol, SWT.RADIO);
-		btnNoProtocol.setText("None");
-		btnNoProtocol.setSelection(true);
-		addSelectionListener(btnNoProtocol, lblPeriod, txtPeriod);
-
-		final Button btnPeriodic = new Button(grpDispatchProtocol, SWT.RADIO);
-		btnPeriodic.setText("Periodic");
-		btnPeriodic.setSelection(false);
-
-		final Button btnSporadic = new Button(grpDispatchProtocol, SWT.RADIO);
-		btnSporadic.setText("Sporadic");
-		btnSporadic.setSelection(false);
-
-		final GridData dataInfoField = new GridData();
-		dataInfoField.grabExcessHorizontalSpace = true;
-		dataInfoField.horizontalAlignment = SWT.FILL;
-		dataInfoField.grabExcessVerticalSpace = false;
-
-		lblPeriod = new Label(container, SWT.NONE);
-		lblPeriod.setLayoutData(dataInfoField);
-		lblPeriod.setText("Period");
-		lblPeriod.setEnabled(false);
-
-		txtPeriod = new Text(container, SWT.BORDER);
-		txtPeriod.setLayoutData(dataInfoField);
-		txtPeriod.setEnabled(false);
-
-		btnDispatchProtocol.add(btnNoProtocol);
-		btnDispatchProtocol.add(btnPeriodic);
-		btnDispatchProtocol.add(btnSporadic);
-
-	}
-
-	public static void createLogPortField(Composite container, List<Button> btnLogPortType) {
+	public static List<Button> createLogPortField(Composite container) {
 		final Label lblLogField = new Label(container, SWT.NONE);
 		lblLogField.setText("Create log port");
 		lblLogField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
@@ -119,7 +70,7 @@ public class TransformDialogUtil {
 		logGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		logGroup.setLayout(new RowLayout(SWT.HORIZONTAL));
 
-		btnLogPortType.clear();
+		final List<Button> btnLogPortType = new ArrayList<>();
 
 		final Button btnNoLogPort = new Button(logGroup, SWT.RADIO);
 		btnNoLogPort.setText("None");
@@ -142,43 +93,27 @@ public class TransformDialogUtil {
 		btnLogPortType.add(btnEventDataLogPort);
 		btnLogPortType.add(btnNoLogPort);
 
+		return btnLogPortType;
 	}
 
-	public static void createRequirementField(Composite container, Combo cboRequirement, List<String> requirements) {
-		final Label lblResoluteField = new Label(container, SWT.NONE);
-		lblResoluteField.setText("Requirement");
+	public static Combo createComboField(Composite container, String labelText, List<String> contents,
+			String defaultText) {
+		final Label lblComboField = new Label(container, SWT.NONE);
+		lblComboField.setText(labelText);
 
 		final GridData dataInfoField = new GridData();
 		dataInfoField.grabExcessHorizontalSpace = true;
 		dataInfoField.horizontalAlignment = GridData.FILL;
 		dataInfoField.grabExcessVerticalSpace = false;
-		cboRequirement = new Combo(container, SWT.BORDER);
-		cboRequirement.setLayoutData(dataInfoField);
-		cboRequirement.add(NO_REQUIREMENT_SELECTED);
-		for (String req : requirements) {
-			cboRequirement.add(req);
+		final Combo combo = new Combo(container, SWT.BORDER);
+		combo.setLayoutData(dataInfoField);
+		combo.add(defaultText);
+		for (String c : contents) {
+			combo.add(c);
 		}
-		cboRequirement.setText(NO_REQUIREMENT_SELECTED);
-
+		combo.setText(defaultText);
+		return combo;
 	}
 
-	private static void addSelectionListener(Button button, Label label, Text text) {
-		button.addSelectionListener(new SelectionListener() {
-
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				label.setEnabled(!button.getSelection());
-				text.setEnabled(!button.getSelection());
-				if (button.getSelection()) {
-					text.setText("");
-				}
-			}
-
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e) {
-				widgetSelected(e);
-			}
-		});
-	}
 
 }

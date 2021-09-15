@@ -1,6 +1,5 @@
 package com.collins.trustedsystems.briefcase.staircase.handlers;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -129,16 +128,28 @@ public class AttestationTransformHandler extends AadlHandler {
 		Subcomponent selectedSubcomponent = null;
 		if (eObj instanceof Subcomponent) {
 			selectedSubcomponent = (Subcomponent) eObj;
+			// Check if selected subcomponent is a comm driver
+			if (!CasePropertyUtils.isCommDriver(selectedSubcomponent.getClassifier())) {
+				Dialog.showError("Attestation Transform",
+						"A communication driver subcomponent must be selected to add attestation.");
+				return;
+			}
+		} else if (eObj instanceof ComponentImplementation) {
+			boolean containsCommDrivers = false;
+			for (Subcomponent sub : ((ComponentImplementation) eObj).getOwnedSubcomponents()) {
+				if (CasePropertyUtils.isCommDriver(sub.getClassifier())) {
+					containsCommDrivers = true;
+					break;
+				}
+			}
+			if (!containsCommDrivers) {
+				Dialog.showError("Attestation Transform",
+						"The selected component implementation must contain at least one communication driver to add attestation.");
+				return;
+			}
 		} else {
 			Dialog.showError("Attestation Transform",
-					"A communication driver subcomponent must be selected to add attestation.");
-			return;
-		}
-
-		// Check if selected subcomponent is a comm driver
-		if (!CasePropertyUtils.isCommDriver(selectedSubcomponent.getClassifier())) {
-			Dialog.showError("Attestation Transform",
-					"A communication driver subcomponent must be selected to add attestation.");
+					"A communication driver subcomponent, or component implementation containing a communication driver, must be selected to add attestation.");
 			return;
 		}
 
@@ -158,9 +169,23 @@ public class AttestationTransformHandler extends AadlHandler {
 		// Open wizard to enter filter info
 		final AttestationTransformDialog wizard = new AttestationTransformDialog(
 				PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell());
-//		wizard.create(selectedSubcomponent, attestationManager, attestationGate);
-		wizard.create(selectedSubcomponent);
+		wizard.create(eObj);
 		if (wizard.open() == Window.OK) {
+			if (selectedSubcomponent == null && eObj instanceof ComponentImplementation) {
+				final String commDriver = wizard.getCommDriver();
+				for (Subcomponent sub : ((ComponentImplementation) eObj).getOwnedSubcomponents()) {
+					if (sub.getName().equalsIgnoreCase(commDriver)) {
+						selectedSubcomponent = sub;
+						uri = EcoreUtil.getURI(sub);
+						break;
+					}
+				}
+				if (selectedSubcomponent == null) {
+					Dialog.showError("Attestation Transform", "Unable to determine communication driver.");
+					return;
+				}
+			}
+
 			attestationManagerComponentName = wizard.getAttestationManagerComponentName();
 			if (attestationManagerComponentName.isEmpty()) {
 				attestationManagerComponentName = AM_COMP_TYPE_NAME;
@@ -194,22 +219,14 @@ public class AttestationTransformHandler extends AadlHandler {
 			isSel4Process = wizard.createThread();
 			useKUImplementation = wizard.useKUImplementation();
 			attestationRequirement = wizard.getRequirement();
-//			attestationManagerAgreeProperty = wizard.getMgrAgreeProperty();
 //			attestationGateAgreeProperty = wizard.getGateAgreeProperty();
 		} else {
 			return;
 		}
 
 		// Insert the attestation manager
-//		if (attestationManager != null) {
-//			associateNewRequirement(EcoreUtil.getURI(selectedSubcomponent), EcoreUtil.getURI(attestationManager),
-//					EcoreUtil.getURI(attestationGate));
-//			BriefcaseNotifier.notify("StairCASE - Attestation Transform",
-//					"New requirement associated with Attestation Manager.");
-//		} else {
 		insertAttestationComponents(uri);
-		BriefcaseNotifier.notify("StairCASE - Attestation Transform", "Attestation added to model.");
-//		}
+		BriefcaseNotifier.notify("BriefCASE - Attestation Transform", "Attestation added to model.");
 
 		// Format and save
 		format(true);
@@ -596,8 +613,7 @@ public class AttestationTransformHandler extends AadlHandler {
 						"", null);
 				String kuFolderName = Platform.getPreferencesService().getString("com.collins.trustedsystems.briefcase",
 						BriefcasePreferenceConstants.KU_IMPL_FOLDER, "", null);
-				String attestationImplPath = componentSourceFolderName + File.separator + kuFolderName + File.separator
-						+ "build" + File.separator;
+				String attestationImplPath = componentSourceFolderName + "/" + kuFolderName + "/build/";
 				// TODO: don't hardcode attestation impl path
 				StringLiteral sourceTextLit = Aadl2Factory.eINSTANCE.createStringLiteral();
 				sourceTextLit.setValue(attestationImplPath + "heli_am.S");

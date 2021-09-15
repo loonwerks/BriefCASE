@@ -2,6 +2,7 @@ package com.collins.trustedsystems.briefcase.staircase.handlers;
 
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.jface.window.Window;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.xtext.ui.editor.XtextEditor;
@@ -75,30 +76,38 @@ public class FilterTransformHandler extends AadlHandler {
 	@Override
 	protected void runCommand(URI uri) {
 
+		Connection selectedConnection = null;
+
 		// Check if it is a connection
 		final EObject eObj = getEObject(uri);
-		if (!(eObj instanceof Connection)) {
+
+		if (eObj instanceof Connection) {
+
+			selectedConnection = (Connection) eObj;
+			Subcomponent subcomponent = (Subcomponent) selectedConnection.getDestination().getContext();
+
+			if (subcomponent == null) {
+				Dialog.showError("Filter Transform", "A filter cannot be connected to the out port of a component.");
+				return;
+			}
+
+			// For now a filter can only be added onto a thread, thread group, or process
+			final ComponentCategory compCategory = subcomponent.getCategory();
+			if (compCategory != ComponentCategory.THREAD && compCategory != ComponentCategory.THREAD_GROUP
+					&& compCategory != ComponentCategory.PROCESS) {
+				Dialog.showError("Filter Transform",
+						"A filter can only be connected to a thread, thread group, or process.");
+				return;
+			}
+		} else if (eObj instanceof ComponentImplementation) {
+			if (((ComponentImplementation) eObj).getOwnedConnections().isEmpty()) {
+				Dialog.showError("Filter Transform",
+						"The selected component implementation must contain at least one connected subcomponent to add a filter.");
+				return;
+			}
+		} else {
 			Dialog.showError("Filter Transform",
-					"A connection between two components must be selected to add a filter.");
-			return;
-		}
-
-		// Make sure the source and destination components are not filters.
-		// If one (or both) is, they will need to be combined, so alert the user
-		final Connection selectedConnection = (Connection) eObj;
-		Subcomponent subcomponent = (Subcomponent) selectedConnection.getDestination().getContext();
-
-		if (subcomponent == null) {
-			Dialog.showError("Filter Transform", "A filter cannot be connected to the out port of a component.");
-			return;
-		}
-
-		// For now a filter can only be added onto a thread, thread group, or process
-		final ComponentCategory compCategory = subcomponent.getCategory();
-		if (compCategory != ComponentCategory.THREAD && compCategory != ComponentCategory.THREAD_GROUP
-				&& compCategory != ComponentCategory.PROCESS) {
-			Dialog.showError("Filter Transform",
-					"A filter can only be connected to a thread, thread group, or process.");
+					"A connection between two components, or a component implementation containing at least one connected subcomponent, must be selected to add a filter.");
 			return;
 		}
 
@@ -106,8 +115,22 @@ public class FilterTransformHandler extends AadlHandler {
 		final FilterTransformDialog wizard = new FilterTransformDialog(
 				PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell());
 
-		wizard.create(selectedConnection.getContainingComponentImpl());
+		wizard.create(eObj);
 		if (wizard.open() == Window.OK) {
+			final String connection = wizard.getConnection();
+			if (!connection.isEmpty()) {
+				for (Connection conn : ((ComponentImplementation) eObj).getOwnedConnections()) {
+					if (conn.getName().equalsIgnoreCase(connection)) {
+						selectedConnection = conn;
+						uri = EcoreUtil.getURI(conn);
+						break;
+					}
+				}
+				if (selectedConnection == null) {
+					Dialog.showError("Filter Transform", "Unable to determine connection to insert filter.");
+					return;
+				}
+			}
 			filterComponentName = wizard.getFilterComponentName();
 			if (filterComponentName == "") {
 				filterComponentName = FILTER_COMP_TYPE_NAME;
@@ -137,7 +160,7 @@ public class FilterTransformHandler extends AadlHandler {
 
 		// Insert the filter component
 		insertFilterComponent(uri);
-		BriefcaseNotifier.notify("StairCASE - Filter Transform", "Filter added to model.");
+		BriefcaseNotifier.notify("BriefCASE - Filter Transform", "Filter added to model.");
 
 		// Format and save
 		format(true);

@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.jface.window.Window;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.xtext.ui.editor.XtextEditor;
@@ -92,28 +93,39 @@ public class MonitorTransformHandler extends AadlHandler {
 
 		// Check if it is a connection
 		final EObject eObj = getEObject(uri);
-		if (!(eObj instanceof Connection)) {
+
+		if (eObj instanceof ComponentImplementation) {
+			if (((ComponentImplementation) eObj).getOwnedConnections().isEmpty()) {
+				Dialog.showError("Monitor Transform",
+						"The selected component implementation must contain at least one connected subcomponent to add a monitor.");
+				return;
+			}
+		} else if (!(eObj instanceof Connection)) {
 			Dialog.showError("Monitor Transform",
-					"A connection between two components must be selected to add a monitor.");
+					"A connection between two components, or a component implementation containing at least one connected subcomponent, must be selected to add a monitor.");
 			return;
-		}
-		final Connection selectedConnection = (Connection) eObj;
-		final ComponentImplementation ci = selectedConnection.getContainingComponentImpl();
-
-		// TODO: Check if monitor is being placed after a filter. If so, filter requirement claim needs
-		// to be updated so filter_exists doesn't return false
-
-		// Check that a monitor isn't being added to a thread in a seL4 process
-		Subcomponent subcomponent = (Subcomponent) selectedConnection.getSource().getContext();
-		if (subcomponent == null) {
-			subcomponent = (Subcomponent) selectedConnection.getDestination().getContext();
 		}
 
 		// Open wizard to enter monitor info
 		MonitorTransformDialog wizard = new MonitorTransformDialog(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell());
 
-		wizard.create(ci);
+		wizard.create(eObj);
 		if (wizard.open() == Window.OK) {
+			if (eObj instanceof ComponentImplementation) {
+				final String connection = wizard.getConnection();
+				Connection selectedConnection = null;
+				for (Connection conn : ((ComponentImplementation) eObj).getOwnedConnections()) {
+					if (conn.getName().equalsIgnoreCase(connection)) {
+						selectedConnection = conn;
+						uri = EcoreUtil.getURI(conn);
+						break;
+					}
+				}
+				if (selectedConnection == null) {
+					Dialog.showError("Monitor Transform", "Unable to determine connection to insert monitor.");
+					return;
+				}
+			}
 			monitorComponentName = wizard.getMonitorComponentName();
 			if (monitorComponentName.isEmpty()) {
 				monitorComponentName = MONITOR_COMP_TYPE_NAME;
@@ -158,7 +170,7 @@ public class MonitorTransformHandler extends AadlHandler {
 		// Insert the monitor component
 		insertMonitor(uri);
 
-		BriefcaseNotifier.notify("StairCASE - Monitor Transform", "Monitor added to model.");
+		BriefcaseNotifier.notify("BriefCASE - Monitor Transform", "Monitor added to model.");
 
 		// Format and save
 		format(true);
@@ -198,10 +210,6 @@ public class MonitorTransformHandler extends AadlHandler {
 			if (!CasePropertyUtils.addCasePropertyImport(pkgSection)) {
 				return null;
 			}
-//			// Import CASE_Model_Transformations file
-//			if (!CaseUtils.addCaseModelTransformationsImport(pkgSection, true)) {
-//				return null;
-//			}
 
 			// Figure out component type by looking at the component type of the source or destination component
 			// Note that the context could be null if the connection end is the containing component
