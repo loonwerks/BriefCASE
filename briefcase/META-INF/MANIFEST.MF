@@ -23,6 +23,8 @@ Bundle-ClassPath: .,
  dependencies/gson-2.8.5.jar
 Export-Package: com.collins.trustedsystems.briefcase,
  com.collins.trustedsystems.briefcase.preferences,
- com.collins.trustedsystems.briefcase.util
+ com.collins.trustedsystems.briefcase.util,
+ com.google.gson,
+ com.google.gson.stream
 Bundle-Activator: com.collins.trustedsystems.briefcase.Activator
 Bundle-ActivationPolicy: lazy
