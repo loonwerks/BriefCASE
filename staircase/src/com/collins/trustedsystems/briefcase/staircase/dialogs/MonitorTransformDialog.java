@@ -213,8 +213,7 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 
 		txtObservationPortName = TransformDialogUtil.createTextField(container, "Observation port name",
 				MonitorTransformHandler.MONITOR_OBSERVED_PORT_NAME);
-		txtObservationGatePortName = TransformDialogUtil.createTextField(container, "Observation gate port name",
-				MonitorTransformHandler.MONITOR_GATE_PORT_NAME);
+		createObservationGatePortNameField(container);
 		createResetPortField(container);
 		createReferencePortsField(container);
 
@@ -227,6 +226,21 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 		portsTab.setControl(container);
 	}
 
+	private void createObservationGatePortNameField(Composite container) {
+
+		lblObservationGatePortNameField = new Label(container, SWT.NONE);
+		lblObservationGatePortNameField.setText("Observation gate port name");
+		lblObservationGatePortNameField.setEnabled(false);
+
+		final GridData dataInfoField = new GridData();
+		dataInfoField.grabExcessHorizontalSpace = true;
+		dataInfoField.horizontalAlignment = SWT.FILL;
+		dataInfoField.grabExcessVerticalSpace = false;
+		txtObservationGatePortName = new Text(container, SWT.BORDER);
+		txtObservationGatePortName.setLayoutData(dataInfoField);
+		txtObservationGatePortName.setEnabled(false);
+
+	}
 
 	/**
 	 * Creates the checkbox field for adding a reset port

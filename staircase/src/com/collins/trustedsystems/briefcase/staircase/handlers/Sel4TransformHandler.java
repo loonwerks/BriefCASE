@@ -1,6 +1,5 @@
 package com.collins.trustedsystems.briefcase.staircase.handlers;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -10,16 +9,16 @@ import java.util.ListIterator;
 import java.util.Map;
 
 import org.eclipse.emf.common.command.Command;
-import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.emf.transaction.RecordingCommand;
-import org.eclipse.emf.transaction.RollbackException;
 import org.eclipse.emf.transaction.TransactionalCommandStack;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
+import org.eclipse.emf.workspace.WorkspaceEditingDomainFactory;
 import org.eclipse.jface.window.Window;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.xtext.resource.SaveOptions;
 import org.osate.aadl2.Aadl2Factory;
 import org.osate.aadl2.Aadl2Package;
 import org.osate.aadl2.Access;
@@ -43,6 +42,7 @@ import org.osate.aadl2.EnumerationLiteral;
 import org.osate.aadl2.EventDataPort;
 import org.osate.aadl2.EventPort;
 import org.osate.aadl2.Feature;
+import org.osate.aadl2.IntegerLiteral;
 import org.osate.aadl2.ListValue;
 import org.osate.aadl2.ModalPropertyValue;
 import org.osate.aadl2.NamedElement;
@@ -69,13 +69,18 @@ import org.osate.aadl2.ThreadGroupSubcomponent;
 import org.osate.aadl2.ThreadImplementation;
 import org.osate.aadl2.ThreadSubcomponent;
 import org.osate.aadl2.ThreadType;
+import org.osate.aadl2.UnitLiteral;
 import org.osate.aadl2.modelsupport.scoping.Aadl2GlobalScopeUtil;
 import org.osate.aadl2.modelsupport.util.AadlUtil;
 import org.osate.ui.dialogs.Dialog;
 import org.osate.xtext.aadl2.properties.util.GetProperties;
+import org.osate.xtext.aadl2.properties.util.MemoryProperties;
 import org.osate.xtext.aadl2.properties.util.ThreadProperties;
 
 import com.collins.trustedsystems.briefcase.staircase.dialogs.Sel4TransformDialog;
+import com.collins.trustedsystems.briefcase.staircase.requirements.CyberRequirement;
+import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsManager;
+import com.collins.trustedsystems.briefcase.staircase.requirements.Sel4TransformClaim;
 import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
 import com.collins.trustedsystems.briefcase.staircase.utils.ComponentCreateHelper;
 import com.collins.trustedsystems.briefcase.staircase.utils.ModelTransformUtils;
@@ -91,10 +96,9 @@ public class Sel4TransformHandler extends AadlHandler {
 	private String sel4Requirement;
 
 	@Override
-	protected void runCommand(URI uri) {
+	protected void runCommand(EObject eObj) {
 
 		// Selection must be a system or process subcomponent
-		final EObject eObj = getEObject(uri);
 		if (!(eObj instanceof SystemSubcomponent || eObj instanceof ProcessSubcomponent)) {
 			Dialog.showError("seL4 Transform",
 					"A system or process subcomponent must be selected to perform the seL4 transform.");
@@ -115,11 +119,11 @@ public class Sel4TransformHandler extends AadlHandler {
 		final Sel4TransformDialog wizard = new Sel4TransformDialog(
 				PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell());
 
-		if (selectedSubcomponent.getComponentType().getCategory() != ComponentCategory.SYSTEM
-				|| !isSoftwareSubcomponent(selectedSubcomponent)
-				|| selectedSubcomponent.getComponentImplementation().getOwnedSubcomponents().size() <= 1) {
-			sel4Subcomponent = selectedSubcomponent.getName();
-		} else {
+//		if (selectedSubcomponent.getComponentType().getCategory() != ComponentCategory.SYSTEM
+//				|| !isSoftwareSubcomponent(selectedSubcomponent)
+//				|| selectedSubcomponent.getComponentImplementation().getOwnedSubcomponents().size() <= 1) {
+//			sel4Subcomponent = selectedSubcomponent.getName();
+//		} else {
 
 			wizard.create(selectedSubcomponent);
 			if (wizard.open() == Window.OK) {
@@ -128,7 +132,7 @@ public class Sel4TransformHandler extends AadlHandler {
 			} else {
 				return;
 			}
-		}
+//		}
 
 //		SystemInstance systemInstance = null;
 //		try {
@@ -172,8 +176,7 @@ public class Sel4TransformHandler extends AadlHandler {
 
 		// Set OS property on containing component impl for processor
 		final Resource aadlResource = si.eResource();
-		final TransactionalEditingDomain domain = TransactionalEditingDomain.Registry.INSTANCE
-				.getEditingDomain("org.osate.aadl2.ModelEditingDomain");
+		final TransactionalEditingDomain domain = WorkspaceEditingDomainFactory.INSTANCE.createEditingDomain();
 		// We execute this command on the command stack because otherwise, we will not
 		// have write permissions on the editing domain.
 		final Command cmd = new RecordingCommand(domain) {
@@ -186,13 +189,11 @@ public class Sel4TransformHandler extends AadlHandler {
 		try {
 			((TransactionalCommandStack) domain.getCommandStack()).execute(cmd, null);
 			// We're done: Save the model
-			aadlResource.save(null);
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		} catch (RollbackException e) {
-			e.printStackTrace();
+			aadlResource.save(SaveOptions.newBuilder().format().getOptions().toOptionsMap());
+		} catch (Exception e) {
+			return;
+		} finally {
+			domain.dispose();
 		}
 
 		// Each process subcomponent containing a thread group and/or multiple thread subcomponents
@@ -200,31 +201,38 @@ public class Sel4TransformHandler extends AadlHandler {
 		// Each thread becomes a process containing the thread
 		// Each thread group becomes a system
 		// Re-wire everything appropriately
+		boolean result = false;
 		if (sub instanceof ProcessSubcomponent) {
 			final Map<String, SystemImplementation> transformedSubs = new HashMap<>();
 			final SystemImplementation systemImpl = transformProcess((ProcessSubcomponent) sub);
 			if (systemImpl != null) {
 				transformedSubs.put(sub.getName(), systemImpl);
 			}
-			updateSystemImplementation((SystemImplementation) sub.getContainingComponentImpl(), transformedSubs);
+			result = updateSystemImplementation((SystemImplementation) sub.getContainingComponentImpl(),
+					transformedSubs);
 		} else {
-			transformSystem((SystemSubcomponent) sub);
+			result = transformSystem((SystemSubcomponent) sub);
 		}
 
-//		// Add sel4_transform claims to resolute prove statement, if applicable
-//		if (!sel4Requirement.isEmpty()) {
-//			final CyberRequirement req = RequirementsManager.getInstance().getRequirement(sel4Requirement);
-//			Sel4TransformClaim claim = new Sel4TransformClaim(req.getContext(),
-//					si, sel4Subcomponent);
-//			RequirementsManager.getInstance().modifyRequirement(sel4Requirement, claim);
-//		}
+		if (result) {
 
-		BriefcaseNotifier.notify("BriefCASE - seL4 Transform", "Model transformed for seL4 build.");
+			// TODO: Add sel4_transform claims to resolute prove statement, if applicable
+			if (!sel4Requirement.isEmpty()) {
+				final CyberRequirement req = RequirementsManager.getInstance().getRequirement(sel4Requirement);
+//				Sel4TransformClaim claim = new Sel4TransformClaim(req.getContext(), si, sel4Subcomponent);
+				Sel4TransformClaim claim = new Sel4TransformClaim(req.getContext());
+				RequirementsManager.getInstance().modifyRequirement(sel4Requirement, claim);
+			}
 
-		// Format and save
-//		format(true);
+			BriefcaseNotifier.notify("BriefCASE - seL4 Transform", "Model transformed for seL4 build.");
 
-//		saveChanges(false);
+			// Format and save
+//			format(true);
+
+//			saveChanges(false);
+		} else {
+			BriefcaseNotifier.printError("seL4 transform failed.");
+		}
 
 	}
 
@@ -232,7 +240,7 @@ public class Sel4TransformHandler extends AadlHandler {
 	 * Transforms a System into a System containing transformed subcomponents
 	 * @param system - Subcomponent instantiation of a system to be transformed
 	 */
-	public void transformSystem(SystemSubcomponent system) {
+	public boolean transformSystem(SystemSubcomponent system) {
 
 		final SystemImplementation systemImpl = (SystemImplementation) system.getComponentImplementation();
 
@@ -251,17 +259,15 @@ public class Sel4TransformHandler extends AadlHandler {
 			}
 		}
 
-		updateSystemImplementation(systemImpl, transformedSubs);
+		return updateSystemImplementation(systemImpl, transformedSubs);
 
-		return;
 	}
 
-	private void updateSystemImplementation(SystemImplementation systemImpl,
+	private boolean updateSystemImplementation(SystemImplementation systemImpl,
 			Map<String, SystemImplementation> transformedSubs) {
 
 		final Resource aadlResource = systemImpl.eResource();
-		final TransactionalEditingDomain domain = TransactionalEditingDomain.Registry.INSTANCE
-				.getEditingDomain("org.osate.aadl2.ModelEditingDomain");
+		final TransactionalEditingDomain domain = WorkspaceEditingDomainFactory.INSTANCE.createEditingDomain();
 		// We execute this command on the command stack because otherwise, we will not
 		// have write permissions on the editing domain.
 		final Command cmd = new RecordingCommand(domain) {
@@ -328,20 +334,14 @@ public class Sel4TransformHandler extends AadlHandler {
 			((TransactionalCommandStack) domain.getCommandStack()).execute(cmd, null);
 
 			// We're done: Save the model
-			aadlResource.save(null);
-		} catch (IOException e) {
-			e.printStackTrace();
-//			setErrorMessage(e.getMessage());
-			return;
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-//			setErrorMessage(e.getMessage());
-		} catch (RollbackException e) {
-			e.printStackTrace();
-//			setErrorMessage(e.getMessage());
+			aadlResource.save(SaveOptions.newBuilder().format().getOptions().toOptionsMap());
+		} catch (Exception e) {
+			return false;
+		} finally {
+			domain.dispose();
 		}
 
-		return;
+		return true;
 
 	}
 
@@ -382,8 +382,7 @@ public class Sel4TransformHandler extends AadlHandler {
 		}
 
 		final Resource aadlResource = processImpl.eResource();
-		final TransactionalEditingDomain domain = TransactionalEditingDomain.Registry.INSTANCE
-				.getEditingDomain("org.osate.aadl2.ModelEditingDomain");
+		final TransactionalEditingDomain domain = WorkspaceEditingDomainFactory.INSTANCE.createEditingDomain();
 		// We execute this command on the command stack because otherwise, we will not
 		// have write permissions on the editing domain.
 		final Command cmd = new RecordingCommand(domain) {
@@ -405,17 +404,11 @@ public class Sel4TransformHandler extends AadlHandler {
 			((TransactionalCommandStack) domain.getCommandStack()).execute(cmd, null);
 
 			// We're done: Save the model
-			aadlResource.save(null);
-		} catch (IOException e) {
-			e.printStackTrace();
-//			setErrorMessage(e.getMessage());
+			aadlResource.save(SaveOptions.newBuilder().format().getOptions().toOptionsMap());
+		} catch (Exception e) {
 			return null;
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-//			setErrorMessage(e.getMessage());
-		} catch (RollbackException e) {
-			e.printStackTrace();
-//			setErrorMessage(e.getMessage());
+		} finally {
+			domain.dispose();
 		}
 
 		@SuppressWarnings("unchecked")
@@ -465,8 +458,7 @@ public class Sel4TransformHandler extends AadlHandler {
 		}
 
 		final Resource aadlResource = tgImpl.eResource();
-		final TransactionalEditingDomain domain = TransactionalEditingDomain.Registry.INSTANCE
-				.getEditingDomain("org.osate.aadl2.ModelEditingDomain");
+		final TransactionalEditingDomain domain = WorkspaceEditingDomainFactory.INSTANCE.createEditingDomain();
 		// We execute this command on the command stack because otherwise, we will not
 		// have write permissions on the editing domain.
 		final Command cmd = new RecordingCommand(domain) {
@@ -488,17 +480,11 @@ public class Sel4TransformHandler extends AadlHandler {
 			((TransactionalCommandStack) domain.getCommandStack()).execute(cmd, null);
 
 			// We're done: Save the model
-			aadlResource.save(null);
-		} catch (IOException e) {
-			e.printStackTrace();
-//			setErrorMessage(e.getMessage());
+			aadlResource.save(SaveOptions.newBuilder().format().getOptions().toOptionsMap());
+		} catch (Exception e) {
 			return null;
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-//			setErrorMessage(e.getMessage());
-		} catch (RollbackException e) {
-			e.printStackTrace();
-//			setErrorMessage(e.getMessage());
+		} finally {
+			domain.dispose();
 		}
 
 		@SuppressWarnings("unchecked")
@@ -531,8 +517,7 @@ public class Sel4TransformHandler extends AadlHandler {
 		}
 
 		final Resource aadlResource = threadImpl.eResource();
-		final TransactionalEditingDomain domain = TransactionalEditingDomain.Registry.INSTANCE
-				.getEditingDomain("org.osate.aadl2.ModelEditingDomain");
+		final TransactionalEditingDomain domain = WorkspaceEditingDomainFactory.INSTANCE.createEditingDomain();
 		// We execute this command on the command stack because otherwise, we will not
 		// have write permissions on the editing domain.
 		final Command cmd = new RecordingCommand(domain) {
@@ -554,17 +539,11 @@ public class Sel4TransformHandler extends AadlHandler {
 			((TransactionalCommandStack) domain.getCommandStack()).execute(cmd, null);
 
 			// We're done: Save the model
-			aadlResource.save(null);
-		} catch (IOException e) {
-			e.printStackTrace();
-//			setErrorMessage(e.getMessage());
+			aadlResource.save(SaveOptions.newBuilder().format().getOptions().toOptionsMap());
+		} catch (Exception e) {
 			return null;
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-//			setErrorMessage(e.getMessage());
-		} catch (RollbackException e) {
-			e.printStackTrace();
-//			setErrorMessage(e.getMessage());
+		} finally {
+			domain.dispose();
 		}
 
 		final List<ComponentImplementation> transformImplList = (List<ComponentImplementation>) cmd.getResult();
@@ -917,7 +896,7 @@ public class Sel4TransformHandler extends AadlHandler {
 	 * Inserts a single thread into a designated seL4 process
 	 */
 	public static ThreadSubcomponent insertThreadInSel4Process(ProcessImplementation processImpl,
-			String dispatchProtocol, String agreeClauses) {
+			String dispatchProtocol, String stackSize, String agreeClauses) {
 
 		final PackageSection pkgSection = (PackageSection) processImpl.eContainer();
 
@@ -983,6 +962,19 @@ public class Sel4TransformHandler extends AadlHandler {
 			final NamedValue nv = Aadl2Factory.eINSTANCE.createNamedValue();
 			nv.setNamedValue(dispatchProtocolLit);
 			threadImpl.setPropertyValue(dispatchProtocolProp, nv);
+		}
+
+		// Stack Size
+		if (stackSize != null && !stackSize.isEmpty()) {
+			final Property stackSizeProp = GetProperties.lookupPropertyDefinition(threadImpl, MemoryProperties._NAME,
+					MemoryProperties.STACK_SIZE);
+			final IntegerLiteral stackSizeLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
+			final UnitLiteral unit = Aadl2Factory.eINSTANCE.createUnitLiteral();
+			unit.setName(stackSize.replaceAll("[\\d]", "").trim());
+			stackSizeLit.setBase(0);
+			stackSizeLit.setValue(Long.parseLong(stackSize.replaceAll("[\\D]", "").trim()));
+			stackSizeLit.setUnit(unit);
+			threadImpl.setPropertyValue(stackSizeProp, stackSizeLit);
 		}
 
 		// Put thread component above process components
@@ -1179,7 +1171,7 @@ public class Sel4TransformHandler extends AadlHandler {
 			try {
 				CasePropertyUtils.addCasePropertyImport(AadlUtil.getContainingPackageSection(systemImpl));
 			} catch (Exception e) {
-//				return null;
+
 			}
 		}
 

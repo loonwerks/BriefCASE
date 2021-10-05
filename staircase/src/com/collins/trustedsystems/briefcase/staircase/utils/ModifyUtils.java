@@ -13,11 +13,10 @@ import org.eclipse.xtext.ui.editor.utils.EditorUtils;
 public class ModifyUtils {
 
 	public static XtextEditor getEditor(IFile file) {
-		IWorkbenchPage page = null;
 		IEditorPart part = null;
 
 		if (file.exists()) {
-			page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
+			final IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
 			final IEditorDescriptor desc = PlatformUI.getWorkbench().getEditorRegistry()
 					.getDefaultEditor(file.getName());
 			try {
@@ -31,10 +30,7 @@ public class ModifyUtils {
 			return null;
 		}
 
-		XtextEditor xedit = null;
-		xedit = (XtextEditor) part;
-
-		return xedit;
+		return (XtextEditor) part;
 	}
 
 	public static XtextEditor getActiveEditor() {

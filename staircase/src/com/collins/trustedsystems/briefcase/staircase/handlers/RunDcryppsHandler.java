@@ -2,7 +2,6 @@ package com.collins.trustedsystems.briefcase.staircase.handlers;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.Map;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -49,7 +48,7 @@ public class RunDcryppsHandler extends AadlHandler {
 
 	private final static String DESIRABLE_PROPERTIES = "desirableProperties";
 	private final static String ATTACKER_DESCRIPTION = "attackerDescription";
-	private final static String CLASS_DICTIONARY = "classDictionary";
+//	private final static String CLASS_DICTIONARY = "classDictionary";
 	private final static String TOOL = "tool";
 	private final static String PROJECT = "project";
 	private final static String IMPLEMENTATION = "implementation";
@@ -59,12 +58,14 @@ public class RunDcryppsHandler extends AadlHandler {
 	private final static String MODEL = "model";
 	private final static String REQUIREMENT = "requirement";
 	private final static String REQUIREMENTS = "requirements";
+	private final static String TYPE = "type";
+	private final static String CONTEXT = "context";
+	private final static String DESCRIPTION = "description";
 
 	@Override
-	protected void runCommand(URI uri) {
+	protected void runCommand(EObject eObj) {
 
 		// Check if a component implementation is selected
-		final EObject eObj = getEObject(uri);
 		if (!(eObj instanceof ComponentImplementation)) {
 			Dialog.showError("Run DCRYPPS", "Select the top-level component implementation for analysis.");
 			return;
@@ -121,21 +122,21 @@ public class RunDcryppsHandler extends AadlHandler {
 			Dialog.showError("Run DCRYPPS", "Component implementation " + ci.getName()
 					+ " must include a JSON annex containing the " + ATTACKER_DESCRIPTION + " array.");
 			return false;
-		} else if (!inputs.has(CLASS_DICTIONARY)) {
-			Dialog.showError("Run DCRYPPS", "Component implementation " + ci.getName()
-					+ " must include a JSON annex containing the " + CLASS_DICTIONARY + " object.");
-			return false;
+//		} else if (!inputs.has(CLASS_DICTIONARY)) {
+//			Dialog.showError("Run DCRYPPS", "Component implementation " + ci.getName()
+//					+ " must include a JSON annex containing the " + CLASS_DICTIONARY + " object.");
+//			return false;
 		}
 
-		// TODO: Remove after Tamas fixes bug
-		for (Map.Entry<String, JsonElement> input : inputs.entrySet()) {
-			request.add(input.getKey(), input.getValue());
-		}
+//		// TODO: Remove after Tamas fixes bug
+//		for (Map.Entry<String, JsonElement> input : inputs.entrySet()) {
+//			request.add(input.getKey(), input.getValue());
+//		}
 
 		final JsonObject results = postDcryppsRequest(request.toString());
-//		writeRequirementsFile(project, request);
-		// TODO: Check results status
-		if (!checkResults(results)) {
+//		// TODO: Check results status
+//		if (!checkResults(results)) {
+		if (results == null) {
 			return false;
 		}
 
@@ -208,26 +209,41 @@ public class RunDcryppsHandler extends AadlHandler {
 
 	}
 
-	private boolean checkResults(JsonObject results) {
-		if (results == null) {
-			return false;
-		}
-		return true;
-	}
+//	private boolean checkResults(JsonObject results) {
+//		if (results == null) {
+//			return false;
+//		}
+//		return true;
+//	}
 
-	private IFile writeRequirementsFile(IProject project, JsonObject header, JsonObject reqs) {
+	private IFile writeRequirementsFile(IProject project, JsonObject header, JsonObject results) {
 
 		final JsonObject contents = header;
 		contents.addProperty(TOOL, "DCRYPPS");
 
 		final JsonArray requirements = new JsonArray();
-		if (!(reqs.has(REQUIREMENTS) && reqs.get(REQUIREMENTS).isJsonArray())) {
-			for (JsonElement reqElement : reqs.get(REQUIREMENTS).getAsJsonArray()) {
+		if (!(results.has(REQUIREMENTS) && results.get(REQUIREMENTS).isJsonArray())) {
+			for (JsonElement reqElement : results.get(REQUIREMENTS).getAsJsonArray()) {
+				final JsonObject importReq = new JsonObject();
 				if (reqElement.isJsonObject()) {
-					final JsonObject req = reqElement.getAsJsonObject();
-					if (req.has(REQUIREMENT) && req.get(REQUIREMENT).isJsonArray()) {
+					final JsonObject reqObj = reqElement.getAsJsonObject();
+					if (reqObj.has(REQUIREMENT) && reqObj.get(REQUIREMENT).isJsonArray()
+							&& reqObj.get(REQUIREMENT).getAsJsonArray().size() > 0) {
+
+						JsonArray reqArr = reqObj.get(REQUIREMENT).getAsJsonArray();
+
+						importReq.addProperty(TYPE, reqArr.get(0).getAsString());
+
+						// Context
+						if (reqArr.size() > 1) {
+							importReq.addProperty(CONTEXT, reqArr.get(reqArr.size() - 1).getAsString());
+						}
 
 					}
+					if (reqObj.has(DESCRIPTION)) {
+						importReq.addProperty(DESCRIPTION, reqObj.get(DESCRIPTION).getAsString());
+					}
+					requirements.add(reqObj);
 				}
 			}
 		}
@@ -243,11 +259,11 @@ public class RunDcryppsHandler extends AadlHandler {
 
 			final URI reqFileUri = URI.createURI(reqFolder.getFullPath().toString()).appendSegment(REQ_FILE_NAME);
 			reqFile = Filesystem.getFile(reqFileUri);
-			Filesystem.writeFile(reqFile, gson.toJson(reqs).getBytes());
+			Filesystem.writeFile(reqFile, gson.toJson(contents).getBytes());
 
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.err.println("Unable to write requirements to filesystem.");
+			BriefcaseNotifier.println("Unable to write requirements to filesystem.");
 			return null;
 		}
 

@@ -1,6 +1,8 @@
 package com.collins.trustedsystems.briefcase.staircase.handlers;
 
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -8,13 +10,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.eclipse.emf.common.util.URI;
+import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.ecore.EObject;
-import org.eclipse.emf.ecore.util.EcoreUtil;
+import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.transaction.RecordingCommand;
+import org.eclipse.emf.transaction.TransactionalCommandStack;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
+import org.eclipse.emf.workspace.WorkspaceEditingDomainFactory;
 import org.eclipse.jface.window.Window;
 import org.eclipse.ui.PlatformUI;
-import org.eclipse.xtext.ui.editor.XtextEditor;
-import org.eclipse.xtext.ui.editor.utils.EditorUtils;
+import org.eclipse.xtext.resource.SaveOptions;
 import org.osate.aadl2.Aadl2Factory;
 import org.osate.aadl2.Aadl2Package;
 import org.osate.aadl2.ComponentCategory;
@@ -68,7 +73,7 @@ public class VirtualizationTransformHandler extends AadlHandler {
 	private Map<String, Subcomponent> virtualizationSubNameMap = new HashMap<>();
 
 	@Override
-	protected void runCommand(URI uri) {
+	protected void runCommand(EObject eObj) {
 
 		// ASSUMPTIONS:
 		// Selected subcomponent or it's subcomponents are bound to a processor
@@ -77,7 +82,6 @@ public class VirtualizationTransformHandler extends AadlHandler {
 		// (in other words, processor bindings are the same for all selected components)
 
 		// Get the current selection
-		EObject eObj = getEObject(uri);
 		Subcomponent selectedSub = null;
 		if (eObj instanceof SystemSubcomponent || eObj instanceof ProcessSubcomponent) {
 			selectedSub = (Subcomponent) eObj;
@@ -183,15 +187,18 @@ public class VirtualizationTransformHandler extends AadlHandler {
 		// Insert the virtual processor type and implementation components
 		// into the same package as the selected subcomponent's containing implementation.
 		// Note that this could be a different package than the bound processor(s).
-		insertVirtualProcessor(EcoreUtil.getURI(selectedSub));
+		if (insertVirtualProcessor(selectedSub)) {
 
-		BriefcaseNotifier.notify("StairCASE - Virtualization Transform", "Virtual machine added to model.");
+			BriefcaseNotifier.notify("StairCASE - Virtualization Transform", "Virtual machine added to model.");
 
-		// Format and save
-		format(true);
+			// Format and save
+			format(true);
 
-//		// Save
-//		saveChanges(false);
+//			// Save
+//			saveChanges(false);
+		} else {
+			BriefcaseNotifier.printError("Virtualization transform failed.");
+		}
 
 		return;
 
@@ -200,29 +207,38 @@ public class VirtualizationTransformHandler extends AadlHandler {
 	/**
 	 * Inserts the virtual processor type and implementation components
 	 * into the same package as the selected subcomponent.
-	 * @param selectedComponentURI - URI of the selected subcomponent
+	 * @param selectedComponent - selected subcomponent
 	 */
-	private void insertVirtualProcessor(URI selectedComponentURI) {
+	private boolean insertVirtualProcessor(Subcomponent selectedSub) {
 
-		// Get the active xtext editor so we can make modifications
-		final XtextEditor editor = EditorUtils.getActiveXtextEditor();
-		AddVirtualizationClaim claim = null;
+		if (selectedSub == null) {
+			Dialog.showError("Virtualization Transform", "Invalid subcomponent.");
+			return false;
+		}
 
-		if (editor != null) {
-			claim = editor.getDocument().modify(resource -> {
+		final Resource aadlResource = selectedSub.eResource();
+		final TransactionalEditingDomain domain = WorkspaceEditingDomainFactory.INSTANCE.createEditingDomain();
 
-				final Subcomponent selectedSub = (Subcomponent) resource.getEObject(selectedComponentURI.fragment());
+		// We execute this command on the command stack because otherwise, we will not
+		// have write permissions on the editing domain.
+		final Command cmd = new RecordingCommand(domain) {
+
+			AddVirtualizationClaim claim = null;
+
+			@Override
+			protected void doExecute() {
+
 				final ComponentImplementation containingImpl = selectedSub.getContainingComponentImpl();
 				PackageSection pkgSection = AadlUtil.getContainingPackageSection(containingImpl);
 				if (pkgSection == null) {
 					// Something went wrong
 					Dialog.showError("Virtualization Transform", "No public or private package sections found.");
-					return null;
+					return;
 				}
 
 				// Import CASE_Properties file
 				if (!CasePropertyUtils.addCasePropertyImport(pkgSection)) {
-					return null;
+					return;
 				}
 
 				// Create virtual processor component type
@@ -239,10 +255,7 @@ public class VirtualizationTransformHandler extends AadlHandler {
 						pkgSection.getOwnedClassifiers().size() - 1);
 
 				// CASE::COMP_TYPE Property
-//				if (!CasePropertyUtils.setCompType(vpType, "VIRTUAL_MACHINE")) {
-				if (!CasePropertyUtils.setMitigationType(vpType, MITIGATION_TYPE.VIRTUALIZATION)) {
-//					return;
-				}
+				CasePropertyUtils.setMitigationType(vpType, MITIGATION_TYPE.VIRTUALIZATION);
 
 				// Create virtual processor component implementation
 				final VirtualProcessorImplementation vpImpl = (VirtualProcessorImplementation) pkgSection
@@ -256,9 +269,7 @@ public class VirtualizationTransformHandler extends AadlHandler {
 
 				// CASE::OS Property
 				if (!virtualMachineOS.isEmpty()) {
-					if (!CasePropertyUtils.setOs(vpImpl, virtualMachineOS)) {
-//						return;
-					}
+					CasePropertyUtils.setOs(vpImpl, virtualMachineOS);
 				}
 
 				// Create virtual processor subcomponent
@@ -276,9 +287,7 @@ public class VirtualizationTransformHandler extends AadlHandler {
 				// Bind the virtual processor to the processor(s)
 				// If a binding to a processor already exists, add virtual processor to Applies To
 				// Remove virtualized components from this processor binding
-//				// Add non-virtualized components to binding if their parents are virtualized
 				boolean propertyAssociationFound = false;
-//				final List<String> nonVmBoundChildren = new ArrayList<>();
 				final Iterator<PropertyAssociation> paIterator = containingImpl.getOwnedPropertyAssociations()
 						.iterator();
 				while (paIterator.hasNext()) {
@@ -322,26 +331,6 @@ public class VirtualizationTransformHandler extends AadlHandler {
 										}
 
 									}
-
-//									// If any subcomponents with implicit processor bindings to be virtualized
-//									// have children that are not to be virtualized, create explicit processor bindings for them
-//									for (String s : virtualizationComponents) {
-//										final Set<String> processors = implicitProcessorBindings.get(s);
-//										if (processors != null && processors.contains(processorRef)) {
-//											final Subcomponent parent = virtualizationSubNameMap.get(s);
-//											for (Subcomponent child : parent.getComponentImplementation()
-//													.getOwnedSubcomponents()) {
-//												if (!virtualizationSubNameMap.containsValue(child)) {
-//													final String childQualName = s + "." + child.getName();
-//													final ContainedNamedElement ne = createContainedNamedElement(
-//															selectedSub,
-//															childQualName);
-//													pa.getAppliesTos().add(ne);
-//													nonVmBoundChildren.add(childQualName);
-//												}
-//											}
-//										}
-//									}
 
 									propertyAssociationFound = true;
 								}
@@ -404,18 +393,40 @@ public class VirtualizationTransformHandler extends AadlHandler {
 
 				// Add add_virtualization claims to resolute prove statement, if applicable
 				if (!virtualizationRequirement.isEmpty()) {
-//					return new AddVirtualizationClaim(virtualizationComponents, nonVmBoundChildren, vpSub);
-					return new AddVirtualizationClaim(virtualizationComponents, vpSub);
+					claim = new AddVirtualizationClaim(virtualizationComponents, vpSub);
 				}
 
-				return null;
-			});
+			}
+
+			@Override
+			public Collection<AddVirtualizationClaim> getResult() {
+				if (claim == null) {
+					return null;
+				} else {
+					return Collections.singletonList(claim);
+				}
+			}
+
+		};
+
+		try {
+			((TransactionalCommandStack) domain.getCommandStack()).execute(cmd, null);
+
+			// We're done: Save the model
+			aadlResource.save(SaveOptions.newBuilder().format().getOptions().toOptionsMap());
+		} catch (Exception e) {
+			return false;
+		} finally {
+			domain.dispose();
 		}
 
-		// Add add_virtualization claims to resolute prove statement, if applicable
+		@SuppressWarnings("unchecked")
+		final List<AddVirtualizationClaim> claim = (List<AddVirtualizationClaim>) cmd.getResult();
 		if (claim != null) {
-			RequirementsManager.getInstance().modifyRequirement(virtualizationRequirement, claim);
+			RequirementsManager.getInstance().modifyRequirement(virtualizationRequirement, claim.get(0));
 		}
+
+		return true;
 
 	}
 

@@ -26,11 +26,22 @@ Require-Bundle: org.osate.aadl2;bundle-version="[4.0.0,5.0.0)",
  com.rockwellcollins.atc.resolute.ui;bundle-version="[2.4.2,3.0.0)",
  org.eclipse.mylyn.commons.ui,
  org.apache.httpcomponents.httpclient,
- org.apache.httpcomponents.httpcore
+ org.apache.httpcomponents.httpcore,
+ org.eclipse.graphiti;bundle-version="0.17.0",
+ org.eclipse.graphiti.ui;bundle-version="0.17.0",
+ org.eclipse.emf.transaction,
+ org.eclipse.emf.workspace,
+ org.eclipse.xtext,
+ org.eclipse.core.expressions,
+ org.eclipse.core.expressions;bundle-version="[3.6.0,4.0.0)",
+ org.eclipse.e4.core.contexts,
+ org.eclipse.ui.workbench
 Import-Package: com.collins.trustedsystems.briefcase,
  com.collins.trustedsystems.briefcase.attestation,
  com.collins.trustedsystems.briefcase.json.json,
- org.eclipse.emf.transaction
+ org.eclipse.emf.transaction,
+ org.eclipse.emf.workspace,
+ org.eclipse.graphiti.ui.editor;version="0.17.0"
 Bundle-Activator: com.collins.trustedsystems.briefcase.staircase.Activator
 Export-Package: com.collins.trustedsystems.briefcase.staircase,
  com.collins.trustedsystems.briefcase.staircase.handlers,

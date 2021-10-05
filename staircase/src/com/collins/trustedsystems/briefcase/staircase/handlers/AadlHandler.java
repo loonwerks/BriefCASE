@@ -4,6 +4,7 @@ import java.util.Collection;
 
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -19,6 +20,7 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IEditorReference;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchPage;
@@ -27,16 +29,19 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.ui.progress.WorkbenchJob;
 import org.eclipse.xtext.resource.EObjectAtOffsetHelper;
+import org.eclipse.xtext.resource.XtextResource;
+import org.eclipse.xtext.resource.XtextResourceSet;
 import org.eclipse.xtext.ui.editor.XtextEditor;
 import org.eclipse.xtext.ui.editor.outline.impl.EObjectNode;
 import org.eclipse.xtext.ui.editor.utils.EditorUtils;
 import org.osate.aadl2.NamedElement;
 import org.osate.aadl2.Realization;
+import org.osate.ge.BusinessObjectSelection;
 import org.osate.ui.dialogs.Dialog;
 
 public abstract class AadlHandler extends AbstractHandler {
 
-	abstract protected void runCommand(URI uri);
+	abstract protected void runCommand(EObject eObj);
 
 	static final String OUTLINE_VIEW_PART_ID = "org.eclipse.ui.views.ContentOutline";
 	protected ExecutionEvent executionEvent;
@@ -63,7 +68,6 @@ public abstract class AadlHandler extends AbstractHandler {
 			selection = selectionProvider.getSelection();
 		}
 
-		// TODO: Handle same functionality in the Graphical Editor?
 		final URI uri = getSelectionURI(selection);
 		if (uri == null) {
 			Dialog.showError("BriefCASE", "A model element must be selected to perform this action.");
@@ -71,7 +75,7 @@ public abstract class AadlHandler extends AbstractHandler {
 		}
 
 		// Run the command in the handler
-		runCommand(uri);
+		runCommand(getEObject(uri));
 
 		return null;
 	}
@@ -82,31 +86,34 @@ public abstract class AadlHandler extends AbstractHandler {
 	 * @return EObject
 	 */
 	protected EObject getEObject(URI uri) {
-		final XtextEditor xtextEditor = EditorUtils.getActiveXtextEditor();
-		return xtextEditor.getDocument().readOnly(resource -> {
-			return resource.getResourceSet().getEObject(uri, true);
-		});
+
+		final XtextResourceSet resourceSet = new XtextResourceSet();
+		resourceSet.addLoadOption(XtextResource.OPTION_RESOLVE_ALL, Boolean.TRUE);
+		return resourceSet.getEObject(uri, true);
+
 	}
+
 
 	/**
 	 * Gets the URI for the current selection in the editor
 	 * @param currentSelection - Selected model object
 	 * @return A URI representing the selected model object
 	 */
-//	@SuppressWarnings("restriction")
 	private URI getSelectionURI(ISelection currentSelection) {
 
 		if (currentSelection instanceof IStructuredSelection) {
 			final IStructuredSelection iss = (IStructuredSelection) currentSelection;
-			if (iss.size() == 1) {
-				final Object obj = iss.getFirstElement();
-//				if (obj instanceof DiagramElement) {
-//					final DiagramElement diagramElement = (DiagramElement) obj;
-//					EObject eObj = (EObject) diagramElement.getBusinessObject();
-//					return EcoreUtil.getURI(eObj);
-//				} else {
-				return ((EObjectNode) obj).getEObjectURI();
-//				}
+
+			if (iss.size() == 1 && iss.getFirstElement() instanceof EObjectNode) {
+				final EObjectNode node = (EObjectNode) iss.getFirstElement();
+				return node.getEObjectURI();
+			} else {
+				final BusinessObjectSelection bos = Adapters.adapt(currentSelection, BusinessObjectSelection.class);
+				if (bos != null) {
+					if (bos.boStream(EObject.class).count() == 1) {
+						return bos.boStream(EObject.class).findFirst().map(e -> EcoreUtil.getURI(e)).orElse(null);
+					}
+				}
 			}
 		} else if (currentSelection instanceof TextSelection) {
 			// Selection may be stale, get latest from editor
@@ -125,7 +132,7 @@ public abstract class AadlHandler extends AbstractHandler {
 
 	protected static boolean saveChanges(boolean prompt) {
 
-		IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+		final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
 		if (window == null) {
 			return false;
 		}
@@ -139,11 +146,6 @@ public abstract class AadlHandler extends AbstractHandler {
 			return false;
 		} else {
 			for (IEditorPart e : dirtyEditors) {
-//				final ITextOperationTarget fOperationTarget = e.getAdapter(ITextOperationTarget.class);
-//				fOperationTarget.doOperation(ISourceViewer.FORMAT);
-//				((SourceViewer) ((XtextEditor) e).getInternalSourceViewer())
-//				((SourceViewer) EditorUtils.getActiveXtextEditor().getInternalSourceViewer())
-//						.doOperation(ISourceViewer.FORMAT);
 				e.doSave(new NullProgressMonitor());
 			}
 			return true;
@@ -158,26 +160,61 @@ public abstract class AadlHandler extends AbstractHandler {
 			@Override
 			public IStatus runInUIThread(IProgressMonitor monitor) {
 
-				IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+				final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
 				if (window == null) {
 					return null;
 				}
-				final IEditorPart[] dirtyEditors = window.getActivePage().getDirtyEditors();
-				for (IEditorPart e : dirtyEditors) {
-//					final ITextOperationTarget fOperationTarget = e.getAdapter(ITextOperationTarget.class);
-//					fOperationTarget.doOperation(ISourceViewer.FORMAT);
-					if (e instanceof XtextEditor) {
-						((SourceViewer) ((XtextEditor) e).getInternalSourceViewer())
-//					((SourceViewer) EditorUtils.getActiveXtextEditor().getInternalSourceViewer())
+				for (IEditorReference ref : window.getActivePage().getEditorReferences()) {
+					final IEditorPart editor = ref.getEditor(false);
+					if (editor == null) {
+						continue;
+					} else if (editor instanceof XtextEditor) {
+						((SourceViewer) ((XtextEditor) editor).getInternalSourceViewer())
 							.doOperation(ISourceViewer.FORMAT);
-						e.doSave(new NullProgressMonitor());
+//					} else if (editor instanceof AgeDiagramEditor) {
+//						AgeDiagramEditor diagramEditor = (AgeDiagramEditor) editor;
+//						AgeDiagram diagram = diagramEditor.getDiagram();
+//						final List<DiagramElement> diagramElements = diagram.getAllDiagramNodes()
+//								.filter(DiagramElement.class::isInstance)
+//								.map(DiagramElement.class::cast)
+//								.collect(Collectors.toList());
+//						diagramEditor.selectDiagramElements(diagramElements);
+//
+//						ICommandService commandService = window.getActivePage()
+//								.getActiveEditor()
+//								.getSite()
+//								.getService(ICommandService.class);
+//						IHandlerService handlerService = window.getActivePage()
+//								.getActiveEditor()
+//								.getSite()
+//								.getService(IHandlerService.class);
+//						Command generateCmd = commandService.getCommand("org.osate.ge.showDefaultContents");
+//						ExecutionEvent executionEvent = handlerService.createExecutionEvent(generateCmd, new Event());
+//						((IEvaluationContext) executionEvent.getApplicationContext())
+//								.addVariable(ISources.ACTIVE_EDITOR_NAME, editor);
+//						try {
+//							generateCmd.executeWithChecks(executionEvent);
+//						} catch (Exception e) {
+//
+//						}
+//
+//						generateCmd = commandService.getCommand("org.osate.ge.layoutContents");
+//						executionEvent = handlerService.createExecutionEvent(generateCmd, new Event());
+//						((IEvaluationContext) executionEvent.getApplicationContext())
+//								.addVariable(ISources.ACTIVE_EDITOR_NAME, editor);
+//						try {
+//							generateCmd.executeWithChecks(executionEvent);
+//						} catch (Exception e) {
+//
+//						}
+//
+//						diagramEditor.clearSelection();
+					}
+					if (saveAfterFormat && editor.isDirty()) {
+						editor.doSave(new NullProgressMonitor());
 					}
 				}
-//				((SourceViewer) EditorUtils.getActiveXtextEditor().getInternalSourceViewer())
-//						.doOperation(ISourceViewer.FORMAT);
-//				if (saveAfterFormat) {
-//					saveChanges(false);
-//				}
+
 				return Status.OK_STATUS;
 			}
 		};
@@ -209,5 +246,80 @@ public abstract class AadlHandler extends AbstractHandler {
 		}
 		return idx;
 	}
+
+//	/**
+//	 * Adds contents to the selected diagram elements. Adds all children which pass the specified filter.
+//	 * @param event is the ExecutionEvent of the handler which provides the active editor.
+//	 * @param filter is passed the parent diagram element and the business object of the potential child. If the filter returns true, then an element will be added for the business object.
+//	 */
+//	public static void showDefaultContents(final AgeDiagramEditor diagramEditor) {
+//
+//		if (!(diagramEditor instanceof AgeDiagramEditor)) {
+//			throw new RuntimeException("Unexpected editor: " + diagramEditor);
+//		}
+//		final AgeDiagram diagram = diagramEditor.getDiagram();
+//		if (diagram == null) {
+//			throw new RuntimeException("Unable to retrieve diagram");
+//		}
+//		final List<DiagramElement> selectedDiagramElements = diagram.getAllDescendants()
+//				.filter(d -> d instanceof DiagramElement)
+//				.map(d -> (DiagramElement) d)
+//				.collect(Collectors.toList());
+//
+//		final Bundle bundle = FrameworkUtil.getBundle(ShowDefaultContentsHandler.class);
+//		final ExtensionRegistryService contentFilterProvider = Objects.requireNonNull(
+//				EclipseContextFactory.getServiceContext(bundle.getBundleContext()).get(ExtensionRegistryService.class),
+//				"Unable to retrieve extension registry");
+//
+//		final BiFunction<DiagramElement, Object, Boolean> filter = (parentElement, childBo) -> ContentFilterUtil
+//				.passesAnyContentFilter(childBo,
+//						DiagramTypeUtil.getApplicableDefaultContentFilters(diagram.getConfiguration().getDiagramType(),
+//								parentElement.getBusinessObject(), contentFilterProvider));
+//
+//		final ExtensionRegistryService extService = Objects.requireNonNull(
+//				Adapters.adapt(diagramEditor, ExtensionRegistryService.class), "Unable to retrieve extension service");
+//		final AgeFeatureProvider featureProvider = Objects.requireNonNull(
+//				(AgeFeatureProvider) diagramEditor.getDiagramTypeProvider().getFeatureProvider(),
+//				"Unable to retrieve feature provider");
+//		final ActionService actionService = Objects.requireNonNull(Adapters.adapt(diagramEditor, ActionService.class),
+//				"Unable to retrieve action service");
+//
+//		final DiagramUpdater diagramUpdater = Objects.requireNonNull(featureProvider.getDiagramUpdater(),
+//				"Unable to retrieve diagram updater");
+//
+//		final ReferenceBuilderService referenceBuilder = Objects.requireNonNull(
+//				Adapters.adapt(diagramEditor, ReferenceBuilderService.class),
+//				"Unable to retrieve reference builder service");
+//
+//
+//		boolean childrenAdded = false;
+//		final BusinessObjectProviderHelper bopHelper = new BusinessObjectProviderHelper(extService);
+//		for (final DiagramElement selectedElement : selectedDiagramElements) {
+//			for (final Object childBo : bopHelper.getChildBusinessObjects(selectedElement)) {
+//				final RelativeBusinessObjectReference relativeReference = referenceBuilder
+//						.getRelativeReference(childBo);
+//
+//				if (relativeReference != null && selectedElement.getByRelativeReference(relativeReference) == null) {
+//					if (filter.apply(selectedElement, childBo)) {
+//						diagramUpdater.addToNextUpdate(selectedElement, relativeReference, new FutureElementInfo());
+//						childrenAdded = true;
+//					}
+//				}
+//			}
+//		}
+//
+//		if (childrenAdded) {
+//			actionService.execute("Show Contents", ExecutionMode.NORMAL, () -> {
+//				// Update the diagram
+//				final IUpdateContext updateCtx = new UpdateContext(
+//						diagramEditor.getGraphitiAgeDiagram().getGraphitiDiagram());
+//				diagramEditor.getDiagramBehavior()
+//						.executeFeature(featureProvider.getUpdateFeature(updateCtx), updateCtx);
+//
+//				return null;
+//			});
+//		}
+//
+//	}
 
 }

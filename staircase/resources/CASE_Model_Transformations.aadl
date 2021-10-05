@@ -110,9 +110,9 @@ public
 			component_exists(switch, CASE_Properties::Gating) and component_not_bypassed(switch, comp_context, message_type) and component_implemented(switch, "SPLAT")
 		
 		-- Strategy for proper transformation of model for seL4 build
-		strategy sel4_transform(comp_context : component, transformed_component : component) <=
+		strategy sel4_transform(comp_context : component) <=
 			** "Component " comp_context " transformed for seL4 build" **
-			each_thread_in_separate_process(transformed_component)
+			each_thread_in_separate_process(comp_context)
 			
 		--------------------------
 		-- PROJECT-LEVEL CLAIMS --

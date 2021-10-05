@@ -1,16 +1,22 @@
 package com.collins.trustedsystems.briefcase.staircase.handlers;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.eclipse.emf.common.util.URI;
+import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.transaction.RecordingCommand;
+import org.eclipse.emf.transaction.TransactionalCommandStack;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
+import org.eclipse.emf.workspace.WorkspaceEditingDomainFactory;
 import org.eclipse.jface.window.Window;
 import org.eclipse.ui.PlatformUI;
-import org.eclipse.xtext.ui.editor.XtextEditor;
-import org.eclipse.xtext.ui.editor.utils.EditorUtils;
+import org.eclipse.xtext.resource.SaveOptions;
 import org.osate.aadl2.Aadl2Factory;
 import org.osate.aadl2.ArrayDimension;
 import org.osate.aadl2.ComponentCategory;
@@ -66,13 +72,12 @@ public class SwitchTransformHandler extends AadlHandler {
 	private String switchAgreeProperty;
 
 	@Override
-	protected void runCommand(URI uri) {
+	protected void runCommand(EObject eObj) {
 
 		// Check if it is a connection
-		final EObject eObj = getEObject(uri);
 		if (!(eObj instanceof PortConnection)) {
 			Dialog.showError("Switch Transform",
-					"A connection between two components must be selected to add a monitor.");
+					"A connection between two components must be selected to add a switch.");
 			return;
 		}
 		final PortConnection selectedConnection = (PortConnection) eObj;
@@ -107,9 +112,11 @@ public class SwitchTransformHandler extends AadlHandler {
 		}
 
 		// Insert the switch component
-		insertSwitchComponent(uri);
-
-		BriefcaseNotifier.notify("StairCASE - Switch Transform", "Switch added to model.");
+		if (insertSwitchComponent(selectedConnection)) {
+			BriefcaseNotifier.notify("StairCASE - Switch Transform", "Switch added to model.");
+		} else {
+			BriefcaseNotifier.printError("Switch transform failed.");
+		}
 
 		return;
 
@@ -119,73 +126,169 @@ public class SwitchTransformHandler extends AadlHandler {
 	 * Inserts a switch component into the model
 	 * @param uri - The URI of the selected connection
 	 */
-	public void insertSwitchComponent(URI uri) {
+	public boolean insertSwitchComponent(PortConnection selectedConnection) {
 
-		// Get the active xtext editor so we can make modifications
-		final XtextEditor xtextEditor = EditorUtils.getActiveXtextEditor();
+		if (selectedConnection == null) {
+			Dialog.showError("Switch Transform", "Invalid connection.");
+			return false;
+		}
 
-		final AddSwitchClaim claim = xtextEditor.getDocument().modify(resource -> {
+		final Resource aadlResource = selectedConnection.eResource();
+		final TransactionalEditingDomain domain = WorkspaceEditingDomainFactory.INSTANCE.createEditingDomain();
 
-			// Retrieve the model object to modify
-			final PortConnection selectedConnection = (PortConnection) resource.getEObject(uri.fragment());
-			final ComponentImplementation containingImpl = selectedConnection.getContainingComponentImpl();
-			PackageSection pkgSection = AadlUtil.getContainingPackageSection(containingImpl);
-			if (pkgSection == null) {
-				// Something went wrong
-				Dialog.showError("Switch Transform", "No public or private package sections found.");
-				return null;
+		// We execute this command on the command stack because otherwise, we will not
+		// have write permissions on the editing domain.
+		final Command cmd = new RecordingCommand(domain) {
+
+			AddSwitchClaim claim = null;
+
+			@Override
+			protected void doExecute() {
+				final ComponentImplementation containingImpl = selectedConnection.getContainingComponentImpl();
+				PackageSection pkgSection = AadlUtil.getContainingPackageSection(containingImpl);
+				if (pkgSection == null) {
+					// Something went wrong
+					BriefcaseNotifier.printError("No public or private package sections found.");
+					throw new RuntimeException();
+				}
+
+				// Import CASE_Properties file
+				if (!CasePropertyUtils.addCasePropertyImport(pkgSection)) {
+					BriefcaseNotifier.printError("Could not import CASE_Properties property set.");
+					throw new RuntimeException();
+				}
+
+				// Figure out component type by looking at the component type of the destination component
+				ComponentCategory compCategory = ((Subcomponent) selectedConnection.getDestination().getContext())
+						.getCategory();
+
+				// If the component type is a process, we will need to put a single thread inside.
+				// Per convention, we will attach all properties and contracts to the thread.
+				// For this model transformation, we will create the thread first, then wrap it in a process
+				// component, using the same mechanism we use for the seL4 transformation
+				boolean isProcess = (compCategory == ComponentCategory.PROCESS);
+				if (isProcess) {
+					compCategory = ComponentCategory.THREAD;
+				} else if (compCategory == ComponentCategory.THREAD_GROUP) {
+					compCategory = ComponentCategory.THREAD;
+				}
+
+				// Add switch
+				final Subcomponent switchSub = insertSwitch(containingImpl, inputPorts, selectedConnection,
+						compCategory, dispatchProtocol, controlPort, switchRequirement, switchAgreeProperty);
+
+				// Add add_switch claim to resolute prove statement, if applicable
+				if (!switchRequirement.isEmpty()) {
+					final CyberRequirement req = RequirementsManager.getInstance().getRequirement(switchRequirement);
+					NamedElement dataFeatureClassifier = null;
+					final ConnectionEnd port = selectedConnection.getDestination().getConnectionEnd();
+					if (port instanceof EventDataPort) {
+						dataFeatureClassifier = ((EventDataPort) port).getDataFeatureClassifier();
+					} else if (port instanceof DataPort) {
+						dataFeatureClassifier = ((DataPort) port).getDataFeatureClassifier();
+					} else if (port instanceof FeatureGroup) {
+						dataFeatureClassifier = ((FeatureGroup) port).getAllFeatureGroupType();
+					}
+					// TODO: handle case where selected connection is an event connection, in which case there is no data type
+					claim = new AddSwitchClaim(req.getContext(), switchSub, dataFeatureClassifier);
+				}
 			}
 
-			// Import CASE_Properties file
-			if (!CasePropertyUtils.addCasePropertyImport(pkgSection)) {
-				return null;
+			@Override
+			public Collection<AddSwitchClaim> getResult() {
+				if (claim == null) {
+					return null;
+				} else {
+					return Collections.singletonList(claim);
+				}
 			}
-//			// Import CASE_Model_Transformations file
-//			if (!CaseUtils.addCaseModelTransformationsImport(pkgSection, true)) {
+
+		};
+
+		try {
+			((TransactionalCommandStack) domain.getCommandStack()).execute(cmd, null);
+
+			// We're done: Save the model
+			aadlResource.save(SaveOptions.newBuilder().format().getOptions().toOptionsMap());
+		} catch (Exception e) {
+			return false;
+		} finally {
+			domain.dispose();
+		}
+
+		@SuppressWarnings("unchecked")
+		final List<AddSwitchClaim> claim = (List<AddSwitchClaim>) cmd.getResult();
+		if (claim != null) {
+			RequirementsManager.getInstance().modifyRequirement(switchRequirement, claim.get(0));
+		}
+
+		return true;
+
+//		// Get the active xtext editor so we can make modifications
+//		final XtextEditor xtextEditor = EditorUtils.getActiveXtextEditor();
+//
+//		final AddSwitchClaim claim = xtextEditor.getDocument().modify(resource -> {
+//
+//			// Retrieve the model object to modify
+//			final PortConnection selectedConnection = (PortConnection) resource.getEObject(uri.fragment());
+//			final ComponentImplementation containingImpl = selectedConnection.getContainingComponentImpl();
+//			PackageSection pkgSection = AadlUtil.getContainingPackageSection(containingImpl);
+//			if (pkgSection == null) {
+//				// Something went wrong
+//				Dialog.showError("Switch Transform", "No public or private package sections found.");
 //				return null;
 //			}
-
-			// Figure out component type by looking at the component type of the destination component
-			ComponentCategory compCategory = ((Subcomponent) selectedConnection.getDestination().getContext())
-					.getCategory();
-
-			// If the component type is a process, we will need to put a single thread inside.
-			// Per convention, we will attach all properties and contracts to the thread.
-			// For this model transformation, we will create the thread first, then wrap it in a process
-			// component, using the same mechanism we use for the seL4 transformation
-			boolean isProcess = (compCategory == ComponentCategory.PROCESS);
-			if (isProcess) {
-				compCategory = ComponentCategory.THREAD;
-			} else if (compCategory == ComponentCategory.THREAD_GROUP) {
-				compCategory = ComponentCategory.THREAD;
-			}
-
-			// Add switch
-			final Subcomponent switchSub = insertSwitch(containingImpl, inputPorts, selectedConnection, compCategory,
-					dispatchProtocol, controlPort, switchRequirement, switchAgreeProperty);
-
-			// Add add_switch claim to resolute prove statement, if applicable
-			if (!switchRequirement.isEmpty()) {
-				final CyberRequirement req = RequirementsManager.getInstance().getRequirement(switchRequirement);
-				NamedElement dataFeatureClassifier = null;
-				final ConnectionEnd port = selectedConnection.getDestination().getConnectionEnd();
-				if (port instanceof EventDataPort) {
-					dataFeatureClassifier = ((EventDataPort) port).getDataFeatureClassifier();
-				} else if (port instanceof DataPort) {
-					dataFeatureClassifier = ((DataPort) port).getDataFeatureClassifier();
-				} else if (port instanceof FeatureGroup) {
-					dataFeatureClassifier = ((FeatureGroup) port).getAllFeatureGroupType();
-				}
-				// TODO: handle case where selected connection is an event connection, in which case there is no data type
-				return new AddSwitchClaim(req.getContext(), switchSub, dataFeatureClassifier);
-			}
-
-			return null;
-		});
-
-		if (claim != null) {
-			RequirementsManager.getInstance().modifyRequirement(switchRequirement, claim);
-		}
+//
+//			// Import CASE_Properties file
+//			if (!CasePropertyUtils.addCasePropertyImport(pkgSection)) {
+//				return null;
+//			}
+////			// Import CASE_Model_Transformations file
+////			if (!CaseUtils.addCaseModelTransformationsImport(pkgSection, true)) {
+////				return null;
+////			}
+//
+//			// Figure out component type by looking at the component type of the destination component
+//			ComponentCategory compCategory = ((Subcomponent) selectedConnection.getDestination().getContext())
+//					.getCategory();
+//
+//			// If the component type is a process, we will need to put a single thread inside.
+//			// Per convention, we will attach all properties and contracts to the thread.
+//			// For this model transformation, we will create the thread first, then wrap it in a process
+//			// component, using the same mechanism we use for the seL4 transformation
+//			boolean isProcess = (compCategory == ComponentCategory.PROCESS);
+//			if (isProcess) {
+//				compCategory = ComponentCategory.THREAD;
+//			} else if (compCategory == ComponentCategory.THREAD_GROUP) {
+//				compCategory = ComponentCategory.THREAD;
+//			}
+//
+//			// Add switch
+//			final Subcomponent switchSub = insertSwitch(containingImpl, inputPorts, selectedConnection, compCategory,
+//					dispatchProtocol, controlPort, switchRequirement, switchAgreeProperty);
+//
+//			// Add add_switch claim to resolute prove statement, if applicable
+//			if (!switchRequirement.isEmpty()) {
+//				final CyberRequirement req = RequirementsManager.getInstance().getRequirement(switchRequirement);
+//				NamedElement dataFeatureClassifier = null;
+//				final ConnectionEnd port = selectedConnection.getDestination().getConnectionEnd();
+//				if (port instanceof EventDataPort) {
+//					dataFeatureClassifier = ((EventDataPort) port).getDataFeatureClassifier();
+//				} else if (port instanceof DataPort) {
+//					dataFeatureClassifier = ((DataPort) port).getDataFeatureClassifier();
+//				} else if (port instanceof FeatureGroup) {
+//					dataFeatureClassifier = ((FeatureGroup) port).getAllFeatureGroupType();
+//				}
+//				// TODO: handle case where selected connection is an event connection, in which case there is no data type
+//				return new AddSwitchClaim(req.getContext(), switchSub, dataFeatureClassifier);
+//			}
+//
+//			return null;
+//		});
+//
+//		if (claim != null) {
+//			RequirementsManager.getInstance().modifyRequirement(switchRequirement, claim);
+//		}
 
 	}
 

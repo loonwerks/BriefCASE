@@ -69,9 +69,9 @@ public class CasePropertyUtils {
 	 * Adds the CASE_Properties file to the list of imported model units via the 'with' statement
 	 * to the specified package section
 	 * @param pkgSection - The package section (public or private) to add the imported file to
-	 * @return the property set
+	 * @return success
 	 */
-	public static boolean addCasePropertyImport(PackageSection pkgSection) throws Exception {
+	public static boolean addCasePropertyImport(PackageSection pkgSection) {
 
 		// First check if CASE Property file has already been imported in the model
 		PropertySet casePropSet = null;

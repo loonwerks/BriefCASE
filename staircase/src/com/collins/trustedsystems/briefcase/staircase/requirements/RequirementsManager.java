@@ -2,6 +2,7 @@ package com.collins.trustedsystems.briefcase.staircase.requirements;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -13,8 +14,15 @@ import java.util.Set;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.jface.text.source.ISourceViewer;
-import org.eclipse.jface.text.source.SourceViewer;
+import org.eclipse.emf.common.command.Command;
+import org.eclipse.emf.common.util.URI;
+import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.ecore.resource.ResourceSet;
+import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
+import org.eclipse.emf.transaction.RecordingCommand;
+import org.eclipse.emf.transaction.TransactionalCommandStack;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
+import org.eclipse.emf.workspace.WorkspaceEditingDomainFactory;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.ui.IEditorDescriptor;
@@ -23,6 +31,7 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.FileEditorInput;
+import org.eclipse.xtext.resource.SaveOptions;
 import org.eclipse.xtext.ui.editor.XtextEditor;
 import org.eclipse.xtext.ui.editor.utils.EditorUtils;
 import org.osate.aadl2.AadlPackage;
@@ -97,6 +106,12 @@ public class RequirementsManager {
 
 		return (XtextEditor) part;
 
+	}
+
+	private Resource getResource(IFile file) {
+		final ResourceSet resourceSet = new ResourceSetImpl();
+		final URI uri = URI.createPlatformResourceURI(file.getFullPath().toString(), true);
+		return resourceSet.getResource(uri, true);
 	}
 
 	private RequirementsManager() {
@@ -371,25 +386,53 @@ public class RequirementsManager {
 
 		closeEditor(editor, false);
 
+
 		// Insert requirement into the subcomponent type's agree annex
 		file = CyberRequirement.getContainingFile(compQualifiedName);
-		editor = getEditor(file);
+//		editor = getEditor(file);
+//
+//		if (editor == null) {
+//			return;
+//		}
+//
+//		editor.getDocument().modify(resource -> {
+//			if (insert) {
+//				req.insertAgree(resource, compQualifiedName);
+//			} else {
+//				req.removeAgree(resource, compQualifiedName);
+//			}
+//			return null;
+//		});
+//
+//		// Close editor, if necessary
+//		closeEditor(editor, true);
 
-		if (editor == null) {
+		final Resource aadlResource = getResource(file);
+		final TransactionalEditingDomain domain = WorkspaceEditingDomainFactory.INSTANCE.createEditingDomain();
+
+		// We execute this command on the command stack because otherwise, we will not
+		// have write permissions on the editing domain.
+		final Command cmd = new RecordingCommand(domain) {
+
+			@Override
+			protected void doExecute() {
+				if (insert) {
+					req.insertAgree(aadlResource, compQualifiedName);
+				} else {
+					req.removeAgree(aadlResource, compQualifiedName);
+				}
+			}
+		};
+
+		try {
+			((TransactionalCommandStack) domain.getCommandStack()).execute(cmd, null);
+
+			// We're done: Save the model
+			aadlResource.save(SaveOptions.newBuilder().format().getOptions().toOptionsMap());
+		} catch (Exception e) {
 			return;
 		}
 
-		editor.getDocument().modify(resource -> {
-			if (insert) {
-				req.insertAgree(resource, compQualifiedName);
-			} else {
-				req.removeAgree(resource, compQualifiedName);
-			}
-			return null;
-		});
-
-		// Close editor, if necessary
-		closeEditor(editor, true);
 	}
 
 	protected void insertAgree(CyberRequirement req) {
@@ -424,21 +467,40 @@ public class RequirementsManager {
 			throw new RuntimeException(
 					"File referenced by requirement " + req.getId() + " in Req_Component context not found.");
 		}
-		final XtextEditor editor = getEditor(file);
 
-		if (editor == null) {
+//		final XtextEditor editor = getEditor(file);
+//		if (editor == null) {
+//			return;
+//		}
+//		editor.getDocument().modify(resource -> {
+//			req.insertClaimCall(resource, claim);
+//			return null;
+//		});
+//		editor.forceReconcile();
+//		// Close editor
+//		closeEditor(editor, true);
+
+		final Resource aadlResource = getResource(file);
+		final TransactionalEditingDomain domain = WorkspaceEditingDomainFactory.INSTANCE.createEditingDomain();
+
+		// We execute this command on the command stack because otherwise, we will not
+		// have write permissions on the editing domain.
+		final Command cmd = new RecordingCommand(domain) {
+
+			@Override
+			protected void doExecute() {
+				req.insertClaimCall(aadlResource, claim);
+			}
+		};
+
+		try {
+			((TransactionalCommandStack) domain.getCommandStack()).execute(cmd, null);
+
+			// We're done: Save the model
+			aadlResource.save(SaveOptions.newBuilder().format().getOptions().toOptionsMap());
+		} catch (Exception e) {
 			return;
 		}
-
-		editor.getDocument().modify(resource -> {
-			req.insertClaimCall(resource, claim);
-			return null;
-		});
-
-		editor.forceReconcile();
-
-		// Close editor
-		closeEditor(editor, true);
 	}
 
 	protected void insertClaimDefinition(CyberRequirement req, BuiltInClaim claim) {
@@ -448,24 +510,47 @@ public class RequirementsManager {
 
 		// Get the file to insert into
 		final IFile file = CaseUtils.getCaseRequirementsFile();
-		final XtextEditor editor = getEditor(file);
+//		final XtextEditor editor = getEditor(file);
+//
+//		if (editor == null) {
+//			throw new RuntimeException("Cannot open claim definition file: " + file);
+//		}
+//
+//		editor.getDocument().modify(resource -> {
+//			req.insertClaimDef(resource, claim);
+//			return null;
+//		});
+//
+//		editor.forceReconcile();
+//
+//		// Format
+//		((SourceViewer) editor.getInternalSourceViewer()).doOperation(ISourceViewer.FORMAT);
+//
+//		// Close editor
+//		closeEditor(editor, true);
 
-		if (editor == null) {
-			throw new RuntimeException("Cannot open claim definition file: " + file);
+		final Resource aadlResource = getResource(file);
+		final TransactionalEditingDomain domain = WorkspaceEditingDomainFactory.INSTANCE.createEditingDomain();
+
+		// We execute this command on the command stack because otherwise, we will not
+		// have write permissions on the editing domain.
+		final Command cmd = new RecordingCommand(domain) {
+
+			@Override
+			protected void doExecute() {
+				req.insertClaimDef(aadlResource, claim);
+			}
+		};
+
+		try {
+			((TransactionalCommandStack) domain.getCommandStack()).execute(cmd, null);
+
+			// We're done: Save the model
+			aadlResource.save(SaveOptions.newBuilder().format().getOptions().toOptionsMap());
+		} catch (Exception e) {
+			return;
 		}
 
-		editor.getDocument().modify(resource -> {
-			req.insertClaimDef(resource, claim);
-			return null;
-		});
-
-		editor.forceReconcile();
-
-		// Format
-		((SourceViewer) editor.getInternalSourceViewer()).doOperation(ISourceViewer.FORMAT);
-
-		// Close editor
-		closeEditor(editor, true);
 	}
 
 	protected FunctionDefinition removeClaimDefinition(CyberRequirement req,
@@ -476,23 +561,55 @@ public class RequirementsManager {
 
 		// Get the file to insert into
 		final IFile file = CaseUtils.getCaseRequirementsFile();
-		final XtextEditor editor = getEditor(file);
+//		final XtextEditor editor = getEditor(file);
+//
+//		if (editor == null) {
+//			return null;
+//		}
+//
+//		final FunctionDefinition fd = editor.getDocument().modify(resource -> {
+//			return req.removeClaimDef(resource, claim);
+//		});
+//
+//		// Format
+//		((SourceViewer) editor.getInternalSourceViewer()).doOperation(ISourceViewer.FORMAT);
+//
+//		// Close editor, if necessary
+//		closeEditor(editor, true);
 
-		if (editor == null) {
+		final Resource aadlResource = getResource(file);
+		final TransactionalEditingDomain domain = WorkspaceEditingDomainFactory.INSTANCE.createEditingDomain();
+
+		// We execute this command on the command stack because otherwise, we will not
+		// have write permissions on the editing domain.
+		final Command cmd = new RecordingCommand(domain) {
+
+			FunctionDefinition fd = null;
+
+			@Override
+			protected void doExecute() {
+				fd = req.removeClaimDef(aadlResource, claim);
+			}
+
+			@Override
+			public Collection<FunctionDefinition> getResult() {
+				return Collections.singletonList(fd);
+			}
+		};
+
+		try {
+			((TransactionalCommandStack) domain.getCommandStack()).execute(cmd, null);
+
+			// We're done: Save the model
+			aadlResource.save(SaveOptions.newBuilder().format().getOptions().toOptionsMap());
+		} catch (Exception e) {
 			return null;
 		}
 
-		final FunctionDefinition fd = editor.getDocument().modify(resource -> {
-			return req.removeClaimDef(resource, claim);
-		});
+		@SuppressWarnings("unchecked")
+		final List<FunctionDefinition> fd = (List<FunctionDefinition>) cmd.getResult();
+		return fd.get(0);
 
-		// Format
-		((SourceViewer) editor.getInternalSourceViewer()).doOperation(ISourceViewer.FORMAT);
-
-		// Close editor, if necessary
-		closeEditor(editor, true);
-
-		return fd;
 	}
 
 	protected boolean removeClaimCall(CyberRequirement req) {
@@ -502,20 +619,52 @@ public class RequirementsManager {
 
 		// Get the file to insert into
 		final IFile file = req.getContainingFile();
-		final XtextEditor editor = getEditor(file);
+//		final XtextEditor editor = getEditor(file);
+//
+//		if (editor == null) {
+//			return false;
+//		}
+//
+//		final boolean success = editor.getDocument().modify(resource -> {
+//			return req.removeClaimCall(resource);
+//		});
+//
+//		// Close editor, if necessary
+//		closeEditor(editor, true);
 
-		if (editor == null) {
+		final Resource aadlResource = getResource(file);
+		final TransactionalEditingDomain domain = WorkspaceEditingDomainFactory.INSTANCE.createEditingDomain();
+
+		// We execute this command on the command stack because otherwise, we will not
+		// have write permissions on the editing domain.
+		final Command cmd = new RecordingCommand(domain) {
+
+			boolean success = false;
+
+			@Override
+			protected void doExecute() {
+				success = req.removeClaimCall(aadlResource);
+			}
+
+			@Override
+			public Collection<Boolean> getResult() {
+				return Collections.singletonList(success);
+			}
+		};
+
+		try {
+			((TransactionalCommandStack) domain.getCommandStack()).execute(cmd, null);
+
+			// We're done: Save the model
+			aadlResource.save(SaveOptions.newBuilder().format().getOptions().toOptionsMap());
+		} catch (Exception e) {
 			return false;
 		}
 
-		final boolean success = editor.getDocument().modify(resource -> {
-			return req.removeClaimCall(resource);
-		});
+		@SuppressWarnings("unchecked")
+		final List<Boolean> success = (List<Boolean>) cmd.getResult();
+		return success.get(0);
 
-		// Close editor, if necessary
-		closeEditor(editor, true);
-
-		return success;
 	}
 
 	protected List<JsonRequirementsFile> readInputFiles(String filename) {
@@ -662,111 +811,229 @@ public class RequirementsManager {
 		private void commitChangesToClaimsFile() {
 			// Get the file to insert into
 			final IFile file = CaseUtils.getCaseRequirementsFile();
-			final XtextEditor editor = RequirementsManager.getEditor(file);
+//			final XtextEditor editor = RequirementsManager.getEditor(file);
+//
+//			if (editor == null) {
+//				throw new RuntimeException("Cannot open claim definition file: " + file);
+//			}
+//
+//			editor.getDocument().modify(resource -> {
+//				for (CyberRequirement req : addBaseClaimDefinition) {
+//					final BaseClaim c = new BaseClaim(req);
+//					req.insertClaimDef(resource, c);
+//					baseClaims.put(req, c);
+//				}
+//
+//				for (CyberRequirement req : addAgreeCheckClaimDefinition) {
+//					final AgreePropCheckedClaim c = new AgreePropCheckedClaim(req.getId(), req.getContext());
+//					req.insertClaimDef(resource, c);
+//					agreePropCheckedClaims.put(req, c);
+//				}
+//
+//				removeAgreeCheckFromClaimDefinition.removeAll(removeClaimDefinition);
+//				for (CyberRequirement req : removeAgreeCheckFromClaimDefinition) {
+//					req.removeClaimDef(resource, new AgreePropCheckedClaim(req.getId(), req.getContext()));
+//				}
+//
+//				for (CyberRequirement req : removeClaimDefinition) {
+//					req.removeClaimDef(resource, new BaseClaim(req));
+//				}
+//
+//				CyberRequirement.sortClaimDefinitions(resource);
+//
+//				return null;
+//			});
+//
+//			// Format
+//			((SourceViewer) editor.getInternalSourceViewer()).doOperation(ISourceViewer.FORMAT);
+//
+//			// Close editor
+//			RequirementsManager.closeEditor(editor, true);
 
-			if (editor == null) {
-				throw new RuntimeException("Cannot open claim definition file: " + file);
+			final Resource aadlResource = getResource(file);
+			final TransactionalEditingDomain domain = WorkspaceEditingDomainFactory.INSTANCE.createEditingDomain();
+
+			// We execute this command on the command stack because otherwise, we will not
+			// have write permissions on the editing domain.
+			final Command cmd = new RecordingCommand(domain) {
+
+				@Override
+				protected void doExecute() {
+					for (CyberRequirement req : addBaseClaimDefinition) {
+						final BaseClaim c = new BaseClaim(req);
+						req.insertClaimDef(aadlResource, c);
+						baseClaims.put(req, c);
+					}
+
+					for (CyberRequirement req : addAgreeCheckClaimDefinition) {
+						final AgreePropCheckedClaim c = new AgreePropCheckedClaim(req.getId(), req.getContext());
+						req.insertClaimDef(aadlResource, c);
+						agreePropCheckedClaims.put(req, c);
+					}
+
+					removeAgreeCheckFromClaimDefinition.removeAll(removeClaimDefinition);
+					for (CyberRequirement req : removeAgreeCheckFromClaimDefinition) {
+						req.removeClaimDef(aadlResource, new AgreePropCheckedClaim(req.getId(), req.getContext()));
+					}
+
+					for (CyberRequirement req : removeClaimDefinition) {
+						req.removeClaimDef(aadlResource, new BaseClaim(req));
+					}
+
+					CyberRequirement.sortClaimDefinitions(aadlResource);
+				}
+			};
+
+			try {
+				((TransactionalCommandStack) domain.getCommandStack()).execute(cmd, null);
+
+				// We're done: Save the model
+				aadlResource.save(SaveOptions.newBuilder().format().getOptions().toOptionsMap());
+			} catch (Exception e) {
+				return;
 			}
 
-			editor.getDocument().modify(resource -> {
-				for (CyberRequirement req : addBaseClaimDefinition) {
-					final BaseClaim c = new BaseClaim(req);
-					req.insertClaimDef(resource, c);
-					baseClaims.put(req, c);
-				}
-
-				for (CyberRequirement req : addAgreeCheckClaimDefinition) {
-					final AgreePropCheckedClaim c = new AgreePropCheckedClaim(req.getId(), req.getContext());
-					req.insertClaimDef(resource, c);
-					agreePropCheckedClaims.put(req, c);
-				}
-
-				removeAgreeCheckFromClaimDefinition.removeAll(removeClaimDefinition);
-				for (CyberRequirement req : removeAgreeCheckFromClaimDefinition) {
-					req.removeClaimDef(resource, new AgreePropCheckedClaim(req.getId(), req.getContext()));
-				}
-
-				for (CyberRequirement req : removeClaimDefinition) {
-					req.removeClaimDef(resource, new BaseClaim(req));
-				}
-
-				CyberRequirement.sortClaimDefinitions(resource);
-
-				return null;
-			});
-
-			// Format
-			((SourceViewer) editor.getInternalSourceViewer()).doOperation(ISourceViewer.FORMAT);
-
-			// Close editor
-			RequirementsManager.closeEditor(editor, true);
 		}
 
 		private void removeProveStatements(IFile file) {
 			// Remove prove calls before removing claim definitions in the main claims file
 			// to avoid null cross references.
 
-			// Get the file to insert into
-			final XtextEditor editor = RequirementsManager.getEditor(file);
+//			// Get the file to insert into
+//			final XtextEditor editor = RequirementsManager.getEditor(file);
+//
+//			if (editor == null) {
+//				throw new RuntimeException("Cannot open claim definition file: " + file);
+//			}
+//
+//			editor.getDocument().modify(resource -> {
+//				if (removeProveStatement.containsKey(file)) {
+//					for (CyberRequirement req : removeProveStatement.get(file)) {
+//						req.removeClaimCall(resource);
+//					}
+//				}
+//
+//				return null;
+//			});
+//
+//			// Close editor
+//			RequirementsManager.closeEditor(editor, true);
 
-			if (editor == null) {
-				throw new RuntimeException("Cannot open claim definition file: " + file);
-			}
+			final Resource aadlResource = getResource(file);
+			final TransactionalEditingDomain domain = WorkspaceEditingDomainFactory.INSTANCE.createEditingDomain();
 
-			editor.getDocument().modify(resource -> {
-				if (removeProveStatement.containsKey(file)) {
-					for (CyberRequirement req : removeProveStatement.get(file)) {
-						req.removeClaimCall(resource);
+			// We execute this command on the command stack because otherwise, we will not
+			// have write permissions on the editing domain.
+			final Command cmd = new RecordingCommand(domain) {
+
+				@Override
+				protected void doExecute() {
+					if (removeProveStatement.containsKey(file)) {
+						for (CyberRequirement req : removeProveStatement.get(file)) {
+							req.removeClaimCall(aadlResource);
+						}
 					}
 				}
+			};
 
-				return null;
-			});
+			try {
+				((TransactionalCommandStack) domain.getCommandStack()).execute(cmd, null);
 
-			// Close editor
-			RequirementsManager.closeEditor(editor, true);
+				// We're done: Save the model
+				aadlResource.save(SaveOptions.newBuilder().format().getOptions().toOptionsMap());
+			} catch (Exception e) {
+				return;
+			}
+
 		}
 
 		private void commitChangestoFile(IFile file) {
-			// Get the file to insert into
-			final XtextEditor editor = RequirementsManager.getEditor(file);
+//			// Get the file to insert into
+//			final XtextEditor editor = RequirementsManager.getEditor(file);
+//
+//			if (editor == null) {
+//				throw new RuntimeException("Cannot open claim definition file: " + file);
+//			}
+//
+//			editor.getDocument().modify(resource -> {
+//				if (addBaseClaimProveStatement.containsKey(file)) {
+//					for (CyberRequirement req : addBaseClaimProveStatement.get(file)) {
+//						final BaseClaim c = baseClaims.get(req);
+//						req.insertClaimCall(resource, c);
+//					}
+//				}
+//
+//				if (addAgreeCheckClaimProveStatement.containsKey(file)) {
+//					for (CyberRequirement req : addAgreeCheckClaimProveStatement.get(file)) {
+//						final AgreePropCheckedClaim c = agreePropCheckedClaims.get(req);
+//						req.insertClaimCall(resource, c);
+//					}
+//				}
+//
+//				if (addAgreeAssumption.containsKey(file)) {
+//					for (CyberRequirement req : addAgreeAssumption.get(file)) {
+//						req.insertAgree(resource);
+//					}
+//				}
+//
+//				if (removeAgreeAssumption.containsKey(file)) {
+//					for (CyberRequirement req : removeAgreeAssumption.get(file)) {
+//						req.removeAgree(resource);
+//					}
+//				}
+//
+//				return null;
+//			});
+//
+//			// Close editor
+//			RequirementsManager.closeEditor(editor, true);
 
-			if (editor == null) {
-				throw new RuntimeException("Cannot open claim definition file: " + file);
+			final Resource aadlResource = getResource(file);
+			final TransactionalEditingDomain domain = WorkspaceEditingDomainFactory.INSTANCE.createEditingDomain();
+
+			// We execute this command on the command stack because otherwise, we will not
+			// have write permissions on the editing domain.
+			final Command cmd = new RecordingCommand(domain) {
+
+				@Override
+				protected void doExecute() {
+					if (addBaseClaimProveStatement.containsKey(file)) {
+						for (CyberRequirement req : addBaseClaimProveStatement.get(file)) {
+							final BaseClaim c = baseClaims.get(req);
+							req.insertClaimCall(aadlResource, c);
+						}
+					}
+
+					if (addAgreeCheckClaimProveStatement.containsKey(file)) {
+						for (CyberRequirement req : addAgreeCheckClaimProveStatement.get(file)) {
+							final AgreePropCheckedClaim c = agreePropCheckedClaims.get(req);
+							req.insertClaimCall(aadlResource, c);
+						}
+					}
+
+					if (addAgreeAssumption.containsKey(file)) {
+						for (CyberRequirement req : addAgreeAssumption.get(file)) {
+							req.insertAgree(aadlResource);
+						}
+					}
+
+					if (removeAgreeAssumption.containsKey(file)) {
+						for (CyberRequirement req : removeAgreeAssumption.get(file)) {
+							req.removeAgree(aadlResource);
+						}
+					}
+				}
+			};
+
+			try {
+				((TransactionalCommandStack) domain.getCommandStack()).execute(cmd, null);
+
+				// We're done: Save the model
+				aadlResource.save(SaveOptions.newBuilder().format().getOptions().toOptionsMap());
+			} catch (Exception e) {
+				return;
 			}
 
-			editor.getDocument().modify(resource -> {
-				if (addBaseClaimProveStatement.containsKey(file)) {
-					for (CyberRequirement req : addBaseClaimProveStatement.get(file)) {
-						final BaseClaim c = baseClaims.get(req);
-						req.insertClaimCall(resource, c);
-					}
-				}
-
-				if (addAgreeCheckClaimProveStatement.containsKey(file)) {
-					for (CyberRequirement req : addAgreeCheckClaimProveStatement.get(file)) {
-						final AgreePropCheckedClaim c = agreePropCheckedClaims.get(req);
-						req.insertClaimCall(resource, c);
-					}
-				}
-
-				if (addAgreeAssumption.containsKey(file)) {
-					for (CyberRequirement req : addAgreeAssumption.get(file)) {
-						req.insertAgree(resource);
-					}
-				}
-
-				if (removeAgreeAssumption.containsKey(file)) {
-					for (CyberRequirement req : removeAgreeAssumption.get(file)) {
-						req.removeAgree(resource);
-					}
-				}
-
-				return null;
-			});
-
-			// Close editor
-			RequirementsManager.closeEditor(editor, true);
 		}
 	}
 
