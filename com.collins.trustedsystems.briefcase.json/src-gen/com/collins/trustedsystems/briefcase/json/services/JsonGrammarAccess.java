@@ -414,9 +414,7 @@ public class JsonGrammarAccess extends AbstractGrammarElementFinder {
 		private final RuleCall cSTRINGTerminalRuleCall = (RuleCall)rule.eContents().get(1);
 		
 		//JsonString aadl2::String:
-		//	STRING
-		//	//|	ESC_FWD_SLASH
-		//;
+		//	STRING;
 		@Override public ParserRule getRule() { return rule; }
 
 		//STRING
@@ -663,9 +661,7 @@ public class JsonGrammarAccess extends AbstractGrammarElementFinder {
 	} 
 
 	//JsonString aadl2::String:
-	//	STRING
-	//	//|	ESC_FWD_SLASH
-	//;
+	//	STRING;
 	public JsonStringElements getJsonStringAccess() {
 		return pJsonString;
 	}

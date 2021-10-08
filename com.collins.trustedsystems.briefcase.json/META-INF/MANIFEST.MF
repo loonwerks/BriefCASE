@@ -5,13 +5,13 @@ Bundle-Name: com.collins.trustedsystems.briefcase.json
 Bundle-Version: 0.5.3.qualifier
 Bundle-SymbolicName: com.collins.trustedsystems.briefcase.json;singleton:=true
 Bundle-ActivationPolicy: lazy
-Require-Bundle: org.eclipse.xtext,
- org.eclipse.xtext.xbase,
+Require-Bundle: org.eclipse.xtext;visibility:=reexport,
+ org.eclipse.xtext.xbase;resolution:=optional;visibility:=reexport,
  org.eclipse.equinox.common;bundle-version="3.5.0",
  org.osate.aadl2;bundle-version="[4.0.0,5.0.0)",
  org.osate.xtext.aadl2;bundle-version="[5.0.0,7.0.0)",
  org.osate.xtext.aadl2.properties;bundle-version="[3.0.0,4.0.0)",
- org.eclipse.xtext.generator;bundle-version="2.17.0",
+ org.eclipse.xtext.generator;resolution:=optional,
  org.eclipse.xtext.util,
  org.eclipse.emf.ecore,
  org.eclipse.emf.common,
@@ -29,5 +29,6 @@ Export-Package: com.collins.trustedsystems.briefcase.json,
  com.collins.trustedsystems.briefcase.json.parser.antlr.lexer,
  com.collins.trustedsystems.briefcase.json.validation,
  com.collins.trustedsystems.briefcase.json.scoping,
- com.collins.trustedsystems.briefcase.json.formatting
-Import-Package: org.apache.log4j
+ com.collins.trustedsystems.briefcase.json.formatting2
+Import-Package: org.apache.log4j,
+ org.eclipse.xtext.xbase.lib

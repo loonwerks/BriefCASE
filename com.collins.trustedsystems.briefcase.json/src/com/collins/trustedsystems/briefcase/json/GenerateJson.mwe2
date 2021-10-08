@@ -5,7 +5,7 @@ import org.eclipse.xtext.generator.*
 import org.eclipse.xtext.ui.generator.*
 
 var grammarURI = "classpath:/com/collins/trustedsystems/briefcase/json/Json.xtext"
-var file.extensions = "json"
+//var file.extensions = "json"
 var projectName = "com.collins.trustedsystems.briefcase.json"
 var runtimeProject = "../${projectName}"
 
@@ -84,7 +84,7 @@ Workflow {
 		projectNameUi = "${projectName}.ui"
 		language = {
 			uri = grammarURI
-			fileExtensions = file.extensions
+//			fileExtensions = file.extensions
 
 			// Java API to access grammar elements (required by several other fragments)
 			fragment = grammarAccess.GrammarAccessFragment {}
@@ -99,9 +99,9 @@ Workflow {
             fragment = serializer.SerializerFragment {}
 
 			// a custom ResourceFactory for use with EMF 
-			fragment = resourceFactory.ResourceFactoryFragment {
-				fileExtensions = file.extensions
-			}
+//			fragment = resourceFactory.ResourceFactoryFragment {
+//				fileExtensions = file.extensions
+//			}
 
 			// The antlr parser generator fragment.
 //			fragment = parser.antlr.XtextAntlrGeneratorFragment {
@@ -140,8 +140,8 @@ Workflow {
 //			}
 			
 			// formatter API 
-			fragment = formatting.FormatterFragment {}
-//			fragment = formatting2.Formatter2Fragment auto-inject {}
+//			fragment = formatting.FormatterFragment {}
+			fragment = formatting2.Formatter2Fragment auto-inject {}
 
 			// labeling API 
 			fragment = labeling.LabelProviderFragment {}

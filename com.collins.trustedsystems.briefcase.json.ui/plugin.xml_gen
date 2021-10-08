@@ -207,23 +207,6 @@
         </handler>
     </extension>   
 
-<!-- adding resource factories -->
-
-	<extension
-		point="org.eclipse.emf.ecore.extension_parser">
-		<parser
-			class="com.collins.trustedsystems.briefcase.json.ui.JsonExecutableExtensionFactory:org.eclipse.xtext.resource.IResourceFactory"
-			type="json">
-		</parser>
-	</extension>
-	<extension point="org.eclipse.xtext.extension_resourceServiceProvider">
-        <resourceServiceProvider
-            class="com.collins.trustedsystems.briefcase.json.ui.JsonExecutableExtensionFactory:org.eclipse.xtext.ui.resource.IResourceUIServiceProvider"
-            uriExtension="json">
-        </resourceServiceProvider>
-    </extension>
-
-
     <!-- marker definitions for com.collins.trustedsystems.briefcase.json.Json -->
     <extension
             id="json.check.fast"

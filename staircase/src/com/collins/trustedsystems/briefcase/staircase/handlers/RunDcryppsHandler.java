@@ -4,11 +4,12 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
 import org.apache.http.HttpEntity;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -43,6 +44,7 @@ import com.google.gson.JsonParser;
 public class RunDcryppsHandler extends AadlHandler {
 
 	private final static String DCRYPPS_GET_REQUIREMENTS_ENDPOINT = "http://localhost:8888/routers/DCRYPPSRoute/getRequirements";
+	private final static int TIMEOUT = 5 * 60 * 1000;
 	private final static String JOB_NAME = "Running DCRYPPS";
 	private final static String REQ_FILE_NAME = "DCRYPPS_Cyber_Requirements.json";
 
@@ -176,10 +178,15 @@ public class RunDcryppsHandler extends AadlHandler {
 
 	private JsonObject postDcryppsRequest(String requestBody) {
 
-		final CloseableHttpClient httpClient = HttpClients.createDefault();
 		final HttpPost httpPost = new HttpPost(DCRYPPS_GET_REQUIREMENTS_ENDPOINT);
 		httpPost.setHeader("Accept", "application/json");
 		httpPost.setHeader("Content-type", "application/json");
+		final RequestConfig config = RequestConfig.custom()
+//				.setConnectTimeout(TIMEOUT)
+//				.setConnectionRequestTimeout(TIMEOUT)
+				.setSocketTimeout(TIMEOUT)
+				.build();
+		final CloseableHttpClient httpClient = HttpClientBuilder.create().setDefaultRequestConfig(config).build();
 		StringEntity stringEntity;
 		try {
 			stringEntity = new StringEntity(requestBody);
@@ -199,7 +206,6 @@ public class RunDcryppsHandler extends AadlHandler {
 
 				return responseJsonObject;
 			} else {
-				System.out.println("Error code " + statusCode);
 				Dialog.showError("Run DCRYPPS", "DCRYPPS returned error code " + statusCode + ".");
 			}
 		} catch (IOException e) {
