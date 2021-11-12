@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Agreecheck
 Bundle-SymbolicName: com.collins.trustedsystems.briefcase.agreecheck;singleton:=true
-Bundle-Version: 0.5.3.qualifier
+Bundle-Version: 0.6.0
 Bundle-Activator: com.collins.trustedsystems.briefcase.agreecheck.Activator
 Bundle-Vendor: Collins Aerospace, Inc.
 Require-Bundle: org.eclipse.ui,
