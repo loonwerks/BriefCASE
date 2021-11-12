@@ -368,17 +368,17 @@
             allPopups="false"
             locationURI="popup:org.osate.ge.editor.AgeDiagramEditor?after=additions">
          <menu
-               id="com.collins.trustedsystems.briefcase.menus.editor.main"
+               id="com.collins.trustedsystems.briefcase.menus.diagram.main"
                label="BriefCASE">
             <menu
-                  id="com.collins.trustedsystems.briefcase.menus.editor.requirements"
+                  id="com.collins.trustedsystems.briefcase.menus.diagram.requirements"
                   label="Cyber Requirements">
                <menu
-                     id="com.collins.trustedsystems.briefcase.menus.editor.requirements.generate"
+                     id="com.collins.trustedsystems.briefcase.menus.diagram.requirements.generate"
                      label="Generate Requirements">
                   <command
                         commandId="com.collins.trustedsystems.briefcase.staircase.commands.GenerateRequirements"
-                        id="com.collins.trustedsystems.briefcase.menus.editor.requirements.generate.dcrypps"
+                        id="com.collins.trustedsystems.briefcase.menus.diagram.requirements.generate.dcrypps"
                         label="DCRYPPS"
                         style="push">
                      <parameter
@@ -389,7 +389,7 @@
                </menu>
                <command
                      commandId="com.collins.trustedsystems.briefcase.staircase.commands.ImportRequirements"
-                     id="com.collins.trustedsystems.briefcase.menus.editor.requirements.import"
+                     id="com.collins.trustedsystems.briefcase.menus.diagram.requirements.import"
                      label="Import Requirements..."
                      style="push">
                </command>
@@ -399,85 +399,79 @@
                </separator>
                <command
                      commandId="com.collins.trustedsystems.briefcase.staircase.commands.ManageRequirements"
-                     id="com.collins.trustedsystems.briefcase.menus.editor.requirements.manage"
+                     id="com.collins.trustedsystems.briefcase.menus.diagram.requirements.manage"
                      label="Open Requirements Manager..."
                      style="push">
                </command>
                <command
                      commandId="com.collins.trustedsystems.briefcase.staircase.commands.ClearRequirementsCache"
-                     id="com.collins.trustedsystems.briefcase.menus.editor.requirements.clear"
+                     id="com.collins.trustedsystems.briefcase.menus.diagram.requirements.clear"
                      label="Clear Requirements Cache"
                      style="push">
                </command>
             </menu>
             <menu
-                  id="com.collins.trustedsystems.briefcase.menus.editor.resiliency"
+                  id="com.collins.trustedsystems.briefcase.menus.diagram.resiliency"
                   label="Cyber Resiliency">
                <command
                      commandId="com.collins.trustedsystems.briefcase.staircase.commands.ModelAnnotations"
-                     id="com.collins.trustedsystems.briefcase.menus.editor.resiliency.ModelAnnotations"
+                     id="com.collins.trustedsystems.briefcase.menus.diagram.resiliency.ModelAnnotations"
                      label="Model Annotations..."
                      style="push">
                </command>
                <menu
-                     id="com.collins.trustedsystems.briefcase.menus.editor.resiliency.transformations"
+                     id="com.collins.trustedsystems.briefcase.menus.diagram.resiliency.transformations"
                      label="Model Transformations">
                   <command
                         commandId="com.collins.trustedsystems.briefcase.staircase.commands.AddAttestationManager"
-                        id="com.collins.trustedsystems.briefcase.menus.editor.resiliency.transformations.AddAttestationManager"
+                        id="com.collins.trustedsystems.briefcase.menus.diagram.resiliency.transformations.AddAttestationManager"
                         label="Add Attestation..."
                         style="push">
                   </command>
                   <command
                         commandId="com.collins.trustedsystems.briefcase.staircase.commands.AddFilter"
-                        id="com.collins.trustedsystems.briefcase.menus.editor.resiliency.transformations.AddFilter"
+                        id="com.collins.trustedsystems.briefcase.menus.diagram.resiliency.transformations.AddFilter"
                         label="Add Filter..."
                         style="push">
                   </command>
                   <command
                         commandId="com.collins.trustedsystems.briefcase.staircase.commands.AddVirtualization"
-                        id="com.collins.trustedsystems.briefcase.menus.editor.resiliency.transformations.AddVirtualization"
+                        id="com.collins.trustedsystems.briefcase.menus.diagram.resiliency.transformations.AddVirtualization"
                         label="Add Virtualization..."
                         style="push">
                   </command>
                   <command
                         commandId="com.collins.trustedsystems.briefcase.staircase.commands.AddMonitor"
-                        id="com.collins.trustedsystems.briefcase.menus.editor.resiliency.transformations.AddMonitor"
+                        id="com.collins.trustedsystems.briefcase.menus.diagram.resiliency.transformations.AddMonitor"
                         label="Add Monitor..."
                         style="push">
                   </command>
                   <command
                         commandId="com.collins.trustedsystems.briefcase.staircase.commands.AddProxy"
-                        id="com.collins.trustedsystems.briefcase.menus.editor.resiliency.transformations.AddProxy"
+                        id="com.collins.trustedsystems.briefcase.menus.diagram.resiliency.transformations.AddProxy"
                         label="Add Proxies..."
                         style="push">
                   </command>
                   <command
                         commandId="com.collins.trustedsystems.briefcase.staircase.commands.AddSwitch"
-                        id="com.collins.trustedsystems.briefcase.menus.editor.resiliency.transformations.AddSwitch"
+                        id="com.collins.trustedsystems.briefcase.menus.diagram.resiliency.transformations.AddSwitch"
                         label="Add Switch..."
                         style="push">
                   </command>
                   <command
                         commandId="com.collins.trustedsystems.briefcase.staircase.commands.Sel4Transform"
-                        id="com.collins.trustedsystems.briefcase.menus.editor.resiliency.transformations.Sel4Transform"
+                        id="com.collins.trustedsystems.briefcase.menus.diagram.resiliency.transformations.Sel4Transform"
                         label="Transform for seL4 build..."
                         style="push">
                   </command>
                </menu>
                <menu
-                     id="com.collins.trustedsystems.briefcase.menus.editor.resiliency.synthesis"
+                     id="com.collins.trustedsystems.briefcase.menus.diagram.resiliency.synthesis"
                      label="Synthesis Tools">
                </menu>
-               <command
-                     commandId="com.collins.trustedsystems.briefcase.staircase.commands.AddProxy"
-                     id="com.collins.trustedsystems.briefcase.menus.menubar.resiliency.transformations.AddProxy"
-                     label="Add Proxies..."
-                     style="push">
-               </command>
             </menu>
             <menu
-                  id="com.collins.trustedsystems.briefcase.menus.editor.build"
+                  id="com.collins.trustedsystems.briefcase.menus.diagram.build"
                   label="System Build">
             </menu>
          </menu>

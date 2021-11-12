@@ -129,9 +129,6 @@ public
 			-- Components that are bound to virtual processors that are bound to seL4 processors should have the HAMR::Component_Type => VIRTUAL_MACHINE property association
 			error (vm_property())
 			
-			-- seL4 platform
-			error (seL4_platform())
-			
 		}
 
 	**};
@@ -329,11 +326,7 @@ private
 			let sel4_processors : {component} = {p for (p : processor) | is_sel4_processor(p)};
 			let vps : {component} = {c for (c : virtual_processor) | exists(p : sel4_processors) . processor_bound(c, p)};
 			forall (p : process)(v : vps) . lint_check(p, processor_bound(p, v) => (has_property(p, HAMR::Component_Type) and property(p, HAMR::Component_Type) = "VIRTUAL_MACHINE"))
-			
-		seL4_platform() <=
-			** "systems containing seL4 processors should have the HAMR::Platform => (seL4) property association defined" **
-			let seL4_systems : {system} = {s for (s : system) | exists (p : processor) . member(p, subcomponents(s)) and is_sel4_processor(p)};
-			forall (s : seL4_systems) . (lint_check(s, has_property(s, HAMR::Platform) and member("seL4", property(s, HAMR::Platform))))			
+						
 	**};
 	
 end CASE_Modeling_Guidelines;

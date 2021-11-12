@@ -12,11 +12,11 @@ import org.osate.aadl2.PublicPackageSection;
 import com.collins.trustedsystems.briefcase.staircase.utils.CaseUtils;
 import com.rockwellcollins.atc.resolute.analysis.execution.ExprComparator;
 import com.rockwellcollins.atc.resolute.resolute.Arg;
+import com.rockwellcollins.atc.resolute.resolute.ArgueStatement;
 import com.rockwellcollins.atc.resolute.resolute.Definition;
 import com.rockwellcollins.atc.resolute.resolute.Expr;
 import com.rockwellcollins.atc.resolute.resolute.FnCallExpr;
 import com.rockwellcollins.atc.resolute.resolute.FunctionDefinition;
-import com.rockwellcollins.atc.resolute.resolute.ProveStatement;
 import com.rockwellcollins.atc.resolute.resolute.ResoluteLibrary;
 
 public abstract class BuiltInClaim {
@@ -71,18 +71,18 @@ public abstract class BuiltInClaim {
 	}
 
 
-	protected ProveStatement buildClaimCall(ProveStatement prove) {
+	protected ArgueStatement buildClaimCall(ArgueStatement argue) {
 
 		// Get current claim call for the requirement (could be null if there isn't one)
 		FnCallExpr fnCallExpr = null;
-		if (prove != null && prove.getExpr() instanceof FnCallExpr) {
-			fnCallExpr = (FnCallExpr) prove.getExpr();
+		if (argue != null && argue.getExpr() instanceof FnCallExpr) {
+			fnCallExpr = (FnCallExpr) argue.getExpr();
 		}
 
 		// Get the required call arguments from the built-in claim
 		final List<Expr> callArgs = getCallArgs();
 
-		final ClaimCallBuilder builder = new ClaimCallBuilder(prove);
+		final ClaimCallBuilder builder = new ClaimCallBuilder(argue);
 
 		for (Expr arg : callArgs) {
 			boolean argFound = false;

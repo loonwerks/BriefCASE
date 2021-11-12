@@ -3,10 +3,10 @@ package com.collins.trustedsystems.briefcase.staircase.requirements;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.rockwellcollins.atc.resolute.resolute.ArgueStatement;
 import com.rockwellcollins.atc.resolute.resolute.Expr;
 import com.rockwellcollins.atc.resolute.resolute.FnCallExpr;
 import com.rockwellcollins.atc.resolute.resolute.FunctionDefinition;
-import com.rockwellcollins.atc.resolute.resolute.ProveStatement;
 import com.rockwellcollins.atc.resolute.resolute.ResoluteFactory;
 
 public class ClaimCallBuilder {
@@ -21,18 +21,18 @@ public class ClaimCallBuilder {
 		this.args = new ArrayList<>();
 	}
 
-	public ClaimCallBuilder(ProveStatement prove) {
-		if (prove == null) {
+	public ClaimCallBuilder(ArgueStatement argue) {
+		if (argue == null) {
 			throw new RuntimeException("Claim call cannot be null.");
 		}
-		if (prove.getExpr() instanceof FnCallExpr) {
-			final FnCallExpr fnCallExpr = (FnCallExpr) prove.getExpr();
+		if (argue.getExpr() instanceof FnCallExpr) {
+			final FnCallExpr fnCallExpr = (FnCallExpr) argue.getExpr();
 			this.def = fnCallExpr.getFn();
 			for (Expr expr : fnCallExpr.getArgs()) {
 				this.args.add(expr);
 			}
 		} else {
-			throw new RuntimeException("Prove statement can only contain a claim call.");
+			throw new RuntimeException("Argue statement can only contain a claim call.");
 		}
 	}
 
@@ -41,8 +41,9 @@ public class ClaimCallBuilder {
 		return e;
 	}
 
-	public ProveStatement build() {
-		final ProveStatement prove = f.createProveStatement();
+	public ArgueStatement build() {
+		final ArgueStatement argue = f.createArgueStatement();
+		argue.setTag("argue");
 
 		final FnCallExpr fn = f.createFnCallExpr();
 		fn.setFn(this.def);
@@ -50,7 +51,7 @@ public class ClaimCallBuilder {
 			fn.getArgs().add(expr);
 		}
 
-		prove.setExpr(fn);
-		return prove;
+		argue.setExpr(fn);
+		return argue;
 	}
 }
