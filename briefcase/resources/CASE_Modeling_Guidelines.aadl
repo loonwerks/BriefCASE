@@ -126,9 +126,6 @@ public
 			-- The maximum stack size requirements for each thread should be specified using the Memory_Properties::Stack_Size property.
 			warning (thread_stack_size())
 			
-			-- Components that are bound to virtual processors that are bound to seL4 processors should have the HAMR::Component_Type => VIRTUAL_MACHINE property association
-			error (vm_property())
-			
 		}
 
 	**};
@@ -320,12 +317,6 @@ private
 			
 		is_sel4_processor(p : processor) : bool =
 			has_property(p, CASE_Properties::OS) and property(p, CASE_Properties::OS) = "seL4"
-			
-		vm_property() <=
-			** "Processes that are bound to virtual processors that are bound to seL4 processors should have the HAMR::Component_Type => VIRTUAL_MACHINE property association" **
-			let sel4_processors : {component} = {p for (p : processor) | is_sel4_processor(p)};
-			let vps : {component} = {c for (c : virtual_processor) | exists(p : sel4_processors) . processor_bound(c, p)};
-			forall (p : process)(v : vps) . lint_check(p, processor_bound(p, v) => (has_property(p, HAMR::Component_Type) and property(p, HAMR::Component_Type) = "VIRTUAL_MACHINE"))
 						
 	**};
 	
