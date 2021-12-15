@@ -444,7 +444,7 @@ public class AgreeTranslate {
 
 		result.add("size", new JsonPrimitive(type.getSize()));
 		if (type.getStem() instanceof PrimType) {
-			result.add("arrayType", new JsonPrimitive(((PrimType) type).getName()));
+			result.add("arrayType", new JsonPrimitive(((PrimType) type.getStem()).getName()));
 		} else if (type.getStem() instanceof DoubleDotRef) {
 			NamedElement ne = ((DoubleDotRef) type.getStem()).getElm();
 			result.add("arrayType", new JsonPrimitive(ne.getQualifiedName()));

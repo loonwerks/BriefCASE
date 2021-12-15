@@ -198,16 +198,11 @@ public abstract class AadlHandler extends AbstractHandler {
 //
 //						}
 //
-//						generateCmd = commandService.getCommand("org.osate.ge.layoutContents");
-//						executionEvent = handlerService.createExecutionEvent(generateCmd, new Event());
-//						((IEvaluationContext) executionEvent.getApplicationContext())
-//								.addVariable(ISources.ACTIVE_EDITOR_NAME, editor);
 //						try {
-//							generateCmd.executeWithChecks(executionEvent);
-//						} catch (Exception e) {
+//							Thread.sleep(500);
+//						} catch (InterruptedException e) {
 //
 //						}
-//
 //						diagramEditor.clearSelection();
 					}
 					if (saveAfterFormat && editor.isDirty()) {
@@ -246,80 +241,5 @@ public abstract class AadlHandler extends AbstractHandler {
 		}
 		return idx;
 	}
-
-//	/**
-//	 * Adds contents to the selected diagram elements. Adds all children which pass the specified filter.
-//	 * @param event is the ExecutionEvent of the handler which provides the active editor.
-//	 * @param filter is passed the parent diagram element and the business object of the potential child. If the filter returns true, then an element will be added for the business object.
-//	 */
-//	public static void showDefaultContents(final AgeDiagramEditor diagramEditor) {
-//
-//		if (!(diagramEditor instanceof AgeDiagramEditor)) {
-//			throw new RuntimeException("Unexpected editor: " + diagramEditor);
-//		}
-//		final AgeDiagram diagram = diagramEditor.getDiagram();
-//		if (diagram == null) {
-//			throw new RuntimeException("Unable to retrieve diagram");
-//		}
-//		final List<DiagramElement> selectedDiagramElements = diagram.getAllDescendants()
-//				.filter(d -> d instanceof DiagramElement)
-//				.map(d -> (DiagramElement) d)
-//				.collect(Collectors.toList());
-//
-//		final Bundle bundle = FrameworkUtil.getBundle(ShowDefaultContentsHandler.class);
-//		final ExtensionRegistryService contentFilterProvider = Objects.requireNonNull(
-//				EclipseContextFactory.getServiceContext(bundle.getBundleContext()).get(ExtensionRegistryService.class),
-//				"Unable to retrieve extension registry");
-//
-//		final BiFunction<DiagramElement, Object, Boolean> filter = (parentElement, childBo) -> ContentFilterUtil
-//				.passesAnyContentFilter(childBo,
-//						DiagramTypeUtil.getApplicableDefaultContentFilters(diagram.getConfiguration().getDiagramType(),
-//								parentElement.getBusinessObject(), contentFilterProvider));
-//
-//		final ExtensionRegistryService extService = Objects.requireNonNull(
-//				Adapters.adapt(diagramEditor, ExtensionRegistryService.class), "Unable to retrieve extension service");
-//		final AgeFeatureProvider featureProvider = Objects.requireNonNull(
-//				(AgeFeatureProvider) diagramEditor.getDiagramTypeProvider().getFeatureProvider(),
-//				"Unable to retrieve feature provider");
-//		final ActionService actionService = Objects.requireNonNull(Adapters.adapt(diagramEditor, ActionService.class),
-//				"Unable to retrieve action service");
-//
-//		final DiagramUpdater diagramUpdater = Objects.requireNonNull(featureProvider.getDiagramUpdater(),
-//				"Unable to retrieve diagram updater");
-//
-//		final ReferenceBuilderService referenceBuilder = Objects.requireNonNull(
-//				Adapters.adapt(diagramEditor, ReferenceBuilderService.class),
-//				"Unable to retrieve reference builder service");
-//
-//
-//		boolean childrenAdded = false;
-//		final BusinessObjectProviderHelper bopHelper = new BusinessObjectProviderHelper(extService);
-//		for (final DiagramElement selectedElement : selectedDiagramElements) {
-//			for (final Object childBo : bopHelper.getChildBusinessObjects(selectedElement)) {
-//				final RelativeBusinessObjectReference relativeReference = referenceBuilder
-//						.getRelativeReference(childBo);
-//
-//				if (relativeReference != null && selectedElement.getByRelativeReference(relativeReference) == null) {
-//					if (filter.apply(selectedElement, childBo)) {
-//						diagramUpdater.addToNextUpdate(selectedElement, relativeReference, new FutureElementInfo());
-//						childrenAdded = true;
-//					}
-//				}
-//			}
-//		}
-//
-//		if (childrenAdded) {
-//			actionService.execute("Show Contents", ExecutionMode.NORMAL, () -> {
-//				// Update the diagram
-//				final IUpdateContext updateCtx = new UpdateContext(
-//						diagramEditor.getGraphitiAgeDiagram().getGraphitiDiagram());
-//				diagramEditor.getDiagramBehavior()
-//						.executeFeature(featureProvider.getUpdateFeature(updateCtx), updateCtx);
-//
-//				return null;
-//			});
-//		}
-//
-//	}
 
 }
