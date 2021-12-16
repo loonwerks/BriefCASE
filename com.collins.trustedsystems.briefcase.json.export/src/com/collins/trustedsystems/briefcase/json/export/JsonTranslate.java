@@ -47,7 +47,7 @@ public class JsonTranslate {
 	private static JsonObject genObject(JsonAnnexObject object) {
 		JsonObject jsonObject = new JsonObject();
 		for (JsonAnnexMember member : object.getJsonAnnexMembers()) {
-			jsonObject.add(member.getKey().getValue(), genElement(member.getJsonAnnexElement()));
+			jsonObject.add(member.getKey().getValue().replace("\"", ""), genElement(member.getJsonAnnexElement()));
 		}
 		return jsonObject;
 	}
@@ -61,7 +61,7 @@ public class JsonTranslate {
 	}
 
 	private static JsonPrimitive genString(JsonAnnexString element) {
-		return new JsonPrimitive(element.getValue());
+		return new JsonPrimitive(element.getValue().replace("\"", ""));
 	}
 
 	private static JsonPrimitive genNumber(JsonAnnexNumber element) {

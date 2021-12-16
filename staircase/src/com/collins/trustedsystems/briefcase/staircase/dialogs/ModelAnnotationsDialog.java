@@ -1,381 +1,581 @@
 package com.collins.trustedsystems.briefcase.staircase.dialogs;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.graphics.FontData;
-import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.custom.ScrolledComposite;
+import org.eclipse.swt.events.FocusEvent;
+import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.layout.RowLayout;
-import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
-import org.osate.aadl2.ComponentType;
+import org.eclipse.swt.widgets.TabFolder;
+import org.eclipse.swt.widgets.TabItem;
+import org.eclipse.swt.widgets.Text;
+import org.osate.aadl2.Aadl2Factory;
+import org.osate.aadl2.AadlBoolean;
+import org.osate.aadl2.AadlInteger;
+import org.osate.aadl2.AadlReal;
+import org.osate.aadl2.AadlString;
+import org.osate.aadl2.BooleanLiteral;
+import org.osate.aadl2.EnumerationLiteral;
+import org.osate.aadl2.EnumerationType;
+import org.osate.aadl2.IntegerLiteral;
+import org.osate.aadl2.NamedElement;
+import org.osate.aadl2.NamedValue;
+import org.osate.aadl2.NumberType;
+import org.osate.aadl2.Property;
+import org.osate.aadl2.PropertyExpression;
+import org.osate.aadl2.PropertySet;
+import org.osate.aadl2.PropertyType;
+import org.osate.aadl2.RealLiteral;
+import org.osate.aadl2.StringLiteral;
+import org.osate.aadl2.UnitLiteral;
+import org.osate.aadl2.UnitsType;
 
-import com.collins.trustedsystems.briefcase.staircase.handlers.ModelAnnotationsHandler.BOUNDARY;
-import com.collins.trustedsystems.briefcase.staircase.handlers.ModelAnnotationsHandler.CIA;
-import com.collins.trustedsystems.briefcase.staircase.handlers.ModelAnnotationsHandler.COMM_MODALITY;
-import com.collins.trustedsystems.briefcase.staircase.handlers.ModelAnnotationsHandler.COMP_TYPE;
+import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
+import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
 
 public class ModelAnnotationsDialog extends TitleAreaDialog {
 
-	private List<Button> btnConfidentiality = new ArrayList<>();
-	private List<Button> btnIntegrity = new ArrayList<>();
-	private List<Button> btnAvailability = new ArrayList<>();
-	private List<Button> btnCompType = new ArrayList<>();
-	private List<Button> btnCommModality = new ArrayList<>();
-	private List<Button> btnBoundary = new ArrayList<>();
+	private Map<Property, PropertyExpression> annotations = new HashMap<>();
+	private NamedElement element = null;
 
-	private Map<String, String> prettyName = new HashMap<>();
-	private Map<String, String> uglyName = new HashMap<>();
-
-	private ComponentType component = null;
-	private CIA confidentiality = CIA.NULL;
-	private CIA integrity = CIA.NULL;
-	private CIA availability = CIA.NULL;
-	private COMP_TYPE compType = COMP_TYPE.NULL;
-	private COMM_MODALITY commModality = COMM_MODALITY.NULL;
-	private Set<BOUNDARY> boundary = new HashSet<>();
+	private final static String NO_VALUE_SELECTED = "<No value selected>";
 
 	public ModelAnnotationsDialog(Shell parentShell) {
 		super(parentShell);
 		setHelpAvailable(false);
-
-		prettyName.clear();
-		prettyName.put("HIGH", "High");
-		prettyName.put("MEDIUM", "Medium");
-		prettyName.put("LOW", "Low");
-		prettyName.put("NULL", "None");
-		prettyName.put("FILTER", "Filter");
-		prettyName.put("ATTESTATION", "Attestation");
-		prettyName.put("MONITOR", "Monitor");
-		prettyName.put("ROUTER", "Router");
-		prettyName.put("ISOLATOR", "Isolator");
-		prettyName.put("COMM_DRIVER", "Comm Driver");
-		prettyName.put("RF", "RF");
-		prettyName.put("WIFI", "WiFi");
-		prettyName.put("WIRED_ETHERNET", "Wired Ethernet");
-		prettyName.put("SERIAL", "Serial");
-		prettyName.put("BT", "Bluetooth");
-		prettyName.put("TRUSTED", "Trusted");
-		prettyName.put("PHYSICAL", "Physical");
-		uglyName.clear();
-		uglyName.put("High", "HIGH");
-		uglyName.put("Medium", "MEDIUM");
-		uglyName.put("Low", "LOW");
-		uglyName.put("None", "NULL");
-		uglyName.put("Other", "NULL");
-		uglyName.put("Filter", "FILTER");
-		uglyName.put("Attestation", "ATTESTATION");
-		uglyName.put("Monitor", "MONITOR");
-		uglyName.put("Router", "ROUTER");
-		uglyName.put("Isolator", "ISOLATOR");
-		uglyName.put("Comm Driver", "COMM_DRIVER");
-		uglyName.put("RF", "RF");
-		uglyName.put("WiFi", "WIFI");
-		uglyName.put("Wired Ethernet", "WIRED_ETHERNET");
-		uglyName.put("Serial", "SERIAL");
-		uglyName.put("Bluetooth", "BT");
-		uglyName.put("Trusted", "TRUSTED");
-		uglyName.put("Physical", "PHYSICAL");
-
 	}
 
 	@Override
 	public void create() {
 		super.create();
-		if (component == null) {
-			setTitle("Annotate Model");
-			setMessage("Annotate model with CASE-specific properties.", IMessageProvider.NONE);
-		} else {
-			setTitle("Annotate Model");
-			setMessage("Annotate " + component.getName() + " with CASE-specific properties.", IMessageProvider.NONE);
+		setTitle("Annotate Model");
+		setMessage("Annotate " + element.getName() + " with CASE-specific properties.", IMessageProvider.NONE);
+	}
+
+	public void create(NamedElement element) {
+		if (element == null) {
+			return;
 		}
+		this.element = element;
+		create();
 	}
 
 
-	@Override
-	protected Point getInitialSize() {
-		final Point size = super.getInitialSize();
-//		size.x -= convertWidthInCharsToPixels(6);
-		size.y += convertHeightInCharsToPixels(1);
-
-		return size;
-	}
+//	@Override
+//	protected Point getInitialSize() {
+//		final Point size = super.getInitialSize();
+////		size.x -= convertWidthInCharsToPixels(6);
+//		size.y += convertHeightInCharsToPixels(1);
+//
+//		return size;
+//	}
 
 	@Override
 	protected Control createDialogArea(Composite parent) {
-		final Composite area = (Composite) super.createDialogArea(parent);
-		final Composite container = new Composite(area, SWT.NONE);
-		container.setLayoutData(new GridData(SWT.FILL, SWT.TOP, false, false));
-		final GridLayout layout = new GridLayout(2, false);
-		layout.horizontalSpacing = convertWidthInCharsToPixels(5);
-		layout.marginLeft = convertWidthInCharsToPixels(2);
-		layout.marginRight = convertWidthInCharsToPixels(2);
-		container.setLayout(layout);
 
-		// Add annotation information fields
-		createConfidentialityField(container);
-		createIntegrityField(container);
-		createAvailabilityField(container);
-		createCompTypeField(container);
-		if (component.getCategory().getName().equalsIgnoreCase("bus")) {
-			createCommModalityField(container);
-		} else {
-			createBoundaryField(container);
-		}
+		final Composite area = (Composite) super.createDialogArea(parent);
+		area.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+
+		TabFolder folder = new TabFolder(area, SWT.NONE);
+		createTab(folder, CasePropertyUtils.getCasePropertySet());
+//		createTab(folder, CasePropertyUtils.getCaseSchedulingPropertySet());
+//		createTab(folder, CasePropertyUtils.getHamrPropertySet());
+		folder.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 
 		return area;
 	}
 
-	private void createConfidentialityField(Composite container) {
+	private void createTab(TabFolder folder, PropertySet propertySet) {
 
-		final Label lblConfidentialityField = new Label(container, SWT.NONE);
-		lblConfidentialityField.setText("Confidentiality");
-
-		final FontData fontData = lblConfidentialityField.getFont().getFontData()[0];
-		final Font font = new Font(container.getDisplay(),
-				new FontData(fontData.getName(), fontData.getHeight(), SWT.BOLD));
-		lblConfidentialityField.setFont(font);
-
-		// Create a group to contain CIA options
-		final Group ciaGroup = new Group(container, SWT.NONE);
-		ciaGroup.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
-		ciaGroup.setLayout(new RowLayout(SWT.HORIZONTAL));
-
-		btnConfidentiality.clear();
-		for (CIA cia : CIA.values()) {
-			final Button option = new Button(ciaGroup, SWT.RADIO);
-			option.setText(prettyName.getOrDefault(cia.toString(), cia.toString()));
-			if (cia == confidentiality) {
-				option.setSelection(true);
-			}
-			btnConfidentiality.add(option);
+		if (propertySet == null) {
+			return;
 		}
 
+		final TabItem tab = new TabItem(folder, SWT.NONE);
+		tab.setText(propertySet.getName());
+
+		final ScrolledComposite scroller = new ScrolledComposite(folder, SWT.BORDER | SWT.V_SCROLL);
+
+		Composite container = new Composite(scroller, SWT.NONE);
+		container.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+		final GridLayout layout = new GridLayout(2, false);
+		container.setLayout(layout);
+
+
+		for (Property prop : propertySet.getOwnedProperties()) {
+			if (element.acceptsProperty(prop)) {
+				createPropertyField(container, prop);
+			}
+		}
+		scroller.setContent(container);
+		scroller.setExpandVertical(true);
+		scroller.setExpandHorizontal(true);
+		scroller.setMinSize(folder.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+		scroller.setShowFocusedControl(true);
+
+		tab.setControl(scroller);
 	}
 
-	private void createIntegrityField(Composite container) {
-		final Label lblIntegrityField = new Label(container, SWT.NONE);
-		lblIntegrityField.setText("Integrity");
+	private void createPropertyField(Composite container, Property prop) {
 
-		final FontData fontData = lblIntegrityField.getFont().getFontData()[0];
-		final Font font = new Font(container.getDisplay(),
-				new FontData(fontData.getName(), fontData.getHeight(), SWT.BOLD));
-		lblIntegrityField.setFont(font);
-
-		// Create a group to contain CIA options
-		final Group ciaGroup = new Group(container, SWT.NONE);
-		ciaGroup.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
-		ciaGroup.setLayout(new RowLayout(SWT.HORIZONTAL));
-
-		btnIntegrity.clear();
-		for (CIA cia : CIA.values()) {
-			final Button option = new Button(ciaGroup, SWT.RADIO);
-			option.setText(prettyName.getOrDefault(cia.toString(), cia.toString()));
-			if (cia == integrity) {
-				option.setSelection(true);
-			}
-			btnIntegrity.add(option);
+		PropertyType propType = prop.getOwnedPropertyType();
+		if (propType == null) {
+			propType = prop.getReferencedPropertyType();
+		}
+		if (propType == null) {
+			BriefcaseNotifier.printWarning("Unable to determine property type for " + prop.getName());
+			return;
 		}
 
-	}
+		Label lblProperty = new Label(container, SWT.NONE);
+		lblProperty.setText(prop.getName());
 
-	private void createAvailabilityField(Composite container) {
-		final Label lblAvailabilityField = new Label(container, SWT.NONE);
-		lblAvailabilityField.setText("Availability");
+		PropertyExpression propExpr = null;
+		try {
+			propExpr = element.getSimplePropertyValue(prop);
+		} catch (Exception e) {
 
-		final FontData fontData = lblAvailabilityField.getFont().getFontData()[0];
-		final Font font = new Font(container.getDisplay(),
-				new FontData(fontData.getName(), fontData.getHeight(), SWT.BOLD));
-		lblAvailabilityField.setFont(font);
-
-		// Create a group to contain CIA options
-		final Group ciaGroup = new Group(container, SWT.NONE);
-		ciaGroup.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
-		ciaGroup.setLayout(new RowLayout(SWT.HORIZONTAL));
-
-		btnAvailability.clear();
-		for (CIA cia : CIA.values()) {
-			final Button option = new Button(ciaGroup, SWT.RADIO);
-			option.setText(prettyName.getOrDefault(cia.toString(), cia.toString()));
-			if (cia == availability) {
-				option.setSelection(true);
-			}
-			btnAvailability.add(option);
 		}
 
-	}
-
-	private void createCompTypeField(Composite container) {
-		final Label lblCompTypeField = new Label(container, SWT.NONE);
-		lblCompTypeField.setText("Component Type");
-
-		final FontData fontData = lblCompTypeField.getFont().getFontData()[0];
-		final Font font = new Font(container.getDisplay(),
-				new FontData(fontData.getName(), fontData.getHeight(), SWT.BOLD));
-		lblCompTypeField.setFont(font);
-
-
-		// Create a group to contain COMP_TYPE options
-		final Group compTypeGroup = new Group(container, SWT.NONE);
-		compTypeGroup.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
-		compTypeGroup.setLayout(new GridLayout(3, true));
-
-		btnCompType.clear();
-		for (COMP_TYPE ct : COMP_TYPE.values()) {
-			final Button option = new Button(compTypeGroup, SWT.RADIO);
-			option.setText(ct.toString().equalsIgnoreCase("NULL") ? "Other"
-					: prettyName.getOrDefault(ct.toString(), ct.toString()));
-			if (ct == compType) {
-				option.setSelection(true);
-			}
-			btnCompType.add(option);
-		}
-
-	}
-
-	private void createCommModalityField(Composite container) {
-		final Label lblCommModalityField = new Label(container, SWT.NONE);
-		lblCommModalityField.setText("Communication Modality");
-
-		final FontData fontData = lblCommModalityField.getFont().getFontData()[0];
-		final Font font = new Font(container.getDisplay(),
-				new FontData(fontData.getName(), fontData.getHeight(), SWT.BOLD));
-		lblCommModalityField.setFont(font);
-
-		// Create a group to contain COMM_MODALITY options
-		final Group commModalityGroup = new Group(container, SWT.NONE);
-		commModalityGroup.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
-		commModalityGroup.setLayout(new GridLayout(3, true));
-
-		btnCommModality.clear();
-		for (COMM_MODALITY cm : COMM_MODALITY.values()) {
-			final Button option = new Button(commModalityGroup, SWT.RADIO);
-			option.setText(prettyName.getOrDefault(cm.toString(), cm.toString()));
-			if (cm == commModality) {
-				option.setSelection(true);
-			}
-			btnCommModality.add(option);
+		if (propType instanceof AadlBoolean) {
+			createBooleanField(container, prop, propExpr);
+		} else if (propType instanceof AadlString) {
+			createStringField(container, prop, propExpr);
+		} else if (propType instanceof EnumerationType) {
+			createEnumField(container, prop, propExpr);
+		} else if (propType instanceof UnitsType) {
+			createUnitsField(container, prop, propExpr);
+		} else if (propType instanceof AadlReal) {
+			createRealField(container, prop, propExpr);
+		} else if (propType instanceof AadlInteger) {
+			createIntegerField(container, prop, propExpr);
+//		} else if (propType instanceof RangeType) {
+//
+//		} else if (propType instanceof ClassifierType) {
+//
+//		} else if (propType instanceof ReferenceType) {
+//
+//		} else if (propType instanceof RecordType) {
+//
+//		} else if (propType instanceof ListType) {
+//			createListField(container, prop, propExpr);
+		} else {
+			lblProperty = new Label(container, SWT.NONE);
+			lblProperty.setText("Unsupported type - modify in model");
 		}
 	}
 
-	private void createBoundaryField(Composite container) {
-		final Label lblBoundaryField = new Label(container, SWT.NONE);
-		lblBoundaryField.setText("Boundary");
+	private void createBooleanField(Composite container, Property prop, PropertyExpression propExpr) {
 
-		final FontData fontData = lblBoundaryField.getFont().getFontData()[0];
-		final Font font = new Font(container.getDisplay(),
-				new FontData(fontData.getName(), fontData.getHeight(), SWT.BOLD));
-		lblBoundaryField.setFont(font);
+		final String initialValue = (propExpr == null ? NO_VALUE_SELECTED
+				: (((BooleanLiteral) propExpr).getValue() ? "True" : "False"));
 
-		// Create a composite to contain BOUNDARY options
-		final Group selectionField = new Group(container, SWT.NO_RADIO_GROUP);
-		selectionField.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
-		selectionField.setLayout(new RowLayout(SWT.HORIZONTAL));
+		final GridData dataInfoField = new GridData();
+		dataInfoField.grabExcessHorizontalSpace = true;
+		dataInfoField.horizontalAlignment = GridData.FILL;
+		dataInfoField.grabExcessVerticalSpace = false;
+		final Combo combo = new Combo(container, SWT.BORDER);
+		combo.setLayoutData(dataInfoField);
+		combo.add(NO_VALUE_SELECTED);
+		combo.add("True");
+		combo.add("False");
+		combo.setText(initialValue);
+		combo.addFocusListener(new FocusListener() {
 
-		btnBoundary.clear();
-		for (BOUNDARY b : BOUNDARY.values()) {
-			if (b == BOUNDARY.NULL) {
-				continue;
+			private String priorValue = "";
+
+			@Override
+			public void focusGained(FocusEvent e) {
+				priorValue = combo.getText();
 			}
-			final Button option = new Button(selectionField, SWT.CHECK);
-			option.setText(prettyName.getOrDefault(b.toString(), b.toString()));
-			if (boundary.contains(b)) {
-				option.setSelection(true);
+
+			@Override
+			public void focusLost(FocusEvent e) {
+				if (combo.getText().contentEquals(priorValue)) {
+					return;
+				} else if (combo.getText().contentEquals(initialValue)) {
+					annotations.remove(prop);
+				} else if (combo.getText().equals(NO_VALUE_SELECTED)) {
+					annotations.put(prop, null);
+				} else {
+					BooleanLiteral boolLit = Aadl2Factory.eINSTANCE.createBooleanLiteral();
+					boolLit.setValue(Boolean.parseBoolean(combo.getText()));
+					annotations.put(prop, boolLit);
+				}
 			}
-			btnBoundary.add(option);
-		}
+
+		});
+//		combo.addSelectionListener(new SelectionListener() {
+//
+//			@Override
+//			public void widgetSelected(SelectionEvent e) {
+//				if (combo.getText().equals(NO_VALUE_SELECTED)) {
+//					annotations.put(prop, null);
+//				} else {
+//					BooleanLiteral boolLit = Aadl2Factory.eINSTANCE.createBooleanLiteral();
+//					boolLit.setValue(Boolean.parseBoolean(combo.getText()));
+//					annotations.put(prop, boolLit);
+//				}
+//			}
+//
+//			@Override
+//			public void widgetDefaultSelected(SelectionEvent e) {
+//				widgetSelected(e);
+//			}
+//
+//		});
+
 	}
+
+	private void createStringField(Composite container, Property prop, PropertyExpression propExpr) {
+
+		final String initialValue = (propExpr == null ? "" : ((StringLiteral) propExpr).getValue());
+
+		final GridData dataInfoField = new GridData();
+		dataInfoField.grabExcessHorizontalSpace = true;
+		dataInfoField.horizontalAlignment = SWT.FILL;
+		dataInfoField.grabExcessVerticalSpace = false;
+		final Text text = new Text(container, SWT.BORDER);
+		text.setLayoutData(dataInfoField);
+		text.setText(initialValue);
+		text.addFocusListener(new FocusListener() {
+
+			private String priorValue = "";
+
+			@Override
+			public void focusGained(FocusEvent e) {
+				priorValue = text.getText();
+			}
+
+			@Override
+			public void focusLost(FocusEvent e) {
+				if (text.getText().contentEquals(priorValue)) {
+					return;
+				} else if (text.getText().contentEquals(initialValue)) {
+					annotations.remove(prop);
+				} else if (text.getText().isEmpty()) {
+					annotations.put(prop, null);
+				} else {
+					StringLiteral stringLit = Aadl2Factory.eINSTANCE.createStringLiteral();
+					stringLit.setValue(text.getText());
+					annotations.put(prop, stringLit);
+				}
+			}
+
+		});
+
+	}
+
+	private void createEnumField(Composite container, Property prop, PropertyExpression propExpr) {
+
+		final String initialValue = (propExpr == null ? NO_VALUE_SELECTED
+				: ((EnumerationLiteral) ((NamedValue) propExpr).getNamedValue()).getName());
+
+		final GridData dataInfoField = new GridData();
+		dataInfoField.grabExcessHorizontalSpace = true;
+		dataInfoField.horizontalAlignment = GridData.FILL;
+		dataInfoField.grabExcessVerticalSpace = false;
+		final Combo combo = new Combo(container, SWT.BORDER);
+		combo.setLayoutData(dataInfoField);
+		combo.add(NO_VALUE_SELECTED);
+		for (EnumerationLiteral literal : ((EnumerationType) prop.getOwnedPropertyType()).getOwnedLiterals()) {
+			combo.add(literal.getName());
+		}
+		combo.setText(initialValue);
+		combo.addFocusListener(new FocusListener() {
+
+			private String priorValue = "";
+
+			@Override
+			public void focusGained(FocusEvent e) {
+				priorValue = combo.getText();
+			}
+
+			@Override
+			public void focusLost(FocusEvent e) {
+				if (combo.getText().contentEquals(priorValue)) {
+					return;
+				} else if (combo.getText().contentEquals(initialValue)) {
+					annotations.remove(prop);
+				} else if (combo.getText().equals(NO_VALUE_SELECTED)) {
+					annotations.put(prop, null);
+				} else {
+					final EnumerationLiteral enumLit = Aadl2Factory.eINSTANCE.createEnumerationLiteral();
+					enumLit.setName(combo.getText());
+					final NamedValue namedVal = Aadl2Factory.eINSTANCE.createNamedValue();
+					namedVal.setNamedValue(enumLit);
+					annotations.put(prop, namedVal);
+				}
+			}
+
+		});
+//		combo.addSelectionListener(new SelectionListener() {
+//
+//			@Override
+//			public void widgetSelected(SelectionEvent e) {
+//				if (combo.getText().equals(NO_VALUE_SELECTED)) {
+//					annotations.put(prop, null);
+//				} else {
+//					EnumerationLiteral enumLit = Aadl2Factory.eINSTANCE.createEnumerationLiteral();
+//					enumLit.setName(combo.getText());
+//					annotations.put(prop, enumLit);
+//				}
+//			}
+//
+//			@Override
+//			public void widgetDefaultSelected(SelectionEvent e) {
+//				widgetSelected(e);
+//			}
+//
+//		});
+
+	}
+
+	private void createUnitsField(Composite container, Property prop, PropertyExpression propExpr) {
+
+		final String initialValue = (propExpr == null ? NO_VALUE_SELECTED
+				: ((UnitLiteral) ((NamedValue) propExpr).getNamedValue()).getName());
+
+		final GridData dataInfoField = new GridData();
+		dataInfoField.grabExcessHorizontalSpace = true;
+		dataInfoField.horizontalAlignment = GridData.FILL;
+		dataInfoField.grabExcessVerticalSpace = false;
+		final Combo combo = new Combo(container, SWT.BORDER);
+		combo.setLayoutData(dataInfoField);
+		combo.add(NO_VALUE_SELECTED);
+		for (EnumerationLiteral literal : ((UnitsType) prop.getOwnedPropertyType()).getOwnedLiterals()) {
+			combo.add(literal.getName());
+		}
+		combo.setText(initialValue);
+		combo.addFocusListener(new FocusListener() {
+
+			private String priorValue = "";
+
+			@Override
+			public void focusGained(FocusEvent e) {
+				priorValue = combo.getText();
+			}
+
+			@Override
+			public void focusLost(FocusEvent e) {
+				if (combo.getText().contentEquals(priorValue)) {
+					return;
+				} else if (combo.getText().contentEquals(initialValue)) {
+					annotations.remove(prop);
+				} else if (combo.getText().equals(NO_VALUE_SELECTED)) {
+					annotations.put(prop, null);
+				} else {
+					final EnumerationLiteral enumLit = Aadl2Factory.eINSTANCE.createEnumerationLiteral();
+					enumLit.setName(combo.getText());
+					final NamedValue namedVal = Aadl2Factory.eINSTANCE.createNamedValue();
+					namedVal.setNamedValue(enumLit);
+					annotations.put(prop, namedVal);
+				}
+			}
+
+		});
+//		combo.addSelectionListener(new SelectionListener() {
+//
+//			@Override
+//			public void widgetSelected(SelectionEvent e) {
+//				if (combo.getText().equals(NO_VALUE_SELECTED)) {
+//					annotations.put(prop, null);
+//				} else {
+//
+//					annotations.put(prop, combo.getText());
+//				}
+//			}
+//
+//			@Override
+//			public void widgetDefaultSelected(SelectionEvent e) {
+//				widgetSelected(e);
+//			}
+//
+//		});
+
+	}
+
+	private void createRealField(Composite container, Property prop, PropertyExpression propExpr) {
+
+		final UnitLiteral unitLit = (propExpr == null ? null : ((RealLiteral) propExpr).getUnit());
+		final String initialValue = (propExpr == null ? ""
+				: ((RealLiteral) propExpr).getValue()
+						+ (unitLit != null ? " " + unitLit.getName() : ""));
+
+		final GridData dataInfoField = new GridData();
+		dataInfoField.grabExcessHorizontalSpace = true;
+		dataInfoField.horizontalAlignment = SWT.FILL;
+		dataInfoField.grabExcessVerticalSpace = false;
+		final Text text = new Text(container, SWT.BORDER);
+		text.setLayoutData(dataInfoField);
+		text.setText(initialValue);
+		text.addFocusListener(new FocusListener() {
+
+			private String priorValue = "";
+
+			@Override
+			public void focusGained(FocusEvent e) {
+				priorValue = text.getText();
+			}
+
+			@Override
+			public void focusLost(FocusEvent e) {
+
+				if (text.getText().contentEquals(priorValue)) {
+					return;
+				} else if (text.getText().contentEquals(initialValue)) {
+					annotations.remove(prop);
+				} else if (text.getText().isEmpty()) {
+					annotations.put(prop, null);
+				} else {
+					RealLiteral realLit = Aadl2Factory.eINSTANCE.createRealLiteral();
+					// TODO: parse units
+					realLit.setValue(text.getText());
+					annotations.put(prop, realLit);
+				}
+			}
+
+		});
+
+	}
+
+	private void createIntegerField(Composite container, Property prop, PropertyExpression propExpr) {
+
+		final UnitLiteral unitLit = (propExpr == null ? null : ((IntegerLiteral) propExpr).getUnit());
+		final String initialValue = (propExpr == null ? ""
+				: ((IntegerLiteral) propExpr).getValue()
+						+ (unitLit != null ? " " + unitLit.getName() : ""));
+
+		final GridData dataInfoField = new GridData();
+		dataInfoField.grabExcessHorizontalSpace = true;
+		dataInfoField.horizontalAlignment = SWT.FILL;
+		dataInfoField.grabExcessVerticalSpace = false;
+		final Text text = new Text(container, SWT.BORDER);
+		text.setLayoutData(dataInfoField);
+		text.setText(initialValue);
+		text.addFocusListener(new FocusListener() {
+
+			private String priorValue = "";
+
+			@Override
+			public void focusGained(FocusEvent e) {
+				priorValue = text.getText();
+			}
+
+			@Override
+			public void focusLost(FocusEvent e) {
+				if (text.getText().contentEquals(priorValue)) {
+					return;
+				} else if (text.getText().contentEquals(initialValue)) {
+					annotations.remove(prop);
+				} else if (text.getText().isEmpty()) {
+					annotations.put(prop, null);
+				} else {
+					IntegerLiteral intLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
+					// TODO: parse units
+					intLit.setValue(text.getText());
+					annotations.put(prop, intLit);
+				}
+			}
+
+		});
+
+	}
+
+//	public void createListField(Composite container, Property prop, PropertyExpression propExpr) {
+//
+//		final List<String> initialValues = new ArrayList<>();
+//		final ListValue listValue = (ListValue) propExpr;
+//		if (listValue != null) {
+//			for (PropertyExpression pe : listValue.getOwnedListElements()) {
+//				if (pe instanceof StringLiteral) {
+//					initialValues.add(((StringLiteral) pe).getValue());
+//				} else if (pe instanceof RealLiteral) {
+//					final UnitLiteral unitLit = ((RealLiteral) pe).getUnit();
+//					initialValues
+//							.add(((RealLiteral) pe).getValue() + (unitLit == null ? "" : " + " + unitLit.getName()));
+//				} else if (pe instanceof IntegerLiteral) {
+//					final UnitLiteral unitLit = ((IntegerLiteral) pe).getUnit();
+//					initialValues
+//							.add(((IntegerLiteral) pe).getValue() + (unitLit == null ? "" : " + " + unitLit.getName()));
+//				} else if (pe instanceof BooleanLiteral) {
+//					initialValues.add(((BooleanLiteral) pe).getValue() ? "True" : "False");
+//				} else {
+//					initialValues.add(pe.toString());
+//				}
+//			}
+//		}
+//
+//		final GridData dataInfoField = new GridData();
+//		dataInfoField.grabExcessHorizontalSpace = true;
+//		dataInfoField.horizontalAlignment = SWT.FILL;
+//		dataInfoField.grabExcessVerticalSpace = false;
+//
+//		final ListControl list = new ListControl(container, initialValues);
+//
+//
+//	}
+
+//	private String printValue(PropertyExpression expr) {
+//		if (expr == null) {
+//			return "";
+//		}
+//		if (expr instanceof BooleanLiteral) {
+//			return (((BooleanLiteral) expr).getValue() ? "True" : "False");
+//		} else if (expr instanceof IntegerLiteral) {
+//			final UnitLiteral unitLit = ((IntegerLiteral) expr).getUnit();
+//			return ((IntegerLiteral) expr).getValue() + (unitLit != null ? " " + unitLit.getName() : "");
+//		} else if (expr instanceof RealLiteral) {
+//			final UnitLiteral unitLit = ((RealLiteral) expr).getUnit();
+//			return ((RealLiteral) expr).getValue() + (unitLit != null ? " " + unitLit.getName() : "");
+//		} else if (expr instanceof StringLiteral) {
+//			return ((StringLiteral) expr).getValue();
+//		} else if (expr instanceof NamedValue) {
+//			if (((NamedValue) expr).getNamedValue() instanceof EnumerationLiteral) {
+//				return ((EnumerationLiteral) ((NamedValue) expr).getNamedValue()).getName();
+//			}
+//
+//		} else if (expr instanceof ListValue) {
+//			String value = "[";
+//			final ListValue listValue = (ListValue) expr;
+//			for (int i = 0; i < listValue.getOwnedListElements().size(); ++i) {
+//				value += printValue(listValue.getOwnedListElements().get(i));
+//				if (i < listValue.getOwnedListElements().size() - 1) {
+//					value += ",";
+//				}
+//			}
+//			return value + "]";
+//		}
+//		return "";
+//	}
+
 
 	@Override
 	protected void okPressed() {
-
-		for (Button b : btnConfidentiality) {
-			if (b.getSelection()) {
-				confidentiality = CIA.valueOf(uglyName.get(b.getText()));
-				break;
-			}
-		}
-		for (Button b : btnIntegrity) {
-			if (b.getSelection()) {
-				integrity = CIA.valueOf(uglyName.get(b.getText()));
-				break;
-			}
-		}
-		for (Button b : btnAvailability) {
-			if (b.getSelection()) {
-				availability = CIA.valueOf(uglyName.get(b.getText()));
-				break;
-			}
-		}
-		for (Button b : btnCompType) {
-			if (b.getSelection()) {
-				compType = COMP_TYPE.valueOf(uglyName.get(b.getText()));
-				break;
-			}
-		}
-		for (Button b : btnCommModality) {
-			if (b.getSelection()) {
-				commModality = COMM_MODALITY.valueOf(uglyName.get(b.getText()));
-				break;
-			}
-		}
-		boundary.clear();
-		for (Button b : btnBoundary) {
-			if (b.getSelection()) {
-				boundary.add(BOUNDARY.valueOf(uglyName.get(b.getText())));
-			}
-		}
 		super.okPressed();
+		for (Map.Entry<Property, PropertyExpression> entry : annotations.entrySet()) {
+			// TODO: Check for missing units
+			if (entry.getKey().getPropertyType() instanceof NumberType) {
+				NumberType numberType = (NumberType) entry.getKey().getPropertyType();
+				if (numberType.getOwnedUnitsType() != null) {
+
+				}
+			}
+		}
 	}
 
-
-	public void setComponentAnnotations(ComponentType component, CIA confidentiality, CIA integrity, CIA availability,
-			COMP_TYPE compType, COMM_MODALITY commModality, Set<BOUNDARY> boundary) {
-		this.component = component;
-		this.confidentiality = confidentiality;
-		this.integrity = integrity;
-		this.availability = availability;
-		this.compType = compType;
-		this.commModality = commModality;
-		this.boundary = boundary;
-	}
-
-	public CIA getConfidentiality() {
-		return confidentiality;
-	}
-
-	public CIA getIntegrity() {
-		return integrity;
-	}
-
-	public CIA getAvailability() {
-		return availability;
-	}
-
-	public COMP_TYPE getCompType() {
-		return compType;
-	}
-
-	public COMM_MODALITY getCommModality() {
-		return commModality;
-	}
-
-	public Set<BOUNDARY> getBoundary() {
-		return boundary;
+	public Map<Property, PropertyExpression> getAnnotations() {
+		return annotations;
 	}
 
 }

@@ -1,16 +1,22 @@
 package com.collins.trustedsystems.briefcase.staircase.handlers;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.eclipse.emf.common.util.URI;
+import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.transaction.RecordingCommand;
+import org.eclipse.emf.transaction.TransactionalCommandStack;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
+import org.eclipse.emf.workspace.WorkspaceEditingDomainFactory;
 import org.eclipse.jface.window.Window;
 import org.eclipse.ui.PlatformUI;
-import org.eclipse.xtext.ui.editor.XtextEditor;
-import org.eclipse.xtext.ui.editor.utils.EditorUtils;
+import org.eclipse.xtext.resource.SaveOptions;
 import org.osate.aadl2.Aadl2Factory;
 import org.osate.aadl2.ArrayDimension;
 import org.osate.aadl2.ComponentCategory;
@@ -38,6 +44,7 @@ import org.osate.aadl2.UnitLiteral;
 import org.osate.aadl2.modelsupport.util.AadlUtil;
 import org.osate.ui.dialogs.Dialog;
 import org.osate.xtext.aadl2.properties.util.GetProperties;
+import org.osate.xtext.aadl2.properties.util.MemoryProperties;
 import org.osate.xtext.aadl2.properties.util.ThreadProperties;
 import org.osate.xtext.aadl2.properties.util.TimingProperties;
 
@@ -64,23 +71,25 @@ public class ProxyTransformHandler extends AadlHandler {
 	private Map<String, List<String>> highProxyPortNames;
 	private String highProxyDispatchProtocol;
 	private String highProxyPeriod;
+	private String highProxyStackSize;
 	private String lowProxyComponentName;
 	private String lowProxySubcomponentName;
 	private Map<String, List<String>> lowProxyPortNames;
 	private String lowProxyDispatchProtocol;
 	private String lowProxyPeriod;
+	private String lowProxyStackSize;
 //	private boolean addProxiedComponent;
 //	private String proxiedComponentName;
 //	private String proxiedSubcomponentName;
 //	private String proxiedCompDispatchProtocol;
 //	private String proxiedCompPeriod;
 	private String proxyRequirement;
+	private boolean isSel4Process = false;
 
 	@Override
-	protected void runCommand(URI uri) {
+	protected void runCommand(EObject eObj) {
 
 		// Check if it is a component implementation
-		final EObject eObj = getEObject(uri);
 		if (!(eObj instanceof SystemImplementation || eObj instanceof ProcessImplementation)) {
 			Dialog.showError("Add Proxy", "A system or process implementation must be selected to add a proxy.");
 			return;
@@ -103,6 +112,7 @@ public class ProxyTransformHandler extends AadlHandler {
 			highProxyPortNames = wizard.getHighProxyPortNames();
 			highProxyDispatchProtocol = wizard.getHighProxyDispatchProtocol();
 			highProxyPeriod = wizard.getHighProxyPeriod();
+			highProxyStackSize = wizard.getHighProxyStackSize();
 			lowProxyComponentName = wizard.getLowProxyComponentName();
 			if (lowProxyComponentName.isEmpty()) {
 				lowProxyComponentName = LOW_PROXY_COMP_TYPE_NAME;
@@ -114,6 +124,7 @@ public class ProxyTransformHandler extends AadlHandler {
 			lowProxyPortNames = wizard.getLowProxyPortNames();
 			lowProxyDispatchProtocol = wizard.getLowProxyDispatchProtocol();
 			lowProxyPeriod = wizard.getLowProxyPeriod();
+			lowProxyStackSize = wizard.getLowProxyStackSize();
 //			addProxiedComponent = wizard.getAddProxiedComponent();
 //			proxiedComponentName = wizard.getProxiedComponentName();
 //			if (proxiedComponentName.isEmpty()) {
@@ -126,19 +137,23 @@ public class ProxyTransformHandler extends AadlHandler {
 //			proxiedCompDispatchProtocol = wizard.getProxiedCompDispatchProtocol();
 //			proxiedCompPeriod = wizard.getProxiedCompPeriod();
 			proxyRequirement = wizard.getRequirement();
+			isSel4Process = wizard.createThread();
 		} else {
 			return;
 		}
 
 		// Insert the proxy components
-		insertProxy(uri);
-		BriefcaseNotifier.notify("StairCASE - Proxy", "Proxy added to model.");
+		if (insertProxy(compImpl)) {
+			BriefcaseNotifier.notify("StairCASE - Proxy", "Proxy added to model.");
 
-		// Format and save
-		format(true);
+			// Format and save
+			format(true);
 
-//		// Save
-//		saveChanges(false);
+//			// Save
+//			saveChanges(false);
+		} else {
+			BriefcaseNotifier.printError("Proxy transform failed.");
+		}
 
 		return;
 
@@ -148,186 +163,373 @@ public class ProxyTransformHandler extends AadlHandler {
 	 * Inserts a proxy component into the model.
 	 * @param uri - The URI of the selected component implementation that will contain the proxy
 	 */
-	private void insertProxy(URI uri) {
+	private boolean insertProxy(ComponentImplementation containingImpl) {
 
-		// Get the active xtext editor so we can make modifications
-		final XtextEditor xtextEditor = EditorUtils.getActiveXtextEditor();
+		if (containingImpl == null) {
+			Dialog.showError("Proxy Transform", "Invalid component implementation.");
+			return false;
+		}
 
-		final AddProxyClaim claim = xtextEditor.getDocument().modify(resource -> {
+		final Resource aadlResource = containingImpl.eResource();
+		final TransactionalEditingDomain domain = WorkspaceEditingDomainFactory.INSTANCE.createEditingDomain();
 
-			// Retrieve the model object to modify
-			final ComponentImplementation containingImpl = (ComponentImplementation) resource.getEObject(uri.fragment());
+		// We execute this command on the command stack because otherwise, we will not
+		// have write permissions on the editing domain.
+		final Command cmd = new RecordingCommand(domain) {
 
-			PackageSection pkgSection = AadlUtil.getContainingPackageSection(containingImpl);
-			if (pkgSection == null) {
-				// Something went wrong
-				Dialog.showError("Proxy Transform", "No public or private package sections found.");
-				return null;
+			AddProxyClaim claim = null;
+
+			@Override
+			protected void doExecute() {
+				PackageSection pkgSection = AadlUtil.getContainingPackageSection(containingImpl);
+				if (pkgSection == null) {
+					// Something went wrong
+					BriefcaseNotifier.printError("No public or private package sections found.");
+					throw new RuntimeException();
+				}
+
+				// Import CASE_Properties file
+				if (!CasePropertyUtils.addCasePropertyImport(pkgSection)) {
+					BriefcaseNotifier.printError("Could not import CASE_Properties property set.");
+					throw new RuntimeException();
+				}
+
+				ComponentCategory compCategory = containingImpl.getCategory();
+				if (containingImpl instanceof SystemImplementation) {
+					compCategory = ComponentCategory.PROCESS;
+				} else if (containingImpl instanceof ProcessImplementation) {
+					compCategory = ComponentCategory.THREAD;
+				}
+//				// If the component type is a process, we will need to put a single thread inside.
+//				// Per convention, we will attach all properties and contracts to the thread.
+//				// For this model transformation, we will create the thread first, then wrap it in a process
+//				// component, using the same mechanism we use for the seL4 transformation
+//				final boolean isProcess = (compCategory == ComponentCategory.PROCESS);
+//				if (isProcess) {
+//					compCategory = ComponentCategory.THREAD;
+//				}
+
+				// Add High-side Proxy
+				final Map<ConnectionEnd, List<ConnectionEnd>> highProxyPorts = new HashMap<>();
+				final Subcomponent highProxySubcomp = createProxyComponent(containingImpl, compCategory,
+						highProxyComponentName, highProxySubcomponentName, highProxyPortNames,
+						highProxyDispatchProtocol, highProxyPeriod, highProxyStackSize, highProxyPorts);
+
+				// Add Low-side Proxy
+				final Map<ConnectionEnd, List<ConnectionEnd>> lowProxyPorts = new HashMap<>();
+				final Subcomponent lowProxySubcomp = createProxyComponent(containingImpl, compCategory,
+						lowProxyComponentName, lowProxySubcomponentName, lowProxyPortNames, lowProxyDispatchProtocol,
+						lowProxyPeriod, lowProxyStackSize, lowProxyPorts);
+
+//				// Add proxied component, if needed
+//				if (addProxiedComponent) {
+				//
+//					// proxied component type
+//					final ComponentType proxiedCompType = (ComponentType) pkgSection
+//							.createOwnedClassifier(ComponentCreateHelper.getTypeClass(compCategory));
+				//
+//					// Give it a unique name
+//					proxiedCompType.setName(ModelTransformUtils.getUniqueName(proxiedComponentName, true,
+//							pkgSection.getOwnedClassifiers()));
+				//
+//					// TODO: Create proxy ports
+				//
+//					// Move to top of file
+//					pkgSection.getOwnedClassifiers().move(0, pkgSection.getOwnedClassifiers().size() - 1);
+				//
+//					// Create proxied component implementation
+//					final ComponentImplementation proxiedCompImpl = (ComponentImplementation) pkgSection
+//							.createOwnedClassifier(ComponentCreateHelper.getImplClass(compCategory));
+//					proxiedCompImpl.setName(proxiedCompType.getName() + ".Impl");
+//					final Realization r = proxiedCompImpl.createOwnedRealization();
+//					r.setImplemented(proxiedCompType);
+				//
+//					// Move below component type
+//					pkgSection.getOwnedClassifiers().move(1, pkgSection.getOwnedClassifiers().size() - 1);
+				//
+//					// Dispatch protocol property
+//					if (!proxiedCompDispatchProtocol.isEmpty() && compCategory == ComponentCategory.THREAD) {
+//						final Property dispatchProtocolProp = GetProperties.lookupPropertyDefinition(proxiedCompImpl,
+//								ThreadProperties._NAME, ThreadProperties.DISPATCH_PROTOCOL);
+//						final EnumerationLiteral dispatchProtocolLit = Aadl2Factory.eINSTANCE.createEnumerationLiteral();
+//						dispatchProtocolLit.setName(proxiedCompDispatchProtocol);
+//						final NamedValue nv = Aadl2Factory.eINSTANCE.createNamedValue();
+//						nv.setNamedValue(dispatchProtocolLit);
+//						proxiedCompImpl.setPropertyValue(dispatchProtocolProp, nv);
+//					}
+//					// Period
+//					if (!proxiedCompPeriod.isEmpty() && compCategory == ComponentCategory.THREAD) {
+//						final Property periodProp = GetProperties.lookupPropertyDefinition(proxiedCompImpl,
+//								TimingProperties._NAME, TimingProperties.PERIOD);
+//						final IntegerLiteral periodLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
+//						final UnitLiteral unit = Aadl2Factory.eINSTANCE.createUnitLiteral();
+//						unit.setName(proxiedCompPeriod.replaceAll("[\\d]", "").trim());
+//						periodLit.setBase(0);
+//						periodLit.setValue(Long.parseLong(proxiedCompPeriod.replaceAll("[\\D]", "").trim()));
+//						periodLit.setUnit(unit);
+//						proxiedCompImpl.setPropertyValue(periodProp, periodLit);
+//					}
+				//
+//					// Insert monitor subcomponent in containing component implementation
+//					final Subcomponent proxiedSubcomp = ComponentCreateHelper.createOwnedSubcomponent(containingImpl,
+//							compCategory);
+				//
+//					// Give it a unique name
+//					proxiedSubcomp.setName(ModelTransformUtils.getUniqueName(proxiedSubcomponentName, true,
+//							containingImpl.getOwnedSubcomponents()));
+				//
+//					ComponentCreateHelper.setSubcomponentType(proxiedSubcomp, proxiedCompImpl);
+//				}
+
+				// High-side connections
+				for (Map.Entry<ConnectionEnd, List<ConnectionEnd>> portEntry : highProxyPorts.entrySet()) {
+					final Connection conn = ComponentCreateHelper.createOwnedConnection(containingImpl,
+							portEntry.getKey());
+					conn.setName(ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false,
+							containingImpl.getAllConnections()));
+					conn.setBidirectional(false);
+					final ConnectedElement src = conn.createSource();
+					String srcPortName = "";
+					for (Map.Entry<String, List<String>> highPortNames : highProxyPortNames.entrySet()) {
+						if (highPortNames.getValue().get(0).equalsIgnoreCase(portEntry.getValue().get(0).getName())) {
+							srcPortName = highPortNames.getKey();
+						}
+					}
+					src.setContext(ModelTransformUtils.getSubcomponent(containingImpl, srcPortName));
+					src.setConnectionEnd(portEntry.getKey());
+					final ConnectedElement dst = conn.createDestination();
+					dst.setContext(highProxySubcomp);
+					dst.setConnectionEnd(portEntry.getValue().get(0));
+
+				}
+
+				// Low-side connections
+				for (Map.Entry<ConnectionEnd, List<ConnectionEnd>> portEntry : lowProxyPorts.entrySet()) {
+					final Connection conn = ComponentCreateHelper.createOwnedConnection(containingImpl,
+							portEntry.getKey());
+					conn.setName(ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false,
+							containingImpl.getAllConnections()));
+					conn.setBidirectional(false);
+					final ConnectedElement src = conn.createSource();
+					src.setContext(lowProxySubcomp);
+					src.setConnectionEnd(portEntry.getValue().get(1));
+					final ConnectedElement dst = conn.createDestination();
+					String dstPortName = "";
+					for (Map.Entry<String, List<String>> lowPortNames : lowProxyPortNames.entrySet()) {
+						if (lowPortNames.getValue().get(1).equalsIgnoreCase(portEntry.getValue().get(1).getName())) {
+							dstPortName = lowPortNames.getKey();
+						}
+					}
+					dst.setContext(ModelTransformUtils.getSubcomponent(containingImpl, dstPortName));
+					dst.setConnectionEnd(portEntry.getKey());
+				}
 			}
 
-			// Import CASE_Properties file
-			if (!CasePropertyUtils.addCasePropertyImport(pkgSection)) {
-				return null;
+			@Override
+			public Collection<AddProxyClaim> getResult() {
+				if (claim == null) {
+					return null;
+				} else {
+					return Collections.singletonList(claim);
+				}
 			}
-//			// Import CASE_Model_Transformations file
-//			if (!CaseUtils.addCaseModelTransformationsImport(pkgSection, true)) {
+
+		};
+
+		try {
+			((TransactionalCommandStack) domain.getCommandStack()).execute(cmd, null);
+
+			// We're done: Save the model
+			aadlResource.save(SaveOptions.newBuilder().format().getOptions().toOptionsMap());
+		} catch (Exception e) {
+			return false;
+		} finally {
+			domain.dispose();
+		}
+
+		@SuppressWarnings("unchecked")
+		final List<AddProxyClaim> claim = (List<AddProxyClaim>) cmd.getResult();
+		if (claim != null) {
+			RequirementsManager.getInstance().modifyRequirement(proxyRequirement, claim.get(0));
+		}
+
+		return true;
+
+//		// Get the active xtext editor so we can make modifications
+//		final XtextEditor xtextEditor = EditorUtils.getActiveXtextEditor();
+//
+//		final AddProxyClaim claim = xtextEditor.getDocument().modify(resource -> {
+//
+//			// Retrieve the model object to modify
+//			final ComponentImplementation containingImpl = (ComponentImplementation) resource.getEObject(uri.fragment());
+//
+//			PackageSection pkgSection = AadlUtil.getContainingPackageSection(containingImpl);
+//			if (pkgSection == null) {
+//				// Something went wrong
+//				Dialog.showError("Proxy Transform", "No public or private package sections found.");
 //				return null;
 //			}
-
-			ComponentCategory compCategory = containingImpl.getCategory();
-			if (containingImpl instanceof SystemImplementation) {
-				compCategory = ComponentCategory.PROCESS;
-			} else if (containingImpl instanceof ProcessImplementation) {
-				compCategory = ComponentCategory.THREAD;
-			}
-//			// If the component type is a process, we will need to put a single thread inside.
-//			// Per convention, we will attach all properties and contracts to the thread.
-//			// For this model transformation, we will create the thread first, then wrap it in a process
-//			// component, using the same mechanism we use for the seL4 transformation
-//			final boolean isProcess = (compCategory == ComponentCategory.PROCESS);
-//			if (isProcess) {
+//
+//			// Import CASE_Properties file
+//			if (!CasePropertyUtils.addCasePropertyImport(pkgSection)) {
+//				return null;
+//			}
+//
+//			ComponentCategory compCategory = containingImpl.getCategory();
+//			if (containingImpl instanceof SystemImplementation) {
+//				compCategory = ComponentCategory.PROCESS;
+//			} else if (containingImpl instanceof ProcessImplementation) {
 //				compCategory = ComponentCategory.THREAD;
 //			}
-
-			// Add High-side Proxy
-			final Map<ConnectionEnd, List<ConnectionEnd>> highProxyPorts = new HashMap<>();
-			final Subcomponent highProxySubcomp = createProxyComponent(containingImpl,
-					compCategory, highProxyComponentName, highProxySubcomponentName, highProxyPortNames,
-					highProxyDispatchProtocol, highProxyPeriod, highProxyPorts);
-
-			// Add Low-side Proxy
-			final Map<ConnectionEnd, List<ConnectionEnd>> lowProxyPorts = new HashMap<>();
-			final Subcomponent lowProxySubcomp = createProxyComponent(containingImpl,
-					compCategory, lowProxyComponentName, lowProxySubcomponentName, lowProxyPortNames,
-					lowProxyDispatchProtocol, lowProxyPeriod, lowProxyPorts);
-
-
-//			// Add proxied component, if needed
-//			if (addProxiedComponent) {
+////			// If the component type is a process, we will need to put a single thread inside.
+////			// Per convention, we will attach all properties and contracts to the thread.
+////			// For this model transformation, we will create the thread first, then wrap it in a process
+////			// component, using the same mechanism we use for the seL4 transformation
+////			final boolean isProcess = (compCategory == ComponentCategory.PROCESS);
+////			if (isProcess) {
+////				compCategory = ComponentCategory.THREAD;
+////			}
 //
-//				// proxied component type
-//				final ComponentType proxiedCompType = (ComponentType) pkgSection
-//						.createOwnedClassifier(ComponentCreateHelper.getTypeClass(compCategory));
+//			// Add High-side Proxy
+//			final Map<ConnectionEnd, List<ConnectionEnd>> highProxyPorts = new HashMap<>();
+//			final Subcomponent highProxySubcomp = createProxyComponent(containingImpl,
+//					compCategory, highProxyComponentName, highProxySubcomponentName, highProxyPortNames,
+//					highProxyDispatchProtocol, highProxyPeriod, highProxyPorts);
 //
-//				// Give it a unique name
-//				proxiedCompType.setName(ModelTransformUtils.getUniqueName(proxiedComponentName, true,
-//						pkgSection.getOwnedClassifiers()));
+//			// Add Low-side Proxy
+//			final Map<ConnectionEnd, List<ConnectionEnd>> lowProxyPorts = new HashMap<>();
+//			final Subcomponent lowProxySubcomp = createProxyComponent(containingImpl,
+//					compCategory, lowProxyComponentName, lowProxySubcomponentName, lowProxyPortNames,
+//					lowProxyDispatchProtocol, lowProxyPeriod, lowProxyPorts);
 //
-//				// TODO: Create proxy ports
 //
-//				// Move to top of file
-//				pkgSection.getOwnedClassifiers().move(0, pkgSection.getOwnedClassifiers().size() - 1);
+////			// Add proxied component, if needed
+////			if (addProxiedComponent) {
+////
+////				// proxied component type
+////				final ComponentType proxiedCompType = (ComponentType) pkgSection
+////						.createOwnedClassifier(ComponentCreateHelper.getTypeClass(compCategory));
+////
+////				// Give it a unique name
+////				proxiedCompType.setName(ModelTransformUtils.getUniqueName(proxiedComponentName, true,
+////						pkgSection.getOwnedClassifiers()));
+////
+////				// TODO: Create proxy ports
+////
+////				// Move to top of file
+////				pkgSection.getOwnedClassifiers().move(0, pkgSection.getOwnedClassifiers().size() - 1);
+////
+////				// Create proxied component implementation
+////				final ComponentImplementation proxiedCompImpl = (ComponentImplementation) pkgSection
+////						.createOwnedClassifier(ComponentCreateHelper.getImplClass(compCategory));
+////				proxiedCompImpl.setName(proxiedCompType.getName() + ".Impl");
+////				final Realization r = proxiedCompImpl.createOwnedRealization();
+////				r.setImplemented(proxiedCompType);
+////
+////				// Move below component type
+////				pkgSection.getOwnedClassifiers().move(1, pkgSection.getOwnedClassifiers().size() - 1);
+////
+////				// Dispatch protocol property
+////				if (!proxiedCompDispatchProtocol.isEmpty() && compCategory == ComponentCategory.THREAD) {
+////					final Property dispatchProtocolProp = GetProperties.lookupPropertyDefinition(proxiedCompImpl,
+////							ThreadProperties._NAME, ThreadProperties.DISPATCH_PROTOCOL);
+////					final EnumerationLiteral dispatchProtocolLit = Aadl2Factory.eINSTANCE.createEnumerationLiteral();
+////					dispatchProtocolLit.setName(proxiedCompDispatchProtocol);
+////					final NamedValue nv = Aadl2Factory.eINSTANCE.createNamedValue();
+////					nv.setNamedValue(dispatchProtocolLit);
+////					proxiedCompImpl.setPropertyValue(dispatchProtocolProp, nv);
+////				}
+////				// Period
+////				if (!proxiedCompPeriod.isEmpty() && compCategory == ComponentCategory.THREAD) {
+////					final Property periodProp = GetProperties.lookupPropertyDefinition(proxiedCompImpl,
+////							TimingProperties._NAME, TimingProperties.PERIOD);
+////					final IntegerLiteral periodLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
+////					final UnitLiteral unit = Aadl2Factory.eINSTANCE.createUnitLiteral();
+////					unit.setName(proxiedCompPeriod.replaceAll("[\\d]", "").trim());
+////					periodLit.setBase(0);
+////					periodLit.setValue(Long.parseLong(proxiedCompPeriod.replaceAll("[\\D]", "").trim()));
+////					periodLit.setUnit(unit);
+////					proxiedCompImpl.setPropertyValue(periodProp, periodLit);
+////				}
+////
+////				// Insert monitor subcomponent in containing component implementation
+////				final Subcomponent proxiedSubcomp = ComponentCreateHelper.createOwnedSubcomponent(containingImpl,
+////						compCategory);
+////
+////				// Give it a unique name
+////				proxiedSubcomp.setName(ModelTransformUtils.getUniqueName(proxiedSubcomponentName, true,
+////						containingImpl.getOwnedSubcomponents()));
+////
+////				ComponentCreateHelper.setSubcomponentType(proxiedSubcomp, proxiedCompImpl);
+////			}
 //
-//				// Create proxied component implementation
-//				final ComponentImplementation proxiedCompImpl = (ComponentImplementation) pkgSection
-//						.createOwnedClassifier(ComponentCreateHelper.getImplClass(compCategory));
-//				proxiedCompImpl.setName(proxiedCompType.getName() + ".Impl");
-//				final Realization r = proxiedCompImpl.createOwnedRealization();
-//				r.setImplemented(proxiedCompType);
-//
-//				// Move below component type
-//				pkgSection.getOwnedClassifiers().move(1, pkgSection.getOwnedClassifiers().size() - 1);
-//
-//				// Dispatch protocol property
-//				if (!proxiedCompDispatchProtocol.isEmpty() && compCategory == ComponentCategory.THREAD) {
-//					final Property dispatchProtocolProp = GetProperties.lookupPropertyDefinition(proxiedCompImpl,
-//							ThreadProperties._NAME, ThreadProperties.DISPATCH_PROTOCOL);
-//					final EnumerationLiteral dispatchProtocolLit = Aadl2Factory.eINSTANCE.createEnumerationLiteral();
-//					dispatchProtocolLit.setName(proxiedCompDispatchProtocol);
-//					final NamedValue nv = Aadl2Factory.eINSTANCE.createNamedValue();
-//					nv.setNamedValue(dispatchProtocolLit);
-//					proxiedCompImpl.setPropertyValue(dispatchProtocolProp, nv);
+//			// High-side connections
+//			for (Map.Entry<ConnectionEnd, List<ConnectionEnd>> portEntry : highProxyPorts.entrySet()) {
+//				final Connection conn = ComponentCreateHelper.createOwnedConnection(containingImpl, portEntry.getKey());
+//				conn.setName(ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false,
+//						containingImpl.getAllConnections()));
+//				conn.setBidirectional(false);
+//				final ConnectedElement src = conn.createSource();
+//				String srcPortName = "";
+//				for (Map.Entry<String, List<String>> highPortNames : highProxyPortNames.entrySet()) {
+//					if (highPortNames.getValue().get(0).equalsIgnoreCase(portEntry.getValue().get(0).getName())) {
+//						srcPortName = highPortNames.getKey();
+//					}
 //				}
-//				// Period
-//				if (!proxiedCompPeriod.isEmpty() && compCategory == ComponentCategory.THREAD) {
-//					final Property periodProp = GetProperties.lookupPropertyDefinition(proxiedCompImpl,
-//							TimingProperties._NAME, TimingProperties.PERIOD);
-//					final IntegerLiteral periodLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
-//					final UnitLiteral unit = Aadl2Factory.eINSTANCE.createUnitLiteral();
-//					unit.setName(proxiedCompPeriod.replaceAll("[\\d]", "").trim());
-//					periodLit.setBase(0);
-//					periodLit.setValue(Long.parseLong(proxiedCompPeriod.replaceAll("[\\D]", "").trim()));
-//					periodLit.setUnit(unit);
-//					proxiedCompImpl.setPropertyValue(periodProp, periodLit);
+//				src.setContext(ModelTransformUtils.getSubcomponent(containingImpl, srcPortName));
+//				src.setConnectionEnd(portEntry.getKey());
+//				final ConnectedElement dst = conn.createDestination();
+//				dst.setContext(highProxySubcomp);
+//				dst.setConnectionEnd(portEntry.getValue().get(0));
+//
+//			}
+//
+//			// Low-side connections
+//			for (Map.Entry<ConnectionEnd, List<ConnectionEnd>> portEntry : lowProxyPorts.entrySet()) {
+//				final Connection conn = ComponentCreateHelper.createOwnedConnection(containingImpl, portEntry.getKey());
+//				conn.setName(ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false,
+//						containingImpl.getAllConnections()));
+//				conn.setBidirectional(false);
+//				final ConnectedElement src = conn.createSource();
+//				src.setContext(lowProxySubcomp);
+//				src.setConnectionEnd(portEntry.getValue().get(1));
+//				final ConnectedElement dst = conn.createDestination();
+//				String dstPortName = "";
+//				for (Map.Entry<String, List<String>> lowPortNames : lowProxyPortNames.entrySet()) {
+//					if (lowPortNames.getValue().get(1).equalsIgnoreCase(portEntry.getValue().get(1).getName())) {
+//						dstPortName = lowPortNames.getKey();
+//					}
 //				}
-//
-//				// Insert monitor subcomponent in containing component implementation
-//				final Subcomponent proxiedSubcomp = ComponentCreateHelper.createOwnedSubcomponent(containingImpl,
-//						compCategory);
-//
-//				// Give it a unique name
-//				proxiedSubcomp.setName(ModelTransformUtils.getUniqueName(proxiedSubcomponentName, true,
-//						containingImpl.getOwnedSubcomponents()));
-//
-//				ComponentCreateHelper.setSubcomponentType(proxiedSubcomp, proxiedCompImpl);
+//				dst.setContext(ModelTransformUtils.getSubcomponent(containingImpl, dstPortName));
+//				dst.setConnectionEnd(portEntry.getKey());
 //			}
-
-			// High-side connections
-			for (Map.Entry<ConnectionEnd, List<ConnectionEnd>> portEntry : highProxyPorts.entrySet()) {
-				final Connection conn = ComponentCreateHelper.createOwnedConnection(containingImpl, portEntry.getKey());
-				conn.setName(ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false,
-						containingImpl.getAllConnections()));
-				conn.setBidirectional(false);
-				final ConnectedElement src = conn.createSource();
-				String srcPortName = "";
-				for (Map.Entry<String, List<String>> highPortNames : highProxyPortNames.entrySet()) {
-					if (highPortNames.getValue().get(0).equalsIgnoreCase(portEntry.getValue().get(0).getName())) {
-						srcPortName = highPortNames.getKey();
-					}
-				}
-				src.setContext(ModelTransformUtils.getSubcomponent(containingImpl, srcPortName));
-				src.setConnectionEnd(portEntry.getKey());
-				final ConnectedElement dst = conn.createDestination();
-				dst.setContext(highProxySubcomp);
-				dst.setConnectionEnd(portEntry.getValue().get(0));
-
-			}
-
-			// Low-side connections
-			for (Map.Entry<ConnectionEnd, List<ConnectionEnd>> portEntry : lowProxyPorts.entrySet()) {
-				final Connection conn = ComponentCreateHelper.createOwnedConnection(containingImpl, portEntry.getKey());
-				conn.setName(ModelTransformUtils.getUniqueName(CONNECTION_IMPL_NAME, false,
-						containingImpl.getAllConnections()));
-				conn.setBidirectional(false);
-				final ConnectedElement src = conn.createSource();
-				src.setContext(lowProxySubcomp);
-				src.setConnectionEnd(portEntry.getValue().get(1));
-				final ConnectedElement dst = conn.createDestination();
-				String dstPortName = "";
-				for (Map.Entry<String, List<String>> lowPortNames : lowProxyPortNames.entrySet()) {
-					if (lowPortNames.getValue().get(1).equalsIgnoreCase(portEntry.getValue().get(1).getName())) {
-						dstPortName = lowPortNames.getKey();
-					}
-				}
-				dst.setContext(ModelTransformUtils.getSubcomponent(containingImpl, dstPortName));
-				dst.setConnectionEnd(portEntry.getKey());
-			}
-
-//			if (isProcess) {
 //
-//				// TODO: Wrap thread component in a process
+////			if (isProcess) {
+////
+////				// TODO: Wrap thread component in a process
+////
+////				// TODO: Bind process to processor
+////			}
 //
-//				// TODO: Bind process to processor
-//			}
-
-			// Add add_monitor claims to resolute prove statement, if applicable
-//			if (!proxyRequirement.isEmpty()) {
-//				final CyberRequirement req = RequirementsManager.getInstance().getRequirement(proxyRequirement);
-//				return new AddProxyClaim(req.getContext(), highProxySubcomp, lowProxySubcomp);
-//			}
-
-			return null;
-		});
-
-		if (claim != null) {
-			RequirementsManager.getInstance().modifyRequirement(proxyRequirement, claim);
-		}
+//			// Add add_monitor claims to resolute prove statement, if applicable
+////			if (!proxyRequirement.isEmpty()) {
+////				final CyberRequirement req = RequirementsManager.getInstance().getRequirement(proxyRequirement);
+////				return new AddProxyClaim(req.getContext(), highProxySubcomp, lowProxySubcomp);
+////			}
+//
+//			return null;
+//		});
+//
+//		if (claim != null) {
+//			RequirementsManager.getInstance().modifyRequirement(proxyRequirement, claim);
+//		}
 	}
 
 	private Subcomponent createProxyComponent(ComponentImplementation containingImpl,
 			ComponentCategory compCategory,
 			String componentName, String subcomponentName, Map<String, List<String>> proxyPortNames,
-			String dispatchProtocol, String period, Map<ConnectionEnd, List<ConnectionEnd>> proxyPorts) {
+			String dispatchProtocol, String period, String stackSize,
+			Map<ConnectionEnd, List<ConnectionEnd>> proxyPorts) {
 
 		// Proxy component type
 		PackageSection pkgSection = AadlUtil.getContainingPackageSection(containingImpl);
@@ -400,9 +602,7 @@ public class ProxyTransformHandler extends AadlHandler {
 		}
 
 		// Mitigate type property
-//		if (!CasePropertyUtils.setMitigationType(highProxyType, MITIGATION_TYPE.PROXY)) {
-////		return null;
-//		}
+//		CasePropertyUtils.setMitigationType(highProxyType, MITIGATION_TYPE.PROXY);
 
 		// Move to top of file
 		pkgSection.getOwnedClassifiers().move(0, pkgSection.getOwnedClassifiers().size() - 1);
@@ -439,6 +639,18 @@ public class ProxyTransformHandler extends AadlHandler {
 			periodLit.setValue(Long.parseLong(period.replaceAll("[\\D]", "").trim()));
 			periodLit.setUnit(unit);
 			proxyImpl.setPropertyValue(periodProp, periodLit);
+		}
+		// Stack Size
+		if (!stackSize.isEmpty()) {
+			final Property stackSizeProp = GetProperties.lookupPropertyDefinition(proxyImpl, MemoryProperties._NAME,
+					MemoryProperties.STACK_SIZE);
+			final IntegerLiteral stackSizeLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
+			final UnitLiteral unit = Aadl2Factory.eINSTANCE.createUnitLiteral();
+			unit.setName(stackSize.replaceAll("[\\d]", "").trim());
+			stackSizeLit.setBase(0);
+			stackSizeLit.setValue(Long.parseLong(stackSize.replaceAll("[\\D]", "").trim()));
+			stackSizeLit.setUnit(unit);
+			proxyImpl.setPropertyValue(stackSizeProp, stackSizeLit);
 		}
 
 		// Insert monitor subcomponent in containing component implementation

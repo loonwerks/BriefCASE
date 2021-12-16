@@ -64,6 +64,15 @@
                style="push">
          </command>
       </menuContribution>
+      <menuContribution
+            allPopups="false"
+            locationURI="popup:com.collins.trustedsystems.briefcase.menus.diagram.resiliency.synthesis?after=additions">
+         <command
+               commandId="com.collins.trustedsystems.briefcase.splat.plugin.RunSplat"
+               label="Run SPLAT"
+               style="push">
+         </command>
+      </menuContribution>
    </extension>
  <!--  
    <extension

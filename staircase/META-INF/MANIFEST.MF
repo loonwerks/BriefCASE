@@ -2,9 +2,9 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: c
 Bundle-SymbolicName: com.collins.trustedsystems.briefcase.staircase;singleton:=true
-Bundle-Version: 0.5.3.qualifier
+Bundle-Version: 0.6.1.qualifier
 Automatic-Module-Name: com.collins.trustedsystems.briefcase.staircase
-Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-RequiredExecutionEnvironment: JavaSE-11
 Require-Bundle: org.osate.aadl2;bundle-version="[4.0.0,5.0.0)",
  org.eclipse.xtext.ui;bundle-version="2.12.0",
  org.eclipse.ui.navigator;bundle-version="[3.7.0,4.0.0)",
@@ -26,9 +26,19 @@ Require-Bundle: org.osate.aadl2;bundle-version="[4.0.0,5.0.0)",
  com.rockwellcollins.atc.resolute.ui;bundle-version="[2.4.2,3.0.0)",
  org.eclipse.mylyn.commons.ui,
  org.apache.httpcomponents.httpclient,
- org.apache.httpcomponents.httpcore
-Import-Package: com.collins.trustedsystems.briefcase.attestation,
- org.eclipse.emf.transaction
+ org.apache.httpcomponents.httpcore,
+ org.eclipse.emf.transaction,
+ org.eclipse.emf.workspace,
+ org.eclipse.xtext,
+ org.eclipse.core.expressions,
+ org.eclipse.core.expressions;bundle-version="[3.6.0,4.0.0)",
+ org.eclipse.e4.core.contexts,
+ org.eclipse.ui.workbench
+Import-Package: com.collins.trustedsystems.briefcase,
+ com.collins.trustedsystems.briefcase.attestation,
+ com.collins.trustedsystems.briefcase.json.json,
+ org.eclipse.emf.transaction,
+ org.eclipse.emf.workspace
 Bundle-Activator: com.collins.trustedsystems.briefcase.staircase.Activator
 Export-Package: com.collins.trustedsystems.briefcase.staircase,
  com.collins.trustedsystems.briefcase.staircase.handlers,

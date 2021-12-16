@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.rockwellcollins.atc.resolute.resolute.Arg;
+import com.rockwellcollins.atc.resolute.resolute.ArgueStatement;
 import com.rockwellcollins.atc.resolute.resolute.Expr;
 import com.rockwellcollins.atc.resolute.resolute.FunctionDefinition;
-import com.rockwellcollins.atc.resolute.resolute.ProveStatement;
 
 public class BaseClaim extends BuiltInClaim {
 
@@ -59,7 +59,7 @@ public class BaseClaim extends BuiltInClaim {
 	}
 
 	@Override
-	public ProveStatement buildClaimCall(ProveStatement prove) {
+	public ArgueStatement buildClaimCall(ArgueStatement argue) {
 
 		if (this.claimDef == null) {
 			return null;

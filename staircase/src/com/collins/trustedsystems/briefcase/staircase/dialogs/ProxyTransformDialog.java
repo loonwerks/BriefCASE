@@ -47,32 +47,38 @@ public class ProxyTransformDialog extends TitleAreaDialog {
 	private List<Button> btnHighProxyDispatchProtocol = new ArrayList<>();
 	private Label lblHighProxyPeriodField;
 	private Text txtHighProxyPeriod;
+	private Text txtHighProxyStackSize;
 	private Text txtLowProxyComponentName;
 	private Text txtLowProxySubcomponentName;
 	private PortSelectorControl pscLowProxyPortNames = null;
 	private List<Button> btnLowProxyDispatchProtocol = new ArrayList<>();
 	private Label lblLowProxyPeriodField;
 	private Text txtLowProxyPeriod;
+	private Text txtLowProxyStackSize;
 //	private Button btnAddProxiedComponent;
 //	private Label lblProxiedComponentName;
 //	private Text txtProxiedComponentName;
 //	private Label lblProxiedSubcomponentName;
 //	private Text txtProxiedSubcomponentName;
 	private Combo cboProxyRequirement;
+	private Button btnCreateThread = null;
 	private String highProxyComponentName = "";
 	private String highProxySubcomponentName = "";
 	private Map<String, List<String>> highProxyPortNames = new HashMap<>();
 	private String highProxyDispatchProtocol = "";
 	private String highProxyPeriod = "";
+	private String highProxyStackSize = "";
 	private String lowProxyComponentName = "";
 	private String lowProxySubcomponentName = "";
 	private Map<String, List<String>> lowProxyPortNames = new HashMap<>();
 	private String lowProxyDispatchProtocol = "";
 	private String lowProxyPeriod = "";
+	private String lowProxyStackSize = "";
 //	private boolean addProxiedComponent = false;
 //	private String proxiedComponentName = "";
 //	private String proxiedSubcomponentName = "";
 	private String proxyRequirement = "";
+	private boolean createThread = false;
 
 	private List<String> inports = new ArrayList<>();
 	private List<String> outports = new ArrayList<>();
@@ -708,6 +714,10 @@ public class ProxyTransformDialog extends TitleAreaDialog {
 		return highProxyPeriod;
 	}
 
+	public String getHighProxyStackSize() {
+		return highProxyStackSize;
+	}
+
 	public String getLowProxyComponentName() {
 		return lowProxyComponentName;
 	}
@@ -728,6 +738,10 @@ public class ProxyTransformDialog extends TitleAreaDialog {
 		return lowProxyPeriod;
 	}
 
+	public String getLowProxyStackSize() {
+		return lowProxyStackSize;
+	}
+
 //	public boolean getAddProxiedComponent() {
 //		return addProxiedComponent;
 //	}
@@ -742,6 +756,10 @@ public class ProxyTransformDialog extends TitleAreaDialog {
 
 	public String getRequirement() {
 		return proxyRequirement;
+	}
+
+	public boolean createThread() {
+		return createThread;
 	}
 
 }

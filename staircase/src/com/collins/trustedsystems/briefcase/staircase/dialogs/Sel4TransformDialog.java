@@ -76,7 +76,7 @@ public class Sel4TransformDialog extends TitleAreaDialog {
 
 		// Add seL4 information fields
 		createComponentSelectionField(container);
-//		createRequirementField(container);
+		createRequirementField(container);
 
 		return area;
 	}
@@ -152,15 +152,16 @@ public class Sel4TransformDialog extends TitleAreaDialog {
 
 
 		// Requirement
-//		sel4Requirement = cboSel4Requirement.getText();
-//		if (sel4Requirement.equals(NO_REQUIREMENT_SELECTED)) {
-//			sel4Requirement = "";
-//		} else if (!requirements.contains(sel4Requirement)) {
-//			Dialog.showError("seL4 Transform", "seL4 requirement " + sel4Requirement
-//							+ " does not exist in the model.  Select a requirement from the list, or choose "
-//							+ NO_REQUIREMENT_SELECTED + ".");
-//			return false;
-//		}
+		sel4Requirement = cboSel4Requirement.getText();
+		if (sel4Requirement.equals(NO_REQUIREMENT_SELECTED)) {
+			sel4Requirement = "";
+		} else if (!requirements.contains(sel4Requirement)) {
+			Dialog.showError("seL4 Transform",
+					"seL4 requirement " + sel4Requirement
+							+ " does not exist in the model.  Select a requirement from the list, or choose "
+							+ NO_REQUIREMENT_SELECTED + ".");
+			return false;
+		}
 
 		return true;
 	}

@@ -44,7 +44,8 @@ public class Filesystem {
 	}
 
 	public static IFile getFile(URI f) {
-		return getRoot().getFile(new Path(f.toPlatformString(true)));
+		final String pathString = f.isPlatform() ? f.toPlatformString(true) : f.toString();
+		return getRoot().getFile(new Path(pathString));
 	}
 
 	public static String readFile(IFile res) throws CoreException, IOException {

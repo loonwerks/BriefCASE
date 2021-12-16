@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.eclipse.emf.ecore.EObject;
 import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.swt.SWT;
@@ -28,6 +29,7 @@ import org.eclipse.swt.widgets.TabItem;
 import org.eclipse.swt.widgets.Text;
 import org.osate.aadl2.Classifier;
 import org.osate.aadl2.ComponentImplementation;
+import org.osate.aadl2.Connection;
 import org.osate.aadl2.PortCategory;
 import org.osate.aadl2.SystemImplementation;
 import org.osate.aadl2.modelsupport.util.AadlUtil;
@@ -41,6 +43,8 @@ import com.collins.trustedsystems.briefcase.staircase.utils.ModelTransformUtils;
 public class MonitorTransformDialog extends TitleAreaDialog {
 
 	private ComponentImplementation context;
+	private List<String> connections = new ArrayList<>();
+	private Combo cboConnections = null;
 	private Text txtMonitorComponentName;
 	private Text txtMonitorSubcomponentName;
 	private Text txtObservationPortName;
@@ -66,9 +70,11 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 	private List<Button> btnDispatchProtocol = new ArrayList<>();
 	private Label lblPeriodField;
 	private Text txtPeriod;
+	private Text txtStackSize;
 	private Combo cboMonitorRequirement;
 	private Text txtAgreeProperty;
 
+	private String connection = "";
 	private String monitorComponentName = "";
 	private String monitorSubcomponentName = "";
 	private String observationPortName = "";
@@ -85,6 +91,7 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 	private boolean createThread = false;
 	private String dispatchProtocol = "";
 	private String period = "";
+	private String stackSize = "";
 	private String monitorRequirement = "";
 	private String agreeProperty = "";
 
@@ -96,6 +103,7 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 	private static final String NO_PORT_SELECTED = "<No port selected>";
 	private static final String NO_REQUIREMENT_SELECTED = "<No requirement selected>";
 	static final String MONITOR_REFERENCE_PORT_NAME = "reference";
+	private static final String NO_CONNECTION_SELECTED = "<No connection selected>";
 
 	public MonitorTransformDialog(Shell parentShell) {
 		super(parentShell);
@@ -111,14 +119,22 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 				IMessageProvider.NONE);
 	}
 
-	public void create(ComponentImplementation context) {
-		this.context = context;
+	public void create(EObject context) {
+		if (context instanceof ComponentImplementation) {
+			this.context = (ComponentImplementation) context;
+			for (Connection conn : this.context.getOwnedConnections()) {
+				this.connections.add(conn.getName());
+			}
+		} else if (context instanceof Connection) {
+			this.context = ((Connection) context).getContainingComponentImpl();
+		}
+
 		// Provide list of outports that can be connected to monitor's expected in port
-		outports = ModelTransformUtils.getOutports(context);
+		outports = ModelTransformUtils.getOutports(this.context);
 		// Provide list of inports that monitor's alert out port can be connected to
-		inports = ModelTransformUtils.getInports(context);
+		inports = ModelTransformUtils.getInports(this.context);
 		// Populate data types list
-		types = ModelTransformUtils.getTypes(context);
+		types = ModelTransformUtils.getTypes(this.context);
 		// Populate requirements list
 		RequirementsManager.getInstance().getImportedRequirements().forEach(r -> requirements.add(r.getId()));
 		create();
@@ -147,27 +163,6 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 		createPortsTab(folder);
 		folder.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, true));
 
-//		Composite area = (Composite) super.createDialogArea(parent);
-//		Composite container = new Composite(area, SWT.NONE);
-//		container.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-//		GridLayout layout = new GridLayout(2, false);
-//		container.setLayout(layout);
-//
-//		// Add monitor information fields
-//		createMonitorComponentNameField(container);
-//		createMonitorSubcomponentNameField(container);
-//		createLatchedField(container);
-//		createResetPortField(container);
-//		createReferencePortsField(container);
-//		createAlertPortField(container);
-//		createObservationGateField(container);
-//		// Only display dispatch protocol if filter is a thread
-//		if (context instanceof ProcessImplementation || context instanceof ThreadGroupImplementation) {
-//			createDispatchProtocolField(container);
-//		}
-//		createRequirementField(container);
-//		createAgreeField(container);
-
 		return area;
 	}
 
@@ -181,20 +176,27 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 		final TabItem genTab = new TabItem(folder, SWT.NONE);
 		genTab.setText("General");
 
-		createMonitorComponentNameField(container);
-		createMonitorSubcomponentNameField(container);
-		createLatchedField(container);
+		if (!connections.isEmpty()) {
+			cboConnections = TransformDialogUtil.createComboField(container, "Connection to monitor", connections,
+					NO_CONNECTION_SELECTED);
+		}
+
+		txtMonitorComponentName = TransformDialogUtil.createTextField(container, "Monitor component name",
+				ModelTransformUtils.getUniqueName(MonitorTransformHandler.MONITOR_COMP_TYPE_NAME, true,
+						AadlUtil.getContainingPackageSection(context).getOwnedClassifiers()));
+		txtMonitorSubcomponentName = TransformDialogUtil.createTextField(container, "Monitor subcomponent name",
+				ModelTransformUtils.getUniqueName(MonitorTransformHandler.MONITOR_SUBCOMP_NAME, true,
+						context.getOwnedSubcomponents()));
+		btnLatched = TransformDialogUtil.createCheckboxField(container, "Latched", false);
 		createObservationGateField(container);
 		if (context instanceof SystemImplementation) {
 			createCreateThreadField(container);
 		}
-//		// Only display dispatch protocol if monitor is a thread
-//		if (context instanceof ProcessImplementation || context instanceof ThreadGroupImplementation
-//				|| (context instanceof SystemImplementation && context.getTypeName().endsWith("_seL4"))) {
-			createDispatchProtocolField(container);
-//		}
-		createRequirementField(container);
-		createAgreeField(container);
+		createDispatchProtocolField(container);
+		txtStackSize = TransformDialogUtil.createTextField(container, "Stack size", "");
+		cboMonitorRequirement = TransformDialogUtil.createComboField(container, "Requirement", requirements,
+				NO_REQUIREMENT_SELECTED);
+		txtAgreeProperty = TransformDialogUtil.createTextField(container, "Monitor policy", "");
 
 		genTab.setControl(container);
 	}
@@ -209,12 +211,14 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 		final TabItem portsTab = new TabItem(folder, SWT.NONE);
 		portsTab.setText("Ports");
 
-		createObservationPortNameField(container);
+		txtObservationPortName = TransformDialogUtil.createTextField(container, "Observation port name",
+				MonitorTransformHandler.MONITOR_OBSERVED_PORT_NAME);
 		createObservationGatePortNameField(container);
 		createResetPortField(container);
 		createReferencePortsField(container);
 
-		createAlertPortNameField(container);
+		txtAlertPortName = TransformDialogUtil.createTextField(container, "Alert port name",
+				MonitorTransformHandler.MONITOR_ALERT_PORT_NAME);
 		createAlertPortField(container);
 		createAlertPortCategoryField(container);
 		createAlertPortDataTypeField(container);
@@ -222,69 +226,20 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 		portsTab.setControl(container);
 	}
 
-	/**
-	 * Creates the input text field for specifying the monitor component name
-	 * @param container
-	 */
-	private void createMonitorComponentNameField(Composite container) {
-		final Label lblMonitorComponentNameField = new Label(container, SWT.NONE);
-		lblMonitorComponentNameField.setText("Monitor component instance name");
-
-		final GridData dataInfoField = new GridData();
-		dataInfoField.grabExcessHorizontalSpace = true;
-		dataInfoField.horizontalAlignment = GridData.FILL;
-		txtMonitorComponentName = new Text(container, SWT.BORDER);
-		txtMonitorComponentName.setLayoutData(dataInfoField);
-		txtMonitorComponentName.setText(MonitorTransformHandler.MONITOR_COMP_TYPE_NAME);
-	}
-
-	/**
-	 * Creates the input text field for specifying the monitor subcomponent instance name
-	 * @param container
-	 */
-	private void createMonitorSubcomponentNameField(Composite container) {
-		final Label lblMonitorSubcomponentNameField = new Label(container, SWT.NONE);
-		lblMonitorSubcomponentNameField.setText("Monitor subcomponent instance name");
-
-		final GridData dataInfoField = new GridData();
-		dataInfoField.grabExcessHorizontalSpace = true;
-		dataInfoField.horizontalAlignment = GridData.FILL;
-		txtMonitorSubcomponentName = new Text(container, SWT.BORDER);
-		txtMonitorSubcomponentName.setLayoutData(dataInfoField);
-		txtMonitorSubcomponentName.setText(MonitorTransformHandler.MONITOR_SUBCOMP_NAME);
-	}
-
-	/**
-	 * Creates the input text field for specifying the monitor observation port name
-	 * @param container
-	 */
-	private void createObservationPortNameField(Composite container) {
-		final Label lblObservationPortNameField = new Label(container, SWT.NONE);
-		lblObservationPortNameField.setText("Observation port name");
-
-		final GridData dataInfoField = new GridData();
-		dataInfoField.grabExcessHorizontalSpace = true;
-		dataInfoField.horizontalAlignment = GridData.FILL;
-		txtObservationPortName = new Text(container, SWT.BORDER);
-		txtObservationPortName.setLayoutData(dataInfoField);
-		txtObservationPortName.setText(MonitorTransformHandler.MONITOR_OBSERVED_PORT_NAME);
-	}
-
-	/**
-	 * Creates the input text field for specifying the monitor observation gate port name
-	 * @param container
-	 */
 	private void createObservationGatePortNameField(Composite container) {
+
 		lblObservationGatePortNameField = new Label(container, SWT.NONE);
 		lblObservationGatePortNameField.setText("Observation gate port name");
+		lblObservationGatePortNameField.setEnabled(false);
 
 		final GridData dataInfoField = new GridData();
 		dataInfoField.grabExcessHorizontalSpace = true;
-		dataInfoField.horizontalAlignment = GridData.FILL;
+		dataInfoField.horizontalAlignment = SWT.FILL;
+		dataInfoField.grabExcessVerticalSpace = false;
 		txtObservationGatePortName = new Text(container, SWT.BORDER);
 		txtObservationGatePortName.setLayoutData(dataInfoField);
-		lblObservationGatePortNameField.setEnabled(false);
 		txtObservationGatePortName.setEnabled(false);
+
 	}
 
 	/**
@@ -344,24 +299,6 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 
 
 	/**
-	 * Creates the checkbox field for specifying if the monitor is latched
-	 * @param container
-	 */
-	private void createLatchedField(Composite container) {
-
-		final Label lblLatchedField = new Label(container, SWT.NONE);
-		lblLatchedField.setText("Latched");
-
-		final GridData dataInfoField = new GridData();
-		dataInfoField.grabExcessHorizontalSpace = true;
-		dataInfoField.horizontalAlignment = SWT.FILL;
-		btnLatched = new Button(container, SWT.CHECK);
-		btnLatched.setSelection(false);
-		btnLatched.setLayoutData(dataInfoField);
-
-	}
-
-	/**
 	 * Creates the input field for specifying what to connect the 'reference' ports to
 	 * @param container
 	 */
@@ -378,21 +315,6 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 				MONITOR_REFERENCE_PORT_NAME, "Monitor");
 	}
 
-	/**
-	 * Creates the input text field for specifying the monitor alert port name
-	 * @param container
-	 */
-	private void createAlertPortNameField(Composite container) {
-		final Label lblAlertPortNameField = new Label(container, SWT.NONE);
-		lblAlertPortNameField.setText("Alert port name");
-
-		final GridData dataInfoField = new GridData();
-		dataInfoField.grabExcessHorizontalSpace = true;
-		dataInfoField.horizontalAlignment = GridData.FILL;
-		txtAlertPortName = new Text(container, SWT.BORDER);
-		txtAlertPortName.setLayoutData(dataInfoField);
-		txtAlertPortName.setText(MonitorTransformHandler.MONITOR_ALERT_PORT_NAME);
-	}
 
 	/**
 	 * Creates the input field for specifying what to connect the 'alert' port to
@@ -450,39 +372,14 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 		final Button btnEventPort = new Button(alertPortCategoryGroup, SWT.RADIO);
 		btnEventPort.setText("Event");
 		btnEventPort.setSelection(false);
-//		btnEventPort.addListener(SWT.Selection, e -> {
-//			if (e.type == SWT.Selection) {
-//				if (btnEventPort.getSelection()) {
-//					lblAlertPortDataTypeField.setEnabled(false);
-//					txtAlertPortDataType.setText("");
-//					txtAlertPortDataType.setEnabled(false);
-//				}
-//			}
-//		});
 
 		final Button btnDataPort = new Button(alertPortCategoryGroup, SWT.RADIO);
 		btnDataPort.setText("Data");
 		btnDataPort.setSelection(false);
-//		btnDataPort.addListener(SWT.Selection, e -> {
-//			if (e.type == SWT.Selection) {
-//				if (btnDataPort.getSelection()) {
-//					lblAlertPortDataTypeField.setEnabled(true);
-//					txtAlertPortDataType.setEnabled(true);
-//				}
-//			}
-//		});
 
 		final Button btnEventDataPort = new Button(alertPortCategoryGroup, SWT.RADIO);
 		btnEventDataPort.setText("Event Data");
 		btnEventDataPort.setSelection(false);
-//		btnEventDataPort.addListener(SWT.Selection, e -> {
-//			if (e.type == SWT.Selection) {
-//				if (btnEventDataPort.getSelection()) {
-//					lblAlertPortDataTypeField.setEnabled(true);
-//					txtAlertPortDataType.setEnabled(true);
-//				}
-//			}
-//		});
 
 		btnAlertPortCategory.add(btnDataPort);
 		btnAlertPortCategory.add(btnEventPort);
@@ -499,12 +396,6 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 		lblAlertPortDataTypeField = new Label(container, SWT.NONE);
 		lblAlertPortDataTypeField.setText("Alert port data type");
 
-//		final GridData dataInfoField = new GridData();
-//		dataInfoField.grabExcessHorizontalSpace = true;
-//		dataInfoField.horizontalAlignment = SWT.FILL;
-//		dataInfoField.grabExcessVerticalSpace = false;
-//		txtAlertPortDataType = new Text(container, SWT.BORDER);
-//		txtAlertPortDataType.setLayoutData(dataInfoField);
 		txtAlertPortDataType = new MenuCombo(container, types);
 
 	}
@@ -519,9 +410,6 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 		final Label lblObservationGateField = new Label(container, SWT.NONE);
 		lblObservationGateField.setText("Gate Observed connection");
 
-//		final GridData dataInfoField = new GridData();
-//		dataInfoField.grabExcessHorizontalSpace = true;
-//		dataInfoField.horizontalAlignment = SWT.FILL;
 		btnObservationGate = new Button(container, SWT.CHECK);
 		btnObservationGate.setSelection(false);
 		btnObservationGate.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
@@ -547,11 +435,7 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 	private void createCreateThreadField(Composite container) {
 		final Label lblCreateThreadField = new Label(container, SWT.NONE);
 		lblCreateThreadField.setText("Create internal thread component");
-//		lblCreateThreadField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
-//		GridData dataInfoField = new GridData();
-//		dataInfoField.grabExcessHorizontalSpace = true;
-//		dataInfoField.horizontalAlignment = SWT.FILL;
 		btnCreateThread = new Button(container, SWT.CHECK);
 		btnCreateThread.setSelection(true);
 		btnCreateThread.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
@@ -644,39 +528,6 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 
 	}
 
-	/**
-	 * Creates the input field for selecting the resolute clause that drives
-	 * the addition of this monitor to the design
-	 * @param container
-	 */
-	private void createRequirementField(Composite container) {
-		final Label lblResoluteField = new Label(container, SWT.NONE);
-		lblResoluteField.setText("Requirement");
-
-		final GridData dataInfoField = new GridData();
-		dataInfoField.grabExcessHorizontalSpace = true;
-		dataInfoField.horizontalAlignment = GridData.FILL;
-		cboMonitorRequirement = new Combo(container, SWT.BORDER);
-		cboMonitorRequirement.setLayoutData(dataInfoField);
-		cboMonitorRequirement.add(NO_REQUIREMENT_SELECTED);
-		requirements.forEach(r -> cboMonitorRequirement.add(r));
-		cboMonitorRequirement.setText(NO_REQUIREMENT_SELECTED);
-
-	}
-
-	/**
-	 * Creates the input text field for specifying the monitor agree property
-	 * @param container
-	 */
-	private void createAgreeField(Composite container) {
-		final Label lblAgreeField = new Label(container, SWT.NONE);
-		lblAgreeField.setText("Monitor policy");
-
-		final GridData dataInfoField = new GridData(SWT.FILL, SWT.FILL, true, false);
-		txtAgreeProperty = new Text(container, SWT.BORDER);
-		txtAgreeProperty.setLayoutData(dataInfoField);
-
-	}
 
 	/**
 	 * Saves information entered into the text fields.  This is needed because the
@@ -687,6 +538,19 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 		final List<Classifier> componentsInPackage = AadlUtil.getContainingPackageSection(context)
 				.getOwnedClassifiers();
 		final Set<String> portNames = new HashSet<>();
+
+		// Connection
+		if (cboConnections != null) {
+			connection = cboConnections.getText();
+			if (connection.equals(NO_CONNECTION_SELECTED)) {
+				Dialog.showError("Monitor Transform", "A connection to monitor must be selected.");
+				return false;
+			} else if (!connections.contains(connection)) {
+				Dialog.showError("Monitor Transform", "Connection " + connection
+						+ " does not exist in the model.  Select a connection from the list.");
+				return false;
+			}
+		}
 
 		// Monitor Component Name
 		if (!txtMonitorComponentName.getText().isEmpty()
@@ -723,7 +587,6 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 		} else {
 			monitorSubcomponentName = txtMonitorSubcomponentName.getText();
 		}
-//		monitorSubcomponentName = txtMonitorSubcomponentName.getText();
 
 		// Observation Port
 		if (!txtObservationPortName.getText().isEmpty()
@@ -829,10 +692,6 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 								+ AadlUtil.getContainingPackage(context).getName()
 								+ ". Enter the data type's qualified name if it is defined in a different package.");
 				return false;
-//			} else {
-//				// Add the package name
-//				txtAlertPortDataType.setText(
-//						AadlUtil.getContainingPackage(context).getName() + "::" + txtAlertPortDataType.getText());
 			}
 		}
 		if (txtAlertPortDataType.getText().contains("[")) {
@@ -889,6 +748,16 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 			}
 		}
 
+		// Stack Size
+		if (txtStackSize.getText().isEmpty()
+				|| txtStackSize.getText().matches("((\\d)+(\\s)*(bits|Bytes|KByte|MByte|GByte|TByte)?)")) {
+			stackSize = txtStackSize.getText();
+		} else {
+			Dialog.showError("Monitor Transform", "Monitor stack size " + txtStackSize.getText()
+					+ " is malformed. See the AADL definition of Stack_Size in Memory_Properties.aadl.");
+			return false;
+		}
+
 		// Requirement
 		monitorRequirement = cboMonitorRequirement.getText();
 		if (monitorRequirement.equals(NO_REQUIREMENT_SELECTED)) {
@@ -913,6 +782,10 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 			return;
 		}
 		super.okPressed();
+	}
+
+	public String getConnection() {
+		return connection;
 	}
 
 	public String getMonitorComponentName() {
@@ -977,6 +850,10 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 
 	public String getPeriod() {
 		return period;
+	}
+
+	public String getStackSize() {
+		return stackSize;
 	}
 
 	public String getAgreeProperty() {

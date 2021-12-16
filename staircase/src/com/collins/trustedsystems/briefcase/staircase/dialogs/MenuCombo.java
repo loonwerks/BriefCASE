@@ -44,8 +44,8 @@ public class MenuCombo {
 
 	public MenuCombo(Composite parent, Map<String, List<String>> items) {
 
-		final Composite control = new Composite(parent, SWT.BORDER);
-		control.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		final Composite control = new Composite(parent, SWT.NONE);
+		control.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 		control.setLayout(new GridLayout(2, false));
 
 		final GridData dataInfoField = new GridData();
@@ -102,5 +102,9 @@ public class MenuCombo {
 	public void setEnabled(boolean enabled) {
 		text.setEnabled(enabled);
 		button.setEnabled(enabled);
+	}
+
+	public void setFocus() {
+		text.setFocus();
 	}
 }

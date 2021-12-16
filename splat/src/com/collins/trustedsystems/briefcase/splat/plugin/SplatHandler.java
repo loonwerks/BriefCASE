@@ -427,8 +427,8 @@ public class SplatHandler extends AbstractHandler {
 							}
 
 							// Insert source text property
-							String sourceText = outputDir + File.separator + aadlPackage.getName()
-									+ FOLDER_PACKAGE_DELIMITER + ci.getType().getName() + File.separator
+							String sourceText = outputDir + "/" + aadlPackage.getName() + FOLDER_PACKAGE_DELIMITER
+									+ ci.getType().getName() + "/"
 									+ ci.getType().getName();
 							if (implLang.equalsIgnoreCase("c")) {
 								sourceText += ".c";

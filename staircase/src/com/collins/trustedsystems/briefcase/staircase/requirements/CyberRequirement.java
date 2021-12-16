@@ -45,6 +45,7 @@ import com.rockwellcollins.atc.agree.agree.NamedSpecStatement;
 import com.rockwellcollins.atc.agree.agree.SpecStatement;
 import com.rockwellcollins.atc.agree.parsing.AgreeAnnexParser;
 import com.rockwellcollins.atc.resolute.resolute.AnalysisStatement;
+import com.rockwellcollins.atc.resolute.resolute.ArgueStatement;
 import com.rockwellcollins.atc.resolute.resolute.BinaryExpr;
 import com.rockwellcollins.atc.resolute.resolute.ClaimBody;
 import com.rockwellcollins.atc.resolute.resolute.ClaimContext;
@@ -53,7 +54,6 @@ import com.rockwellcollins.atc.resolute.resolute.DefinitionBody;
 import com.rockwellcollins.atc.resolute.resolute.Expr;
 import com.rockwellcollins.atc.resolute.resolute.FnCallExpr;
 import com.rockwellcollins.atc.resolute.resolute.FunctionDefinition;
-import com.rockwellcollins.atc.resolute.resolute.ProveStatement;
 import com.rockwellcollins.atc.resolute.resolute.ResoluteFactory;
 import com.rockwellcollins.atc.resolute.resolute.ResoluteLibrary;
 import com.rockwellcollins.atc.resolute.resolute.ResoluteSubclause;
@@ -558,13 +558,13 @@ public class CyberRequirement {
 			System.out.println("Statements in resclause before changes: " + resclause);
 		}
 
-		// If the prove statement already exists, remove it
-		ProveStatement oldClaimCall = null;
-		for (Iterator<AnalysisStatement> i = resclause.getProves().iterator(); i.hasNext();) {
+		// If the argue statement already exists, remove it
+		ArgueStatement oldClaimCall = null;
+		for (Iterator<AnalysisStatement> i = resclause.getAnalyses().iterator(); i.hasNext();) {
 			final AnalysisStatement as = i.next();
 			System.out.println(as);
-			if (as instanceof ProveStatement) {
-				final Expr expr = ((ProveStatement) as).getExpr();
+			if (as instanceof ArgueStatement) {
+				final Expr expr = ((ArgueStatement) as).getExpr();
 				if (expr instanceof FnCallExpr) {
 					final FunctionDefinition fd = ((FnCallExpr) expr).getFn();
 					if (debug) {
@@ -573,7 +573,7 @@ public class CyberRequirement {
 //					if (fd != null && (fd == savedClaimDefinition
 //							|| (fd.hasName() && fd.getName().equalsIgnoreCase(getId())))) {
 					if (fd != null && fd.hasName() && fd.getName().equalsIgnoreCase(getId())) {
-						oldClaimCall = (ProveStatement) as;
+						oldClaimCall = (ArgueStatement) as;
 						break;
 					}
 				}
@@ -581,25 +581,25 @@ public class CyberRequirement {
 		}
 
 		// Build Claim Call
-		final ProveStatement newClaimCall = claim.buildClaimCall(oldClaimCall);
+		final ArgueStatement newClaimCall = claim.buildClaimCall(oldClaimCall);
 
 		if (newClaimCall == null) {
 			throw new RuntimeException("Unable to generate the claim call.");
 		}
 
-		resclause.getProves().add(newClaimCall);
+		resclause.getAnalyses().add(newClaimCall);
 		if (oldClaimCall != null) {
-			resclause.getProves().remove(oldClaimCall);
+			resclause.getAnalyses().remove(oldClaimCall);
 		}
 		subclause.setParsedAnnexSubclause(resclause);
 
 		if (debug) {
 			System.out.println("Statements in resclause after changes: " + resclause);
-			for (Iterator<AnalysisStatement> i = resclause.getProves().iterator(); i.hasNext();) {
+			for (Iterator<AnalysisStatement> i = resclause.getAnalyses().iterator(); i.hasNext();) {
 				final AnalysisStatement as = i.next();
 				System.out.println(as);
-				if (as instanceof ProveStatement) {
-					final Expr expr = ((ProveStatement) as).getExpr();
+				if (as instanceof ArgueStatement) {
+					final Expr expr = ((ArgueStatement) as).getExpr();
 					if (expr instanceof FnCallExpr) {
 						final FunctionDefinition fd = ((FnCallExpr) expr).getFn();
 						System.out.println(fd.toString());
@@ -727,10 +727,10 @@ public class CyberRequirement {
 
 			// If the prove statement already exists, remove it
 			boolean updated = false; // tracks if the list of prove statements has been modified
-			for (Iterator<AnalysisStatement> i = resclause.getProves().iterator(); i.hasNext();) {
+			for (Iterator<AnalysisStatement> i = resclause.getAnalyses().iterator(); i.hasNext();) {
 				final AnalysisStatement as = i.next();
-				if (as instanceof ProveStatement) {
-					final Expr expr = ((ProveStatement) as).getExpr();
+				if (as instanceof ArgueStatement) {
+					final Expr expr = ((ArgueStatement) as).getExpr();
 					if (expr instanceof FnCallExpr) {
 						final FunctionDefinition fd = ((FnCallExpr) expr).getFn();
 						if (fd != null && fd.getName() != null && fd.getName().equalsIgnoreCase(getId())) {

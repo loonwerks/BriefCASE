@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: com.collins.trustedsystems.briefcase
 Bundle-SymbolicName: com.collins.trustedsystems.briefcase;singleton:=true
-Bundle-Version: 0.5.3.qualifier
+Bundle-Version: 0.6.1.qualifier
 Automatic-Module-Name: com.collins.trustedsystems.briefcase
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Require-Bundle: org.eclipse.jface,
@@ -23,6 +23,8 @@ Bundle-ClassPath: .,
  dependencies/gson-2.8.5.jar
 Export-Package: com.collins.trustedsystems.briefcase,
  com.collins.trustedsystems.briefcase.preferences,
- com.collins.trustedsystems.briefcase.util
+ com.collins.trustedsystems.briefcase.util,
+ com.google.gson,
+ com.google.gson.stream
 Bundle-Activator: com.collins.trustedsystems.briefcase.Activator
 Bundle-ActivationPolicy: lazy

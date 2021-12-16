@@ -1,280 +1,89 @@
 package com.collins.trustedsystems.briefcase.staircase.handlers;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.Map;
 
-import org.eclipse.emf.common.util.URI;
+import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.transaction.RecordingCommand;
+import org.eclipse.emf.transaction.TransactionalCommandStack;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
+import org.eclipse.emf.workspace.WorkspaceEditingDomainFactory;
 import org.eclipse.jface.window.Window;
 import org.eclipse.ui.PlatformUI;
-import org.eclipse.xtext.resource.XtextResource;
-import org.eclipse.xtext.ui.editor.XtextEditor;
-import org.eclipse.xtext.ui.editor.utils.EditorUtils;
-import org.eclipse.xtext.util.concurrent.IUnitOfWork;
-import org.osate.aadl2.AadlPackage;
-import org.osate.aadl2.ComponentImplementation;
-import org.osate.aadl2.ComponentType;
-import org.osate.aadl2.EnumerationLiteral;
-import org.osate.aadl2.ListValue;
-import org.osate.aadl2.ModalPropertyValue;
-import org.osate.aadl2.NamedValue;
-import org.osate.aadl2.PackageSection;
-import org.osate.aadl2.PrivatePackageSection;
+import org.eclipse.xtext.resource.SaveOptions;
+import org.osate.aadl2.NamedElement;
 import org.osate.aadl2.Property;
-import org.osate.aadl2.PropertyAssociation;
 import org.osate.aadl2.PropertyExpression;
-import org.osate.aadl2.PublicPackageSection;
-import org.osate.aadl2.Subcomponent;
+import org.osate.aadl2.PropertyValue;
 import org.osate.ui.dialogs.Dialog;
 
 import com.collins.trustedsystems.briefcase.staircase.dialogs.ModelAnnotationsDialog;
-import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
 import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
 
 public class ModelAnnotationsHandler extends AadlHandler {
 
-	public enum CIA {
-		HIGH, MEDIUM, LOW, NULL
-	};
-
-	public enum COMP_TYPE {
-		FILTER, ATTESTATION, MONITOR, ROUTER, ISOLATOR, COMM_DRIVER, NULL
-	};
-
-	public enum COMM_MODALITY {
-		RF, WIFI, WIRED_ETHERNET, SERIAL, BT, NULL
-	};
-
-	public enum BOUNDARY {
-		TRUSTED, PHYSICAL, NULL
-	}
-
-	private CIA confidentiality = CIA.NULL;
-	private CIA integrity = CIA.NULL;
-	private CIA availability = CIA.NULL;
-	private COMP_TYPE compType = COMP_TYPE.NULL;
-	private COMM_MODALITY commModality = COMM_MODALITY.NULL;
-	private Set<BOUNDARY> boundary = new HashSet<>();
+	private Map<Property, PropertyExpression> annotations;
 
 	@Override
-	protected void runCommand(URI uri) {
+	protected void runCommand(EObject eObj) {
 		// Check that it is a component type
-		final EObject eObj = getEObject(uri);
-		ComponentType component = null;
-		if (eObj instanceof Subcomponent) {
-			component = ((Subcomponent) eObj).getComponentType();
-		} else if (eObj instanceof ComponentImplementation) {
-			component = ((ComponentImplementation) eObj).getType();
-		} else if (eObj instanceof ComponentType) {
-			component = (ComponentType) eObj;
-		} else {
-			Dialog.showError("Model Annotations", "A component must be selected to annotate.");
+		if (!(eObj instanceof NamedElement)) {
+			Dialog.showError("Model Annotations", "Select an AADL Named Element to annotate");
 			return;
 		}
-
-		// Get the current CASE annotations for the selected component
-		getCurrentAnnotations(component);
+		final NamedElement element = (NamedElement) eObj;
 
 		final ModelAnnotationsDialog wizard = new ModelAnnotationsDialog(
 				PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell());
-		wizard.setComponentAnnotations(component, confidentiality, integrity, availability, compType, commModality,
-				boundary);
-		wizard.create();
+		wizard.create(element);
 		if (wizard.open() == Window.OK) {
-			confidentiality = wizard.getConfidentiality();
-			integrity = wizard.getIntegrity();
-			availability = wizard.getAvailability();
-			compType = wizard.getCompType();
-			commModality = wizard.getCommModality();
-			boundary = wizard.getBoundary();
+			annotations = wizard.getAnnotations();
 		} else {
 			return;
 		}
 
-		setAnnotations(component);
-
-		BriefcaseNotifier.notify("Model Annotations", "Model annotations complete.");
-
-	}
-
-	private void setAnnotations(ComponentType component) {
-
-		// Get the active xtext editor so we can make modifications
-		final XtextEditor xtextEditor = EditorUtils.getActiveXtextEditor();
-
-		xtextEditor.getDocument().modify(new IUnitOfWork.Void<XtextResource>() {
-
-			@Override
-			public void process(final XtextResource resource) throws Exception {
-
-				// Remove existing CASE properties
-				boolean addConfidentiality = (confidentiality != CIA.NULL);
-				boolean addIntegrity = (integrity != CIA.NULL);
-				boolean addAvailability = (availability != CIA.NULL);
-				boolean addCompType = (compType != COMP_TYPE.NULL);
-				boolean addCommModality = (commModality != COMM_MODALITY.NULL);
-				boolean addBoundary = !boundary.isEmpty();
-				final Iterator<PropertyAssociation> prop = component.getOwnedPropertyAssociations().iterator();
-				while (prop.hasNext()) {
-					final String propName = prop.next().getProperty().getName();
-					if (propName.equalsIgnoreCase("CONFIDENTIALITY")) {
-						prop.remove();
-					} else if (propName.equalsIgnoreCase("INTEGRITY")) {
-						prop.remove();
-					} else if (propName.equalsIgnoreCase("AVAILABILITY")) {
-						prop.remove();
-					} else if (propName.equalsIgnoreCase("COMP_TYPE")) {
-						prop.remove();
-					} else if (propName.equalsIgnoreCase("COMM_MODALITY")) {
-						prop.remove();
-					} else if (propName.equalsIgnoreCase("BOUNDARY")) {
-						prop.remove();
-					}
-				}
-
-				// Update CASE properties
-				if (addConfidentiality || addIntegrity || addAvailability || addCompType || addCommModality
-						|| addBoundary) {
-
-					final AadlPackage aadlPkg = (AadlPackage) resource.getContents().get(0);
-					PackageSection pkgSection = null;
-					// Figure out if the selected connection is in the public or private section
-					EObject eObj = component.eContainer();
-					while (eObj != null) {
-						if (eObj instanceof PublicPackageSection) {
-							pkgSection = aadlPkg.getOwnedPublicSection();
-							break;
-						} else if (eObj instanceof PrivatePackageSection) {
-							pkgSection = aadlPkg.getOwnedPrivateSection();
-							break;
-						} else {
-							eObj = eObj.eContainer();
-						}
-					}
-
-					if (pkgSection == null) {
-						// Something went wrong
-						Dialog.showError("Model Annotations", "No public or private package sections found.");
-						return;
-					}
-
-					// Import CASE_Properties file
-					if (!CasePropertyUtils.addCasePropertyImport(pkgSection)) {
-						return;
-					}
-
-					if (addConfidentiality) {
-						if (!CasePropertyUtils.addCasePropertyAssociation("Confidentiality", confidentiality.toString(),
-								component)) {
-							Dialog.showError("Model Annotations",
-									"Unable to set the Confidentiality property for " + component.getName() + ".");
-//							return;
-						}
-					}
-					if (addIntegrity) {
-						if (!CasePropertyUtils.addCasePropertyAssociation("Integrity", integrity.toString(),
-								component)) {
-							Dialog.showError("Model Annotations",
-									"Unable to set the Integrity property for " + component.getName() + ".");
-//							return;
-						}
-					}
-					if (addAvailability) {
-						if (!CasePropertyUtils.addCasePropertyAssociation("Availability", availability.toString(),
-								component)) {
-							Dialog.showError("Model Annotations",
-									"Unable to set the Availability property for " + component.getName() + ".");
-//							return;
-						}
-					}
-//					if (addCompType) {
-//						if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.COMP_TYPE,
-//								compType.toString(), component)) {
-//							Dialog.showError("Model Annotations",
-//									"Unable to set the COMP_TYPE property for " + component.getName() + ".");
-////							return;
-//						}
-//					}
-					if (addCommModality) {
-						if (!CasePropertyUtils.addCasePropertyAssociation(CasePropertyUtils.COMM_MODALITY,
-								commModality.toString(),
-								component)) {
-							Dialog.showError("Model Annotations",
-									"Unable to set the COMM_MODALITY property for " + component.getName() + ".");
-//							return;
-						}
-					}
-					if (addBoundary) {
-						String bString = "";
-						for (BOUNDARY b : boundary) {
-							bString = bString + b.toString() + ",";
-						}
-						bString = bString.substring(0, bString.length() - 1);
-						if (!CasePropertyUtils.addCasePropertyAssociation("Boundary", bString, component)) {
-							Dialog.showError("Model Annotations",
-									"Unable to set the Boundary property for " + component.getName() + ".");
-//							return;
-						}
-					}
-				}
-			}
-		});
-	}
-
-
-	private void reset() {
-		confidentiality = CIA.NULL;
-		integrity = CIA.NULL;
-		availability = CIA.NULL;
-		compType = COMP_TYPE.NULL;
-		commModality = COMM_MODALITY.NULL;
-		boundary = new HashSet<>();
-	}
-
-	private void getCurrentAnnotations(ComponentType component) {
-
-		// Reset to default values
-		reset();
-
-		for (PropertyAssociation propertyAssociation : component.getOwnedPropertyAssociations()) {
-			final Property property = propertyAssociation.getProperty();
-			if (property.getName().equalsIgnoreCase("Confidentiality")) {
-				final ModalPropertyValue val = propertyAssociation.getOwnedValues().get(0);
-				final NamedValue namedVal = (NamedValue) val.getOwnedValue();
-				final EnumerationLiteral enumLiteral = (EnumerationLiteral) namedVal.getNamedValue();
-				confidentiality = CIA.valueOf(enumLiteral.getName());
-			} else if (property.getName().equalsIgnoreCase("Integrity")) {
-				final ModalPropertyValue val = propertyAssociation.getOwnedValues().get(0);
-				final NamedValue namedVal = (NamedValue) val.getOwnedValue();
-				final EnumerationLiteral enumLiteral = (EnumerationLiteral) namedVal.getNamedValue();
-				integrity = CIA.valueOf(enumLiteral.getName());
-			} else if (property.getName().equalsIgnoreCase("Availability")) {
-				final ModalPropertyValue val = propertyAssociation.getOwnedValues().get(0);
-				final NamedValue namedVal = (NamedValue) val.getOwnedValue();
-				final EnumerationLiteral enumLiteral = (EnumerationLiteral) namedVal.getNamedValue();
-				availability = CIA.valueOf(enumLiteral.getName());
-//			} else if (property.getName().equalsIgnoreCase(CasePropertyUtils.COMP_TYPE)) {
-//				ModalPropertyValue val = propertyAssociation.getOwnedValues().get(0);
-//				NamedValue namedVal = (NamedValue) val.getOwnedValue();
-//				EnumerationLiteral enumLiteral = (EnumerationLiteral) namedVal.getNamedValue();
-//				compType = COMP_TYPE.valueOf(enumLiteral.getName());
-			} else if (property.getName().equalsIgnoreCase(CasePropertyUtils.COMM_MODALITY)) {
-				final ModalPropertyValue val = propertyAssociation.getOwnedValues().get(0);
-				final NamedValue namedVal = (NamedValue) val.getOwnedValue();
-				final EnumerationLiteral enumLiteral = (EnumerationLiteral) namedVal.getNamedValue();
-				commModality = COMM_MODALITY.valueOf(enumLiteral.getName());
-			} else if (property.getName().equalsIgnoreCase("Boundary")) {
-				final ModalPropertyValue val = propertyAssociation.getOwnedValues().get(0);
-				final ListValue listVal = (ListValue) val.getOwnedValue();
-				for (PropertyExpression propertyExpression : listVal.getOwnedListElements()) {
-					final NamedValue namedVal = (NamedValue) propertyExpression;
-					final EnumerationLiteral enumLiteral = (EnumerationLiteral) namedVal.getNamedValue();
-					boundary.add(BOUNDARY.valueOf(enumLiteral.getName()));
-				}
-			}
+		if (setAnnotations(element)) {
+			BriefcaseNotifier.notify("Model Annotations", "Model annotations complete.");
+			format(true);
+		} else {
+			BriefcaseNotifier.printError("Model annotation failed");
 		}
 
+	}
+
+	private boolean setAnnotations(NamedElement element) {
+
+		final Resource aadlResource = element.eResource();
+		final TransactionalEditingDomain domain = WorkspaceEditingDomainFactory.INSTANCE.createEditingDomain();
+
+		// We execute this command on the command stack because otherwise, we will not
+		// have write permissions on the editing domain.
+		final Command cmd = new RecordingCommand(domain) {
+
+			@Override
+			protected void doExecute() {
+				for (Map.Entry<Property, PropertyExpression> entry : annotations.entrySet()) {
+					if (element.acceptsProperty(entry.getKey())) {
+						if (entry.getValue() instanceof PropertyValue) {
+							element.setPropertyValue(entry.getKey(), (PropertyValue) entry.getValue());
+						}
+					}
+				}
+			}
+		};
+
+		try {
+			((TransactionalCommandStack) domain.getCommandStack()).execute(cmd, null);
+
+			// We're done: Save the model
+			aadlResource.save(SaveOptions.newBuilder().format().getOptions().toOptionsMap());
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+
+		return true;
 	}
 
 }

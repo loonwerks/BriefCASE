@@ -4,11 +4,12 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
 import org.apache.http.HttpEntity;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -22,35 +23,53 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
+import org.osate.aadl2.AnnexSubclause;
 import org.osate.aadl2.ComponentImplementation;
 import org.osate.aadl2.modelsupport.util.AadlUtil;
 import org.osate.ui.dialogs.Dialog;
 
 import com.collins.trustedsystems.briefcase.json.export.Aadl2Json;
 import com.collins.trustedsystems.briefcase.json.export.AadlTranslate.AgreePrintOption;
+import com.collins.trustedsystems.briefcase.json.export.JsonTranslate;
 import com.collins.trustedsystems.briefcase.staircase.utils.CaseUtils;
 import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
 import com.collins.trustedsystems.briefcase.util.Filesystem;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 public class RunDcryppsHandler extends AadlHandler {
 
-	private final static String DCRYPPS_GET_REQUIREMENTS_ENDPOINT = "http://localhost/routers/DCRYPPSRoute/getRequirements";
+	private final static String DCRYPPS_GET_REQUIREMENTS_ENDPOINT = "http://localhost:8888/routers/DCRYPPSRoute/getRequirements";
+	private final static int TIMEOUT = 5 * 60 * 1000;
 	private final static String JOB_NAME = "Running DCRYPPS";
 	private final static String REQ_FILE_NAME = "DCRYPPS_Cyber_Requirements.json";
 
+	private final static String DESIRABLE_PROPERTIES = "desirableProperties";
+	private final static String ATTACKER_DESCRIPTION = "attackerDescription";
+//	private final static String CLASS_DICTIONARY = "classDictionary";
+	private final static String TOOL = "tool";
+	private final static String PROJECT = "project";
+	private final static String IMPLEMENTATION = "implementation";
+	private final static String DATE = "date";
+	private final static String HASH = "hash";
+	private final static String MODEL_UNITS = "modelUnits";
+	private final static String MODEL = "model";
+	private final static String REQUIREMENT = "requirement";
+	private final static String REQUIREMENTS = "requirements";
+	private final static String TYPE = "type";
+	private final static String CONTEXT = "context";
+	private final static String DESCRIPTION = "description";
+
 	@Override
-	protected void runCommand(URI uri) {
+	protected void runCommand(EObject eObj) {
 
 		// Check if a component implementation is selected
-		final EObject eObj = getEObject(uri);
 		if (!(eObj instanceof ComponentImplementation)) {
-			Dialog.showError("Run DCRYPPS",
-					"Select the top-level component implementation for analysis.");
+			Dialog.showError("Run DCRYPPS", "Select the top-level component implementation for analysis.");
 			return;
 		}
 		final ComponentImplementation ci = (ComponentImplementation) eObj;
@@ -78,31 +97,53 @@ public class RunDcryppsHandler extends AadlHandler {
 
 		final IPath path = new Path(ci.eResource().getURI().toPlatformString(true));
 		final IProject project = ResourcesPlugin.getWorkspace().getRoot().getFile(path).getProject();
-		header.addProperty("project", project.getName());
-		header.addProperty("implementation", ci.getQualifiedName());
-		header.addProperty("date", System.currentTimeMillis());
+		header.addProperty(PROJECT, project.getName());
+		header.addProperty(IMPLEMENTATION, ci.getQualifiedName());
+		header.addProperty(DATE, System.currentTimeMillis());
 
 		try {
 			// Generate json
 			final JsonElement json = Aadl2Json.generateJson(AadlUtil.getContainingPackage(ci), null,
 					AgreePrintOption.BOTH);
-			header.addProperty("hash", json.toString().hashCode());
-			header.add("modelUnits", json);
+			header.addProperty(HASH, Integer.toString(json.toString().hashCode()));
+			header.add(MODEL_UNITS, json);
 
 		} catch (Exception e) {
 			Dialog.showError("Run DCRYPPS", "Unable to export model to JSON format.");
 			return false;
 		}
 
-		request.add("model", header);
+		request.add(MODEL, header);
+
+		final JsonObject inputs = getInputsFromModel(ci);
+		if (!inputs.has(DESIRABLE_PROPERTIES)) {
+			Dialog.showError("Run DCRYPPS", "Component implementation " + ci.getName()
+					+ " must include a JSON annex containing the " + DESIRABLE_PROPERTIES + " array.");
+			return false;
+		} else if (!inputs.has(ATTACKER_DESCRIPTION)) {
+			Dialog.showError("Run DCRYPPS", "Component implementation " + ci.getName()
+					+ " must include a JSON annex containing the " + ATTACKER_DESCRIPTION + " array.");
+			return false;
+//		} else if (!inputs.has(CLASS_DICTIONARY)) {
+//			Dialog.showError("Run DCRYPPS", "Component implementation " + ci.getName()
+//					+ " must include a JSON annex containing the " + CLASS_DICTIONARY + " object.");
+//			return false;
+		}
+
+//		// TODO: Remove after Tamas fixes bug
+//		for (Map.Entry<String, JsonElement> input : inputs.entrySet()) {
+//			request.add(input.getKey(), input.getValue());
+//		}
+
 		final JsonObject results = postDcryppsRequest(request.toString());
-		// TODO: Check results status
-		if (!checkResults(results)) {
+//		// TODO: Check results status
+//		if (!checkResults(results)) {
+		if (results == null) {
 			return false;
 		}
 
 		// Save results
-		if (writeRequirementsFile(project, results) == null) {
+		if (writeRequirementsFile(project, header, results) == null) {
 			return false;
 		}
 
@@ -111,12 +152,41 @@ public class RunDcryppsHandler extends AadlHandler {
 		return true;
 	}
 
+	private JsonObject getInputsFromModel(ComponentImplementation ci) {
+//		Set<String> inputs = new HashSet<>();
+		JsonObject inputs = new JsonObject();
+		for (AnnexSubclause annexSubclause : ci.getOwnedAnnexSubclauses()) {
+			if (annexSubclause.getName().equalsIgnoreCase("json")) {
+//				final DefaultAnnexSubclause defaultAnnexSubclause = (DefaultAnnexSubclause) annexSubclause;
+//				final JsonAnnexSubclause jsonAnnexSubclause = (JsonAnnexSubclause) defaultAnnexSubclause.getParsedAnnexSubclause();
+				JsonElement jsonElement = JsonTranslate.genAnnexSubclause(annexSubclause);
+				if (jsonElement instanceof JsonObject) {
+					return jsonElement.getAsJsonObject();
+				}
+//				JsonAnnexElement jsonAnnexElement = jsonAnnexSubclause.getJsonAnnexElement();
+//				if (jsonAnnexElement instanceof JsonAnnexObject) {
+//					for (JsonAnnexMember jsonAnnexMember : ((JsonAnnexObject) jsonAnnexElement).getJsonAnnexMembers()) {
+//						inputs.add(jsonAnnexMember.getKey().getValue().replace("\"", ""));
+//
+//					}
+//				}
+				break;
+			}
+		}
+		return inputs;
+	}
+
 	private JsonObject postDcryppsRequest(String requestBody) {
 
-		final CloseableHttpClient httpClient = HttpClients.createDefault();
 		final HttpPost httpPost = new HttpPost(DCRYPPS_GET_REQUIREMENTS_ENDPOINT);
 		httpPost.setHeader("Accept", "application/json");
 		httpPost.setHeader("Content-type", "application/json");
+		final RequestConfig config = RequestConfig.custom()
+//				.setConnectTimeout(TIMEOUT)
+//				.setConnectionRequestTimeout(TIMEOUT)
+				.setSocketTimeout(TIMEOUT)
+				.build();
+		final CloseableHttpClient httpClient = HttpClientBuilder.create().setDefaultRequestConfig(config).build();
 		StringEntity stringEntity;
 		try {
 			stringEntity = new StringEntity(requestBody);
@@ -136,7 +206,7 @@ public class RunDcryppsHandler extends AadlHandler {
 
 				return responseJsonObject;
 			} else {
-				System.out.println("Error code " + statusCode);
+				Dialog.showError("Run DCRYPPS", "DCRYPPS returned error code " + statusCode + ".");
 			}
 		} catch (IOException e) {
 			Dialog.showError("Run DCRYPPS", "Unable to connect to DCRYPPS.\n\n" + e.getMessage());
@@ -145,16 +215,47 @@ public class RunDcryppsHandler extends AadlHandler {
 
 	}
 
-	private boolean checkResults(JsonObject results) {
-		if (results == null) {
-			return false;
+//	private boolean checkResults(JsonObject results) {
+//		if (results == null) {
+//			return false;
+//		}
+//		return true;
+//	}
+
+	private IFile writeRequirementsFile(IProject project, JsonObject header, JsonObject results) {
+
+		final JsonObject contents = header;
+		contents.addProperty(TOOL, "DCRYPPS");
+
+		final JsonArray requirements = new JsonArray();
+		if (!(results.has(REQUIREMENTS) && results.get(REQUIREMENTS).isJsonArray())) {
+			for (JsonElement reqElement : results.get(REQUIREMENTS).getAsJsonArray()) {
+				final JsonObject importReq = new JsonObject();
+				if (reqElement.isJsonObject()) {
+					final JsonObject reqObj = reqElement.getAsJsonObject();
+					if (reqObj.has(REQUIREMENT) && reqObj.get(REQUIREMENT).isJsonArray()
+							&& reqObj.get(REQUIREMENT).getAsJsonArray().size() > 0) {
+
+						JsonArray reqArr = reqObj.get(REQUIREMENT).getAsJsonArray();
+
+						importReq.addProperty(TYPE, reqArr.get(0).getAsString());
+
+						// Context
+						if (reqArr.size() > 1) {
+							importReq.addProperty(CONTEXT, reqArr.get(reqArr.size() - 1).getAsString());
+						}
+
+					}
+					if (reqObj.has(DESCRIPTION)) {
+						importReq.addProperty(DESCRIPTION, reqObj.get(DESCRIPTION).getAsString());
+					}
+					requirements.add(reqObj);
+				}
+			}
 		}
-		return true;
-	}
+		contents.add(REQUIREMENTS, requirements);
 
-	private IFile writeRequirementsFile(IProject project, JsonObject reqs) {
-
-		Gson gson = new GsonBuilder().serializeNulls().disableHtmlEscaping().setPrettyPrinting().create();
+		final Gson gson = new GsonBuilder().serializeNulls().disableHtmlEscaping().setPrettyPrinting().create();
 
 		IFile reqFile = null;
 		try {
@@ -164,10 +265,11 @@ public class RunDcryppsHandler extends AadlHandler {
 
 			final URI reqFileUri = URI.createURI(reqFolder.getFullPath().toString()).appendSegment(REQ_FILE_NAME);
 			reqFile = Filesystem.getFile(reqFileUri);
-			Filesystem.writeFile(reqFile, gson.toJson(reqs).getBytes());
+			Filesystem.writeFile(reqFile, gson.toJson(contents).getBytes());
 
 		} catch (Exception e) {
-			System.err.println("Unable to write requirements to filesystem.");
+			e.printStackTrace();
+			BriefcaseNotifier.println("Unable to write requirements to filesystem.");
 			return null;
 		}
 
