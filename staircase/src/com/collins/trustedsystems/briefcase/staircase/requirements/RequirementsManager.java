@@ -1148,10 +1148,13 @@ public class RequirementsManager {
 			// implInstanceName example:
 			// topLevelImplementation_Impl_Instance
 			final String[] tokens = implInstanceName.split("_");
-			assert (tokens.length >= 3);
-			
-			String topLevelImplName = tokens[tokens.length-3] + "." + tokens[tokens.length-2];
-			for (int i=(tokens.length-4); i>=0; i--) topLevelImplName = tokens[i] + "_" + topLevelImplName;
+			if (tokens.length < 3) {
+				return null;
+			}
+			String topLevelImplName = tokens[tokens.length - 3] + "." + tokens[tokens.length - 2];
+			for (int i = tokens.length - 4; i >= 0; --i) {
+				topLevelImplName = tokens[i] + "_" + topLevelImplName;
+			}
 
 			final XtextEditor editor = (XtextEditor) TraverseProject.getCurrentEditor();
 			if (editor != null) {
