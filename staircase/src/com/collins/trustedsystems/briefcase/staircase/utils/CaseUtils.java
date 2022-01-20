@@ -28,8 +28,8 @@ public class CaseUtils {
 	public static final String CASE_MODEL_TRANSFORMATIONS_NAME = "CASE_Model_Transformations";
 	public static final String CASE_MODEL_TRANSFORMATIONS_FILE = CASE_MODEL_TRANSFORMATIONS_NAME + ".aadl";
 	public static final String CASE_REQUIREMENTS_NAME = "CASE_Requirements";
-	public static final String CASE_REQUIREMENTS_DIR = "Requirements/";
-	public static final String CASE_REQUIREMENTS_FILE = CASE_REQUIREMENTS_DIR + CASE_REQUIREMENTS_NAME + ".aadl";
+	public static final String CASE_REQUIREMENTS_DIR = "Requirements";
+	public static final String CASE_REQUIREMENTS_FILE = CASE_REQUIREMENTS_DIR + "/" + CASE_REQUIREMENTS_NAME + ".aadl";
 	public static final String CASE_REQUIREMENTS_DATABASE_FILE = ".reqdb";
 
 
@@ -203,7 +203,7 @@ public class CaseUtils {
 			try {
 				reqFolder.create(false, true, new NullProgressMonitor());
 			} catch (CoreException e) {
-				System.out.println("CASE_Requirements package not created successfully.");
+				System.out.println("Requirements folder could not be created.");
 				e.printStackTrace();
 				return null;
 			}

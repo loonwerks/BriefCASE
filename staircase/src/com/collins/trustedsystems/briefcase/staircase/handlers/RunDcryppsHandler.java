@@ -16,9 +16,11 @@ import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.resources.WorkspaceJob;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.common.util.URI;
@@ -44,7 +46,7 @@ import com.google.gson.JsonParser;
 public class RunDcryppsHandler extends AadlHandler {
 
 	private final static String DCRYPPS_GET_REQUIREMENTS_ENDPOINT = "http://localhost:8888/routers/DCRYPPSRoute/getRequirements";
-	private final static int TIMEOUT = 5 * 60 * 1000;
+	private final static int TIMEOUT = 5 * 60 * 60 * 1000;
 	private final static String JOB_NAME = "Running DCRYPPS";
 	private final static String REQ_FILE_NAME = "DCRYPPS_Cyber_Requirements.json";
 
@@ -130,14 +132,8 @@ public class RunDcryppsHandler extends AadlHandler {
 //			return false;
 		}
 
-//		// TODO: Remove after Tamas fixes bug
-//		for (Map.Entry<String, JsonElement> input : inputs.entrySet()) {
-//			request.add(input.getKey(), input.getValue());
-//		}
-
 		final JsonObject results = postDcryppsRequest(request.toString());
-//		// TODO: Check results status
-//		if (!checkResults(results)) {
+
 		if (results == null) {
 			return false;
 		}
@@ -153,23 +149,14 @@ public class RunDcryppsHandler extends AadlHandler {
 	}
 
 	private JsonObject getInputsFromModel(ComponentImplementation ci) {
-//		Set<String> inputs = new HashSet<>();
+
 		JsonObject inputs = new JsonObject();
 		for (AnnexSubclause annexSubclause : ci.getOwnedAnnexSubclauses()) {
 			if (annexSubclause.getName().equalsIgnoreCase("json")) {
-//				final DefaultAnnexSubclause defaultAnnexSubclause = (DefaultAnnexSubclause) annexSubclause;
-//				final JsonAnnexSubclause jsonAnnexSubclause = (JsonAnnexSubclause) defaultAnnexSubclause.getParsedAnnexSubclause();
 				JsonElement jsonElement = JsonTranslate.genAnnexSubclause(annexSubclause);
 				if (jsonElement instanceof JsonObject) {
 					return jsonElement.getAsJsonObject();
 				}
-//				JsonAnnexElement jsonAnnexElement = jsonAnnexSubclause.getJsonAnnexElement();
-//				if (jsonAnnexElement instanceof JsonAnnexObject) {
-//					for (JsonAnnexMember jsonAnnexMember : ((JsonAnnexObject) jsonAnnexElement).getJsonAnnexMembers()) {
-//						inputs.add(jsonAnnexMember.getKey().getValue().replace("\"", ""));
-//
-//					}
-//				}
 				break;
 			}
 		}
@@ -215,20 +202,23 @@ public class RunDcryppsHandler extends AadlHandler {
 
 	}
 
-//	private boolean checkResults(JsonObject results) {
-//		if (results == null) {
-//			return false;
-//		}
-//		return true;
-//	}
-
 	private IFile writeRequirementsFile(IProject project, JsonObject header, JsonObject results) {
 
 		final JsonObject contents = header;
 		contents.addProperty(TOOL, "DCRYPPS");
+		if (contents.has(MODEL_UNITS)) {
+			contents.remove(MODEL_UNITS);
+		}
+		if (contents.has(IMPLEMENTATION)) {
+			String implementation = contents.get(IMPLEMENTATION).getAsString();
+			implementation = implementation.substring(implementation.lastIndexOf("::") + 2);
+			implementation = implementation.replace(".", "_");
+			implementation = implementation + "_Instance";
+			contents.addProperty(IMPLEMENTATION, implementation);
+		}
 
 		final JsonArray requirements = new JsonArray();
-		if (!(results.has(REQUIREMENTS) && results.get(REQUIREMENTS).isJsonArray())) {
+		if (results.has(REQUIREMENTS) && results.get(REQUIREMENTS).isJsonArray()) {
 			for (JsonElement reqElement : results.get(REQUIREMENTS).getAsJsonArray()) {
 				final JsonObject importReq = new JsonObject();
 				if (reqElement.isJsonObject()) {
@@ -261,9 +251,27 @@ public class RunDcryppsHandler extends AadlHandler {
 		try {
 
 			// Create Requirements folder if it doesn't exist
-			IFolder reqFolder = CaseUtils.createRequirementsFolder(project);
+			final IFolder reqFolder = CaseUtils.createRequirementsFolder(project);
+			URI reqFileUri = URI.createURI(project.getFullPath().toString());
+			if (reqFolder != null) {
+				reqFileUri = reqFileUri.appendSegment(CaseUtils.CASE_REQUIREMENTS_DIR);
 
-			final URI reqFileUri = URI.createURI(reqFolder.getFullPath().toString()).appendSegment(REQ_FILE_NAME);
+				// Create DCRYPPS folder if it doesn't exist
+				IFolder dcryppsFolder = reqFolder.getFolder("DCRYPPS");
+				if (!dcryppsFolder.exists()) {
+					try {
+						dcryppsFolder.create(false, true, new NullProgressMonitor());
+						reqFileUri = reqFileUri.appendSegment("DCRYPPS");
+					} catch (CoreException e) {
+						System.out.println("DCRYPPS folder could not be created.");
+						e.printStackTrace();
+					}
+				} else {
+					reqFileUri = reqFileUri.appendSegment("DCRYPPS");
+				}
+			}
+
+			reqFileUri = reqFileUri.appendSegment(REQ_FILE_NAME);
 			reqFile = Filesystem.getFile(reqFileUri);
 			Filesystem.writeFile(reqFile, gson.toJson(contents).getBytes());
 
