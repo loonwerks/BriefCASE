@@ -65,6 +65,10 @@ public class RunDcryppsHandler extends AadlHandler {
 	private final static String TYPE = "type";
 	private final static String CONTEXT = "context";
 	private final static String DESCRIPTION = "description";
+	private final static String COST_GUIDANCE = "costGuidance";
+	private final static String NO_COST_GUIDANCE = "no-cost-guidance";
+	private final static String TARGET_CONFIDENCE = "targetConfidence";
+	private final static double TARGET_CONFIDENCE_VAL = 0.96;
 
 	@Override
 	protected void runCommand(EObject eObj) {
@@ -116,6 +120,8 @@ public class RunDcryppsHandler extends AadlHandler {
 		}
 
 		request.add(MODEL, header);
+//		request.addProperty(COST_GUIDANCE, NO_COST_GUIDANCE);
+//		request.addProperty(TARGET_CONFIDENCE, TARGET_CONFIDENCE_VAL);
 
 		final JsonObject inputs = getInputsFromModel(ci);
 		if (!inputs.has(DESIRABLE_PROPERTIES)) {

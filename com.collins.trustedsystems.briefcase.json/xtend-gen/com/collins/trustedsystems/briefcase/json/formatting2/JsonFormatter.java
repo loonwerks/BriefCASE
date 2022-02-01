@@ -117,76 +117,76 @@ public class JsonFormatter extends PropertiesFormatter {
     this.format(jsonannexmember.getJsonAnnexElement(), document);
   }
   
-  public void format(final Object jsonannexsubclause, final IFormattableDocument document) {
-    if (jsonannexsubclause instanceof JsonAnnexSubclause) {
-      _format((JsonAnnexSubclause)jsonannexsubclause, document);
+  public void format(final Object jsonannexarray, final IFormattableDocument document) {
+    if (jsonannexarray instanceof XtextResource) {
+      _format((XtextResource)jsonannexarray, document);
       return;
-    } else if (jsonannexsubclause instanceof IntegerLiteral) {
-      _format((IntegerLiteral)jsonannexsubclause, document);
+    } else if (jsonannexarray instanceof JsonAnnexArray) {
+      _format((JsonAnnexArray)jsonannexarray, document);
       return;
-    } else if (jsonannexsubclause instanceof RealLiteral) {
-      _format((RealLiteral)jsonannexsubclause, document);
+    } else if (jsonannexarray instanceof JsonAnnexObject) {
+      _format((JsonAnnexObject)jsonannexarray, document);
       return;
-    } else if (jsonannexsubclause instanceof JsonAnnexLibrary) {
-      _format((JsonAnnexLibrary)jsonannexsubclause, document);
+    } else if (jsonannexarray instanceof JsonAnnexLibrary) {
+      _format((JsonAnnexLibrary)jsonannexarray, document);
       return;
-    } else if (jsonannexsubclause instanceof ClassifierValue) {
-      _format((ClassifierValue)jsonannexsubclause, document);
+    } else if (jsonannexarray instanceof JsonAnnexMember) {
+      _format((JsonAnnexMember)jsonannexarray, document);
       return;
-    } else if (jsonannexsubclause instanceof ComputedValue) {
-      _format((ComputedValue)jsonannexsubclause, document);
+    } else if (jsonannexarray instanceof JsonAnnexSubclause) {
+      _format((JsonAnnexSubclause)jsonannexarray, document);
       return;
-    } else if (jsonannexsubclause instanceof ModalPropertyValue) {
-      _format((ModalPropertyValue)jsonannexsubclause, document);
+    } else if (jsonannexarray instanceof EObject) {
+      _format((EObject)jsonannexarray, document);
       return;
-    } else if (jsonannexsubclause instanceof RangeValue) {
-      _format((RangeValue)jsonannexsubclause, document);
-      return;
-    } else if (jsonannexsubclause instanceof RecordValue) {
-      _format((RecordValue)jsonannexsubclause, document);
-      return;
-    } else if (jsonannexsubclause instanceof ReferenceValue) {
-      _format((ReferenceValue)jsonannexsubclause, document);
-      return;
-    } else if (jsonannexsubclause instanceof ListValue) {
-      _format((ListValue)jsonannexsubclause, document);
-      return;
-    } else if (jsonannexsubclause instanceof Operation) {
-      _format((Operation)jsonannexsubclause, document);
-      return;
-    } else if (jsonannexsubclause instanceof XtextResource) {
-      _format((XtextResource)jsonannexsubclause, document);
-      return;
-    } else if (jsonannexsubclause instanceof ArrayRange) {
-      _format((ArrayRange)jsonannexsubclause, document);
-      return;
-    } else if (jsonannexsubclause instanceof BasicPropertyAssociation) {
-      _format((BasicPropertyAssociation)jsonannexsubclause, document);
-      return;
-    } else if (jsonannexsubclause instanceof ContainmentPathElement) {
-      _format((ContainmentPathElement)jsonannexsubclause, document);
-      return;
-    } else if (jsonannexsubclause instanceof JsonAnnexArray) {
-      _format((JsonAnnexArray)jsonannexsubclause, document);
-      return;
-    } else if (jsonannexsubclause instanceof JsonAnnexObject) {
-      _format((JsonAnnexObject)jsonannexsubclause, document);
-      return;
-    } else if (jsonannexsubclause instanceof JsonAnnexMember) {
-      _format((JsonAnnexMember)jsonannexsubclause, document);
-      return;
-    } else if (jsonannexsubclause instanceof EObject) {
-      _format((EObject)jsonannexsubclause, document);
-      return;
-    } else if (jsonannexsubclause == null) {
+    } else if (jsonannexarray == null) {
       _format((Void)null, document);
       return;
-    } else if (jsonannexsubclause != null) {
-      _format(jsonannexsubclause, document);
+    } else if (jsonannexarray instanceof ArrayRange) {
+      _format((ArrayRange)jsonannexarray, document);
+      return;
+    } else if (jsonannexarray instanceof BasicPropertyAssociation) {
+      _format((BasicPropertyAssociation)jsonannexarray, document);
+      return;
+    } else if (jsonannexarray instanceof ClassifierValue) {
+      _format((ClassifierValue)jsonannexarray, document);
+      return;
+    } else if (jsonannexarray instanceof ComputedValue) {
+      _format((ComputedValue)jsonannexarray, document);
+      return;
+    } else if (jsonannexarray instanceof ContainmentPathElement) {
+      _format((ContainmentPathElement)jsonannexarray, document);
+      return;
+    } else if (jsonannexarray instanceof IntegerLiteral) {
+      _format((IntegerLiteral)jsonannexarray, document);
+      return;
+    } else if (jsonannexarray instanceof ListValue) {
+      _format((ListValue)jsonannexarray, document);
+      return;
+    } else if (jsonannexarray instanceof ModalPropertyValue) {
+      _format((ModalPropertyValue)jsonannexarray, document);
+      return;
+    } else if (jsonannexarray instanceof Operation) {
+      _format((Operation)jsonannexarray, document);
+      return;
+    } else if (jsonannexarray instanceof RangeValue) {
+      _format((RangeValue)jsonannexarray, document);
+      return;
+    } else if (jsonannexarray instanceof RealLiteral) {
+      _format((RealLiteral)jsonannexarray, document);
+      return;
+    } else if (jsonannexarray instanceof RecordValue) {
+      _format((RecordValue)jsonannexarray, document);
+      return;
+    } else if (jsonannexarray instanceof ReferenceValue) {
+      _format((ReferenceValue)jsonannexarray, document);
+      return;
+    } else if (jsonannexarray != null) {
+      _format(jsonannexarray, document);
       return;
     } else {
       throw new IllegalArgumentException("Unhandled parameter types: " +
-        Arrays.<Object>asList(jsonannexsubclause, document).toString());
+        Arrays.<Object>asList(jsonannexarray, document).toString());
     }
   }
 }
