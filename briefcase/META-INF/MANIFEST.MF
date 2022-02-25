@@ -4,7 +4,7 @@ Bundle-Name: com.collins.trustedsystems.briefcase
 Bundle-SymbolicName: com.collins.trustedsystems.briefcase;singleton:=true
 Bundle-Version: 0.6.1.qualifier
 Automatic-Module-Name: com.collins.trustedsystems.briefcase
-Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-RequiredExecutionEnvironment: JavaSE-11
 Require-Bundle: org.eclipse.jface,
  org.osate.aadl2;bundle-version="[4.0.0,5.0.0)",
  org.eclipse.xtext.ui,
