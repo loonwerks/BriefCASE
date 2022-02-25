@@ -5,19 +5,19 @@ Bundle-SymbolicName: com.collins.trustedsystems.briefcase.json.export;singleton:
 Bundle-Version: 0.6.1.qualifier
 Automatic-Module-Name: com.collins.trustedsystems.briefcase.json.export
 Bundle-RequiredExecutionEnvironment: JavaSE-11
-Require-Bundle: org.eclipse.jface,
+Require-Bundle: org.eclipse.jface;bundle-version="[3.22.0,4.0.0)",
  org.osate.aadl2;bundle-version="[4.0.0,5.0.0)",
- org.eclipse.xtext.ui,
- org.eclipse.emf.common,
- org.eclipse.ui.console,
+ org.eclipse.xtext.ui;bundle-version="[2.25.0,3.0.0)",
+ org.eclipse.emf.common;bundle-version="[2.22.0,3.0.0)",
+ org.eclipse.ui.console;bundle-version="[3.10.0,4.0.0)",
  org.osate.ui;bundle-version="[6.0.0,7.0.0)",
  org.osate.aadl2.instantiation;bundle-version="[1.0.1,2.0.0)",
  org.osate.aadl2.modelsupport;bundle-version="[5.0.0,7.0.0)",
  org.osate.annexsupport;bundle-version="[3.0.0,4.0.0)",
  org.osate.ge;bundle-version="[3.0.0,4.0.0)",
  com.rockwellcollins.atc.agree;bundle-version="[2.4.2,4.0.0)",
- com.collins.trustedsystems.briefcase,
- com.collins.trustedsystems.briefcase.json
+ com.collins.trustedsystems.briefcase;bundle-version="[0.6.0,0.7.0)",
+ com.collins.trustedsystems.briefcase.json;bundle-version="[0.6.0,0.7.0)"
 Import-Package: org.eclipse.mylyn.commons.ui.dialogs,
  org.eclipse.ui
 Bundle-ClassPath: .,
