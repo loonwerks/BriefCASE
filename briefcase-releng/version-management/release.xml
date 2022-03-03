@@ -1,4 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <release>
-	<plugin name="com.collins.trustedsystems.briefcase" version="0.6.0"/>
+	<feature name="com.collins.trustedsystems.briefcase.feature" version="0.7.0">
+		<plugin name="com.collins.trustedsystems.briefcase" version="0.7.0"/>
+		<plugin name="com.collins.trustedsystems.briefcase.attestation" version="0.7.0"/>
+		<plugin name="com.collins.trustedsystems.briefcase.splat" version="0.7.0"/>
+		<plugin name="com.collins.trustedsystems.briefcase.staircase" version="0.7.0"/>
+		<plugin name="com.collins.trustedsystems.briefcase.toolcheck" version="0.7.0"/>
+		<plugin name="com.collins.trustedsystems.briefcase.json" version="0.7.0"/>
+		<plugin name="com.collins.trustedsystems.briefcase.json.ui" version="0.7.0"/>
+		<plugin name="com.collins.trustedsystems.briefcase.json.export" version="0.7.0"/>
+		<plugin name="com.collins.trustedsystems.briefcase.agreecheck" version="0.7.0"/>
+		<plugin name="com.collins.trustedsystems.briefcase.agreelib" version="0.7.0"/>
+	</feature>
+	<plugin name="com.collins.trustedsystems.briefcase" version="0.7.0"/>
+	<plugin name="com.collins.trustedsystems.briefcase.agreecheck" version="0.7.0"/>
+	<plugin name="com.collins.trustedsystems.briefcase.agreelib" version="0.7.0"/>
+	<plugin name="com.collins.trustedsystems.briefcase.attestation" version="0.7.0"/>
+	<plugin name="com.collins.trustedsystems.briefcase.json" version="0.7.0"/>
+	<plugin name="com.collins.trustedsystems.briefcase.json.export" version="0.7.0"/>
+	<plugin name="com.collins.trustedsystems.briefcase.json.ui" version="0.7.0"/>
+	<plugin name="com.collins.trustedsystems.briefcase.splat" version="0.7.0"/>
+	<plugin name="com.collins.trustedsystems.briefcase.staircase" version="0.7.0"/>
+	<plugin name="com.collins.trustedsystems.briefcase.toolcheck" version="0.7.0"/>
 </release>
