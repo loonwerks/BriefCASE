@@ -393,7 +393,8 @@
 		<repository>
 			<id>Osate2</id>
 			<layout>p2</layout>
-			<url>https://osate-build.sei.cmu.edu/download/osate/testing/updates/</url>
+			<!-- <url>https://osate-build.sei.cmu.edu/download/osate/testing/updates/</url> -->
+			<url>https://osate-build.sei.cmu.edu/download/osate/stable/2.10.2/updates/</url>
 		</repository>
 		<repository>
 			<id>Formal-Methods-Workbench-Updates</id>
