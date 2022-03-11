@@ -1,0 +1,86 @@
+package CASE_Assurance
+private
+	annex resolute {**
+
+		goal requirements_complete() <=
+			** "Requirements are complete with respect to vulnerabilities" **
+			system_design_evaluated() and cyber_requirements_reviewed() and cyber_requirements_imported_or_omitted_with_rationale()
+		
+		goal system_design_evaluated() <=
+			** "System design analyzed for vulnerabilities" **
+			model_complies_with_guidelines() and cyber_analysis_performed()
+		
+		goal cyber_analysis_performed() <=
+			** "Cyber analysis was performed on most recent version of model" **
+			undeveloped
+		
+		goal cyber_requirements_reviewed() <=
+			** "Cyber requirements were reviewed" **
+			undeveloped
+		
+		goal cyber_requirements_imported_or_omitted_with_rationale() <=
+			** "Generated cyber requirements were imported into model or omitted with rationale" **
+			requirement_imported() or requirement_omitted_with_rationale()
+		
+		goal requirement_imported() <=
+			** "The cyber requirement was imported into the model" **
+			undeveloped
+		
+		goal requirement_omitted_with_rationale() <=
+			** "The cyber requirement was omitted with rationale" **
+			undeveloped
+		
+		goal cyber_requirement_satisfied() <=
+			** "The cyber requirement is satisfied" **
+			requirement_satisfied_in_model() and requirement_satisfied_in_implementation()
+		
+		goal requirement_satisfied_in_model() <=
+			** "Cyber requirement is satisfied in the system model" **
+			mitigation_applied()
+		--and formal_verification_performed() 
+		--and model_complies_with_guidelines()
+		
+		goal mitigation_applied() <=
+			** "BriefCASE mitigation has been applied" **
+			-- refer to mitigation strategy here
+			undeveloped
+		
+--		formal_verification_performed() <=
+--			** "Formal verification proves model satisfies requirement" **
+--			-- AgreeCheck + confidence in results
+
+		goal model_complies_with_guidelines() <=
+			** "Model complies with modeling guidelines" **
+			context: "CASE modeling guidelines";
+			--resolint()
+			undeveloped
+		
+		goal requirement_satisfied_in_implementation() <=
+			** "Cyber requirement is satisfied through the realization of the AADL system model" **
+			required_properties()
+		
+		strategy required_properties() <=
+			** "Argue over required properties of the components and platform" **
+			software_components_guarantee_assertions() and platform_components_guarantee_properties() and system_implementation_addresses_requirements()
+		
+		goal software_components_guarantee_assertions() <=
+			** "Software components guarantee required assertions" **
+			-- SPLAT
+			-- Attestation
+			-- Manual / legacy / simulink
+--			synthesized_code_correct()
+			undeveloped
+		
+		goal platform_components_guarantee_properties() <=
+			** "Platform components guarantee required properties" **
+			undeveloped
+		
+		goal system_implementation_addresses_requirements() <=
+			** "The implementation of the system model addresses the requirements" **
+			-- HAMR
+			-- CAmkES
+			-- seL4
+			undeveloped
+
+	**};
+end CASE_Assurance;

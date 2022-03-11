@@ -130,29 +130,29 @@ public class RequirementsManager {
 		reqDb.importRequirements(findImportedRequirements());
 	}
 
-	public boolean formalizeRequirement(String reqId) {
-		final CyberRequirement req = getRequirement(reqId);
-		if (req == null) {
-			return false;
-		}
-		req.setAgree();
-		formalizeRequirement(req);
-		reqDb.updateRequirement(req);
-		reqDb.saveRequirementsDatabase();
-		return true;
-	}
-
-	public boolean unformalizeRequirement(String reqId) {
-		final CyberRequirement req = getRequirement(reqId);
-		if (req == null) {
-			return false;
-		}
-		req.setStatus(CyberRequirement.add);
-		unformalizeRequirement(req);
-		reqDb.updateRequirement(req);
-		reqDb.saveRequirementsDatabase();
-		return true;
-	}
+//	public boolean formalizeRequirement(String reqId) {
+//		final CyberRequirement req = getRequirement(reqId);
+//		if (req == null) {
+//			return false;
+//		}
+//		req.setAgree();
+//		formalizeRequirement(req);
+//		reqDb.updateRequirement(req);
+//		reqDb.saveRequirementsDatabase();
+//		return true;
+//	}
+//
+//	public boolean unformalizeRequirement(String reqId) {
+//		final CyberRequirement req = getRequirement(reqId);
+//		if (req == null) {
+//			return false;
+//		}
+//		req.setStatus(CyberRequirement.add);
+//		unformalizeRequirement(req);
+//		reqDb.updateRequirement(req);
+//		reqDb.saveRequirementsDatabase();
+//		return true;
+//	}
 
 	public List<CyberRequirement> getImportedRequirements() {
 		return reqDb.getImportedRequirements();
@@ -218,12 +218,13 @@ public class RequirementsManager {
 						break;
 					case CyberRequirement.add:
 						// add to model
-						helper.insertRequirement(r, true, false);
+//						helper.insertRequirement(r, true, false);
+						helper.insertRequirement(r, true);
 						break;
-					case CyberRequirement.addPlusAgree:
-						// add to model and formalize
-						helper.insertRequirement(r, true, true);
-						break;
+//					case CyberRequirement.addPlusAgree:
+//						// add to model and formalize
+//						helper.insertRequirement(r, true, true);
+//						break;
 					default:
 						// Unknown status; signal error
 						throw new RuntimeException("Updated requirement has invalid status : " + r);
@@ -233,37 +234,37 @@ public class RequirementsManager {
 					case CyberRequirement.toDo:
 					case CyberRequirement.omit:
 						// remove resolute claim definition and claim call
-						helper.removeRequirement(r, false, true);
+						helper.removeRequirement(r, existing.getFormalize(), true);
 						break;
 					case CyberRequirement.add:
 						// no change permitted
 						break;
-					case CyberRequirement.addPlusAgree:
-						// formalize
-						helper.insertRequirement(r, false, true);
-						break;
+//					case CyberRequirement.addPlusAgree:
+//						// formalize
+//						helper.insertRequirement(r, false, true);
+//						break;
 					default:
 						// Unknown status; signal error
 						throw new RuntimeException("Updated requirement has invalid status : " + r);
 					}
-				} else if (existing.getStatus() == CyberRequirement.addPlusAgree) {
-					switch (r.getStatus()) {
-					case CyberRequirement.toDo:
-					case CyberRequirement.omit:
-						// remove resolute claim definition, claim call and agree call
-						helper.removeRequirement(r, true, true);
-						break;
-					case CyberRequirement.add:
-						// remove agree call
-						helper.removeRequirement(r, true, false);
-						break;
-					case CyberRequirement.addPlusAgree:
-						// no change permitted
-						break;
-					default:
-						// Unknown status; signal error
-						throw new RuntimeException("Updated requirement has invalid status : " + r);
-					}
+//				} else if (existing.getStatus() == CyberRequirement.addPlusAgree) {
+//					switch (r.getStatus()) {
+//					case CyberRequirement.toDo:
+//					case CyberRequirement.omit:
+//						// remove resolute claim definition, claim call and agree call
+//						helper.removeRequirement(r, true, true);
+//						break;
+//					case CyberRequirement.add:
+//						// remove agree call
+//						helper.removeRequirement(r, true, false);
+//						break;
+//					case CyberRequirement.addPlusAgree:
+//						// no change permitted
+//						break;
+//					default:
+//						// Unknown status; signal error
+//						throw new RuntimeException("Updated requirement has invalid status : " + r);
+//					}
 				} else {
 					// Unknown status; signal error
 					throw new RuntimeException("Existing requirement has invalid status : " + existing);
@@ -324,7 +325,8 @@ public class RequirementsManager {
 				// If this function definition already exists, remove it
 				final List<CyberRequirement> resoluteClauses = new ArrayList<>();
 				for (Definition def : resLib.getDefinitions()) {
-					if (def instanceof FunctionDefinition) {
+					if (def instanceof FunctionDefinition
+							&& !def.getName().equalsIgnoreCase(CyberRequirement.TOP_LEVEL_CLAIM)) {
 						final FunctionDefinition fd = (FunctionDefinition) def;
 						final DefinitionBody db = fd.getBody();
 						if (db instanceof ClaimBody) {
@@ -721,7 +723,7 @@ public class RequirementsManager {
 		private Map<IFile, HashSet<CyberRequirement>> addAgreeCheckClaimProveStatement = new HashMap<IFile, HashSet<CyberRequirement>>();
 		private Map<IFile, HashSet<CyberRequirement>> addAgreeAssumption = new HashMap<IFile, HashSet<CyberRequirement>>();
 		private Map<IFile, HashSet<CyberRequirement>> removeAgreeAssumption = new HashMap<IFile, HashSet<CyberRequirement>>();
-		private Map<IFile, HashSet<CyberRequirement>> removeProveStatement = new HashMap<IFile, HashSet<CyberRequirement>>();
+		private Map<IFile, HashSet<CyberRequirement>> removeArgueStatement = new HashMap<IFile, HashSet<CyberRequirement>>();
 		private Set<CyberRequirement> removeAgreeCheckFromClaimDefinition = new HashSet<CyberRequirement>();
 		private Set<CyberRequirement> removeClaimDefinition = new HashSet<CyberRequirement>();
 
@@ -735,7 +737,7 @@ public class RequirementsManager {
 			addAgreeCheckClaimProveStatement.clear();
 			addAgreeAssumption.clear();
 			removeAgreeAssumption.clear();
-			removeProveStatement.clear();
+			removeArgueStatement.clear();
 			removeAgreeCheckFromClaimDefinition.clear();
 			removeClaimDefinition.clear();
 
@@ -756,12 +758,18 @@ public class RequirementsManager {
 			s.add(r);
 		}
 
-		public void insertRequirement(CyberRequirement r, boolean define, boolean formalize) {
+//		public void insertRequirement(CyberRequirement r, boolean define, boolean formalize) {
+		public void insertRequirement(CyberRequirement r, boolean define) {
 			if (define) {
 				insert(addBaseClaimDefinition, r);
 				insert(addBaseClaimProveStatement, r.getContainingFile(), r);
 			}
-			if (formalize) {
+//			if (formalize) {
+//				insert(addAgreeCheckClaimDefinition, r);
+//				insert(addAgreeCheckClaimProveStatement, r.getContainingFile(), r);
+//				insert(addAgreeAssumption, r.getSubcomponentContainingFile(), r);
+//			}
+			if (r.getFormalize()) {
 				insert(addAgreeCheckClaimDefinition, r);
 				insert(addAgreeCheckClaimProveStatement, r.getContainingFile(), r);
 				insert(addAgreeAssumption, r.getSubcomponentContainingFile(), r);
@@ -770,7 +778,7 @@ public class RequirementsManager {
 
 		public void removeRequirement(CyberRequirement r, boolean removeFormalization, boolean removeDefinition) {
 			if (removeDefinition) {
-				insert(removeProveStatement, r.getContainingFile(), r);
+				insert(removeArgueStatement, r.getContainingFile(), r);
 				insert(removeClaimDefinition, r);
 				if (removeFormalization) {
 					insert(removeAgreeAssumption, r.getSubcomponentContainingFile(), r);
@@ -788,7 +796,7 @@ public class RequirementsManager {
 			files.addAll(addAgreeCheckClaimProveStatement.keySet());
 			files.addAll(addAgreeAssumption.keySet());
 			files.addAll(removeAgreeAssumption.keySet());
-			files.addAll(removeProveStatement.keySet());
+			files.addAll(removeArgueStatement.keySet());
 
 			// Remove prove statements before removing claim definitions in the main claims file
 			// to avoid null cross references.
@@ -928,8 +936,8 @@ public class RequirementsManager {
 
 				@Override
 				protected void doExecute() {
-					if (removeProveStatement.containsKey(file)) {
-						for (CyberRequirement req : removeProveStatement.get(file)) {
+					if (removeArgueStatement.containsKey(file)) {
+						for (CyberRequirement req : removeArgueStatement.get(file)) {
 							req.removeClaimCall(aadlResource);
 						}
 					}
@@ -1229,7 +1237,7 @@ public class RequirementsManager {
 		private List<CyberRequirement> getRequirements(final String filterString) {
 			final List<CyberRequirement> list = new ArrayList<CyberRequirement>();
 			requirements.values().forEach(r -> {
-				// Using "==" instead of equals because filterString is one of four constants
+				// Using "==" instead of equals because filterString is one of three constants
 				if (r.getStatus() == filterString) {
 					list.add(new CyberRequirement(r));
 				}
@@ -1249,13 +1257,13 @@ public class RequirementsManager {
 			return getRequirements(CyberRequirement.add);
 		}
 
-		public List<CyberRequirement> getAddPlusAgreeRequirements() {
-			return getRequirements(CyberRequirement.addPlusAgree);
-		}
+//		public List<CyberRequirement> getAddPlusAgreeRequirements() {
+//			return getRequirements(CyberRequirement.addPlusAgree);
+//		}
 
 		public List<CyberRequirement> getImportedRequirements() {
 			final List<CyberRequirement> list = getAddRequirements();
-			list.addAll(getAddPlusAgreeRequirements());
+//			list.addAll(getAddPlusAgreeRequirements());
 			return list;
 		}
 	}

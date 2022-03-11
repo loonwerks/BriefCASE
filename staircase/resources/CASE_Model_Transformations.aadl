@@ -80,39 +80,78 @@ public
 		---------------------------
 		
 		-- Strategy for proper insertion of a filter
-		strategy add_filter(comp_context : component, filter : component, conn : connection, msg_type : data) <=
+--		strategy add_filter(comp_context : component, filter : component, conn : connection, msg_type : data) <=
+--			** "Filter " filter " is properly added to component " comp_context **
+--			filter_exists(filter, comp_context, conn) and component_not_bypassed(filter, comp_context, msg_type) and component_implemented(filter, "SPLAT")
+		strategy add_filter(comp_context : string, filter : string, conn : string, msg_type : data) <=
 			** "Filter " filter " is properly added to component " comp_context **
-			filter_exists(filter, comp_context, conn) and component_not_bypassed(filter, comp_context, msg_type) and component_implemented(filter, "SPLAT")
+			let ctx : component = ModelAccess.getComponent(comp_context);
+			let flt : component = ModelAccess.getComponent(filter);
+			let cnx : connection = ModelAccess.getConnection(conn);
+			filter_exists(flt, ctx, cnx) and component_not_bypassed(flt, ctx, msg_type) and component_implemented(flt, "SPLAT")
 			
 		-- Strategy for proper insertion of attestation manager
-		strategy add_attestation_manager(comm_driver : component, attestation_manager : component, attestation_gate : component) <=
+--		strategy add_attestation_manager(comm_driver : component, attestation_manager : component, attestation_gate : component) <=
+--			** "Attestation Manager added for communications driver " comm_driver **
+--			attestation_manager_exists(comm_driver, attestation_manager) and attestation_manager_not_bypassed(comm_driver, attestation_manager, attestation_gate) and component_implemented(attestation_manager, "attestation") and component_implemented(attestation_gate, "SPLAT")
+		strategy add_attestation_manager(comm_driver : string, attestation_manager : string, attestation_gate : string) <=
 			** "Attestation Manager added for communications driver " comm_driver **
-			attestation_manager_exists(comm_driver, attestation_manager) and attestation_manager_not_bypassed(comm_driver, attestation_manager, attestation_gate) and component_implemented(attestation_manager, "attestation") and component_implemented(attestation_gate, "SPLAT")
+			let driver : component = ModelAccess.GetComponent(comm_driver);
+			let manager : component = ModelAccess.GetComponent(attestation_manager);
+			let gate : component = ModelAccess.GetComponent(attestation_gate);
+			attestation_manager_exists(driver, manager) and attestation_manager_not_bypassed(driver, manager, gate) and component_implemented(manager, "attestation") and component_implemented(gate, "SPLAT")
 		
 		-- Strategy for proper insertion of virtualization
-		strategy add_virtualization(bound_components : {component}, virtual_machine : component) <=
+--		strategy add_virtualization(bound_components : {component}, virtual_machine : component) <=
+--			** bound_components " contained in VM " virtual_machine **
+--			vm_bound_to_processor(virtual_machine) and components_bound_to_vm(bound_components, virtual_machine) and subcomponents_not_bound_to_other_processors(bound_components, virtual_machine)
+		strategy add_virtualization(bound_components : string, virtual_machine : string) <=
 			** bound_components " contained in VM " virtual_machine **
-			vm_bound_to_processor(virtual_machine) and components_bound_to_vm(bound_components, virtual_machine) and subcomponents_not_bound_to_other_processors(bound_components, virtual_machine)
+			let vm_comps : {component} = ModelAccess.getComponentSet(bound_components);
+			let vm : component = ModelAccess.getComponent(virtual_machine);
+			vm_bound_to_processor(vm) and components_bound_to_vm(vm_comps, vm) and subcomponents_not_bound_to_other_processors(vm_comps, vm)
 		
 		-- Strategy for proper insertion of a monitor
-		strategy add_monitor(comp_context : component, monitor : component, alert_port : feature) <=
+--		strategy add_monitor(comp_context : component, monitor : component, alert_port : feature) <=
+--			** "Monitor " monitor " is properly added to " comp_context **
+--			component_exists(monitor, CASE_Properties::Monitoring) and alert_connected(monitor, alert_port) and independent_reset(monitor, comp_context) and component_implemented(monitor, "SPLAT")
+		strategy add_monitor(comp_context : string, monitor : string, alert_port : string) <=
 			** "Monitor " monitor " is properly added to " comp_context **
-			component_exists(monitor, CASE_Properties::Monitoring) and alert_connected(monitor, alert_port) and independent_reset(monitor, comp_context) and component_implemented(monitor, "SPLAT")
+			let ctx : component = ModelAccess.getComponent(comp_context);
+			let mon : component = ModelAccess.getComponent(monitor);
+			let alert : feature = ModelAccess.getPort(alert_port);
+			component_exists(mon, CASE_Properties::Monitoring) and alert_connected(mon, alert) and independent_reset(mon, ctx) and component_implemented(mon, "SPLAT")
 
 		-- Strategy for proper insertion of a monitor with a gate
-		strategy add_monitor_gate(comp_context : component, monitor : component, alert_port : feature, gate_context : component, message_type : data) <=
+--		strategy add_monitor_gate(comp_context : component, monitor : component, alert_port : feature, gate_context : component, message_type : data) <=
+--			** "Monitor " monitor " is properly added to " comp_context **
+--			component_exists(monitor, CASE_Properties::Monitoring) and alert_connected(monitor, alert_port) and independent_reset(monitor, comp_context) and component_not_bypassed(monitor, gate_context, message_type) and component_implemented(monitor, "SPLAT")
+		strategy add_monitor_gate(comp_context : string, monitor : string, alert_port : string, gate_context : string, message_type : data) <=
 			** "Monitor " monitor " is properly added to " comp_context **
-			component_exists(monitor, CASE_Properties::Monitoring) and alert_connected(monitor, alert_port) and independent_reset(monitor, comp_context) and component_not_bypassed(monitor, gate_context, message_type) and component_implemented(monitor, "SPLAT")
+			let ctx : component = ModelAccess.getComponent(comp_context);
+			let mon : component = ModelAccess.getComponent(monitor);
+			let alert : feature = ModelAccess.getPort(alert_port);
+			let gate : component = ModelAccess.getComponent(gate_context);
+			component_exists(mon, CASE_Properties::Monitoring) and alert_connected(mon, alert) and independent_reset(mon, ctx) and component_not_bypassed(mon, gate, message_type) and component_implemented(mon, "SPLAT")
 
 		-- Strategy claim for proper insertion of a switch
-		strategy add_switch(comp_context : component, switch : component, message_type : data) <=
+--		strategy add_switch(comp_context : component, switch : component, message_type : data) <=
+--			** "Switch inserted after " comp_context **
+--			component_exists(switch, CASE_Properties::Gating) and component_not_bypassed(switch, comp_context, message_type) and component_implemented(switch, "SPLAT")
+		strategy add_switch(comp_context : string, switch : string, message_type : data) <=
 			** "Switch inserted after " comp_context **
-			component_exists(switch, CASE_Properties::Gating) and component_not_bypassed(switch, comp_context, message_type) and component_implemented(switch, "SPLAT")
+			let ctx : component = ModelAccess.getComponent(comp_context);
+			let gate : component = ModelAccess.getComponent(switch);
+			component_exists(gate, CASE_Properties::Gating) and component_not_bypassed(gate, ctx, message_type) and component_implemented(gate, "SPLAT")
 		
 		-- Strategy for proper transformation of model for seL4 build
-		strategy sel4_transform(comp_context : component) <=
+--		strategy sel4_transform(comp_context : component) <=
+--			** "Component " comp_context " transformed for seL4 build" **
+--			each_thread_in_separate_process(comp_context)
+		strategy sel4_transform(comp_context : string) <=
 			** "Component " comp_context " transformed for seL4 build" **
-			each_thread_in_separate_process(comp_context)
+			let ctx : component = ModelAccess.getComponent(comp_context);
+			each_thread_in_separate_process(ctx)
 			
 		--------------------------
 		-- PROJECT-LEVEL CLAIMS --
@@ -127,9 +166,13 @@ public
 		----------------
 	
 		-- This connects to evidence that AGREE was previously run on the current version of the design.
-		agree_property_checked(c : component, property_id : string) <=
+--		agree_property_checked(c : component, property_id : string) <=
+--			** "AGREE properties passed" **
+--			AgreeLib.hasAgreeProperty(c, property_id) and analysis("AgreeCheck", type(parent(c)))
+		goal agree_property_checked(c : string, property_id : string) <=
 			** "AGREE properties passed" **
-			AgreeLib.hasAgreeProperty(c, property_id) and analysis("AgreeCheck", type(parent(c)))
+			let comp : component = ModelAccess.getComponent(c);
+			AgreeLib.hasAgreeProperty(comp, property_id) and analysis("AgreeCheck", type(parent(comp)))
 		
 		-- Check to see if there is a filter immediately before 
 		-- the component on the communication pathway.

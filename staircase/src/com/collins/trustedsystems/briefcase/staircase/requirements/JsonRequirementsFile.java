@@ -114,7 +114,7 @@ public class JsonRequirementsFile {
 						final String description = jsonReq.get(DESCRIPTION).getAsString();
 						final String context = jsonReq.get(COMPONENT).getAsString();
 						this.requirements.add(new CyberRequirement(this.date, this.tool, CyberRequirement.toDo, type,
-								"", description, context, ""));
+								"", description, context, false, ""));
 					}
 				}
 			} else if (this.tool.equalsIgnoreCase(DCRYPPS)) {

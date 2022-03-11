@@ -51,6 +51,7 @@ public class ImportRequirementsGUI extends Dialog {
 	final Combo cmbStatus;
 	final Text txtID;
 	final Text txtDesc;
+	final Button btnFormalize;
 	final Text txtReason;
 	final Label lblContext2;
 	final Label lblGenTool2;
@@ -59,7 +60,7 @@ public class ImportRequirementsGUI extends Dialog {
 	final Set<String> reqIds = new HashSet<String>();
 
 	final List<String> status = Arrays.asList(CyberRequirement.toDo, CyberRequirement.add,
-			CyberRequirement.addPlusAgree,
+//			CyberRequirement.addPlusAgree,
 			CyberRequirement.omit);
 
 	private int oldIndex = -1;
@@ -203,6 +204,15 @@ public class ImportRequirementsGUI extends Dialog {
 		lblContext2.setBackground(SWTResourceManager.getColor(255, 240, 245));
 		lblContext2.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false, 4, 1));
 
+		final Label lblFormalize = new Label(composite, SWT.NONE);
+		lblFormalize.setBackground(SWTResourceManager.getColor(SWT.COLOR_LIST_BACKGROUND));
+		lblFormalize.setText("Formalize");
+
+		btnFormalize = new Button(composite, SWT.CHECK);
+		btnFormalize.setText("");
+		btnFormalize.setBackground(SWTResourceManager.getColor(SWT.COLOR_LIST_BACKGROUND));
+		btnFormalize.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false, 4, 1));
+
 		final Label lblReason = new Label(composite, SWT.NONE);
 		lblReason.setBackground(SWTResourceManager.getColor(SWT.COLOR_LIST_BACKGROUND));
 		// lblReason.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
@@ -255,6 +265,7 @@ public class ImportRequirementsGUI extends Dialog {
 				txtDesc.setText(r.getText());
 				txtDesc.setEditable(reqId.isEmpty());
 				lblContext2.setText(r.getContext());
+				btnFormalize.setSelection(r.getFormalize());
 				txtReason.setText(r.getRationale());
 
 				oldIndex = index;
@@ -290,7 +301,8 @@ public class ImportRequirementsGUI extends Dialog {
 			return false;
 		}
 
-		if ((newStatus.equalsIgnoreCase(CyberRequirement.add) || newStatus.equalsIgnoreCase(CyberRequirement.addPlusAgree))) {
+//		if ((newStatus.equalsIgnoreCase(CyberRequirement.add) || newStatus.equalsIgnoreCase(CyberRequirement.addPlusAgree))) {
+		if ((newStatus.equalsIgnoreCase(CyberRequirement.add))) {
 			if (newId.isEmpty()) {
 				org.osate.ui.dialogs.Dialog.showError("Requirements Manager",
 						"Requirement IDs must be assigned before requirements can be imported into the model.");
@@ -300,8 +312,8 @@ public class ImportRequirementsGUI extends Dialog {
 
 		// Make sure requirement ID starts with a letter and only contains letters, numbers, and underscores
 		// (this is for compliance with Resolute)
-		if ((newStatus.equalsIgnoreCase(CyberRequirement.add)
-				|| newStatus.equalsIgnoreCase(CyberRequirement.addPlusAgree))) {
+//		if ((newStatus.equalsIgnoreCase(CyberRequirement.add) || newStatus.equalsIgnoreCase(CyberRequirement.addPlusAgree))) {
+		if ((newStatus.equalsIgnoreCase(CyberRequirement.add))) {
 			if (!newId.matches("^[A-Za-z][A-Za-z0-9_]*")) {
 				org.osate.ui.dialogs.Dialog.showError("Requirements Manager", newId
 						+ ": Invalid requirement ID. Requirement IDs must begin with a letter and contain only letters, numbers, and underscores.");
@@ -321,6 +333,7 @@ public class ImportRequirementsGUI extends Dialog {
 		req.setStatus(newStatus);
 		req.setId(newId);
 		req.setText(newDesc);
+		req.setFormalize(btnFormalize.getSelection());
 		req.setRationale(newReason);
 		updateTableItem(oldIndex);
 

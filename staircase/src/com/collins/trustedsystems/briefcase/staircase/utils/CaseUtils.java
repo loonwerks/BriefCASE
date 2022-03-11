@@ -145,11 +145,25 @@ public class CaseUtils {
 				return null;
 			}
 
-			final String newline = System.lineSeparator();
-			final String tab = "\t";
-			final String contents = "package CASE_Requirements" + newline + "private" + newline + tab
-					+ "annex resolute" + "{** **};" + newline + "end CASE_Requirements;" + newline;
-			final InputStream source = new ByteArrayInputStream(contents.getBytes());
+//			final String newline = System.lineSeparator();
+//			final String tab = "\t";
+//			final String contents = "package CASE_Requirements" + newline + "private" + newline + tab
+//					+ "annex resolute" + "{** **};" + newline + "end CASE_Requirements;" + newline;
+			final StringBuilder fileContents = new StringBuilder();
+			fileContents.append("package CASE_Requirements" + System.lineSeparator());
+			fileContents.append("private" + System.lineSeparator());
+//			fileContents.append("\tannex resolute {**" + System.lineSeparator() + System.lineSeparator());
+//			fileContents.append("\t\t-- Top-level cybersecurity claim" + System.lineSeparator());
+//			fileContents.append("\t\tgoal cyber_resilient(sys : system) <=" + System.lineSeparator());
+//			fileContents.append("\t\t\t** \"The \" sys \" is acceptably cyber-resilient\" **" + System.lineSeparator());
+//			fileContents.append("\t\t\tstrategy: \"Argue over each cyber requirement\";" + System.lineSeparator());
+//			fileContents.append("\t\t\trequirements_complete()" + System.lineSeparator() + System.lineSeparator());
+//			fileContents.append("\t**};" + System.lineSeparator());
+			fileContents.append("\tannex resolute ");
+			fileContents.append(getInitialRequirementsPackageSourceText() + ";" + System.lineSeparator());
+			fileContents.append("end CASE_Requirements;");
+//			final InputStream source = new ByteArrayInputStream(contents.getBytes());
+			final InputStream source = new ByteArrayInputStream(fileContents.toString().getBytes());
 			try {
 				caseReqFile.create(source, false, new NullProgressMonitor());
 			} catch (CoreException e) {
@@ -158,21 +172,6 @@ public class CaseUtils {
 				return null;
 			}
 		}
-
-//		// Create CASE_REQUIREMENTS_NAME package
-//		AadlPackage pkg = TraverseProject.getPackageInFile(getCaseRequirementsFile());
-//		if (pkg == null) {
-//			// Create a new package
-//			pkg = Aadl2Factory.eINSTANCE.createAadlPackage();
-//			pkg.setName(CASE_REQUIREMENTS_NAME);
-//
-//			// Create a resource for the requirements file, and add package to resource
-//			ResourceSetImpl rs = new ResourceSetImpl();
-//			Resource r = rs.createResource(URI.createFileURI(new File(CASE_REQUIREMENTS_FILE).getAbsolutePath()));
-//			r.getContents().add(pkg);
-//		}
-//
-//		assert (pkg.getName().equalsIgnoreCase(CASE_REQUIREMENTS_NAME));
 
 		// Checking if the package has been inserted into the abstract syntax tree
 		AadlPackage pkg = null;
@@ -183,13 +182,25 @@ public class CaseUtils {
 			}
 		}
 		if (pkg == null) {
-			System.out.println("CASE_Requirements package not created successfully.");
+			System.out.println("CASE_Requirements package was not created successfully.");
 		} else {
 			System.out.println("CASE_Requirements package was created successfully.");
 		}
 		assert (pkg != null);
 
 		return pkg;
+	}
+
+	public static String getInitialRequirementsPackageSourceText() {
+		final StringBuilder sourceText = new StringBuilder();
+		sourceText.append("{**" + System.lineSeparator() + System.lineSeparator());
+		sourceText.append("\t\t-- Top-level cybersecurity claim" + System.lineSeparator());
+		sourceText.append("\t\tgoal cyber_resilient(sys : system) <=" + System.lineSeparator());
+		sourceText.append("\t\t\t** \"The \" sys \" is acceptably cyber-resilient\" **" + System.lineSeparator());
+		sourceText.append("\t\t\tstrategy: \"Argue over each cyber requirement\";" + System.lineSeparator());
+		sourceText.append("\t\t\trequirements_complete()" + System.lineSeparator() + System.lineSeparator());
+		sourceText.append("\t**}");
+		return sourceText.toString();
 	}
 
 	/**

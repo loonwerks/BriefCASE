@@ -67,18 +67,20 @@ public class CyberRequirement {
 
 	// Requirement status
 	// TODO: change them to enum
-	public static final String addPlusAgree = "Formalize";
+//	public static final String addPlusAgree = "Formalize";
 	public static final String toDo = "ToDo";
 	public static final String add = "Import";
 	public static final String omit = "Omit";
 	public static final String unknown = "Unknown";
 	public static final String notApplicable = "N/A";
 	private static final boolean addQuotes = true;
+	public static final String TOP_LEVEL_CLAIM = "cyber_resilient";
 
 	private String type = ""; // this is the requirement classification type as defined by the TA1 tool
 	private String id = "";
 	private String text = "";
 	private String context = ""; // this is the qualified name of the component
+	private boolean formalize = false;
 	private String rationale = "";
 	private long date = 0L;
 	private String tool = "";
@@ -114,10 +116,12 @@ public class CyberRequirement {
 
 	public CyberRequirement(CyberRequirement req) {
 		this(req.getDate(), req.getTool(), req.getStatus(), req.getType(), req.getId(), req.getText(), req.getContext(),
+				req.getFormalize(),
 				req.getRationale());
 	}
 
 	public CyberRequirement(long date, String tool, String status, String type, String id, String text, String context,
+			boolean formalize,
 			String rationale) {
 		this.date = date;
 		this.tool = (tool == null ? unknown : tool);
@@ -125,17 +129,19 @@ public class CyberRequirement {
 		this.id = (id == null ? "" : id);
 		this.text = (text == null ? "" : text);
 		this.context = (context == null ? "" : context);
+		this.formalize = formalize;
 		this.rationale = (rationale == null ? notApplicable : rationale);
 		this.status = ((status == null || toDo.equals(status)) ? toDo
-				: add.equals(status) ? add : addPlusAgree.equals(status) ? addPlusAgree : omit);
+//				: add.equals(status) ? add : addPlusAgree.equals(status) ? addPlusAgree : omit);
+				: add.equals(status) ? add : omit);
 	}
 
 	public CyberRequirement(String type) {
-		this(0L, null, null, type, null, null, null, null);
+		this(0L, null, null, type, null, null, null, false, null);
 	}
 
 	protected CyberRequirement() {
-		this(0L, null, null, null, null, null, null, null);
+		this(0L, null, null, null, null, null, null, false, null);
 	}
 
 	public boolean completelyEqual(Object obj) {
@@ -181,6 +187,10 @@ public class CyberRequirement {
 
 	public String getId() {
 		return id;
+	}
+
+	public boolean getFormalize() {
+		return formalize;
 	}
 
 	public String getRationale() {
@@ -240,9 +250,9 @@ public class CyberRequirement {
 		return type;
 	}
 
-	public boolean hasAgree() {
-		return status == addPlusAgree;
-	}
+//	public boolean hasAgree() {
+//		return status == addPlusAgree;
+//	}
 
 	@Override
 	public int hashCode() {
@@ -295,9 +305,9 @@ public class CyberRequirement {
 //		RequirementsManager.closeEditor(editor, true);
 //	}
 
-	public void setAgree() {
-		status = addPlusAgree;
-	}
+//	public void setAgree() {
+//		status = addPlusAgree;
+//	}
 
 	public void setContext(String context) {
 		this.context = context;
@@ -309,6 +319,10 @@ public class CyberRequirement {
 
 	public void setId(String id) {
 		this.id = id;
+	}
+
+	public void setFormalize(boolean formalize) {
+		this.formalize = formalize;
 	}
 
 	public void setRationale(String rationale) {
@@ -432,12 +446,21 @@ public class CyberRequirement {
 
 		final Comparator<Definition> cyreqComp = (o1, o2) -> o1.getName().compareTo(o2.getName());
 		final List<Definition> list = new ArrayList<Definition>();
-		list.addAll(resLib.getDefinitions());
-		list.sort(cyreqComp);
-		resLib.getDefinitions().clear();
-		for (Definition d : list) {
-			resLib.getDefinitions().add(d);
+//		list.addAll(resLib.getDefinitions());
+		Definition topLevelClaim = null;
+		for (Definition d : resLib.getDefinitions()) {
+			if (d.getName().equalsIgnoreCase(TOP_LEVEL_CLAIM)) {
+				topLevelClaim = d;
+			} else {
+				list.add(d);
+			}
 		}
+		list.sort(cyreqComp);
+		if (topLevelClaim != null) {
+			list.add(0, topLevelClaim);
+		}
+		resLib.getDefinitions().clear();
+		resLib.getDefinitions().addAll(list);
 		defResLib.setParsedAnnexLibrary(resLib);
 	}
 
@@ -481,7 +504,8 @@ public class CyberRequirement {
 				defResLib = (DefaultAnnexLibrary) priv8
 						.createOwnedAnnexLibrary(Aadl2Package.eINSTANCE.getDefaultAnnexLibrary());
 				defResLib.setName("resolute");
-				defResLib.setSourceText("{** **}");
+//				defResLib.setSourceText("{** **}");
+				defResLib.setSourceText(CaseUtils.getInitialRequirementsPackageSourceText());
 				resLib = ResoluteFactory.eINSTANCE.createResoluteLibrary();
 			}
 
@@ -1001,8 +1025,10 @@ public class CyberRequirement {
 		claimAttributes.add(
 				createResoluteContext(generatedOn(), DateFormat.getDateInstance().format(new Date(getDate() * 1000))));
 		claimAttributes.add(createResoluteContext(reqComponent(), this.getContext()));
+//		claimAttributes.add(
+//				createResoluteContext(formalized(), (getStatus() == CyberRequirement.addPlusAgree ? True() : False())));
 		claimAttributes.add(
-				createResoluteContext(formalized(), (getStatus() == CyberRequirement.addPlusAgree ? True() : False())));
+				createResoluteContext(formalized(), (getFormalize() ? True() : False())));
 
 	}
 
@@ -1217,15 +1243,18 @@ public class CyberRequirement {
 
 		final String tool = getContext(claimBody, generatedBy());
 		final String component = getContext(claimBody, reqComponent());
-		final String status = getContext(claimBody, formalized()).equalsIgnoreCase(True())
-				? CyberRequirement.addPlusAgree
-				: CyberRequirement.add;
+//		final String status = getContext(claimBody, formalized()).equalsIgnoreCase(True())
+//				? CyberRequirement.addPlusAgree
+//				: CyberRequirement.add;
+		final boolean formalized = getContext(claimBody, formalized()).equalsIgnoreCase(True());
+		final String status = CyberRequirement.add;
 
 		final int start = claimString.indexOf('[');
 		final int end = claimString.indexOf(']');
 		final String text = claimString.substring(end + 1).trim();
 		final String type = claimString.substring(start + 1, end).trim();
 
-		return new CyberRequirement(date, tool, status, type, id, text, component, CyberRequirement.notApplicable);
+		return new CyberRequirement(date, tool, status, type, id, text, component, formalized,
+				CyberRequirement.notApplicable);
 	}
 }
