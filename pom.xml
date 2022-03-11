@@ -18,6 +18,7 @@
 		<module>com.collins.trustedsystems.briefcase.agreecheck</module>
 		<module>com.collins.trustedsystems.briefcase.agreelib</module>
 		<module>toolcheck</module>
+		<module>com.collins.trustedsystems.briefcase.getaadl</module>
 		<module>feature</module>
 		<module>target-platform</module>
 		<module>repository</module>
