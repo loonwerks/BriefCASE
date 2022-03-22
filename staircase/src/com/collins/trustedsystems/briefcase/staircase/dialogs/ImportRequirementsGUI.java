@@ -60,7 +60,6 @@ public class ImportRequirementsGUI extends Dialog {
 	final Set<String> reqIds = new HashSet<String>();
 
 	final List<String> status = Arrays.asList(CyberRequirement.toDo, CyberRequirement.add,
-//			CyberRequirement.addPlusAgree,
 			CyberRequirement.omit);
 
 	private int oldIndex = -1;
@@ -231,7 +230,6 @@ public class ImportRequirementsGUI extends Dialog {
 		fl_cmpButtonBar.spacing = 20;
 		cmpButtonBar.setLayout(fl_cmpButtonBar);
 		cmpButtonBar.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false, 1, 1));
-		// createButton(cmpButtonBar, SWT.SAVE, " Save ", false);
 		createButton(cmpButtonBar, SWT.OK, "        OK        ", false);
 		createButton(cmpButtonBar, SWT.CANCEL, "        Cancel        ", true);
 
@@ -294,14 +292,14 @@ public class ImportRequirementsGUI extends Dialog {
 		final String newDesc = txtDesc.getText();
 		final String newReason = txtReason.getText();
 
-		if (newStatus.equalsIgnoreCase(CyberRequirement.omit)
-				&& (newReason.isEmpty() || newReason.equalsIgnoreCase(CyberRequirement.notApplicable))) {
-			org.osate.ui.dialogs.Dialog.showError("Requirements Manager",
+		if (newStatus.equalsIgnoreCase(CyberRequirement.omit)) {
+			if (newReason.isEmpty() || newReason.equalsIgnoreCase(CyberRequirement.notApplicable)) {
+				org.osate.ui.dialogs.Dialog.showError("Requirements Manager",
 					"Requirements that are marked as omitted must provide a rationale for the omission.");
-			return false;
+				return false;
+			}
 		}
 
-//		if ((newStatus.equalsIgnoreCase(CyberRequirement.add) || newStatus.equalsIgnoreCase(CyberRequirement.addPlusAgree))) {
 		if ((newStatus.equalsIgnoreCase(CyberRequirement.add))) {
 			if (newId.isEmpty()) {
 				org.osate.ui.dialogs.Dialog.showError("Requirements Manager",
@@ -312,7 +310,6 @@ public class ImportRequirementsGUI extends Dialog {
 
 		// Make sure requirement ID starts with a letter and only contains letters, numbers, and underscores
 		// (this is for compliance with Resolute)
-//		if ((newStatus.equalsIgnoreCase(CyberRequirement.add) || newStatus.equalsIgnoreCase(CyberRequirement.addPlusAgree))) {
 		if ((newStatus.equalsIgnoreCase(CyberRequirement.add))) {
 			if (!newId.matches("^[A-Za-z][A-Za-z0-9_]*")) {
 				org.osate.ui.dialogs.Dialog.showError("Requirements Manager", newId
@@ -321,10 +318,12 @@ public class ImportRequirementsGUI extends Dialog {
 			}
 		}
 
-		if (!newId.isEmpty() && reqIds.contains(newId)) {
-			org.osate.ui.dialogs.Dialog.showError("Requirements Manager",
+		if (!newId.isEmpty()) {
+			if (reqIds.contains(newId)) {
+				org.osate.ui.dialogs.Dialog.showError("Requirements Manager",
 					"Duplicate requirement ID: " + newId + ". Requirement IDs must be unique.");
-			return false;
+				return false;
+			}
 		} else {
 			reqIds.add(newId);
 		}
@@ -453,30 +452,7 @@ public class ImportRequirementsGUI extends Dialog {
 					return false;
 				}
 				boolean contextFound = contextExists(req.getContext(), (ComponentImplementation) contextClassifier);
-//				boolean contextFound = false;
-//				if (contextClassifier instanceof ComponentImplementation) {
-//					ComponentImplementation ci = (ComponentImplementation) contextClassifier;
-//					for (Subcomponent sub : ci.getOwnedSubcomponents()) {
-//						if (sub.getQualifiedName().equalsIgnoreCase(req.getContext())) {
-//							contextFound = true;
-//							break;
-//						}
-//					}
-//					for (Connection conn : ci.getOwnedConnections()) {
-//						if (conn.getQualifiedName().equalsIgnoreCase(req.getContext())) {
-//							contextFound = true;
-//							// Make sure connection isn't being formalized
-//							if (req.getStatus() == CyberRequirement.addPlusAgree) {
-//								org.osate.ui.dialogs.Dialog.showError("Requirements Manager",
-//										req.getContext() + ": Requirements on connections cannot be formalized.");
-//								req.setStatus(CyberRequirement.toDo);
-//								updateTableItem(i);
-//								return false;
-//							}
-//							break;
-//						}
-//					}
-//				}
+
 				// Check for invalid context
 				if (contextClassifier == null || !contextFound) {
 					org.osate.ui.dialogs.Dialog.showError("Requirements Manager", req.getContext()

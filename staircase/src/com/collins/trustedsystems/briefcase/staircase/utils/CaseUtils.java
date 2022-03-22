@@ -15,18 +15,34 @@ import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.osate.aadl2.AadlPackage;
+import org.osate.aadl2.AnnexLibrary;
+import org.osate.aadl2.Classifier;
+import org.osate.aadl2.DefaultAnnexLibrary;
 import org.osate.aadl2.ModelUnit;
 import org.osate.aadl2.PackageSection;
+import org.osate.aadl2.PrivatePackageSection;
 import org.osate.ui.dialogs.Dialog;
 
 import com.collins.trustedsystems.briefcase.staircase.Activator;
 import com.collins.trustedsystems.briefcase.util.TraverseProject;
+import com.rockwellcollins.atc.resolute.resolute.Arg;
+import com.rockwellcollins.atc.resolute.resolute.BaseType;
+import com.rockwellcollins.atc.resolute.resolute.ClaimArg;
+import com.rockwellcollins.atc.resolute.resolute.ClaimBody;
+import com.rockwellcollins.atc.resolute.resolute.ClaimString;
+import com.rockwellcollins.atc.resolute.resolute.Definition;
+import com.rockwellcollins.atc.resolute.resolute.FnCallExpr;
+import com.rockwellcollins.atc.resolute.resolute.FunctionDefinition;
+import com.rockwellcollins.atc.resolute.resolute.ResoluteFactory;
+import com.rockwellcollins.atc.resolute.resolute.ResoluteLibrary;
 
 public class CaseUtils {
 
 	public static final String CASE_RESOURCE_PATH = Activator.PLUGIN_ID + "/resources/";
 	public static final String CASE_MODEL_TRANSFORMATIONS_NAME = "CASE_Model_Transformations";
 	public static final String CASE_MODEL_TRANSFORMATIONS_FILE = CASE_MODEL_TRANSFORMATIONS_NAME + ".aadl";
+	public static final String CASE_ASSURANCE_NAME = "CASE_Assurance";
+	public static final String CASE_ASSURANCE_FILE = CASE_ASSURANCE_NAME + ".aadl";
 	public static final String CASE_REQUIREMENTS_NAME = "CASE_Requirements";
 	public static final String CASE_REQUIREMENTS_DIR = "Requirements";
 	public static final String CASE_REQUIREMENTS_FILE = CASE_REQUIREMENTS_DIR + "/" + CASE_REQUIREMENTS_NAME + ".aadl";
@@ -89,6 +105,32 @@ public class CaseUtils {
 		return true;
 	}
 
+	public static boolean importCaseRequirementsPackage(PackageSection pkgSection) {
+		// First check if CASE_Requirements file has already been imported in the model
+		AadlPackage casePackage = null;
+
+		for (ModelUnit modelUnit : pkgSection.getImportedUnits()) {
+			if (modelUnit instanceof AadlPackage && modelUnit.hasName()) {
+				if (modelUnit.getName().equalsIgnoreCase(CASE_REQUIREMENTS_NAME)) {
+					casePackage = (AadlPackage) modelUnit;
+					break;
+				}
+			}
+		}
+		if (casePackage == null) {
+			// Try importing the resource
+			casePackage = getCaseRequirementsPackage();
+			if (casePackage == null) {
+				Dialog.showError("Could not import " + CASE_REQUIREMENTS_NAME,
+						"Package " + CASE_REQUIREMENTS_NAME + " could not be found.");
+				return false;
+			}
+			// Add as "importedUnit" to package section
+			pkgSection.getImportedUnits().add(casePackage);
+		}
+		return true;
+	}
+
 	/**
 	 * Gets the CASE Model Transformations Package
 	 * @return AadlPackage
@@ -97,6 +139,33 @@ public class CaseUtils {
 		AadlPackage aadlPkg = null;
 		final String pathName = CASE_RESOURCE_PATH + CASE_MODEL_TRANSFORMATIONS_FILE;
 		final ResourceSet resourceSet = new ResourceSetImpl();
+		final Resource r = resourceSet.getResource(URI.createPlatformPluginURI(pathName, true), true);
+		final EObject eObj = r.getContents().get(0);
+		if (eObj instanceof AadlPackage) {
+			aadlPkg = (AadlPackage) eObj;
+		}
+		return aadlPkg;
+	}
+
+	/**
+	 * Gets the CASE Assurance Package
+	 * @return AadlPackage
+	 */
+	public static AadlPackage getCaseAssuracePackage() {
+		AadlPackage aadlPkg = null;
+		final String pathName = CASE_RESOURCE_PATH + CASE_ASSURANCE_FILE;
+		final ResourceSet resourceSet = new ResourceSetImpl();
+		final Resource r = resourceSet.getResource(URI.createPlatformPluginURI(pathName, true), true);
+		final EObject eObj = r.getContents().get(0);
+		if (eObj instanceof AadlPackage) {
+			aadlPkg = (AadlPackage) eObj;
+		}
+		return aadlPkg;
+	}
+
+	public static AadlPackage getCaseAssuracePackage(ResourceSet resourceSet) {
+		AadlPackage aadlPkg = null;
+		final String pathName = CASE_RESOURCE_PATH + CASE_ASSURANCE_FILE;
 		final Resource r = resourceSet.getResource(URI.createPlatformPluginURI(pathName, true), true);
 		final EObject eObj = r.getContents().get(0);
 		if (eObj instanceof AadlPackage) {
@@ -145,25 +214,11 @@ public class CaseUtils {
 				return null;
 			}
 
-//			final String newline = System.lineSeparator();
-//			final String tab = "\t";
-//			final String contents = "package CASE_Requirements" + newline + "private" + newline + tab
-//					+ "annex resolute" + "{** **};" + newline + "end CASE_Requirements;" + newline;
-			final StringBuilder fileContents = new StringBuilder();
-			fileContents.append("package CASE_Requirements" + System.lineSeparator());
-			fileContents.append("private" + System.lineSeparator());
-//			fileContents.append("\tannex resolute {**" + System.lineSeparator() + System.lineSeparator());
-//			fileContents.append("\t\t-- Top-level cybersecurity claim" + System.lineSeparator());
-//			fileContents.append("\t\tgoal cyber_resilient(sys : system) <=" + System.lineSeparator());
-//			fileContents.append("\t\t\t** \"The \" sys \" is acceptably cyber-resilient\" **" + System.lineSeparator());
-//			fileContents.append("\t\t\tstrategy: \"Argue over each cyber requirement\";" + System.lineSeparator());
-//			fileContents.append("\t\t\trequirements_complete()" + System.lineSeparator() + System.lineSeparator());
-//			fileContents.append("\t**};" + System.lineSeparator());
-			fileContents.append("\tannex resolute ");
-			fileContents.append(getInitialRequirementsPackageSourceText() + ";" + System.lineSeparator());
-			fileContents.append("end CASE_Requirements;");
-//			final InputStream source = new ByteArrayInputStream(contents.getBytes());
-			final InputStream source = new ByteArrayInputStream(fileContents.toString().getBytes());
+			final String newline = System.lineSeparator();
+			final String tab = "\t";
+			final String contents = "package CASE_Requirements" + newline + "private" + newline + tab + "annex resolute"
+					+ "{** **};" + newline + "end CASE_Requirements;" + newline;
+			final InputStream source = new ByteArrayInputStream(contents.getBytes());
 			try {
 				caseReqFile.create(source, false, new NullProgressMonitor());
 			} catch (CoreException e) {
@@ -191,16 +246,44 @@ public class CaseUtils {
 		return pkg;
 	}
 
-	public static String getInitialRequirementsPackageSourceText() {
-		final StringBuilder sourceText = new StringBuilder();
-		sourceText.append("{**" + System.lineSeparator() + System.lineSeparator());
-		sourceText.append("\t\t-- Top-level cybersecurity claim" + System.lineSeparator());
-		sourceText.append("\t\tgoal cyber_resilient(sys : system) <=" + System.lineSeparator());
-		sourceText.append("\t\t\t** \"The \" sys \" is acceptably cyber-resilient\" **" + System.lineSeparator());
-		sourceText.append("\t\t\tstrategy: \"Argue over each cyber requirement\";" + System.lineSeparator());
-		sourceText.append("\t\t\trequirements_complete()" + System.lineSeparator() + System.lineSeparator());
-		sourceText.append("\t**}");
-		return sourceText.toString();
+	public static FunctionDefinition createTopLevelGoal(Classifier system) {
+
+		final FunctionDefinition topLevelGoal = ResoluteFactory.eINSTANCE.createFunctionDefinition();
+		topLevelGoal.setName(system.getName().replace(".", "_") + "_cyber_resilient");
+		topLevelGoal.setClaimType("goal");
+		final Arg arg = ResoluteFactory.eINSTANCE.createArg();
+		final BaseType sysType = ResoluteFactory.eINSTANCE.createBaseType();
+		sysType.setType("system");
+		arg.setName("sys");
+		arg.setType(sysType);
+		topLevelGoal.getArgs().add(arg);
+		final ClaimBody claimBody = ResoluteFactory.eINSTANCE.createClaimBody();
+		final ClaimString claimStr1 = ResoluteFactory.eINSTANCE.createClaimString();
+		claimStr1.setStr("The ");
+		claimBody.getClaim().add(claimStr1);
+		final ClaimArg claimArg = ResoluteFactory.eINSTANCE.createClaimArg();
+		claimArg.setArg(arg);
+		claimBody.getClaim().add(claimArg);
+		final ClaimString claimStr2 = ResoluteFactory.eINSTANCE.createClaimString();
+		claimStr2.setStr(" is acceptably cyber-resilient");
+		claimBody.getClaim().add(claimStr2);
+		final FnCallExpr fnCallExpr = ResoluteFactory.eINSTANCE.createFnCallExpr();
+		final AadlPackage assurancePkg = getCaseAssuracePackage(system.eResource().getResourceSet());
+		final PackageSection packageSection = assurancePkg.getOwnedPrivateSection();
+		final AnnexLibrary annexLibrary = packageSection.getOwnedAnnexLibraries().get(0);
+		final ResoluteLibrary assuranceLib = (ResoluteLibrary) ((DefaultAnnexLibrary) annexLibrary)
+				.getParsedAnnexLibrary();
+		for (Definition def : assuranceLib.getDefinitions()) {
+			if (def.getName().equalsIgnoreCase("requirements_complete")) {
+				fnCallExpr.setFn((FunctionDefinition) def);
+				break;
+			}
+		}
+		claimBody.setExpr(fnCallExpr);
+		topLevelGoal.setBody(claimBody);
+
+		return topLevelGoal;
+
 	}
 
 	/**
@@ -228,6 +311,26 @@ public class CaseUtils {
 			initCaseRequirementsPackage();
 		}
 		return caseReqFile;
+	}
+
+	/**
+	 * Imports CASE_Model_Transformations to CASE_Requirements
+	 * @return
+	 */
+	public void importModelTransformationsToRequirementsPackage() {
+		final AadlPackage contextPkg = getCaseRequirementsPackage();
+		if (contextPkg == null) {
+			throw new RuntimeException("Could not find CASE_Requirements.");
+		}
+
+		PrivatePackageSection priv8 = contextPkg.getOwnedPrivateSection();
+		if (priv8 == null) {
+			priv8 = contextPkg.createOwnedPrivateSection();
+		}
+
+		if (!CaseUtils.addCaseModelTransformationsImport(priv8, false)) {
+			throw new RuntimeException("Could not import CASE_Model_Transformations package.");
+		}
 	}
 
 }

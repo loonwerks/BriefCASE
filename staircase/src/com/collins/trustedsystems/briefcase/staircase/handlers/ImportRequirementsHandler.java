@@ -66,12 +66,11 @@ public class ImportRequirementsHandler extends AbstractHandler {
 		 * (6) Display to the user the requirements database and from the AADL model.
 		 * (7) User can reclassify these requirements with the following restrictions:
 		 * (7a) "Omit" with old hashcode: cannot be modified.
-		 * (7b) "ToDo" to "Add" or "Add+Agree": add requirement to the AADL model.
+		 * (7b) "ToDo" to "Add" : add requirement to the AADL model.
 		 * (7c) "ToDo" to "Omit": add requirement to the requirements database as an omitted requirement.
-		 * (7d) "Add" or "Add+Agree" to "Omit": remove from AADL model and add to requirements database as omitted requirement (note hashcode of the model).
-		 * (7e) "Add" or "Add+Agree" to "ToDo": not allowed.
-		 * (7f) "Add+Agree" to "Add": not allowed.
-		 * (8) "ToDo" and "Omit" requirements stay in the requirements database, "Add" and "Add+Agree" go into the AADL model.
+		 * (7d) "Add" to "Omit": remove from AADL model and add to requirements database as omitted requirement (note hashcode of the model).
+		 * (7e) "Add" to "ToDo": not allowed.
+		 * (8) "ToDo" and "Omit" requirements stay in the requirements database, "Add" go into the AADL model.
 		 */
 
 		final RequirementsManager reqMgr = RequirementsManager.getInstance();
