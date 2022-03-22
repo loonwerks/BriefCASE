@@ -6,7 +6,6 @@ import java.util.List;
 import org.osate.aadl2.NamedElement;
 import org.osate.aadl2.Subcomponent;
 
-import com.rockwellcollins.atc.resolute.resolute.Arg;
 import com.rockwellcollins.atc.resolute.resolute.Expr;
 
 public class AddSwitchClaim extends BuiltInClaim {
@@ -25,21 +24,12 @@ public class AddSwitchClaim extends BuiltInClaim {
 	}
 
 	@Override
-	public List<Expr> getCallArgs() {
-		final List<Expr> callArgs = new ArrayList<>();
-		callArgs.add(Create.THIS(this.reqContext));
-		callArgs.add(Create.THIS(this.selector));
-		callArgs.add(Create.id(this.msgType));
-		return callArgs;
-	}
-
-	@Override
-	public List<Arg> getDefinitionParams() {
-		final List<Arg> defParams = new ArrayList<>();
-		defParams.add(Create.arg("switch_context", Create.baseType("component")));
-		defParams.add(Create.arg("switch", Create.baseType("component")));
-		defParams.add(Create.arg("message_type", Create.baseType("data")));
-		return defParams;
+	public List<Expr> getClaimArgs() {
+		final List<Expr> claimArgs = new ArrayList<>();
+		claimArgs.add(Create.stringExpr(reqContext));
+		claimArgs.add(Create.stringExpr(selector.getName()));
+		claimArgs.add(Create.id(this.msgType));
+		return claimArgs;
 	}
 
 }

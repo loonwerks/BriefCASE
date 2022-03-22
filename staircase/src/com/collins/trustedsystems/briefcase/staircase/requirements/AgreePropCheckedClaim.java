@@ -3,12 +3,11 @@ package com.collins.trustedsystems.briefcase.staircase.requirements;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.rockwellcollins.atc.resolute.resolute.Arg;
 import com.rockwellcollins.atc.resolute.resolute.Expr;
 
 public class AgreePropCheckedClaim extends BuiltInClaim {
 
-	private static final String AGREE_PROP_CHECKED = "Agree_Property_Checked";
+	public static final String AGREE_PROP_CHECKED = "Agree_Property_Checked";
 	private final String reqId;
 	private final String reqContext;
 
@@ -19,19 +18,11 @@ public class AgreePropCheckedClaim extends BuiltInClaim {
 	}
 
 	@Override
-	public List<Arg> getDefinitionParams() {
-		final List<Arg> defParams = new ArrayList<>();
-		defParams.add(Create.arg("comp_context", Create.baseType("component")));
-		defParams.add(Create.arg("property_id", Create.baseType("string")));
-		return defParams;
-	}
-
-	@Override
-	public List<Expr> getCallArgs() {
-		final List<Expr> callArgs = new ArrayList<>();
-		callArgs.add(Create.THIS(this.reqContext));
-		callArgs.add(Create.stringExpr(this.reqId));
-		return callArgs;
+	public List<Expr> getClaimArgs() {
+		final List<Expr> claimArgs = new ArrayList<>();
+		claimArgs.add(Create.stringExpr(reqContext));
+		claimArgs.add(Create.stringExpr(reqId));
+		return claimArgs;
 	}
 
 }

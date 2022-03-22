@@ -7,7 +7,6 @@ import org.osate.aadl2.Connection;
 import org.osate.aadl2.NamedElement;
 import org.osate.aadl2.Subcomponent;
 
-import com.rockwellcollins.atc.resolute.resolute.Arg;
 import com.rockwellcollins.atc.resolute.resolute.Expr;
 
 public class AddFilterClaim extends BuiltInClaim {
@@ -16,11 +15,9 @@ public class AddFilterClaim extends BuiltInClaim {
 
 	private final String reqContext;
 	private final Subcomponent filter;
-//	private final PortConnection connection;
 	private final Connection connection;
 	private final NamedElement msgType;
 
-//	public AddFilterClaim(String context, Subcomponent filter, PortConnection connection, NamedElement msgType) {
 	public AddFilterClaim(String context, Subcomponent filter, Connection connection, NamedElement msgType) {
 		super(ADD_FILTER);
 		this.reqContext = context;
@@ -30,24 +27,14 @@ public class AddFilterClaim extends BuiltInClaim {
 	}
 
 	@Override
-	public List<Expr> getCallArgs() {
-		final List<Expr> callArgs = new ArrayList<>();
-		callArgs.add(Create.THIS(this.reqContext));
+	public List<Expr> getClaimArgs() {
+		final List<Expr> claimArgs = new ArrayList<>();
+		claimArgs.add(Create.stringExpr(reqContext));
 		final String qualifiedName = this.reqContext.substring(0, this.reqContext.lastIndexOf("."));
-		callArgs.add(Create.THIS(qualifiedName, this.filter));
-		callArgs.add(Create.THIS(qualifiedName, this.connection));
-		callArgs.add(Create.id(this.msgType));
-		return callArgs;
-	}
-
-	@Override
-	public List<Arg> getDefinitionParams() {
-		final List<Arg> defParams = new ArrayList<>();
-		defParams.add(Create.arg("comp_context", Create.baseType("component")));
-		defParams.add(Create.arg("filter", Create.baseType("component")));
-		defParams.add(Create.arg("conn", Create.baseType("connection")));
-		defParams.add(Create.arg("message_type", Create.baseType("data")));
-		return defParams;
+		claimArgs.add(Create.stringExpr(qualifiedName + "." + this.filter.getName()));
+		claimArgs.add(Create.stringExpr(qualifiedName + "." + this.connection.getName()));
+		claimArgs.add(Create.id(this.msgType));
+		return claimArgs;
 	}
 
 }
