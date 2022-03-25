@@ -11,9 +11,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.eclipse.core.commands.AbstractHandler;
-import org.eclipse.core.commands.ExecutionEvent;
-import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
@@ -22,13 +19,17 @@ import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.common.util.URI;
-import org.eclipse.ui.IEditorDescriptor;
-import org.eclipse.ui.IEditorPart;
+import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.ecore.util.EcoreUtil;
+import org.eclipse.emf.transaction.RecordingCommand;
+import org.eclipse.emf.transaction.TransactionalCommandStack;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
+import org.eclipse.emf.workspace.WorkspaceEditingDomainFactory;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
-import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.console.ConsolePlugin;
 import org.eclipse.ui.console.IConsole;
 import org.eclipse.ui.console.IConsoleConstants;
@@ -37,18 +38,15 @@ import org.eclipse.ui.console.IConsoleView;
 import org.eclipse.ui.console.MessageConsole;
 import org.eclipse.ui.console.MessageConsoleStream;
 import org.eclipse.ui.handlers.HandlerUtil;
-import org.eclipse.ui.part.FileEditorInput;
 import org.eclipse.xtext.EcoreUtil2;
-import org.eclipse.xtext.ui.editor.XtextEditor;
-import org.eclipse.xtext.ui.editor.utils.EditorUtils;
+import org.eclipse.xtext.resource.SaveOptions;
+import org.eclipse.xtext.resource.XtextResource;
+import org.eclipse.xtext.resource.XtextResourceSet;
 import org.osate.aadl2.Aadl2Factory;
-import org.osate.aadl2.Aadl2Package;
 import org.osate.aadl2.AadlPackage;
 import org.osate.aadl2.ComponentImplementation;
 import org.osate.aadl2.Property;
-import org.osate.aadl2.PropertyExpression;
 import org.osate.aadl2.StringLiteral;
-import org.osate.aadl2.modelsupport.scoping.Aadl2GlobalScopeUtil;
 import org.osate.ui.dialogs.Dialog;
 import org.osate.xtext.aadl2.properties.util.GetProperties;
 import org.osate.xtext.aadl2.properties.util.ProgrammingProperties;
@@ -57,281 +55,97 @@ import org.osgi.framework.Bundle;
 import com.collins.trustedsystems.briefcase.Activator;
 import com.collins.trustedsystems.briefcase.json.export.Aadl2Json;
 import com.collins.trustedsystems.briefcase.preferences.BriefcasePreferenceConstants;
+import com.collins.trustedsystems.briefcase.staircase.handlers.AadlHandler;
 import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
 import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
-import com.collins.trustedsystems.briefcase.util.Filesystem;
 import com.collins.trustedsystems.briefcase.util.TraverseProject;
 
-public class SplatHandler extends AbstractHandler {
+public class SplatHandler extends AadlHandler {
 
 	static final String bundleId = "com.collins.trustedsystems.briefcase.splat";
 	private final static String FOLDER_PACKAGE_DELIMITER = "_";
 	private String outputDir = "";
 
 	private MessageConsole findConsole(String name) {
-		ConsolePlugin plugin = ConsolePlugin.getDefault();
-		IConsoleManager conMan = plugin.getConsoleManager();
-		IConsole[] existing = conMan.getConsoles();
+		final ConsolePlugin plugin = ConsolePlugin.getDefault();
+		final IConsoleManager conMan = plugin.getConsoleManager();
+		final IConsole[] existing = conMan.getConsoles();
 		for (int i = 0; i < existing.length; i++) {
 			if (name.equals(existing[i].getName())) {
 				return (MessageConsole) existing[i];
 			}
 		}
 		// no console found, so create a new one
-		MessageConsole myConsole = new MessageConsole(name, null);
+		final MessageConsole myConsole = new MessageConsole(name, null);
 		conMan.addConsoles(new IConsole[] { myConsole });
 		return myConsole;
 	}
 
 	@Override
-	public Object execute(ExecutionEvent event) throws ExecutionException {
-		XtextEditor xtextEditor = EditorUtils.getActiveXtextEditor();
+	protected void runCommand(EObject eObj) {
 
-		if (xtextEditor == null) {
-			Dialog.showError("SPLAT", "An AADL editor must be active in order to generate JSON.");
-			return null;
+		// Check if a component implementation is selected
+		if (!(eObj instanceof ComponentImplementation)) {
+			Dialog.showError("SPLAT", "Select a component implementation containing components for synthesis.");
+			return;
 		}
+		final ComponentImplementation ci = (ComponentImplementation) eObj;
+
+		runSplat(ci);
+
+		format(true);
+
+	}
+
+	private void runSplat(ComponentImplementation ci) {
 
 		try {
 
-			URI jsonURI = Aadl2Json.createJson();
-			IFile file = ResourcesPlugin.getWorkspace().getRoot().getFile(new Path(jsonURI.toPlatformString(true)));
-			String jsonPath = file.getRawLocation().toOSString();
+			final URI jsonURI = Aadl2Json.createJson();
+			final IFile file = ResourcesPlugin.getWorkspace()
+					.getRoot()
+					.getFile(new Path(jsonURI.toPlatformString(true)));
+			final String jsonPath = file.getRawLocation().toOSString();
 
-			Bundle bundle = Platform.getBundle(bundleId);
-			String splatDir = (FileLocator.toFileURL(FileLocator.find(bundle, new Path("resources"), null))).getFile();
-			String splatPath = (FileLocator
+			final Bundle bundle = Platform.getBundle(bundleId);
+			final String splatDir = (FileLocator.toFileURL(FileLocator.find(bundle, new Path("resources"), null)))
+					.getFile();
+			final String splatPath = (FileLocator
 					.toFileURL(FileLocator.find(bundle, new Path("resources/splat"), null))).getFile();
 
-//			// Check if user selection and run SPLAT on the chosen platform
-//			boolean isLinuxrPlatformSelected = Activator.getDefault().getPreferenceStore()
-//					.getBoolean(SplatPreferenceConstants.CHECK_PLATFORM_PREFERENCE);
-//			if (!isLinuxrPlatformSelected) {
-//				if (!checkDockerInstall()) {
-//					Dialog.showError("SPLAT",
-//							"Docker is not installed.  A Docker installation is required in order to run SPLAT.");
-//					return null;
-//				}
-//			}
-
-			// Initialize process and other objects
-			Process ClientProcess = null;
-
-			MessageConsole console = findConsole("SPLAT");
-			MessageConsoleStream out = console.newMessageStream();
-			IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindow(event);
-			IWorkbenchPage page = window.getActivePage();
-			String id = IConsoleConstants.ID_CONSOLE_VIEW;
-			IConsoleView view = (IConsoleView) page.showView(id);
+			final MessageConsole console = findConsole("SPLAT");
+			final MessageConsoleStream out = console.newMessageStream();
+			final IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindow(executionEvent);
+			final IWorkbenchPage page = window.getActivePage();
+			final IConsoleView view = (IConsoleView) page.showView(IConsoleConstants.ID_CONSOLE_VIEW);
 
 			// command line parameters
-			List<String> cmdLineArgs = new ArrayList<>();
-//			String commands = "";
+			final List<String> cmdLineArgs = new ArrayList<>();
 
-			// acquiring user preferences and setting them up accordingly for the exec command
-//			if (isLinuxrPlatformSelected) {
 			cmdLineArgs.add(splatPath);
-//			}
-//			String assuranceLevel = Activator.getDefault().getPreferenceStore()
-//					.getString(SplatPreferenceConstants.ASSURANCE_LEVEL);
-//			cmdLineArgs.add("-alevel");
-//			if (assuranceLevel.equals(SplatPreferenceConstants.ASSURANCE_LEVEL_CAKE)) {
-//				cmdLineArgs.add("cake");
-//			} else if (assuranceLevel.equals(SplatPreferenceConstants.ASSURANCE_LEVEL_HOL)) {
-//				cmdLineArgs.add("hol");
-//			} else if (assuranceLevel.equals(SplatPreferenceConstants.ASSURANCE_LEVEL_FULL)) {
-//				cmdLineArgs.add("full");
-//			} else {
-//				cmdLineArgs.add("basic");
-//			}
-
-//			String codeGeneration = Activator.getDefault().getPreferenceStore()
-//					.getString(SplatPreferenceConstants.CODE_GENERATION);
-//			cmdLineArgs.add("-codegen");
-//			if (codeGeneration.equals(SplatPreferenceConstants.CODE_GENERATION_C)) {
-//				cmdLineArgs.add("C");
-//			} else if (codeGeneration.equals(SplatPreferenceConstants.CODE_GENERATION_SML)) {
-//				cmdLineArgs.add("SML");
-//			} else if (codeGeneration.equals(SplatPreferenceConstants.CODE_GENERATION_ADA)) {
-//				cmdLineArgs.add("Ada");
-//			} else if (codeGeneration.equals(SplatPreferenceConstants.CODE_GENERATION_SLANG)) {
-//				cmdLineArgs.add("Slang");
-//			} else {
-//				cmdLineArgs.add("Java");
-//			}
-
-//			if (Activator.getDefault().getPreferenceStore().getBoolean(SplatPreferenceConstants.CHECK_PROPERTIES)) {
-//				cmdLineArgs.add("-checkprops");
-//			}
-
 			cmdLineArgs.add("-outdir");
-//			if (!isLinuxrPlatformSelected) {
-//				cmdLineArgs.add("./");
-//			} else {
-			String componentSourceFolderName = Platform.getPreferencesService().getString(
+
+			final String componentSourceFolderName = Platform.getPreferencesService()
+					.getString(
 					"com.collins.trustedsystems.briefcase", BriefcasePreferenceConstants.COMPONENT_SOURCE_FOLDER, "",
 					null);
-			IProject project = TraverseProject.getCurrentProject();
+			final IProject project = TraverseProject.getCurrentProject();
 			outputDir = URI.createURI(project.getLocation().toString()).appendSegment(componentSourceFolderName)
 					.toString();
 			cmdLineArgs.add(outputDir);
-//			}
 
-//			cmdLineArgs.add("-intwidth");
-//			cmdLineArgs.add(Integer.toString(
-//					Activator.getDefault().getPreferenceStore().getInt(SplatPreferenceConstants.INTEGER_WIDTH)));
+			cmdLineArgs.add(jsonPath);
 
-//			if (Activator.getDefault().getPreferenceStore().getBoolean(SplatPreferenceConstants.OPTIMIZE)) {
-//				cmdLineArgs.add("optimize");
-//			}
+			final Runtime rt = Runtime.getRuntime();
+			rt.exec("chmod a+x " + splatPath);
+			final String[] subCmds = cmdLineArgs.toArray(new String[cmdLineArgs.size()]);
+			final String[] environmentVars = { "LD_LIBRARY_PATH=" + splatDir };
+			final Process clientProcess = Runtime.getRuntime().exec(subCmds, environmentVars);
 
-//			cmdLineArgs.add("-endian");
-//			if (Activator.getDefault().getPreferenceStore().getBoolean(SplatPreferenceConstants.ENDIAN_BIG)) {
-//				cmdLineArgs.add("MSB");
-//			} else {
-//				cmdLineArgs.add("LSB");
-//			}
+			final BufferedReader stdErr = new BufferedReader(new InputStreamReader(clientProcess.getErrorStream()));
 
-//			cmdLineArgs.add("-encoding");
-//			String encoding = Activator.getDefault().getPreferenceStore().getString(SplatPreferenceConstants.ENCODING);
-//			if (encoding.equals(SplatPreferenceConstants.ENCODING_UNSIGNED)) {
-//				cmdLineArgs.add("Unsigned");
-//			} else if (encoding.equals(SplatPreferenceConstants.ENCODING_SIGN_MAG)) {
-//				cmdLineArgs.add("Sign_mag");
-//			} else if (encoding.equals(SplatPreferenceConstants.ENCODING_ZIGZAG)) {
-//				cmdLineArgs.add("Zigzag");
-//			} else {
-//				cmdLineArgs.add("Twos_comp");
-//			}
+			out.println(String.join(" ", cmdLineArgs) + " " + "LD_LIBRARY_PATH=" + splatDir);
 
-//			if (Activator.getDefault().getPreferenceStore().getBoolean(SplatPreferenceConstants.PRESERVE_MODEL_NUMS)) {
-//				cmdLineArgs.add("-preserve_model_nums");
-//			}
-
-			// input file
-//			if (!isLinuxrPlatformSelected) {
-//				cmdLineArgs.add(jsonURI.lastSegment());
-//			} else {
-				cmdLineArgs.add(jsonPath);
-//			}
-
-//			// Run SPLAT inside docker container
-//			if (!isLinuxrPlatformSelected) {
-//
-//				Process dockerLoadImage = null;
-//				Process dockerListImages = null;
-//
-//				// name of the splat image
-//				String dockerImage = "splatimg";
-//				System.out.println(
-//						"_________________________________________________________________________________________________________________");
-//				System.out.println("Running SPLAT inside docker container");
-//				System.out.println(
-//						"_________________________________________________________________________________________________________________");
-//
-//				// Prepare the volume mounting format for docker
-//				boolean imageExists = false;
-//				String jsonFileName = jsonURI.lastSegment();
-//
-//				java.net.URI splatImageURI = (FileLocator
-//						.toFileURL(FileLocator.find(bundle, new Path("resources/splat_image.tar"), null))).toURI();
-//				String splatTarFilePath = splatImageURI.normalize().getPath();
-//				String splatImagePath = splatTarFilePath.substring(1, splatTarFilePath.length());
-//				System.out.println("Location of docker image: " + splatImagePath);
-//
-//				// Copy json file to user specified directory
-//				File sourceFile = new File(jsonPath);
-//				File destFile = new File(Activator.getDefault().getPreferenceStore()
-//						.getString(SplatPreferenceConstants.OUTPUT_DIRECTORY) + "/" + jsonFileName);
-//				if (!destFile.exists()) {
-//					Files.copy(sourceFile.toPath(), destFile.toPath());
-//				}
-//
-//				// List the available docker images in the local machine and check if the required image exists
-//				String listDockerImage = "docker image ls";
-//				dockerListImages = Runtime.getRuntime().exec(listDockerImage);
-//				BufferedReader stdInp = new BufferedReader(new InputStreamReader(dockerListImages.getInputStream()));
-//				String s = null;
-//
-//				while ((s = stdInp.readLine()) != null) {
-//					List<String> tempList = new ArrayList<String>(Arrays.asList(s.split(" ")));
-//					tempList.removeAll(Arrays.asList(""));
-//					if (tempList.get(0).equals(dockerImage)) {
-//						imageExists = true;
-//						break;
-//					}
-//				}
-//
-//				// If the required image does not exist in the local machine then load the image
-//				if (!imageExists) {
-//					System.out.println("Loading docker image \"" + dockerImage + "\" for SPLAT");
-//					String loadDockerImage = "docker load -i " + splatImagePath;
-//					dockerLoadImage = Runtime.getRuntime().exec(loadDockerImage);
-//					BufferedReader stdErr = new BufferedReader(
-//							new InputStreamReader(dockerLoadImage.getErrorStream()));
-//
-//					console = findConsole("SPLAT");
-//					out = console.newMessageStream();
-//					window = HandlerUtil.getActiveWorkbenchWindow(event);
-//					page = window.getActivePage();
-//					id = IConsoleConstants.ID_CONSOLE_VIEW;
-//					view = (IConsoleView) page.showView(id);
-//					view.display(console);
-//
-//					s = null;
-//					while ((s = stdErr.readLine()) != null) {
-//						out.println(s);
-//					}
-//				} else {
-//					System.out.println("SPLAT image \"" + dockerImage + "\" is already loaded");
-//				}
-//
-//				// build the docker run command
-//				commands += "docker run --rm -v ";
-//				commands += Activator.getDefault().getPreferenceStore()
-//						.getString(SplatPreferenceConstants.OUTPUT_DIRECTORY) + ":/user ";
-//				commands += dockerImage + " ";
-//				for (String c : cmdLineArgs) {
-//					commands += c + " ";
-//				}
-//				System.out.println(commands);
-//				ClientProcess = Runtime.getRuntime().exec(commands);
-//				ClientProcess.waitFor();
-//				destFile.delete();
-//			}
-
-			// Run SPLAT in LINUX environment
-//			else {
-
-//				System.out.println("Running SPLAT in LINUX environment");
-				Runtime rt = Runtime.getRuntime();
-				rt.exec("chmod a+x " + splatPath);
-				String[] subCmds = cmdLineArgs.toArray(new String[cmdLineArgs.size()]);
-				String[] environmentVars = { "LD_LIBRARY_PATH=" + splatDir };
-				ClientProcess = Runtime.getRuntime().exec(subCmds, environmentVars);
-//			}
-
-			BufferedReader stdErr = new BufferedReader(new InputStreamReader(ClientProcess.getErrorStream()));
-
-			console = findConsole("SPLAT");
-			out = console.newMessageStream();
-
-//			if (!isLinuxrPlatformSelected) {
-//				out.println(commands);
-//			} else {
-				String cmdLine = "";
-				for (String st : cmdLineArgs) {
-					cmdLine += st + " ";
-				}
-				cmdLine += "LD_LIBRARY_PATH=" + splatDir;
-				out.println(cmdLine);
-				System.out.println("SPLAT binary exists");
-//			}
-
-			window = HandlerUtil.getActiveWorkbenchWindow(event);
-			page = window.getActivePage();
-			id = IConsoleConstants.ID_CONSOLE_VIEW;
-			view = (IConsoleView) page.showView(id);
 			view.display(console);
 
 			String s = null;
@@ -339,14 +153,14 @@ public class SplatHandler extends AbstractHandler {
 				out.println(s);
 			}
 
-			int exitVal = ClientProcess.waitFor();
+			final int exitVal = clientProcess.waitFor();
 			if (exitVal == 0) {
 
 				// refresh project directory
 				project.refreshLocal(IResource.DEPTH_INFINITE, new NullProgressMonitor());
 
 				// Insert the location of the source code into the filter component implementations in the model
-				insertSourceCodeLocation(xtextEditor);
+				insertSourceCodeLocation(componentSourceFolderName);
 
 				// update log
 				if (Activator.getDefault().getPreferenceStore()
@@ -362,31 +176,29 @@ public class SplatHandler extends AbstractHandler {
 		} catch (Exception e) {
 			Dialog.showError("SPLAT", "SPLAT has encountered an error and was unable to complete.");
 			e.printStackTrace();
-			return null;
+			return;
 		}
 
 		BriefcaseNotifier.notify("SPLAT", "SPLAT completed.");
 
-		return null;
+		return;
 	}
 
 
 
-	private void insertSourceCodeLocation(XtextEditor currentEditor) {
+	private void insertSourceCodeLocation(String componentSourceFolderName) {
 
-		// Look in the SPLAT output directory for filters (each will be in its own folder)
-//		String outputDir = Activator.getDefault().getPreferenceStore()
-//				.getString(BriefcasePreferenceConstants.SPLAT_OUTPUT_FOLDER).replace("\\", "/") + "/";
+		// Look in the SPLAT output directory for high-assurance components (each will be in its own folder)
 
 		// Get all the folders in the output directory
-		File dir = new File(outputDir);
-		String[] compDirs = dir.list((current, name) -> new File(current, name).isDirectory());
-		Map<AadlPackage, List<String>> pkgMap = new HashMap<>();
+		final File dir = new File(outputDir);
+		final String[] compDirs = dir.list((current, name) -> new File(current, name).isDirectory());
+		final Map<AadlPackage, List<String>> pkgMap = new HashMap<>();
 
 		for (AadlPackage pkg : TraverseProject.getPackagesInProject(TraverseProject.getCurrentProject())) {
-			List<String> compNames = new ArrayList<>();
+			final List<String> compNames = new ArrayList<>();
 			for (String d : compDirs) {
-				if (d.startsWith(pkg.getName())) {
+				if (d.startsWith(pkg.getName() + "_")) {
 					compNames.add(d.substring(pkg.getName().length() + 1));
 				}
 			}
@@ -407,113 +219,79 @@ public class SplatHandler extends AbstractHandler {
 
 		// Iterate through project packages
 		for (AadlPackage pkg : pkgMap.keySet()) {
-			IFile file = Filesystem.getFile(pkg.eResource().getURI());
-			XtextEditor editor = getEditor(file);
-			if (editor != null) {
-				editor.getDocument().modify(resource -> {
-					AadlPackage aadlPackage = (AadlPackage) resource.getContents().get(0);
+
+			final XtextResourceSet resourceSet = new XtextResourceSet();
+			resourceSet.addLoadOption(XtextResource.OPTION_RESOLVE_ALL, Boolean.TRUE);
+			final AadlPackage aadlPackage = (AadlPackage) resourceSet.getEObject(EcoreUtil.getURI(pkg), true);
+
+			final Resource aadlResource = aadlPackage.eResource();
+			final TransactionalEditingDomain domain = WorkspaceEditingDomainFactory.INSTANCE
+					.createEditingDomain(resourceSet);
+
+			// We execute this command on the command stack because otherwise, we will not
+			// have write permissions on the editing domain.
+			final Command cmd = new RecordingCommand(domain) {
+
+				@Override
+				protected void doExecute() {
+
 					for (ComponentImplementation ci : EcoreUtil2.getAllContentsOfType(aadlPackage,
 							ComponentImplementation.class)) {
+
 						if (pkgMap.get(pkg).contains(ci.getType().getName())) {
 							// Insert language property
-							String implLang = "CakeML";
-//							String assuranceLevel = Activator.getDefault().getPreferenceStore()
-//									.getString(SplatPreferenceConstants.ASSURANCE_LEVEL);
-//							if (!assuranceLevel.equalsIgnoreCase(SplatPreferenceConstants.ASSURANCE_LEVEL_BASIC)) {
-//								implLang = "CakeML";
-//							}
-							if (!CasePropertyUtils.setCompLanguage(ci, implLang)) {
-//								return;
-							}
+							CasePropertyUtils.setCompLanguage(ci, "CakeML");
 
 							// Insert source text property
-							String sourceText = outputDir + "/" + aadlPackage.getName() + FOLDER_PACKAGE_DELIMITER
-									+ ci.getType().getName() + "/"
-									+ ci.getType().getName();
-							if (implLang.equalsIgnoreCase("c")) {
-								sourceText += ".c";
-							} else if (implLang.equalsIgnoreCase("cakeml")) {
-								sourceText += ".S";
-							} else {
-								sourceText += ".o";
-							}
-							Property sourceTextProp = GetProperties.lookupPropertyDefinition(ci,
-									ProgrammingProperties._NAME, ProgrammingProperties.SOURCE_TEXT);
+							final String compSourceText = componentSourceFolderName + "/" + aadlPackage.getName()
+									+ FOLDER_PACKAGE_DELIMITER
+									+ ci.getType().getName() + "/" + aadlPackage.getName() + FOLDER_PACKAGE_DELIMITER
+									+ ci.getType().getName() + ".S";
+							final String ffiSourceText = componentSourceFolderName + "/" + aadlPackage.getName()
+									+ FOLDER_PACKAGE_DELIMITER + ci.getType().getName() + "/basis_ffi.c";
 
-							// Get any existing source text already in model
-							Property prop = Aadl2GlobalScopeUtil.get(ci, Aadl2Package.eINSTANCE.getProperty(),
-									ProgrammingProperties._NAME + "::" + ProgrammingProperties.SOURCE_TEXT);
-							List<? extends PropertyExpression> currentSource = ci.getPropertyValueList(prop);
-							List<StringLiteral> listVal = new ArrayList<>();
-							if (currentSource != null) {
-								for (PropertyExpression pe : currentSource) {
-									if (pe instanceof StringLiteral) {
-										StringLiteral source = (StringLiteral) pe;
-										if (!source.getValue().equalsIgnoreCase(sourceText)) {
-											listVal.add(source);
-										}
-									}
-								}
-							}
+							final Property sourceTextProp =
+									GetProperties.lookupPropertyDefinition(ci, ProgrammingProperties._NAME,
+											ProgrammingProperties.SOURCE_TEXT);
 
-							StringLiteral sourceTextLit = Aadl2Factory.eINSTANCE.createStringLiteral();
-							sourceTextLit.setValue(sourceText);
-							listVal.add(sourceTextLit);
+							final List<StringLiteral> listVal = new ArrayList<>();
+							final StringLiteral compSourceTextLit = Aadl2Factory.eINSTANCE.createStringLiteral();
+							compSourceTextLit.setValue(compSourceText);
+							listVal.add(compSourceTextLit);
+							final StringLiteral ffiSourceTextLit = Aadl2Factory.eINSTANCE.createStringLiteral();
+							ffiSourceTextLit.setValue(ffiSourceText);
+							listVal.add(ffiSourceTextLit);
+
 							ci.setPropertyValue(sourceTextProp, listVal);
 
 						}
 					}
-					return null;
-				});
-				closeEditor(editor, !editor.equals(currentEditor), true);
-			}
-		}
 
-	}
+				}
 
-	private XtextEditor getEditor(IFile file) {
-		IWorkbenchPage page = null;
-		IEditorPart part = null;
+			};
 
-		if (file.exists()) {
-			page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
-			IEditorDescriptor desc = PlatformUI.getWorkbench().getEditorRegistry().getDefaultEditor(file.getName());
 			try {
-				part = page.openEditor(new FileEditorInput(file), desc.getId());
-			} catch (PartInitException e) {
+				((TransactionalCommandStack) domain.getCommandStack()).execute(cmd, null);
+
+				// We're done: Save the model
+				aadlResource.save(SaveOptions.newBuilder().format().getOptions().toOptionsMap());
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
+			domain.dispose();
+
 		}
 
-		if (part == null) {
-			return null;
-		}
-
-		XtextEditor xedit = null;
-		xedit = (XtextEditor) part;
-
-		return xedit;
-	}
-
-	private void closeEditor(XtextEditor editor, boolean close, boolean save) {
-		IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
-		if (save) {
-			page.saveEditor(editor, false);
-		}
-
-		if (close) {
-			page.closeEditor(editor, false);
-		}
 	}
 
 	private void updateLog() {
-		Date date = new Date(System.currentTimeMillis());
-		String status = "SPLAT completed successfully on " + date + System.lineSeparator();
-		File file = new File(
+		final Date date = new Date(System.currentTimeMillis());
+		final String status = "SPLAT completed successfully on " + date + System.lineSeparator();
+		final File file = new File(
 				Activator.getDefault().getPreferenceStore().getString(BriefcasePreferenceConstants.SPLAT_LOG_FILENAME));
-		FileWriter writer;
 		try {
-			writer = new FileWriter(file, true);
+			final FileWriter writer = new FileWriter(file, true);
 			writer.write(status);
 			writer.close();
 		} catch (IOException e) {
@@ -521,14 +299,5 @@ public class SplatHandler extends AbstractHandler {
 		}
 
 	}
-
-//	private boolean checkDockerInstall() {
-//		try {
-//			Runtime.getRuntime().exec("docker --version");
-//		} catch (IOException e) {
-//			return false;
-//		}
-//		return true;
-//	}
 
 }
