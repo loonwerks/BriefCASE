@@ -25,8 +25,9 @@ public class JsonRequirementsFile {
 	private final static String DCRYPPS = "dcrypps";
 	private final static String TOOL = "Tool";
 	private final static String IMPLEMENTATION = "Implementation";
-	private final static String DATE = "Date";
-	private final static String HASH = "Hash";
+//	private final static String DATE = "Date";
+//	private final static String HASH = "Hash";
+	private final static String REQUIREMENT = "requirement";
 	private final static String REQUIREMENTS = "Requirements";
 	private final static String DESCRIPTION = "Description";
 	private final static String NIST_SECURITY_CONTROLS = "NIST 800-53 Security Controls";
@@ -118,7 +119,32 @@ public class JsonRequirementsFile {
 					}
 				}
 			} else if (this.tool.equalsIgnoreCase(DCRYPPS)) {
+				if (!jsonObject.has(REQUIREMENTS.toLowerCase())) {
+					return false;
+				}
+				final JsonArray reqArray = jsonObject.get(REQUIREMENTS.toLowerCase()).getAsJsonArray();
+				for (JsonElement req : reqArray) {
+					if (req.isJsonObject()) {
+						final JsonObject reqObject = req.getAsJsonObject();
 
+						if (reqObject.has(REQUIREMENT) && reqObject.get(REQUIREMENT).isJsonArray()
+								&& reqObject.get(REQUIREMENT).getAsJsonArray().size() > 0) {
+
+							JsonArray reqArr = reqObject.get(REQUIREMENT).getAsJsonArray();
+
+							if (reqArr.size() <= 1 || !reqObject.has(DESCRIPTION.toLowerCase())) {
+								continue;
+							}
+
+							final String type = reqArr.get(0).getAsString();
+							final String context = reqArr.get(reqArr.size() - 1).getAsString();
+							final String description = reqObject.get(DESCRIPTION.toLowerCase()).getAsString();
+							this.requirements.add(new CyberRequirement(this.date, this.tool, CyberRequirement.toDo,
+									type, "", description, context, ""));
+
+						}
+					}
+				}
 			} else {
 				return false;
 			}
@@ -145,18 +171,6 @@ public class JsonRequirementsFile {
 	 * @param reqList
 	 */
 	public void removeRequirements(final List<CyberRequirement> reqList) {
-//		Iterator<CyberRequirement> i = getRequirements().iterator();
-//		while (i.hasNext()) {
-//			CyberRequirement jsonReq = i.next();
-//			for (CyberRequirement req : reqList) {
-//				if (req.getType().equalsIgnoreCase(jsonReq.getType())
-//						&& req.getContext().equalsIgnoreCase(jsonReq.getContext())) {
-//					i.remove();
-//					break;
-//				}
-//			}
-//		}
-
 		reqList.forEach(r -> removeRequirement(r));
 	}
 

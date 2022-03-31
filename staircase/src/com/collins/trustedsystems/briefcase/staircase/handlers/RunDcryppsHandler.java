@@ -38,8 +38,8 @@ import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
 import com.collins.trustedsystems.briefcase.util.Filesystem;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -52,23 +52,16 @@ public class RunDcryppsHandler extends AadlHandler {
 
 	private final static String DESIRABLE_PROPERTIES = "desirableProperties";
 	private final static String ATTACKER_DESCRIPTION = "attackerDescription";
-//	private final static String CLASS_DICTIONARY = "classDictionary";
-	private final static String TOOL = "tool";
+	private final static String TOOL = "Tool";
 	private final static String PROJECT = "project";
-	private final static String IMPLEMENTATION = "implementation";
+	private final static String IMPLEMENTATION = "Implementation";
 	private final static String DATE = "date";
 	private final static String HASH = "hash";
 	private final static String MODEL_UNITS = "modelUnits";
 	private final static String MODEL = "model";
-	private final static String REQUIREMENT = "requirement";
 	private final static String REQUIREMENTS = "requirements";
-	private final static String TYPE = "type";
-	private final static String CONTEXT = "context";
-	private final static String DESCRIPTION = "description";
-	private final static String COST_GUIDANCE = "costGuidance";
-	private final static String NO_COST_GUIDANCE = "no-cost-guidance";
-	private final static String TARGET_CONFIDENCE = "targetConfidence";
-	private final static double TARGET_CONFIDENCE_VAL = 0.96;
+	private final static String SUCCESS = "success";
+	private final static String PCC = "pcc";
 
 	@Override
 	protected void runCommand(EObject eObj) {
@@ -104,7 +97,7 @@ public class RunDcryppsHandler extends AadlHandler {
 		final IPath path = new Path(ci.eResource().getURI().toPlatformString(true));
 		final IProject project = ResourcesPlugin.getWorkspace().getRoot().getFile(path).getProject();
 		header.addProperty(PROJECT, project.getName());
-		header.addProperty(IMPLEMENTATION, ci.getQualifiedName());
+		header.addProperty(IMPLEMENTATION.toLowerCase(), ci.getQualifiedName());
 		header.addProperty(DATE, System.currentTimeMillis());
 
 		try {
@@ -115,13 +108,12 @@ public class RunDcryppsHandler extends AadlHandler {
 			header.add(MODEL_UNITS, json);
 
 		} catch (Exception e) {
+			e.printStackTrace();
 			Dialog.showError("Run DCRYPPS", "Unable to export model to JSON format.");
 			return false;
 		}
 
 		request.add(MODEL, header);
-//		request.addProperty(COST_GUIDANCE, NO_COST_GUIDANCE);
-//		request.addProperty(TARGET_CONFIDENCE, TARGET_CONFIDENCE_VAL);
 
 		final JsonObject inputs = getInputsFromModel(ci);
 		if (!inputs.has(DESIRABLE_PROPERTIES)) {
@@ -132,10 +124,6 @@ public class RunDcryppsHandler extends AadlHandler {
 			Dialog.showError("Run DCRYPPS", "Component implementation " + ci.getName()
 					+ " must include a JSON annex containing the " + ATTACKER_DESCRIPTION + " array.");
 			return false;
-//		} else if (!inputs.has(CLASS_DICTIONARY)) {
-//			Dialog.showError("Run DCRYPPS", "Component implementation " + ci.getName()
-//					+ " must include a JSON annex containing the " + CLASS_DICTIONARY + " object.");
-//			return false;
 		}
 
 		final JsonObject results = postDcryppsRequest(request.toString());
@@ -175,8 +163,6 @@ public class RunDcryppsHandler extends AadlHandler {
 		httpPost.setHeader("Accept", "application/json");
 		httpPost.setHeader("Content-type", "application/json");
 		final RequestConfig config = RequestConfig.custom()
-//				.setConnectTimeout(TIMEOUT)
-//				.setConnectionRequestTimeout(TIMEOUT)
 				.setSocketTimeout(TIMEOUT)
 				.build();
 		final CloseableHttpClient httpClient = HttpClientBuilder.create().setDefaultRequestConfig(config).build();
@@ -196,8 +182,14 @@ public class RunDcryppsHandler extends AadlHandler {
 				final String responseString = EntityUtils.toString(entity);
 				final JsonParser parser = new JsonParser();
 				final JsonObject responseJsonObject = parser.parse(responseString).getAsJsonObject();
-
-				return responseJsonObject;
+				if (responseJsonObject.has(SUCCESS)
+						&& !responseJsonObject.get(SUCCESS).getAsBoolean()) {
+					Dialog.showError("Run DCRYPPS",
+							"DCRYPPS encountered an error and could not complete analysis.  See console for details.");
+					BriefcaseNotifier.println("DCRYPPS failure message: " + responseJsonObject.toString());
+				} else {
+					return responseJsonObject;
+				}
 			} else {
 				Dialog.showError("Run DCRYPPS", "DCRYPPS returned error code " + statusCode + ".");
 			}
@@ -208,6 +200,7 @@ public class RunDcryppsHandler extends AadlHandler {
 
 	}
 
+
 	private IFile writeRequirementsFile(IProject project, JsonObject header, JsonObject results) {
 
 		final JsonObject contents = header;
@@ -215,41 +208,22 @@ public class RunDcryppsHandler extends AadlHandler {
 		if (contents.has(MODEL_UNITS)) {
 			contents.remove(MODEL_UNITS);
 		}
-		if (contents.has(IMPLEMENTATION)) {
-			String implementation = contents.get(IMPLEMENTATION).getAsString();
+		if (contents.has(IMPLEMENTATION.toLowerCase())) {
+			String implementation = contents.get(IMPLEMENTATION.toLowerCase()).getAsString();
+			contents.remove(IMPLEMENTATION.toLowerCase());
 			implementation = implementation.substring(implementation.lastIndexOf("::") + 2);
 			implementation = implementation.replace(".", "_");
 			implementation = implementation + "_Instance";
 			contents.addProperty(IMPLEMENTATION, implementation);
 		}
 
-		final JsonArray requirements = new JsonArray();
-		if (results.has(REQUIREMENTS) && results.get(REQUIREMENTS).isJsonArray()) {
-			for (JsonElement reqElement : results.get(REQUIREMENTS).getAsJsonArray()) {
-				final JsonObject importReq = new JsonObject();
-				if (reqElement.isJsonObject()) {
-					final JsonObject reqObj = reqElement.getAsJsonObject();
-					if (reqObj.has(REQUIREMENT) && reqObj.get(REQUIREMENT).isJsonArray()
-							&& reqObj.get(REQUIREMENT).getAsJsonArray().size() > 0) {
-
-						JsonArray reqArr = reqObj.get(REQUIREMENT).getAsJsonArray();
-
-						importReq.addProperty(TYPE, reqArr.get(0).getAsString());
-
-						// Context
-						if (reqArr.size() > 1) {
-							importReq.addProperty(CONTEXT, reqArr.get(reqArr.size() - 1).getAsString());
-						}
-
-					}
-					if (reqObj.has(DESCRIPTION)) {
-						importReq.addProperty(DESCRIPTION, reqObj.get(DESCRIPTION).getAsString());
-					}
-					requirements.add(reqObj);
-				}
-			}
+		if (results.has(REQUIREMENTS)) {
+			contents.add(REQUIREMENTS, results.get(REQUIREMENTS));
 		}
-		contents.add(REQUIREMENTS, requirements);
+
+		if (results.has(PCC) && !(results.get(PCC) instanceof JsonNull)) {
+			contents.add(PCC, results.get(PCC));
+		}
 
 		final Gson gson = new GsonBuilder().serializeNulls().disableHtmlEscaping().setPrettyPrinting().create();
 
