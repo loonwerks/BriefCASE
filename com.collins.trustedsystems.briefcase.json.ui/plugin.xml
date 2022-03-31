@@ -350,5 +350,13 @@
             id="com.collins.trustedsystems.briefcase.json.parser">
       </parser>
    </extension>
+   <extension
+         point="org.osate.annexsupport.unparser">
+      <unparser
+            annexName="json"
+            class="com.collins.trustedsystems.briefcase.json.ui.unparsing.JsonAnnexUnparser"
+            id="com.collins.trustedsystems.briefcase.json.unparser">
+      </unparser>
+   </extension>
 
 </plugin>
