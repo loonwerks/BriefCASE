@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>com.collins.trustedsystems.briefcase</groupId>
 		<artifactId>com.collins.trustedsystems.briefcase.parent</artifactId>
-		<version>0.7.1-SNAPSHOT</version>
+		<version>0.8.0</version>
 	</parent>
 
 	<artifactId>com.collins.trustedsystems.briefcase.modelaccess</artifactId>
