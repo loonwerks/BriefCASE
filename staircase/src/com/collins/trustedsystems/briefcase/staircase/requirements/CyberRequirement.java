@@ -408,6 +408,9 @@ public class CyberRequirement {
 		// Add the top-level goal and argue statement if they don't already exist
 
 		final Classifier modificationContext = getModificationContext();
+		if (modificationContext == null) {
+			return;
+		}
 		final Resource aadlResource = modificationContext.eResource();
 
 		final TransactionalEditingDomain domain = WorkspaceEditingDomainFactory.INSTANCE

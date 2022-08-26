@@ -33,6 +33,7 @@ import com.rockwellcollins.atc.resolute.resolute.ClaimString;
 import com.rockwellcollins.atc.resolute.resolute.Definition;
 import com.rockwellcollins.atc.resolute.resolute.FnCallExpr;
 import com.rockwellcollins.atc.resolute.resolute.FunctionDefinition;
+import com.rockwellcollins.atc.resolute.resolute.IdExpr;
 import com.rockwellcollins.atc.resolute.resolute.ResoluteFactory;
 import com.rockwellcollins.atc.resolute.resolute.ResoluteLibrary;
 
@@ -279,6 +280,9 @@ public class CaseUtils {
 				break;
 			}
 		}
+		final IdExpr argExpr = ResoluteFactory.eINSTANCE.createIdExpr();
+		argExpr.setId(arg);
+		fnCallExpr.getArgs().add(argExpr);
 		claimBody.setExpr(fnCallExpr);
 		topLevelGoal.setBody(claimBody);
 

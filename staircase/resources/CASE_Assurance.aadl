@@ -2,13 +2,13 @@ package CASE_Assurance
 private
 	annex resolute {**
 
-		goal requirements_complete() <=
+		goal requirements_complete(sys : system) <=
 			** "Requirements are complete with respect to vulnerabilities" **
-			system_design_evaluated() and cyber_requirements_reviewed() and cyber_requirements_imported_or_omitted_with_rationale()
+			system_design_evaluated(sys) and cyber_requirements_reviewed() and cyber_requirements_imported_or_omitted_with_rationale()
 		
-		goal system_design_evaluated() <=
+		goal system_design_evaluated(sys : system) <=
 			** "System design analyzed for vulnerabilities" **
-			model_complies_with_guidelines() and cyber_analysis_performed()
+			model_complies_with_guidelines(sys) and cyber_analysis_performed()
 		
 		goal cyber_analysis_performed() <=
 			** "Cyber analysis was performed on most recent version of model" **
@@ -49,11 +49,10 @@ private
 --			** "Formal verification proves model satisfies requirement" **
 --			-- AgreeCheck + confidence in results
 
-		goal model_complies_with_guidelines() <=
+		goal model_complies_with_guidelines(sys : system) <=
 			** "Model complies with modeling guidelines" **
 			context: "CASE modeling guidelines";
-			--resolint()
-			undeveloped
+			resolint(sys)
 		
 		goal requirement_satisfied_in_implementation() <=
 			** "Cyber requirement is satisfied through the realization of the AADL system model" **

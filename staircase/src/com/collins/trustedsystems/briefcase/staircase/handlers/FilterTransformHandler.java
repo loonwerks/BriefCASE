@@ -455,13 +455,7 @@ public class FilterTransformHandler extends AadlHandler {
 
 					agreeClauses.append("**}");
 
-					if (isSel4Process) {
-						final DefaultAnnexSubclause annexSubclauseImpl = ComponentCreateHelper
-								.createOwnedAnnexSubclause(filterImpl);
-						annexSubclauseImpl.setName("agree");
-						annexSubclauseImpl.setSourceText(
-								"{**" + System.lineSeparator() + "lift contract;" + System.lineSeparator() + "**}");
-					} else {
+					if (!isSel4Process) {
 						final DefaultAnnexSubclause annexSubclauseImpl = ComponentCreateHelper
 								.createOwnedAnnexSubclause(filterType);
 						annexSubclauseImpl.setName("agree");
@@ -472,6 +466,16 @@ public class FilterTransformHandler extends AadlHandler {
 
 				// Add thread if this is a seL4 process
 				if (isSel4Process) {
+
+					// Create 'lift contract' statement in process implementation.
+					// This will be done even if an AGREE property hasn't been specified yet.
+					// That way if one is manually added later, everything will still work.
+					final DefaultAnnexSubclause annexSubclauseImpl = ComponentCreateHelper
+							.createOwnedAnnexSubclause(filterImpl);
+					annexSubclauseImpl.setName("agree");
+					annexSubclauseImpl.setSourceText(
+							"{**" + System.lineSeparator() + "lift contract;" + System.lineSeparator() + "**}");
+
 					Sel4TransformHandler.insertThreadInSel4Process((ProcessImplementation) filterImpl,
 							filterDispatchProtocol, filterStackSize, agreeClauses.toString());
 

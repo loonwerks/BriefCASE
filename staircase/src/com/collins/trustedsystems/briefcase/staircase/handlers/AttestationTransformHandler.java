@@ -1028,6 +1028,15 @@ public class AttestationTransformHandler extends AadlHandler {
 					Sel4TransformHandler.insertThreadInSel4Process((ProcessImplementation) attestationManagerImpl,
 							attestationManagerDispatchProtocol, attestationManagerStackSize, null);
 
+					// Create 'lift contract' statement in process implementation.
+					// This will be done even if an AGREE property hasn't been specified yet.
+					// That way if one is manually added later, everything will still work.
+					final DefaultAnnexSubclause annexSubclauseImpl = ComponentCreateHelper
+							.createOwnedAnnexSubclause(attestationGateImpl);
+					annexSubclauseImpl.setName("agree");
+					annexSubclauseImpl.setSourceText(
+							"{**" + System.lineSeparator() + "lift contract;" + System.lineSeparator() + "**}");
+
 					Sel4TransformHandler.insertThreadInSel4Process((ProcessImplementation) attestationGateImpl,
 							attestationGateDispatchProtocol, attestationGateStackSize, null);
 

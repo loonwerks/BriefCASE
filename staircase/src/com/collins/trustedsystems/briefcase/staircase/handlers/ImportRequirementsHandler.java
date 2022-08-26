@@ -46,15 +46,17 @@ public class ImportRequirementsHandler extends AbstractHandler {
 			}
 		}
 
-		run(importRequirements, filename);
+		final boolean result = run(importRequirements, filename);
 
 		// Format and save
-		AadlHandler.format(true);
+		if (result) {
+			AadlHandler.format(true);
+		}
 
 		return null;
 	}
 
-	public void run(final boolean importRequirements, final String filename) {
+	public boolean run(final boolean importRequirements, final String filename) {
 
 		/*
 		 * Steps for requirements manager:
@@ -76,7 +78,7 @@ public class ImportRequirementsHandler extends AbstractHandler {
 		final RequirementsManager reqMgr = RequirementsManager.getInstance();
 		if (!reqMgr.readRequirementFiles(importRequirements, filename)) {
 			// No requirement files were read
-			return;
+			return false;
 		}
 
 		final ImportRequirementsGUI wizard = new ImportRequirementsGUI(
@@ -90,9 +92,10 @@ public class ImportRequirementsHandler extends AbstractHandler {
 			final List<CyberRequirement> updatedReqs = wizard.getRequirements();
 			reqMgr.updateRequirements(updatedReqs);
 			BriefcaseNotifier.notify("Requirements Manager", "Requirements import complete.");
+			return true;
 		}
 
-		return;
+		return false;
 	}
 
 }
