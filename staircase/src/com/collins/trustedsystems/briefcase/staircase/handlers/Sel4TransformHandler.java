@@ -227,7 +227,7 @@ public class Sel4TransformHandler extends AadlHandler {
 			BriefcaseNotifier.notify("BriefCASE - seL4 Transform", "Model transformed for seL4 build.");
 
 			// Format and save
-//			format(true);
+			format(true);
 
 //			saveChanges(false);
 		} else {
