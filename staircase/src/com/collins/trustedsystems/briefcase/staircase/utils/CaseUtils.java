@@ -14,6 +14,17 @@ import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
+import org.eclipse.jface.text.source.ISourceViewer;
+import org.eclipse.jface.text.source.SourceViewer;
+import org.eclipse.ui.IEditorDescriptor;
+import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IEditorReference;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.part.FileEditorInput;
+import org.eclipse.xtext.ui.editor.XtextEditor;
 import org.osate.aadl2.AadlPackage;
 import org.osate.aadl2.AnnexLibrary;
 import org.osate.aadl2.Classifier;
@@ -315,6 +326,68 @@ public class CaseUtils {
 			initCaseRequirementsPackage();
 		}
 		return caseReqFile;
+	}
+
+	public static void formatCaseRequirements() {
+
+		// First check if CASE_Requirements is already open
+		final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+		if (window == null) {
+			return;
+		}
+		for (IEditorReference ref : window.getActivePage().getEditorReferences()) {
+			final IEditorPart editor = ref.getEditor(false);
+			if (editor == null) {
+				continue;
+			} else if (editor instanceof XtextEditor
+					&& editor.getTitle().equalsIgnoreCase(CASE_REQUIREMENTS_NAME + ".aadl")) {
+				((SourceViewer) ((XtextEditor) editor).getInternalSourceViewer()).doOperation(ISourceViewer.FORMAT);
+
+				if (editor.isDirty()) {
+					editor.doSave(new NullProgressMonitor());
+				}
+
+				return;
+			}
+		}
+
+		// CASE_Requirements isn't open, so open, format, save, and close it
+		final IFile file = getCaseRequirementsFile();
+		IWorkbenchPage page = null;
+		IEditorPart part = null;
+		IEditorReference editorRef = null;
+
+		if (file != null && file.exists()) {
+			page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
+			final IEditorDescriptor desc = PlatformUI.getWorkbench()
+					.getEditorRegistry()
+					.getDefaultEditor(file.getName());
+			try {
+				part = page.openEditor(new FileEditorInput(file), desc.getId());
+
+				for (IEditorReference editor : page.getEditorReferences()) {
+					if (editor.getEditor(false) == part) {
+						editorRef = editor;
+						page.hideEditor(editor);
+						break;
+					}
+				}
+			} catch (PartInitException e) {
+				e.printStackTrace();
+			}
+		}
+
+		if (part != null && part instanceof XtextEditor) {
+
+			((SourceViewer) ((XtextEditor) part).getInternalSourceViewer()).doOperation(ISourceViewer.FORMAT);
+			((XtextEditor) part).doSave(null);
+
+			if (editorRef != null) {
+				page.showEditor(editorRef);
+			}
+
+			((XtextEditor) part).close(false);
+		}
 	}
 
 	/**

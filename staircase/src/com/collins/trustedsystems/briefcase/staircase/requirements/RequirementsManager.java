@@ -132,6 +132,7 @@ public class RequirementsManager {
 		final CyberRequirement req = getRequirement(reqId);
 		if (req != null) {
 			req.updateClaimDefinition(claim);
+			CaseUtils.formatCaseRequirements();
 		}
 	}
 
@@ -199,6 +200,7 @@ public class RequirementsManager {
 
 		updatedReqs.forEach(r -> reqDb.updateRequirement(r));
 		reqDb.saveRequirementsDatabase();
+		CaseUtils.formatCaseRequirements();
 	}
 
 	public boolean readRequirementFiles(boolean importRequirements, String filename) {
