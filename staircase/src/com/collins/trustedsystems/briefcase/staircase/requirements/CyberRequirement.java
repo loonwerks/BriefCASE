@@ -88,6 +88,13 @@ public class CyberRequirement {
 	public static final String notApplicable = "N/A";
 	private static final boolean addQuotes = true;
 
+	private final static String FALSE = "False";
+	private final static String TRUE = "True";
+	private final static String FORMALIZED = "Formalized";
+	private final static String GENERATED_BY = "Generated_By";
+	private final static String GENERATED_ON = "Generated_On";
+	private final static String REQ_COMPONENT = "Req_Component";
+
 	private String type = ""; // this is the requirement classification type as defined by the TA1 tool
 	private String id = "";
 	private String text = "";
@@ -101,30 +108,6 @@ public class CyberRequirement {
 	transient private String subcomponentQualifiedName = null;
 
 	private Comparator<Definition> alphabetical = (o1, o2) -> o1.getName().compareTo(o2.getName());
-
-	public static String False() {
-		return "False";
-	}
-
-	public static String formalized() {
-		return "Formalized";
-	}
-
-	public static String generatedBy() {
-		return "Generated_By";
-	}
-
-	public static String generatedOn() {
-		return "Generated_On";
-	}
-
-	public static String reqComponent() {
-		return "Req_Component";
-	}
-
-	public static String True() {
-		return "True";
-	}
 
 	public CyberRequirement(CyberRequirement req) {
 		this(req.getDate(), req.getTool(), req.getStatus(), req.getType(), req.getId(), req.getText(), req.getContext(),
@@ -386,7 +369,6 @@ public class CyberRequirement {
 				ECollections.sort(resLib.getDefinitions(), alphabetical);
 				defResLib.setParsedAnnexLibrary(resLib);
 			}
-
 		};
 
 		try {
@@ -448,20 +430,20 @@ public class CyberRequirement {
 					resLib = ResoluteFactory.eINSTANCE.createResoluteLibrary();
 				}
 
-				FunctionDefinition topLevelClaim = null;
 				for (Iterator<Definition> i = resLib.getDefinitions().iterator(); i.hasNext();) {
 					final Definition def = i.next();
 					if (def.getName().equalsIgnoreCase(topLevelGoalName)) {
 						i.remove();
-						break;
+					} else if (def.getName().equalsIgnoreCase("security_requirements_satisfied")) {
+						i.remove();
 					}
 				}
 
-				topLevelClaim = CaseUtils.createTopLevelGoal(modificationContext);
+				final FunctionDefinition requirementsSatisfiedClaim = CaseUtils.createRequirementsSatisfiedGoal();
+				final FunctionDefinition topLevelClaim = CaseUtils.createTopLevelGoal(modificationContext,
+						requirementsSatisfiedClaim);
 
-				final BinaryExpr bExpr = ResoluteFactory.eINSTANCE.createBinaryExpr();
-				bExpr.setOp("and");
-				Expr currentExpr = topLevelClaim.getBody().getExpr();
+				Expr currentExpr = requirementsSatisfiedClaim.getBody().getExpr();
 				for (AnnexLibrary reqAnnexLib : reqPackage.getOwnedPrivateSection().getOwnedAnnexLibraries()) {
 					if (reqAnnexLib.getName().equalsIgnoreCase("resolute")) {
 
@@ -469,34 +451,44 @@ public class CyberRequirement {
 								.getParsedAnnexLibrary();
 						for (Definition def : resReqLib.getDefinitions()) {
 
+							if (!(def instanceof FunctionDefinition)
+									|| !(((FunctionDefinition) def).getBody() instanceof ClaimBody)) {
+								continue;
+							}
 							final ClaimBody body = (ClaimBody) ((FunctionDefinition) def).getBody();
 							for (NamedElement attribute : body.getAttributes()) {
 								if (attribute instanceof ClaimContext
-										&& attribute.getName().equalsIgnoreCase(reqComponent())) {
+										&& attribute.getName().equalsIgnoreCase(REQ_COMPONENT)) {
 									final ClaimContext ctx = (ClaimContext) attribute;
 									final String comp = ((StringExpr) ctx.getExpr()).getVal()
 											.getValue()
 											.replace("\"", "");
-
-									if (getImplementationClassifier(comp).getQualifiedName()
+									final Classifier classifier = getImplementationClassifier(comp);
+									if (classifier != null && classifier.getQualifiedName()
 											.equalsIgnoreCase(modificationContext.getQualifiedName())) {
 										final FnCallExpr fnCallExpr = ResoluteFactory.eINSTANCE.createFnCallExpr();
 										fnCallExpr.setFn((FunctionDefinition) def);
-										bExpr.setLeft(currentExpr);
-										bExpr.setRight(fnCallExpr);
-										currentExpr = EcoreUtil.copy(bExpr);
+										if (currentExpr instanceof UndevelopedExpr) {
+											currentExpr = fnCallExpr;
+										} else {
+											final BinaryExpr bExpr = ResoluteFactory.eINSTANCE.createBinaryExpr();
+											bExpr.setOp("and");
+											bExpr.setLeft(currentExpr);
+											bExpr.setRight(fnCallExpr);
+											currentExpr = EcoreUtil.copy(bExpr);
+										}
 									}
 									break;
 								}
 							}
-
 						}
 						break;
 					}
 				}
 
-				topLevelClaim.getBody().setExpr(bExpr);
+				requirementsSatisfiedClaim.getBody().setExpr(currentExpr);
 				resLib.getDefinitions().add(topLevelClaim);
+				resLib.getDefinitions().add(requirementsSatisfiedClaim);
 				annexLib.setParsedAnnexLibrary(resLib);
 
 				// Check to see if the 'argue' statement has been created
@@ -544,7 +536,6 @@ public class CyberRequirement {
 					resclause.getAnalyses().add(argueStatement);
 					subclause.setParsedAnnexSubclause(resclause);
 				}
-
 			}
 		};
 
@@ -633,7 +624,6 @@ public class CyberRequirement {
 
 				contract.getSpecs().add(agreeSpec);
 				subclause.setParsedAnnexSubclause(agreeSubclause);
-
 			}
 		};
 
@@ -716,7 +706,6 @@ public class CyberRequirement {
 				ECollections.sort(resLib.getDefinitions(), alphabetical);
 				defResLib.setParsedAnnexLibrary(resLib);
 			}
-
 		};
 
 		try {
@@ -792,7 +781,6 @@ public class CyberRequirement {
 				ECollections.sort(resLib.getDefinitions(), alphabetical);
 				defResLib.setParsedAnnexLibrary(resLib);
 			}
-
 		};
 
 		try {
@@ -849,7 +837,6 @@ public class CyberRequirement {
 						break;
 					}
 				}
-
 			}
 
 		};
@@ -899,20 +886,20 @@ public class CyberRequirement {
 					return;
 				}
 
-				FunctionDefinition topLevelClaim = null;
 				for (Iterator<Definition> i = resLib.getDefinitions().iterator(); i.hasNext();) {
 					final Definition def = i.next();
 					if (def.getName().equalsIgnoreCase(topLevelGoalName)) {
 						i.remove();
-						break;
+					} else if (def.getName().equalsIgnoreCase("security_requirements_satisfied")) {
+						i.remove();
 					}
 				}
 
-				topLevelClaim = CaseUtils.createTopLevelGoal(modificationContext);
+				final FunctionDefinition requirementsSatisfiedClaim = CaseUtils.createRequirementsSatisfiedGoal();
+				final FunctionDefinition topLevelClaim = CaseUtils.createTopLevelGoal(modificationContext,
+						requirementsSatisfiedClaim);
 
-				final BinaryExpr bExpr = ResoluteFactory.eINSTANCE.createBinaryExpr();
-				bExpr.setOp("and");
-				Expr currentExpr = topLevelClaim.getBody().getExpr();
+				Expr currentExpr = requirementsSatisfiedClaim.getBody().getExpr();
 				for (AnnexLibrary reqAnnexLib : reqPackage.getOwnedPrivateSection().getOwnedAnnexLibraries()) {
 					if (reqAnnexLib.getName().equalsIgnoreCase("resolute")) {
 
@@ -922,36 +909,46 @@ public class CyberRequirement {
 
 							if (def.getName().equalsIgnoreCase(getId())) {
 								continue;
+							} else if (!(def instanceof FunctionDefinition)
+									|| !(((FunctionDefinition) def).getBody() instanceof ClaimBody)) {
+								continue;
 							}
 
 							final ClaimBody body = (ClaimBody) ((FunctionDefinition) def).getBody();
 							for (NamedElement attribute : body.getAttributes()) {
 								if (attribute instanceof ClaimContext
-										&& attribute.getName().equalsIgnoreCase(reqComponent())) {
+										&& attribute.getName().equalsIgnoreCase(REQ_COMPONENT)) {
 									final ClaimContext ctx = (ClaimContext) attribute;
 									final String comp = ((StringExpr) ctx.getExpr()).getVal()
 											.getValue()
 											.replace("\"", "");
 
-									if (getImplementationClassifier(comp).getQualifiedName()
+									final Classifier classifier = getImplementationClassifier(comp);
+									if (classifier != null && classifier.getQualifiedName()
 											.equalsIgnoreCase(modificationContext.getQualifiedName())) {
 										final FnCallExpr fnCallExpr = ResoluteFactory.eINSTANCE.createFnCallExpr();
 										fnCallExpr.setFn((FunctionDefinition) def);
-										bExpr.setLeft(currentExpr);
-										bExpr.setRight(fnCallExpr);
-										currentExpr = EcoreUtil.copy(bExpr);
+										if (currentExpr instanceof UndevelopedExpr) {
+											currentExpr = fnCallExpr;
+										} else {
+											final BinaryExpr bExpr = ResoluteFactory.eINSTANCE.createBinaryExpr();
+											bExpr.setOp("and");
+											bExpr.setLeft(currentExpr);
+											bExpr.setRight(fnCallExpr);
+											currentExpr = EcoreUtil.copy(bExpr);
+										}
 									}
 									break;
 								}
 							}
-
 						}
 						break;
 					}
 				}
 
-				topLevelClaim.getBody().setExpr(currentExpr);
+				requirementsSatisfiedClaim.getBody().setExpr(currentExpr);
 				resLib.getDefinitions().add(topLevelClaim);
+				resLib.getDefinitions().add(requirementsSatisfiedClaim);
 				annexLib.setParsedAnnexLibrary(resLib);
 
 			}
@@ -1187,12 +1184,12 @@ public class CyberRequirement {
 		// Annotate claim with requirement information
 		final EList<NamedElement> claimAttributes = claimBody.getAttributes();
 		claimAttributes.clear();
-		claimAttributes.add(createResoluteContext(generatedBy(), getTool()));
+		claimAttributes.add(createResoluteContext(GENERATED_BY, getTool()));
 		claimAttributes.add(
-				createResoluteContext(generatedOn(), DateFormat.getDateInstance().format(new Date(getDate() * 1000))));
-		claimAttributes.add(createResoluteContext(reqComponent(), this.getContext()));
+				createResoluteContext(GENERATED_ON, DateFormat.getDateInstance().format(new Date(getDate() * 1000))));
+		claimAttributes.add(createResoluteContext(REQ_COMPONENT, this.getContext()));
 		claimAttributes.add(
-				createResoluteContext(formalized(), (getFormalize() ? True() : False())));
+				createResoluteContext(FORMALIZED, (getFormalize() ? TRUE : FALSE)));
 
 	}
 
@@ -1349,7 +1346,7 @@ public class CyberRequirement {
 					+ ") (claimBody : " + claimBody + ")");
 		}
 
-		final String dateString = getContext(claimBody, generatedOn());
+		final String dateString = getContext(claimBody, GENERATED_ON);
 		long date;
 		try {
 			date = DateFormat.getDateInstance().parse(dateString).getTime() / 1000;
@@ -1359,9 +1356,9 @@ public class CyberRequirement {
 			date = 0L;
 		}
 
-		final String tool = getContext(claimBody, generatedBy());
-		final String component = getContext(claimBody, reqComponent());
-		final boolean formalized = getContext(claimBody, formalized()).equalsIgnoreCase(True());
+		final String tool = getContext(claimBody, GENERATED_BY);
+		final String component = getContext(claimBody, REQ_COMPONENT);
+		final boolean formalized = getContext(claimBody, FORMALIZED).equalsIgnoreCase(TRUE);
 		final String status = CyberRequirement.add;
 
 		final int start = claimString.indexOf('[');

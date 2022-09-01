@@ -2,39 +2,49 @@ package CASE_Assurance
 private
 	annex resolute {**
 
-		goal requirements_complete(sys : system) <=
-			** "Requirements are complete with respect to vulnerabilities" **
-			system_design_evaluated(sys) and cyber_requirements_reviewed() and cyber_requirements_imported_or_omitted_with_rationale()
+		goal security_requirements_complete(sys : system) <=
+			** "System security requirements are correct and complete with respect to vulnerabilities found in the architecture model" **
+			security_requirements_reviewed() and security_requirements_imported_or_omitted_with_rationale() and security_analysis_performed(sys)
 		
-		goal system_design_evaluated(sys : system) <=
-			** "System design analyzed for vulnerabilities" **
-			model_complies_with_guidelines(sys) and cyber_analysis_performed()
-		
-		goal cyber_analysis_performed() <=
-			** "Cyber analysis was performed on most recent version of model" **
+		goal security_requirements_reviewed() <=
+			** "Security requirements were reviewed" **
 			undeveloped
 		
-		goal cyber_requirements_reviewed() <=
-			** "Cyber requirements were reviewed" **
+		goal security_requirements_imported_or_omitted_with_rationale() <=
+			** "Security requirements were imported into model or omitted with rationale" **
+			-- This needs some work
+			security_requirements_imported() or security_requirements_omitted_with_rationale()
+		
+		goal security_analysis_performed(sys : system) <=
+			** "Security analysis performed on " sys " model finds no new vulnerabilities" **
+			model_complies_with_guidelines(sys) and security_analysis_performed_on_current_model() and security_analysis_produces_no_new_requirements()
+		
+		goal security_requirements_imported() <=
+			** "The security requirements were imported into the model" **
 			undeveloped
 		
-		goal cyber_requirements_imported_or_omitted_with_rationale() <=
-			** "Generated cyber requirements were imported into model or omitted with rationale" **
-			requirement_imported() or requirement_omitted_with_rationale()
+		goal security_requirements_omitted_with_rationale() <=
+			** "The security requirements were omitted with rationale" **
+			undeveloped
+
+		goal model_complies_with_guidelines(sys : system) <=
+			** "Security analysis performed on well-formed model that complies with Model Guidelines" **
+			context: "CASE modeling guidelines";
+			resolint(sys)
 		
-		goal requirement_imported() <=
-			** "The cyber requirement was imported into the model" **
+		goal security_analysis_performed_on_current_model() <=
+			** "Security analysis was performed on most recent version of model" **
+			undeveloped
+			
+		goal security_analysis_produces_no_new_requirements() <=
+			** "Security analysis produces no new requirements" **
 			undeveloped
 		
-		goal requirement_omitted_with_rationale() <=
-			** "The cyber requirement was omitted with rationale" **
-			undeveloped
+		goal security_requirement_satisfied() <=
+			** "The security requirement is satisfied" **
+			security_requirement_satisfied_in_model() and security_requirement_satisfied_in_implementation()
 		
-		goal cyber_requirement_satisfied() <=
-			** "The cyber requirement is satisfied" **
-			requirement_satisfied_in_model() and requirement_satisfied_in_implementation()
-		
-		goal requirement_satisfied_in_model() <=
+		goal security_requirement_satisfied_in_model() <=
 			** "Cyber requirement is satisfied in the system model" **
 			mitigation_applied()
 		--and formal_verification_performed() 
@@ -48,13 +58,8 @@ private
 --		formal_verification_performed() <=
 --			** "Formal verification proves model satisfies requirement" **
 --			-- AgreeCheck + confidence in results
-
-		goal model_complies_with_guidelines(sys : system) <=
-			** "Model complies with modeling guidelines" **
-			context: "CASE modeling guidelines";
-			resolint(sys)
 		
-		goal requirement_satisfied_in_implementation() <=
+		goal security_requirement_satisfied_in_implementation() <=
 			** "Cyber requirement is satisfied through the realization of the AADL system model" **
 			required_properties()
 		

@@ -25,6 +25,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.FileEditorInput;
 import org.eclipse.xtext.ui.editor.XtextEditor;
+import org.osate.aadl2.Aadl2Factory;
 import org.osate.aadl2.AadlPackage;
 import org.osate.aadl2.AnnexLibrary;
 import org.osate.aadl2.Classifier;
@@ -32,14 +33,17 @@ import org.osate.aadl2.DefaultAnnexLibrary;
 import org.osate.aadl2.ModelUnit;
 import org.osate.aadl2.PackageSection;
 import org.osate.aadl2.PrivatePackageSection;
+import org.osate.aadl2.StringLiteral;
 import org.osate.ui.dialogs.Dialog;
 
 import com.collins.trustedsystems.briefcase.staircase.Activator;
 import com.collins.trustedsystems.briefcase.util.TraverseProject;
 import com.rockwellcollins.atc.resolute.resolute.Arg;
 import com.rockwellcollins.atc.resolute.resolute.BaseType;
+import com.rockwellcollins.atc.resolute.resolute.BinaryExpr;
 import com.rockwellcollins.atc.resolute.resolute.ClaimArg;
 import com.rockwellcollins.atc.resolute.resolute.ClaimBody;
+import com.rockwellcollins.atc.resolute.resolute.ClaimStrategy;
 import com.rockwellcollins.atc.resolute.resolute.ClaimString;
 import com.rockwellcollins.atc.resolute.resolute.Definition;
 import com.rockwellcollins.atc.resolute.resolute.FnCallExpr;
@@ -47,6 +51,7 @@ import com.rockwellcollins.atc.resolute.resolute.FunctionDefinition;
 import com.rockwellcollins.atc.resolute.resolute.IdExpr;
 import com.rockwellcollins.atc.resolute.resolute.ResoluteFactory;
 import com.rockwellcollins.atc.resolute.resolute.ResoluteLibrary;
+import com.rockwellcollins.atc.resolute.resolute.UndevelopedExpr;
 
 public class CaseUtils {
 
@@ -258,7 +263,22 @@ public class CaseUtils {
 		return pkg;
 	}
 
-	public static FunctionDefinition createTopLevelGoal(Classifier system) {
+	public static FunctionDefinition createRequirementsSatisfiedGoal() {
+		final FunctionDefinition requirementsSatisfiedGoal = ResoluteFactory.eINSTANCE.createFunctionDefinition();
+		requirementsSatisfiedGoal.setName("security_requirements_satisfied");
+		requirementsSatisfiedGoal.setClaimType("goal");
+		final ClaimBody claimBody = ResoluteFactory.eINSTANCE.createClaimBody();
+		final ClaimString claimStr = ResoluteFactory.eINSTANCE.createClaimString();
+		claimStr.setStr("Security requirements are satisfied");
+		claimBody.getClaim().add(claimStr);
+		final UndevelopedExpr undeveloped = ResoluteFactory.eINSTANCE.createUndevelopedExpr();
+		claimBody.setExpr(undeveloped);
+		requirementsSatisfiedGoal.setBody(claimBody);
+		return requirementsSatisfiedGoal;
+	}
+
+	public static FunctionDefinition createTopLevelGoal(Classifier system,
+			FunctionDefinition requirementsSatisfiedGoal) {
 
 		final FunctionDefinition topLevelGoal = ResoluteFactory.eINSTANCE.createFunctionDefinition();
 		topLevelGoal.setName(system.getName().replace(".", "_") + "_cyber_resilient");
@@ -279,22 +299,33 @@ public class CaseUtils {
 		final ClaimString claimStr2 = ResoluteFactory.eINSTANCE.createClaimString();
 		claimStr2.setStr(" is acceptably cyber-resilient");
 		claimBody.getClaim().add(claimStr2);
-		final FnCallExpr fnCallExpr = ResoluteFactory.eINSTANCE.createFnCallExpr();
+		final ClaimStrategy claimStrategy = ResoluteFactory.eINSTANCE.createClaimStrategy();
+		final StringLiteral strategyVal = Aadl2Factory.eINSTANCE.createStringLiteral();
+		strategyVal.setValue("\"Argue over security requirements\"");
+		claimStrategy.setVal(strategyVal);
+		claimBody.getAttributes().add(claimStrategy);
+		final FnCallExpr requirementsComplete = ResoluteFactory.eINSTANCE.createFnCallExpr();
 		final AadlPackage assurancePkg = getCaseAssuracePackage(system.eResource().getResourceSet());
 		final PackageSection packageSection = assurancePkg.getOwnedPrivateSection();
 		final AnnexLibrary annexLibrary = packageSection.getOwnedAnnexLibraries().get(0);
 		final ResoluteLibrary assuranceLib = (ResoluteLibrary) ((DefaultAnnexLibrary) annexLibrary)
 				.getParsedAnnexLibrary();
 		for (Definition def : assuranceLib.getDefinitions()) {
-			if (def.getName().equalsIgnoreCase("requirements_complete")) {
-				fnCallExpr.setFn((FunctionDefinition) def);
+			if (def.getName().equalsIgnoreCase("security_requirements_complete")) {
+				requirementsComplete.setFn((FunctionDefinition) def);
 				break;
 			}
 		}
 		final IdExpr argExpr = ResoluteFactory.eINSTANCE.createIdExpr();
 		argExpr.setId(arg);
-		fnCallExpr.getArgs().add(argExpr);
-		claimBody.setExpr(fnCallExpr);
+		requirementsComplete.getArgs().add(argExpr);
+		final FnCallExpr requirementsSatisfied = ResoluteFactory.eINSTANCE.createFnCallExpr();
+		requirementsSatisfied.setFn(requirementsSatisfiedGoal);
+		final BinaryExpr andExpr = ResoluteFactory.eINSTANCE.createBinaryExpr();
+		andExpr.setOp("and");
+		andExpr.setLeft(requirementsComplete);
+		andExpr.setRight(requirementsSatisfied);
+		claimBody.setExpr(andExpr);
 		topLevelGoal.setBody(claimBody);
 
 		return topLevelGoal;
