@@ -18,7 +18,8 @@ public class JsonRequirementsFile {
 	private String tool = "";
 	private String implementation = "";
 	private long date = 0L;
-	private String hash = "";
+	private String hashcode = "";
+	private String filename = "";
 	private List<CyberRequirement> requirements = new ArrayList<>();
 
 	private final static String GEARCASE = "gearcase";
@@ -26,18 +27,19 @@ public class JsonRequirementsFile {
 	private final static String TOOL = "Tool";
 	private final static String IMPLEMENTATION = "Implementation";
 	private final static String DATE = "Date";
-	private final static String HASH = "Hash";
+	private final static String HASH = "Hashcode";
 	private final static String REQUIREMENTS = "Requirements";
 	private final static String DESCRIPTION = "Description";
 	private final static String NIST_SECURITY_CONTROLS = "NIST 800-53 Security Controls";
 	private final static String COMPONENT = "Component";
 
-	public JsonRequirementsFile(String tool, long date, String implementation, String hash,
+	public JsonRequirementsFile(String tool, long date, String implementation, String hashcode, String filename,
 			List<CyberRequirement> requirements) {
 		this.tool = tool;
 		this.implementation = implementation;
 		this.date = date;
-		this.hash = hash;
+		this.hashcode = hashcode;
+		this.filename = filename;
 		this.requirements = requirements;
 	}
 
@@ -57,8 +59,12 @@ public class JsonRequirementsFile {
 		return this.date;
 	}
 
-	public String getHash() {
-		return this.hash;
+	public String getHashcode() {
+		return this.hashcode;
+	}
+
+	public String getFilename() {
+		return this.filename;
 	}
 
 	public List<CyberRequirement> getRequirements() {
@@ -74,6 +80,7 @@ public class JsonRequirementsFile {
 			final JsonReader jsonReader = new JsonReader(new FileReader(file));
 			final JsonParser jsonParser = new JsonParser();
 			final JsonElement jsonFile = jsonParser.parse(jsonReader);
+			jsonReader.close();
 			if (!jsonFile.isJsonObject()) {
 				return false;
 			}
@@ -86,9 +93,10 @@ public class JsonRequirementsFile {
 //			if (jsonObject.has(DATE)) {
 //				this.date = jsonObject.get(DATE).getAsLong();
 //			}
-//			if (jsonObject.has(HASH)) {
-//				this.hash = jsonObject.get(HASH).getAsString();
-//			}
+			if (jsonObject.has(HASH)) {
+				this.hashcode = jsonObject.get(HASH).getAsString();
+			}
+			this.filename = file.getAbsolutePath();
 			if (!jsonObject.has(IMPLEMENTATION)) {
 				return false;
 			}
@@ -118,7 +126,7 @@ public class JsonRequirementsFile {
 					}
 				}
 			} else if (this.tool.equalsIgnoreCase(DCRYPPS)) {
-
+				// TODO ?
 			} else {
 				return false;
 			}

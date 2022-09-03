@@ -107,7 +107,7 @@ public class CyberRequirement {
 
 	transient private String subcomponentQualifiedName = null;
 
-	private Comparator<Definition> alphabetical = (o1, o2) -> o1.getName().compareTo(o2.getName());
+	private final Comparator<Definition> alphabetical = (o1, o2) -> o1.getName().compareTo(o2.getName());
 
 	public CyberRequirement(CyberRequirement req) {
 		this(req.getDate(), req.getTool(), req.getStatus(), req.getType(), req.getId(), req.getText(), req.getContext(),

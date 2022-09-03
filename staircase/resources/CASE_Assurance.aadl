@@ -4,28 +4,23 @@ private
 
 		goal security_requirements_complete(sys : system) <=
 			** "System security requirements are correct and complete with respect to vulnerabilities found in the architecture model" **
-			security_requirements_reviewed() and security_requirements_imported_or_omitted_with_rationale() and security_analysis_performed(sys)
-		
+			security_requirements_reviewed() and 
+			security_requirements_imported_or_omitted_with_rationale() and 
+			security_analysis_performed(sys)
+
 		goal security_requirements_reviewed() <=
 			** "Security requirements were reviewed" **
 			undeveloped
 		
 		goal security_requirements_imported_or_omitted_with_rationale() <=
 			** "Security requirements were imported into model or omitted with rationale" **
-			-- This needs some work
-			security_requirements_imported() or security_requirements_omitted_with_rationale()
+			BriefCASE.security_requirements_imported_or_omitted_with_rationale()
 		
 		goal security_analysis_performed(sys : system) <=
 			** "Security analysis performed on " sys " model finds no new vulnerabilities" **
-			model_complies_with_guidelines(sys) and security_analysis_performed_on_current_model() and security_analysis_produces_no_new_requirements()
-		
-		goal security_requirements_imported() <=
-			** "The security requirements were imported into the model" **
-			undeveloped
-		
-		goal security_requirements_omitted_with_rationale() <=
-			** "The security requirements were omitted with rationale" **
-			undeveloped
+			model_complies_with_guidelines(sys) and 
+			security_analysis_performed_on_current_model() and 
+			security_analysis_produces_no_applicable_requirements()
 
 		goal model_complies_with_guidelines(sys : system) <=
 			** "Security analysis performed on well-formed model that complies with Model Guidelines" **
@@ -34,57 +29,57 @@ private
 		
 		goal security_analysis_performed_on_current_model() <=
 			** "Security analysis was performed on most recent version of model" **
-			undeveloped
+			BriefCASE.security_analysis_performed_on_current_model();
 			
-		goal security_analysis_produces_no_new_requirements() <=
-			** "Security analysis produces no new requirements" **
-			undeveloped
+		goal security_analysis_produces_no_applicable_requirements() <=
+			** "Security analysis produces no applicable requirements" **
+			BriefCASE.security_analysis_produces_no_applicable_requirements()
 		
-		goal security_requirement_satisfied() <=
-			** "The security requirement is satisfied" **
-			security_requirement_satisfied_in_model() and security_requirement_satisfied_in_implementation()
+--		goal security_requirement_satisfied() <=
+--			** "The security requirement is satisfied" **
+--			security_requirement_satisfied_in_model() and security_requirement_satisfied_in_implementation()
 		
-		goal security_requirement_satisfied_in_model() <=
-			** "Cyber requirement is satisfied in the system model" **
-			mitigation_applied()
+--		goal security_requirement_satisfied_in_model() <=
+--			** "Cyber requirement is satisfied in the system model" **
+--			mitigation_applied()
 		--and formal_verification_performed() 
 		--and model_complies_with_guidelines()
 		
-		goal mitigation_applied() <=
-			** "BriefCASE mitigation has been applied" **
-			-- refer to mitigation strategy here
-			undeveloped
+--		goal mitigation_applied() <=
+--			** "BriefCASE mitigation has been applied" **
+--			-- refer to mitigation strategy here
+--			undeveloped
 		
 --		formal_verification_performed() <=
 --			** "Formal verification proves model satisfies requirement" **
 --			-- AgreeCheck + confidence in results
 		
-		goal security_requirement_satisfied_in_implementation() <=
-			** "Cyber requirement is satisfied through the realization of the AADL system model" **
-			required_properties()
+--		goal security_requirement_satisfied_in_implementation() <=
+--			** "Cyber requirement is satisfied through the realization of the AADL system model" **
+--			required_properties()
 		
-		strategy required_properties() <=
-			** "Argue over required properties of the components and platform" **
-			software_components_guarantee_assertions() and platform_components_guarantee_properties() and system_implementation_addresses_requirements()
+--		strategy required_properties() <=
+--			** "Argue over required properties of the components and platform" **
+--			software_components_guarantee_assertions() and platform_components_guarantee_properties() and system_implementation_addresses_requirements()
 		
-		goal software_components_guarantee_assertions() <=
-			** "Software components guarantee required assertions" **
-			-- SPLAT
-			-- Attestation
-			-- Manual / legacy / simulink
---			synthesized_code_correct()
-			undeveloped
+--		goal software_components_guarantee_assertions() <=
+--			** "Software components guarantee required assertions" **
+--			-- SPLAT
+--			-- Attestation
+--			-- Manual / legacy / simulink
+----			synthesized_code_correct()
+--			undeveloped
 		
-		goal platform_components_guarantee_properties() <=
-			** "Platform components guarantee required properties" **
-			undeveloped
+--		goal platform_components_guarantee_properties() <=
+--			** "Platform components guarantee required properties" **
+--			undeveloped
 		
-		goal system_implementation_addresses_requirements() <=
-			** "The implementation of the system model addresses the requirements" **
-			-- HAMR
-			-- CAmkES
-			-- seL4
-			undeveloped
+--		goal system_implementation_addresses_requirements() <=
+--			** "The implementation of the system model addresses the requirements" **
+--			-- HAMR
+--			-- CAmkES
+--			-- seL4
+--			undeveloped
 
 	**};
 end CASE_Assurance;

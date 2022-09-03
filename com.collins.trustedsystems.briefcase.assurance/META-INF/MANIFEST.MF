@@ -1,0 +1,17 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: com.collins.trustedsystems.briefcase.assurance
+Bundle-SymbolicName: com.collins.trustedsystems.briefcase.assurance;singleton:=true
+Bundle-Version: 0.7.1.qualifier
+Bundle-Activator: com.collins.trustedsystems.briefcase.assurance.Activator
+Bundle-Vendor: COLLINS
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ com.rockwellcollins.atc.resolute.analysis,
+ org.osate.aadl2,
+ com.rockwellcollins.atc.resolute,
+ com.collins.trustedsystems.briefcase.staircase,
+ com.collins.trustedsystems.briefcase
+Bundle-RequiredExecutionEnvironment: JavaSE-11
+Automatic-Module-Name: com.collins.trustedsystems.briefcase.assurance
+Bundle-ActivationPolicy: lazy
