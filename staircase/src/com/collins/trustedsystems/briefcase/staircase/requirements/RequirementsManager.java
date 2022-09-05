@@ -21,11 +21,13 @@ import org.eclipse.xtext.ui.editor.XtextEditor;
 import org.eclipse.xtext.ui.editor.utils.EditorUtils;
 import org.osate.aadl2.AadlPackage;
 import org.osate.aadl2.AnnexLibrary;
+import org.osate.aadl2.ComponentImplementation;
 import org.osate.aadl2.DefaultAnnexLibrary;
 import org.osate.aadl2.PrivatePackageSection;
 import org.osate.ui.dialogs.Dialog;
 
 import com.collins.trustedsystems.briefcase.staircase.utils.CaseUtils;
+import com.collins.trustedsystems.briefcase.util.ModelHashcode;
 import com.collins.trustedsystems.briefcase.util.TraverseProject;
 import com.rockwellcollins.atc.resolute.resolute.ClaimBody;
 import com.rockwellcollins.atc.resolute.resolute.ClaimString;
@@ -215,7 +217,7 @@ public class RequirementsManager {
 				return false;
 			}
 			reqDb.reset();
-			reqDb.importJsonRequrementsFiles(jsonReqFiles);
+			reqDb.importJsonRequirementsFiles(jsonReqFiles);
 		}
 		reqDb.importRequirements(existing);
 		// TODO: If the user cancels importing requirements the reqdb will may not be correct
@@ -334,6 +336,22 @@ public class RequirementsManager {
 						+ " does not contain any requirements that are not already present in this model.");
 				continue;
 			}
+
+			// Alert user if the model has changed since the requirements were generated
+			try {
+				final ComponentImplementation ci = reqDb
+						.getComponentImplementationInCurrentEditor(jsonFile.getImplementation());
+				if (ci == null || !jsonFile.getHashcode().contentEquals(ModelHashcode.getHashcode(ci))) {
+					throw new Exception();
+				}
+			} catch (Exception e) {
+				if (!Dialog.askQuestion("Import Requirements",
+						"The model has changed since requirements in file " + reqFile.getName()
+								+ " were generated, and therefore may no longer be applicable.  Import anyway?")) {
+					continue;
+				}
+			}
+
 			// Add the requirements in this file to the accumulated list of requirements
 			reqs.add(jsonFile);
 		}

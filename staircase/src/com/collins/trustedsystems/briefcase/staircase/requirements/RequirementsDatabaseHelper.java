@@ -95,11 +95,11 @@ public class RequirementsDatabaseHelper {
 		}
 	}
 
-	public void importJsonRequrementsFiles(List<JsonRequirementsFile> reqFiles) {
-		reqFiles.forEach(file -> importJsonRequrementsFile(file));
+	public void importJsonRequirementsFiles(List<JsonRequirementsFile> reqFiles) {
+		reqFiles.forEach(file -> importJsonRequirementsFile(file));
 	}
 
-	public void importJsonRequrementsFile(JsonRequirementsFile reqFile) {
+	public void importJsonRequirementsFile(JsonRequirementsFile reqFile) {
 
 		analysisOutputFilename = reqFile.getFilename();
 
