@@ -149,9 +149,15 @@ public class Assurance extends ResoluteExternalFunctionLibrary {
 	}
 
 	private StringValue get_security_requirements_review() {
-		return new StringValue(Platform.getPreferencesService()
+		final String filename = Platform.getPreferencesService()
 				.getString("com.collins.trustedsystems.briefcase",
-						BriefcasePreferenceConstants.REQUIREMENTS_REVIEW_FILENAME, "", null));
+						BriefcasePreferenceConstants.REQUIREMENTS_REVIEW_FILENAME, "", null);
+		final File file = new File(filename);
+		if (file.exists()) {
+			return new StringValue(filename);
+		} else {
+			return new StringValue("");
+		}
 	}
 
 }
