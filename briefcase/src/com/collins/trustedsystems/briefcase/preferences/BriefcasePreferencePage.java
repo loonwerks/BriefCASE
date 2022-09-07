@@ -139,6 +139,40 @@ public class BriefcasePreferencePage extends FieldEditorPreferencePage implement
 		};
 		addField(reqReviewFileFieldEditor);
 
+		final FileFieldEditor agreeReviewFileFieldEditor = new FileFieldEditor(
+				BriefcasePreferenceConstants.AGREE_REVIEW_FILENAME, "Formal verification review filename:", true,
+				getFieldEditorParent()) {
+
+			@Override
+			protected String changePressed() {
+
+				FileDialog dlgOpen = new FileDialog(getShell(), SWT.OPEN | SWT.SHEET);
+				dlgOpen.setText("Formal verification review file");
+				if (!getTextControl().getText().isEmpty()) {
+					dlgOpen.setFileName(getTextControl().getText());
+				} else {
+					dlgOpen.setFileName("");
+				}
+				dlgOpen.setFilterExtensions(new String[] { "*.*" });
+				String fileName = dlgOpen.open();
+				if (fileName == null) {
+					return null;
+				} else {
+					fileName = fileName.trim();
+				}
+
+				return fileName;
+			}
+
+			@Override
+			protected boolean checkState() {
+				// Don't want to enforce proper path/filenaming
+				clearErrorMessage();
+				return true;
+			}
+		};
+		addField(agreeReviewFileFieldEditor);
+
 		label = new Label(getFieldEditorParent(), SWT.SEPARATOR | SWT.HORIZONTAL);
 		label.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 5));
 

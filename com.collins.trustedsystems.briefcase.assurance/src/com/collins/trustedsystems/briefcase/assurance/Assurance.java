@@ -36,6 +36,8 @@ public class Assurance extends ResoluteExternalFunctionLibrary {
 			return security_analysis_produces_no_applicable_requirements();
 		case "get_security_requirements_review":
 			return get_security_requirements_review();
+		case "get_agree_results_review":
+			return get_agree_results_review();
 		}
 
 		throw new ResoluteFailException("Function " + function + " not part of BriefCASE Assurance library.",
@@ -152,6 +154,18 @@ public class Assurance extends ResoluteExternalFunctionLibrary {
 		final String filename = Platform.getPreferencesService()
 				.getString("com.collins.trustedsystems.briefcase",
 						BriefcasePreferenceConstants.REQUIREMENTS_REVIEW_FILENAME, "", null);
+		final File file = new File(filename);
+		if (file.exists()) {
+			return new StringValue(filename);
+		} else {
+			return new StringValue("");
+		}
+	}
+
+	private StringValue get_agree_results_review() {
+		final String filename = Platform.getPreferencesService()
+				.getString("com.collins.trustedsystems.briefcase", BriefcasePreferenceConstants.AGREE_REVIEW_FILENAME,
+						"", null);
 		final File file = new File(filename);
 		if (file.exists()) {
 			return new StringValue(filename);

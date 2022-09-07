@@ -23,5 +23,6 @@ public class BriefcasePreferenceInitializer extends AbstractPreferenceInitialize
 		store.setDefault(BriefcasePreferenceConstants.COMPONENT_SOURCE_FOLDER, "Component_Source");
 		store.setDefault(BriefcasePreferenceConstants.KU_IMPL_FOLDER, "KU_Attestation");
 		store.setDefault(BriefcasePreferenceConstants.REQUIREMENTS_REVIEW_FILENAME, "");
+		store.setDefault(BriefcasePreferenceConstants.AGREE_REVIEW_FILENAME, "");
 	}
 }
