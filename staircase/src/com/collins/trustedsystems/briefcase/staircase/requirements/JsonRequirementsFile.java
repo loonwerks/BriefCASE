@@ -17,7 +17,8 @@ import com.google.gson.stream.JsonReader;
 public class JsonRequirementsFile {
 	private String tool = "";
 	private String implementation = "";
-	private long date = 0L;
+//	private long date = 0L;
+	private String date = "";
 	private String hashcode = "";
 	private String filename = "";
 	private List<CyberRequirement> requirements = new ArrayList<>();
@@ -30,10 +31,12 @@ public class JsonRequirementsFile {
 	private final static String HASH = "Hashcode";
 	private final static String REQUIREMENTS = "Requirements";
 	private final static String DESCRIPTION = "Description";
+	private final static String TYPE = "Type";
+	private final static String CONTEXT = "Context";
 	private final static String NIST_SECURITY_CONTROLS = "NIST 800-53 Security Controls";
 	private final static String COMPONENT = "Component";
 
-	public JsonRequirementsFile(String tool, long date, String implementation, String hashcode, String filename,
+	public JsonRequirementsFile(String tool, String date, String implementation, String hashcode, String filename,
 			List<CyberRequirement> requirements) {
 		this.tool = tool;
 		this.implementation = implementation;
@@ -55,7 +58,7 @@ public class JsonRequirementsFile {
 		return this.implementation;
 	}
 
-	public long getDate() {
+	public String getDate() {
 		return this.date;
 	}
 
@@ -90,9 +93,9 @@ public class JsonRequirementsFile {
 				return false;
 			}
 			this.tool = jsonObject.get(TOOL).getAsString();
-//			if (jsonObject.has(DATE)) {
-//				this.date = jsonObject.get(DATE).getAsLong();
-//			}
+			if (jsonObject.has(DATE)) {
+				this.date = jsonObject.get(DATE).getAsString();
+			}
 			if (jsonObject.has(HASH)) {
 				this.hashcode = jsonObject.get(HASH).getAsString();
 			}
@@ -126,7 +129,19 @@ public class JsonRequirementsFile {
 					}
 				}
 			} else if (this.tool.equalsIgnoreCase(DCRYPPS)) {
-				// TODO ?
+				if (!jsonObject.has(REQUIREMENTS)) {
+					return false;
+				}
+				final JsonArray reqArray = jsonObject.get(REQUIREMENTS).getAsJsonArray();
+				for (JsonElement req : reqArray) {
+					final JsonObject jsonReq = req.getAsJsonObject();
+					if (!jsonReq.has(TYPE) || !jsonReq.has(DESCRIPTION) || !jsonReq.has(CONTEXT)) {
+						continue;
+					}
+					this.requirements.add(new CyberRequirement(this.date, this.tool, CyberRequirement.toDo,
+							jsonReq.get(TYPE).getAsString(), "", jsonReq.get(DESCRIPTION).getAsString(),
+							jsonReq.get(CONTEXT).getAsString(), false, ""));
+				}
 			} else {
 				return false;
 			}

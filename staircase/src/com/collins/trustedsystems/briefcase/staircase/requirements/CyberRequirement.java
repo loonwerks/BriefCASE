@@ -1,10 +1,7 @@
 package com.collins.trustedsystems.briefcase.staircase.requirements;
 
-import java.text.DateFormat;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
@@ -101,7 +98,8 @@ public class CyberRequirement {
 	private String context = ""; // this is the qualified name of the component
 	private boolean formalize = false;
 	private String rationale = "";
-	private long date = 0L;
+//	private long date = 0L;
+	private String date = "";
 	private String tool = "";
 	private String status = toDo;
 
@@ -115,7 +113,8 @@ public class CyberRequirement {
 				req.getRationale());
 	}
 
-	public CyberRequirement(long date, String tool, String status, String type, String id, String text, String context,
+	public CyberRequirement(String date, String tool, String status, String type, String id, String text,
+			String context,
 			boolean formalize,
 			String rationale) {
 		this.date = date;
@@ -131,11 +130,11 @@ public class CyberRequirement {
 	}
 
 	public CyberRequirement(String type) {
-		this(0L, null, null, type, null, null, null, false, null);
+		this("", null, null, type, null, null, null, false, null);
 	}
 
 	protected CyberRequirement() {
-		this(0L, null, null, null, null, null, null, false, null);
+		this("", null, null, null, null, null, null, false, null);
 	}
 
 	public boolean completelyEqual(Object obj) {
@@ -149,7 +148,7 @@ public class CyberRequirement {
 			return false;
 		}
 		CyberRequirement other = (CyberRequirement) obj;
-		return Objects.equals(context, other.context) && date == other.date && Objects.equals(id, other.id)
+		return Objects.equals(context, other.context) && date.equals(other.date) && Objects.equals(id, other.id)
 				&& Objects.equals(rationale, other.rationale) && Objects.equals(status, other.status)
 				&& Objects.equals(text, other.text) && Objects.equals(tool, other.tool)
 				&& Objects.equals(type, other.type);
@@ -175,7 +174,7 @@ public class CyberRequirement {
 		return context;
 	}
 
-	public long getDate() {
+	public String getDate() {
 		return date;
 	}
 
@@ -250,7 +249,7 @@ public class CyberRequirement {
 		this.context = context;
 	}
 
-	public void setDate(long date) {
+	public void setDate(String date) {
 		this.date = date;
 	}
 
@@ -1185,8 +1184,12 @@ public class CyberRequirement {
 		final EList<NamedElement> claimAttributes = claimBody.getAttributes();
 		claimAttributes.clear();
 		claimAttributes.add(createResoluteContext(GENERATED_BY, getTool()));
-		claimAttributes.add(
-				createResoluteContext(GENERATED_ON, DateFormat.getDateInstance().format(new Date(getDate() * 1000))));
+		if (getDate().isBlank()) {
+			claimAttributes.add(createResoluteContext(GENERATED_ON, "Unknown"));
+		} else {
+//			LocalDateTime localDateTime = LocalDateTime.parse(getDate(), DateTimeFormatter.ofPattern("yyyy-MM-dd-HHmmss"));
+			claimAttributes.add(createResoluteContext(GENERATED_ON, getDate()));
+		}
 		claimAttributes.add(createResoluteContext(REQ_COMPONENT, this.getContext()));
 		claimAttributes.add(
 				createResoluteContext(FORMALIZED, (getFormalize() ? TRUE : FALSE)));
@@ -1341,20 +1344,21 @@ public class CyberRequirement {
 	 * @return
 	 */
 	static CyberRequirement parseClaimString(String id, String claimString, ClaimBody claimBody) {
+
 		if (id == null || claimBody == null || claimString == null || !claimString.matches("\\[.+\\]\\s.+")) {
 			throw new RuntimeException("Invalid arguments: (id : " + id + ") (claimString : " + claimString
 					+ ") (claimBody : " + claimBody + ")");
 		}
 
-		final String dateString = getContext(claimBody, GENERATED_ON);
-		long date;
-		try {
-			date = DateFormat.getDateInstance().parse(dateString).getTime() / 1000;
-		} catch (ParseException e) {
-			e.printStackTrace();
-			System.out.println("Error in parsing date from resolute requirement: " + dateString);
-			date = 0L;
-		}
+		final String date = getContext(claimBody, GENERATED_ON);
+//		long date;
+//		try {
+//			date = DateFormat.getDateInstance().parse(dateString).getTime() / 1000;
+//		} catch (ParseException e) {
+//			e.printStackTrace();
+//			System.out.println("Error in parsing date from resolute requirement: " + dateString);
+//			date = 0L;
+//		}
 
 		final String tool = getContext(claimBody, GENERATED_BY);
 		final String component = getContext(claimBody, REQ_COMPONENT);

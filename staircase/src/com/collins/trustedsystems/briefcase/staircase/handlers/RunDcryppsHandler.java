@@ -2,6 +2,8 @@ package com.collins.trustedsystems.briefcase.staircase.handlers;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.client.config.RequestConfig;
@@ -36,6 +38,7 @@ import com.collins.trustedsystems.briefcase.json.export.JsonTranslate;
 import com.collins.trustedsystems.briefcase.staircase.utils.CaseUtils;
 import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
 import com.collins.trustedsystems.briefcase.util.Filesystem;
+import com.collins.trustedsystems.briefcase.util.ModelHashcode;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
@@ -48,27 +51,26 @@ public class RunDcryppsHandler extends AadlHandler {
 	private final static String DCRYPPS_GET_REQUIREMENTS_ENDPOINT = "http://localhost:8888/routers/DCRYPPSRoute/getRequirements";
 	private final static int TIMEOUT = 5 * 60 * 60 * 1000;
 	private final static String JOB_NAME = "Running DCRYPPS";
-	private final static String REQ_FILE_NAME = "DCRYPPS_Cyber_Requirements.json";
 
 	private final static String DESIRABLE_PROPERTIES = "desirableProperties";
 	private final static String ATTACKER_DESCRIPTION = "attackerDescription";
 //	private final static String CLASS_DICTIONARY = "classDictionary";
-	private final static String TOOL = "tool";
-	private final static String PROJECT = "project";
-	private final static String IMPLEMENTATION = "implementation";
-	private final static String DATE = "date";
-	private final static String HASH = "hash";
+	private final static String TOOL = "Tool";
+	private final static String PROJECT = "Project";
+	private final static String IMPLEMENTATION = "Implementation";
+	private final static String DATE = "Date";
+	private final static String HASH = "Hashcode";
 	private final static String MODEL_UNITS = "modelUnits";
 	private final static String MODEL = "model";
 	private final static String REQUIREMENT = "requirement";
-	private final static String REQUIREMENTS = "requirements";
-	private final static String TYPE = "type";
-	private final static String CONTEXT = "context";
-	private final static String DESCRIPTION = "description";
-	private final static String COST_GUIDANCE = "costGuidance";
-	private final static String NO_COST_GUIDANCE = "no-cost-guidance";
-	private final static String TARGET_CONFIDENCE = "targetConfidence";
-	private final static double TARGET_CONFIDENCE_VAL = 0.96;
+	private final static String REQUIREMENTS = "Requirements";
+	private final static String TYPE = "Type";
+	private final static String CONTEXT = "Context";
+	private final static String DESCRIPTION = "Description";
+//	private final static String COST_GUIDANCE = "costGuidance";
+//	private final static String NO_COST_GUIDANCE = "no-cost-guidance";
+//	private final static String TARGET_CONFIDENCE = "targetConfidence";
+//	private final static double TARGET_CONFIDENCE_VAL = 0.96;
 
 	@Override
 	protected void runCommand(EObject eObj) {
@@ -103,21 +105,28 @@ public class RunDcryppsHandler extends AadlHandler {
 
 		final IPath path = new Path(ci.eResource().getURI().toPlatformString(true));
 		final IProject project = ResourcesPlugin.getWorkspace().getRoot().getFile(path).getProject();
-		header.addProperty(PROJECT, project.getName());
-		header.addProperty(IMPLEMENTATION, ci.getQualifiedName());
-		header.addProperty(DATE, System.currentTimeMillis());
+		header.addProperty(PROJECT.toLowerCase(), project.getName());
+		header.addProperty(IMPLEMENTATION.toLowerCase(), ci.getQualifiedName());
+
+		header.addProperty(DATE, LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd-HHmmss")));
+
+		try {
+			header.addProperty(HASH, ModelHashcode.getHashcode(ci));
+		} catch (Exception e) {
+			BriefcaseNotifier.printWarning("Unable to determine model hashcode before running DCRYPPS.");
+		}
 
 		try {
 			// Generate json
 			final JsonElement json = Aadl2Json.generateJson(AadlUtil.getContainingPackage(ci), null,
 					AgreePrintOption.BOTH);
-			header.addProperty(HASH, Integer.toString(json.toString().hashCode()));
 			header.add(MODEL_UNITS, json);
 
 		} catch (Exception e) {
 			Dialog.showError("Run DCRYPPS", "Unable to export model to JSON format.");
 			return false;
 		}
+
 
 		request.add(MODEL, header);
 //		request.addProperty(COST_GUIDANCE, NO_COST_GUIDANCE);
@@ -210,13 +219,19 @@ public class RunDcryppsHandler extends AadlHandler {
 
 	private IFile writeRequirementsFile(IProject project, JsonObject header, JsonObject results) {
 
-		final JsonObject contents = header;
-		contents.addProperty(TOOL, "DCRYPPS");
-		if (contents.has(MODEL_UNITS)) {
-			contents.remove(MODEL_UNITS);
+		final JsonObject contents = new JsonObject();
+		if (header.has(PROJECT.toLowerCase())) {
+			contents.addProperty(PROJECT, header.get(PROJECT.toLowerCase()).getAsString());
 		}
-		if (contents.has(IMPLEMENTATION)) {
-			String implementation = contents.get(IMPLEMENTATION).getAsString();
+		contents.addProperty(TOOL, "DCRYPPS");
+		if (header.has(DATE)) {
+			contents.addProperty(DATE, header.get(DATE).getAsString());
+		}
+		if (header.has(HASH)) {
+			contents.addProperty(HASH, header.get(HASH).getAsString());
+		}
+		if (header.has(IMPLEMENTATION.toLowerCase())) {
+			String implementation = header.get(IMPLEMENTATION.toLowerCase()).getAsString();
 			implementation = implementation.substring(implementation.lastIndexOf("::") + 2);
 			implementation = implementation.replace(".", "_");
 			implementation = implementation + "_Instance";
@@ -224,15 +239,15 @@ public class RunDcryppsHandler extends AadlHandler {
 		}
 
 		final JsonArray requirements = new JsonArray();
-		if (results.has(REQUIREMENTS) && results.get(REQUIREMENTS).isJsonArray()) {
-			for (JsonElement reqElement : results.get(REQUIREMENTS).getAsJsonArray()) {
+		if (results.has(REQUIREMENTS.toLowerCase()) && results.get(REQUIREMENTS.toLowerCase()).isJsonArray()) {
+			for (JsonElement reqElement : results.get(REQUIREMENTS.toLowerCase()).getAsJsonArray()) {
 				final JsonObject importReq = new JsonObject();
 				if (reqElement.isJsonObject()) {
 					final JsonObject reqObj = reqElement.getAsJsonObject();
 					if (reqObj.has(REQUIREMENT) && reqObj.get(REQUIREMENT).isJsonArray()
 							&& reqObj.get(REQUIREMENT).getAsJsonArray().size() > 0) {
 
-						JsonArray reqArr = reqObj.get(REQUIREMENT).getAsJsonArray();
+						final JsonArray reqArr = reqObj.get(REQUIREMENT).getAsJsonArray();
 
 						importReq.addProperty(TYPE, reqArr.get(0).getAsString());
 
@@ -242,16 +257,20 @@ public class RunDcryppsHandler extends AadlHandler {
 						}
 
 					}
-					if (reqObj.has(DESCRIPTION)) {
-						importReq.addProperty(DESCRIPTION, reqObj.get(DESCRIPTION).getAsString());
+					if (reqObj.has(DESCRIPTION.toLowerCase())) {
+						importReq.addProperty(DESCRIPTION, reqObj.get(DESCRIPTION.toLowerCase()).getAsString());
 					}
-					requirements.add(reqObj);
+					requirements.add(importReq);
 				}
 			}
 		}
 		contents.add(REQUIREMENTS, requirements);
 
-		final Gson gson = new GsonBuilder().serializeNulls().disableHtmlEscaping().setPrettyPrinting().create();
+		final Gson gson = new GsonBuilder()
+				.serializeNulls()
+				.disableHtmlEscaping()
+				.setPrettyPrinting()
+				.create();
 
 		IFile reqFile = null;
 		try {
@@ -277,7 +296,9 @@ public class RunDcryppsHandler extends AadlHandler {
 				}
 			}
 
-			reqFileUri = reqFileUri.appendSegment(REQ_FILE_NAME);
+			final String filename = "Requirements" + (header.has(DATE) ? "-" + header.get(DATE).getAsString() : "")
+					+ ".json";
+			reqFileUri = reqFileUri.appendSegment(filename);
 			reqFile = Filesystem.getFile(reqFileUri);
 			Filesystem.writeFile(reqFile, gson.toJson(contents).getBytes());
 

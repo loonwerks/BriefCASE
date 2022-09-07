@@ -1,8 +1,9 @@
 package com.collins.trustedsystems.briefcase.staircase.requirements;
 
 import java.io.File;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -88,7 +89,8 @@ public class RequirementsDatabaseHelper {
 			reqFile = reqFilePath.toFile();
 		}
 		final JsonRequirementsFile jsonReqFile = new JsonRequirementsFile(CyberRequirement.notApplicable,
-				new Date().getTime(), CyberRequirement.notApplicable, CyberRequirement.notApplicable,
+				LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd-HHmmss")),
+				CyberRequirement.notApplicable, CyberRequirement.notApplicable,
 				analysisOutputFilename, getRequirements());
 		if (!jsonReqFile.exportFile(reqFile)) {
 			throw new RuntimeException("Could not save cyber requirements file " + reqFile.getName() + ".");
