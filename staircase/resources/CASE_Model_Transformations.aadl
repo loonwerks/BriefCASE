@@ -80,9 +80,6 @@ public
 		---------------------------
 		
 		-- Strategy for proper insertion of a filter
---		strategy add_filter(comp_context : component, filter : component, conn : connection, msg_type : data) <=
---			** "Filter " filter " is properly added to component " comp_context **
---			filter_exists(filter, comp_context, conn) and component_not_bypassed(filter, comp_context, msg_type) and component_implemented(filter, "SPLAT")
 		strategy add_filter(comp_context : string, filter : string, conn : string, msg_type : data) <=
 			** "Filter " filter " is properly added to component " comp_context **
 			let ctx : component = ModelAccess.getComponent(comp_context);
@@ -91,9 +88,6 @@ public
 			filter_exists(flt, ctx, cnx) and component_not_bypassed(flt, ctx, msg_type) and component_implemented(flt, "SPLAT")
 			
 		-- Strategy for proper insertion of attestation manager
---		strategy add_attestation_manager(comm_driver : component, attestation_manager : component, attestation_gate : component) <=
---			** "Attestation Manager added for communications driver " comm_driver **
---			attestation_manager_exists(comm_driver, attestation_manager) and attestation_manager_not_bypassed(comm_driver, attestation_manager, attestation_gate) and component_implemented(attestation_manager, "attestation") and component_implemented(attestation_gate, "SPLAT")
 		strategy add_attestation_manager(comm_driver : string, attestation_manager : string, attestation_gate : string) <=
 			** "Attestation Manager added for communications driver " comm_driver **
 			let driver : component = ModelAccess.GetComponent(comm_driver);
@@ -102,9 +96,6 @@ public
 			attestation_manager_exists(driver, manager) and attestation_manager_not_bypassed(driver, manager, gate) and component_implemented(manager, "attestation") and component_implemented(gate, "SPLAT")
 		
 		-- Strategy for proper insertion of virtualization
---		strategy add_virtualization(bound_components : {component}, virtual_machine : component) <=
---			** bound_components " contained in VM " virtual_machine **
---			vm_bound_to_processor(virtual_machine) and components_bound_to_vm(bound_components, virtual_machine) and subcomponents_not_bound_to_other_processors(bound_components, virtual_machine)
 		strategy add_virtualization(bound_components : string, virtual_machine : string) <=
 			** bound_components " contained in VM " virtual_machine **
 			let vm_comps : {component} = ModelAccess.getComponentSet(bound_components);
@@ -112,9 +103,6 @@ public
 			vm_bound_to_processor(vm) and components_bound_to_vm(vm_comps, vm) and subcomponents_not_bound_to_other_processors(vm_comps, vm)
 		
 		-- Strategy for proper insertion of a monitor
---		strategy add_monitor(comp_context : component, monitor : component, alert_port : feature) <=
---			** "Monitor " monitor " is properly added to " comp_context **
---			component_exists(monitor, CASE_Properties::Monitoring) and alert_connected(monitor, alert_port) and independent_reset(monitor, comp_context) and component_implemented(monitor, "SPLAT")
 		strategy add_monitor(comp_context : string, monitor : string, alert_port : string) <=
 			** "Monitor " monitor " is properly added to " comp_context **
 			let ctx : component = ModelAccess.getComponent(comp_context);
@@ -123,9 +111,6 @@ public
 			component_exists(mon, CASE_Properties::Monitoring) and alert_connected(mon, alert) and independent_reset(mon, ctx) and component_implemented(mon, "SPLAT")
 
 		-- Strategy for proper insertion of a monitor with a gate
---		strategy add_monitor_gate(comp_context : component, monitor : component, alert_port : feature, gate_context : component, message_type : data) <=
---			** "Monitor " monitor " is properly added to " comp_context **
---			component_exists(monitor, CASE_Properties::Monitoring) and alert_connected(monitor, alert_port) and independent_reset(monitor, comp_context) and component_not_bypassed(monitor, gate_context, message_type) and component_implemented(monitor, "SPLAT")
 		strategy add_monitor_gate(comp_context : string, monitor : string, alert_port : string, gate_context : string, message_type : data) <=
 			** "Monitor " monitor " is properly added to " comp_context **
 			let ctx : component = ModelAccess.getComponent(comp_context);
@@ -135,9 +120,6 @@ public
 			component_exists(mon, CASE_Properties::Monitoring) and alert_connected(mon, alert) and independent_reset(mon, ctx) and component_not_bypassed(mon, gate, message_type) and component_implemented(mon, "SPLAT")
 
 		-- Strategy claim for proper insertion of a switch
---		strategy add_switch(comp_context : component, switch : component, message_type : data) <=
---			** "Switch inserted after " comp_context **
---			component_exists(switch, CASE_Properties::Gating) and component_not_bypassed(switch, comp_context, message_type) and component_implemented(switch, "SPLAT")
 		strategy add_switch(comp_context : string, switch : string, message_type : data) <=
 			** "Switch inserted after " comp_context **
 			let ctx : component = ModelAccess.getComponent(comp_context);
@@ -145,32 +127,23 @@ public
 			component_exists(gate, CASE_Properties::Gating) and component_not_bypassed(gate, ctx, message_type) and component_implemented(gate, "SPLAT")
 		
 		-- Strategy for proper transformation of model for seL4 build
---		strategy sel4_transform(comp_context : component) <=
---			** "Component " comp_context " transformed for seL4 build" **
---			each_thread_in_separate_process(comp_context)
 		strategy sel4_transform(comp_context : string) <=
 			** "Component " comp_context " transformed for seL4 build" **
 			let ctx : component = ModelAccess.getComponent(comp_context);
 			each_thread_in_separate_process(ctx)
 			
-		--------------------------
-		-- PROJECT-LEVEL CLAIMS --
-		--------------------------
-		
-		aadl_linter() <=
-			** "Static model analysis was performed" **
-			analysis("ToolCheck", "Resolint")
 		
 		----------------
 		-- SUB CLAIMS --
 		----------------
 	
 		-- This connects to evidence that AGREE was previously run on the current version of the design.
---		agree_property_checked(c : component, property_id : string) <=
---			** "AGREE properties passed" **
---			AgreeLib.hasAgreeProperty(c, property_id) and analysis("AgreeCheck", type(parent(c)))
 		goal agree_property_checked(c : string, property_id : string) <=
-			** "AGREE properties passed" **
+			** "Formal verification proves model satisfies requirement" **
+			agree_passes_on_current_model(c, property_id) and confidence_in_agree_results()
+			
+		goal agree_passes_on_current_model(c : string, property_id : string) <=
+			** "AGREE is run on most recent version of model and passes" **
 			let comp : component = ModelAccess.getComponent(c);
 			AgreeLib.hasAgreeProperty(comp, property_id) and analysis("AgreeCheck", type(parent(comp)))
 		
@@ -193,7 +166,7 @@ public
 				recursive_backwards_filter_reach(prev)
 						
 		-- Check to see if the specified component exists
-		component_exists(comp : component, mitigation_type : property) <=
+		component_exists(comp : component, mitigation_type : property<int>) <=
 			** comp " exists in the model" **
 			has_mitigation_type(comp, mitigation_type) and exists(m : component) . m = comp
 			
@@ -209,7 +182,8 @@ public
 	    -- and that the proof was emitted and checked.
 	    component_implemented(comp : component, tool : string) <=
 		    ** "Component property implemented" **
-			implementation_language_assurance(comp) and component_proof_checked(comp, tool)
+			implementation_language_assurance(comp) 
+--			and component_proof_checked(comp, tool)
 			
 		-- Checks that a proof has been generated showing the component implementation
 		-- matches the AGREE contract
@@ -217,7 +191,7 @@ public
 			** "Component proof checked" **
 			is_seL4_component(comp) => analysis("ToolCheck", tool)
 				
-		has_mitigation_type(comp : component, mitigation_type : property) : bool =
+		has_mitigation_type(comp : component, mitigation_type : property<int>) : bool =
 			has_property(comp, mitigation_type) and property(comp, mitigation_type) = 100
 			
 		is_comm_driver(comp : component) : bool =
@@ -248,7 +222,6 @@ public
 		
 		backwards_reachable_components_via_connection(comp : component, conn : connection) : {component} = 
 			if is_port_connection(conn) then 
---				if destination_component(conn) = comp and has_parent(comp) and not (source_component(conn) = parent(comp)) then 
 				if is_destination_component(conn, comp) and not is_source_component(conn, comp) then
 					{source_component(conn)} 
 				else 
@@ -261,9 +234,6 @@ public
 			** "An attestation manager on " comm_driver " exists" **
 			-- check that the attestation manager only has attestation request/response connections to the comm driver
 			is_comm_driver(comm_driver) and has_mitigation_type(attestation_manager, CASE_Properties::Attesting) 
---			and forall (conn : connections(attestation_manager)) . 
---				(has_type(conn) and name(type(conn)) = "CASE_AttestationRequestMsg.Impl") => destination_component(conn) = comm_driver and
---				(has_type(conn) and name(type(conn)) = "CASE_AttestationResponseMsg.Impl") => source_component(conn) = comm_driver
 						
 		-- Evidence that communication from the comm driver cannot bypass attestation manager
 		attestation_manager_not_bypassed(comm_driver : component, attestation_manager : component, attestation_gate : component) <=
@@ -271,7 +241,6 @@ public
 			-- all outgoing connections from the comm driver to components inside the 
 			-- parent of the comm driver connect to the attestation manager or attestation gate
 			let out_conns : {connection} = {conn for (conn : connections(comm_driver)) | source_component(conn) = comm_driver and not (destination_component(conn) = parent(comm_driver))};
---			forall(conn : out_conns) . (not is_software_component(destination_component(conn)) or destination_component(conn) = attestation_manager or destination_component(conn) = attestation_gate)
 			forall(conn : out_conns) . (not is_software_component(destination_component(conn)) or has_mitigation_type(destination_component(conn), CASE_Properties::Attesting) or has_mitigation_type(destination_component(conn), CASE_Properties::Gating))
 				
 		-- Checks if the specified virtual processor is a CASE Virtualization and is bound to a processor
@@ -309,7 +278,6 @@ public
 			
 		implementation_language_assurance(comp : component) <=
 			** comp " implementation is appropriate for OS" **
---			is_seL4_component(comp) => (has_property(comp, CASE_Properties::Component_Language) and property(comp, CASE_Properties::Component_Language) = "CakeML")
 			is_seL4_component(comp) => is_cakeml_component(comp)
 			
 		is_cakeml_component(comp : component) : bool =

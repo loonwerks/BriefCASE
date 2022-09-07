@@ -38,6 +38,20 @@ private
 		goal security_analysis_produces_no_applicable_requirements() <=
 			** "Security analysis produces no applicable requirements" **
 			BriefCASE.security_analysis_produces_no_applicable_requirements()
+			
+		goal confidence_in_agree_results() <=
+			** "AGREE results were reviewed" **
+			let document_location : string = BriefCASE.get_agree_results_review();
+			if document_location = "" then 
+				false
+			else 
+				solution : document_location
+		
+		goal security_requirements_satisfied_in_implementation() <=
+			** "Security requirements are satisfied through the realization of the system model" **
+			strategy: "Argue over the required properties of the components and platform"
+			undeveloped
+		
 		
 --		goal security_requirement_satisfied() <=
 --			** "The security requirement is satisfied" **

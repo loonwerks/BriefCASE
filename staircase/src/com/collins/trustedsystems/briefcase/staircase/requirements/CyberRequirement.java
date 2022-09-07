@@ -435,14 +435,19 @@ public class CyberRequirement {
 						i.remove();
 					} else if (def.getName().equalsIgnoreCase("security_requirements_satisfied")) {
 						i.remove();
+					} else if (def.getName().equalsIgnoreCase("security_requirements_satisfied_in_model")) {
+						i.remove();
 					}
 				}
 
-				final FunctionDefinition requirementsSatisfiedClaim = CaseUtils.createRequirementsSatisfiedGoal();
+				final FunctionDefinition requirementsSatisfiedInModelClaim = CaseUtils
+						.createRequirementsSatisfiedInModelGoal();
+				final FunctionDefinition requirementsSatisfiedClaim = CaseUtils
+						.createRequirementsSatisfiedGoal(modificationContext, requirementsSatisfiedInModelClaim);
 				final FunctionDefinition topLevelClaim = CaseUtils.createTopLevelGoal(modificationContext,
 						requirementsSatisfiedClaim);
 
-				Expr currentExpr = requirementsSatisfiedClaim.getBody().getExpr();
+				Expr currentExpr = requirementsSatisfiedInModelClaim.getBody().getExpr();
 				for (AnnexLibrary reqAnnexLib : reqPackage.getOwnedPrivateSection().getOwnedAnnexLibraries()) {
 					if (reqAnnexLib.getName().equalsIgnoreCase("resolute")) {
 
@@ -485,9 +490,10 @@ public class CyberRequirement {
 					}
 				}
 
-				requirementsSatisfiedClaim.getBody().setExpr(currentExpr);
+				requirementsSatisfiedInModelClaim.getBody().setExpr(currentExpr);
 				resLib.getDefinitions().add(topLevelClaim);
 				resLib.getDefinitions().add(requirementsSatisfiedClaim);
+				resLib.getDefinitions().add(requirementsSatisfiedInModelClaim);
 				annexLib.setParsedAnnexLibrary(resLib);
 
 				// Check to see if the 'argue' statement has been created
@@ -891,14 +897,19 @@ public class CyberRequirement {
 						i.remove();
 					} else if (def.getName().equalsIgnoreCase("security_requirements_satisfied")) {
 						i.remove();
+					} else if (def.getName().equalsIgnoreCase("security_requirements_satisfied_in_model")) {
+						i.remove();
 					}
 				}
 
-				final FunctionDefinition requirementsSatisfiedClaim = CaseUtils.createRequirementsSatisfiedGoal();
+				final FunctionDefinition requirementsSatisfiedInModelClaim = CaseUtils
+						.createRequirementsSatisfiedInModelGoal();
+				final FunctionDefinition requirementsSatisfiedClaim = CaseUtils
+						.createRequirementsSatisfiedGoal(modificationContext, requirementsSatisfiedInModelClaim);
 				final FunctionDefinition topLevelClaim = CaseUtils.createTopLevelGoal(modificationContext,
 						requirementsSatisfiedClaim);
 
-				Expr currentExpr = requirementsSatisfiedClaim.getBody().getExpr();
+				Expr currentExpr = requirementsSatisfiedInModelClaim.getBody().getExpr();
 				for (AnnexLibrary reqAnnexLib : reqPackage.getOwnedPrivateSection().getOwnedAnnexLibraries()) {
 					if (reqAnnexLib.getName().equalsIgnoreCase("resolute")) {
 
@@ -945,9 +956,10 @@ public class CyberRequirement {
 					}
 				}
 
-				requirementsSatisfiedClaim.getBody().setExpr(currentExpr);
+				requirementsSatisfiedInModelClaim.getBody().setExpr(currentExpr);
 				resLib.getDefinitions().add(topLevelClaim);
 				resLib.getDefinitions().add(requirementsSatisfiedClaim);
+				resLib.getDefinitions().add(requirementsSatisfiedInModelClaim);
 				annexLib.setParsedAnnexLibrary(resLib);
 
 			}

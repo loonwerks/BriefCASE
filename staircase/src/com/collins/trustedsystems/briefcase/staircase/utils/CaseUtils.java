@@ -263,7 +263,23 @@ public class CaseUtils {
 		return pkg;
 	}
 
-	public static FunctionDefinition createRequirementsSatisfiedGoal() {
+	public static FunctionDefinition createRequirementsSatisfiedInModelGoal() {
+		final FunctionDefinition requirementsSatisfiedInModelGoal = ResoluteFactory.eINSTANCE
+				.createFunctionDefinition();
+		requirementsSatisfiedInModelGoal.setName("security_requirements_satisfied_in_model");
+		requirementsSatisfiedInModelGoal.setClaimType("goal");
+		final ClaimBody claimBody = ResoluteFactory.eINSTANCE.createClaimBody();
+		final ClaimString claimStr = ResoluteFactory.eINSTANCE.createClaimString();
+		claimStr.setStr("Security requirements are satisfied in the system model");
+		claimBody.getClaim().add(claimStr);
+		final UndevelopedExpr undeveloped = ResoluteFactory.eINSTANCE.createUndevelopedExpr();
+		claimBody.setExpr(undeveloped);
+		requirementsSatisfiedInModelGoal.setBody(claimBody);
+		return requirementsSatisfiedInModelGoal;
+	}
+
+	public static FunctionDefinition createRequirementsSatisfiedGoal(Classifier system,
+			FunctionDefinition requirementsSatisfiedInModelGoal) {
 		final FunctionDefinition requirementsSatisfiedGoal = ResoluteFactory.eINSTANCE.createFunctionDefinition();
 		requirementsSatisfiedGoal.setName("security_requirements_satisfied");
 		requirementsSatisfiedGoal.setClaimType("goal");
@@ -271,8 +287,25 @@ public class CaseUtils {
 		final ClaimString claimStr = ResoluteFactory.eINSTANCE.createClaimString();
 		claimStr.setStr("Security requirements are satisfied");
 		claimBody.getClaim().add(claimStr);
-		final UndevelopedExpr undeveloped = ResoluteFactory.eINSTANCE.createUndevelopedExpr();
-		claimBody.setExpr(undeveloped);
+		final BinaryExpr andExpr = ResoluteFactory.eINSTANCE.createBinaryExpr();
+		andExpr.setOp("and");
+		final FnCallExpr reqSatisfiedInModelExpr = ResoluteFactory.eINSTANCE.createFnCallExpr();
+		reqSatisfiedInModelExpr.setFn(requirementsSatisfiedInModelGoal);
+		andExpr.setLeft(reqSatisfiedInModelExpr);
+		final FnCallExpr reqSatisfiedInImplExpr = ResoluteFactory.eINSTANCE.createFnCallExpr();
+		final AadlPackage assurancePkg = getCaseAssuracePackage(system.eResource().getResourceSet());
+		final PackageSection packageSection = assurancePkg.getOwnedPrivateSection();
+		final AnnexLibrary annexLibrary = packageSection.getOwnedAnnexLibraries().get(0);
+		final ResoluteLibrary assuranceLib = (ResoluteLibrary) ((DefaultAnnexLibrary) annexLibrary)
+				.getParsedAnnexLibrary();
+		for (Definition def : assuranceLib.getDefinitions()) {
+			if (def.getName().equalsIgnoreCase("security_requirements_satisfied_in_implementation")) {
+				reqSatisfiedInImplExpr.setFn((FunctionDefinition) def);
+				break;
+			}
+		}
+		andExpr.setRight(reqSatisfiedInImplExpr);
+		claimBody.setExpr(andExpr);
 		requirementsSatisfiedGoal.setBody(claimBody);
 		return requirementsSatisfiedGoal;
 	}
