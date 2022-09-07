@@ -16,6 +16,8 @@ public class AssuranceType extends ResoluteExternalFunctionLibraryType {
 		case "security_analysis_performed_on_current_model":
 		case "security_analysis_produces_no_applicable_requirements":
 			return BaseType.BOOL;
+		case "get_security_requirements_review":
+			return BaseType.STRING;
 		default:
 			return BaseType.FAIL;
 		}
@@ -28,6 +30,7 @@ public class AssuranceType extends ResoluteExternalFunctionLibraryType {
 		case "security_requirements_imported_or_omitted_with_rationale":
 		case "security_analysis_performed_on_current_model":
 		case "security_analysis_produces_no_applicable_requirements":
+		case "get_security_requirements_review":
 			break;
 		default:
 			args = null;

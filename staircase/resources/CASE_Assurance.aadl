@@ -10,7 +10,11 @@ private
 
 		goal security_requirements_reviewed() <=
 			** "Security requirements were reviewed" **
-			undeveloped
+			let document_location : string = BriefCASE.get_security_requirements_review();
+			if document_location = "" then 
+				false
+			else 
+				solution : document_location
 		
 		goal security_requirements_imported_or_omitted_with_rationale() <=
 			** "Security requirements were imported into model or omitted with rationale" **
@@ -29,7 +33,7 @@ private
 		
 		goal security_analysis_performed_on_current_model() <=
 			** "Security analysis was performed on most recent version of model" **
-			BriefCASE.security_analysis_performed_on_current_model();
+			BriefCASE.security_analysis_performed_on_current_model()
 			
 		goal security_analysis_produces_no_applicable_requirements() <=
 			** "Security analysis produces no applicable requirements" **

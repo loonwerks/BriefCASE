@@ -3,6 +3,9 @@ package com.collins.trustedsystems.briefcase.assurance;
 import java.io.File;
 import java.util.List;
 
+import org.eclipse.core.runtime.Platform;
+
+import com.collins.trustedsystems.briefcase.preferences.BriefcasePreferenceConstants;
 import com.collins.trustedsystems.briefcase.staircase.requirements.CyberRequirement;
 import com.collins.trustedsystems.briefcase.staircase.requirements.JsonRequirementsFile;
 import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsDatabaseHelper;
@@ -13,6 +16,7 @@ import com.rockwellcollins.atc.resolute.analysis.execution.ResoluteExternalFunct
 import com.rockwellcollins.atc.resolute.analysis.execution.ResoluteFailException;
 import com.rockwellcollins.atc.resolute.analysis.values.BoolValue;
 import com.rockwellcollins.atc.resolute.analysis.values.ResoluteValue;
+import com.rockwellcollins.atc.resolute.analysis.values.StringValue;
 
 public class Assurance extends ResoluteExternalFunctionLibrary {
 
@@ -30,6 +34,8 @@ public class Assurance extends ResoluteExternalFunctionLibrary {
 			return security_analysis_performed_on_current_model();
 		case "security_analysis_produces_no_applicable_requirements":
 			return security_analysis_produces_no_applicable_requirements();
+		case "get_security_requirements_review":
+			return get_security_requirements_review();
 		}
 
 		throw new ResoluteFailException("Function " + function + " not part of BriefCASE Assurance library.",
@@ -50,7 +56,7 @@ public class Assurance extends ResoluteExternalFunctionLibrary {
 		}
 
 		// There should be no unaddressed ("todo") requirements
-		if (reqDb.getToDoRequirements().size() == 0) {
+		if (!reqDb.getToDoRequirements().isEmpty()) {
 			throw new ResoluteFailException(
 					"Not all generated requirements from the most recent cyber analysis have been addressed.",
 					context.getThisInstance().getSubcomponent());
@@ -140,6 +146,12 @@ public class Assurance extends ResoluteExternalFunctionLibrary {
 		}
 
 		return new BoolValue(true);
+	}
+
+	private StringValue get_security_requirements_review() {
+		return new StringValue(Platform.getPreferencesService()
+				.getString("com.collins.trustedsystems.briefcase",
+						BriefcasePreferenceConstants.REQUIREMENTS_REVIEW_FILENAME, "", null));
 	}
 
 }
