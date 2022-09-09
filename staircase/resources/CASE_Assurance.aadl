@@ -47,57 +47,121 @@ private
 			else 
 				solution : document_location
 		
-		goal security_requirements_satisfied_in_implementation() <=
+		goal security_requirements_satisfied_in_implementation(sys : system) <=
 			** "Security requirements are satisfied through the realization of the system model" **
 			strategy: "Argue over the required properties of the components and platform"
+			deployed_sw_components_satisfy_requirements(sys) and 
+			platform_components_guarantee_required_properties() and 
+			system_implementation_satisfies_security_requirements()
+			
+		goal deployed_sw_components_satisfy_requirements(sys : system) <=
+			** "Deployed software components satisfy their requirements" **
+			forall(comp : {c for (c : get_subcomponents({sys})) | is_thread(c)}) . 
+				requirements_stated_in_terms_of_interface(comp) and 
+				application_code_conforms_to_interface_and_requirements(comp) and 
+				component_infrastructure_code_satisfies_aadl_semantics(comp) and 
+				component_deployment_context_achieves_required_assurance_properties(comp)
+			
+		goal requirements_stated_in_terms_of_interface(comp : component) <=
+			** "The requirements of the component are stated in terms of the AADL component's interface and the publicly disclosed component local state" **
 			undeveloped
-		
-		
---		goal security_requirement_satisfied() <=
---			** "The security requirement is satisfied" **
---			security_requirement_satisfied_in_model() and security_requirement_satisfied_in_implementation()
-		
---		goal security_requirement_satisfied_in_model() <=
---			** "Cyber requirement is satisfied in the system model" **
---			mitigation_applied()
-		--and formal_verification_performed() 
-		--and model_complies_with_guidelines()
-		
---		goal mitigation_applied() <=
---			** "BriefCASE mitigation has been applied" **
---			-- refer to mitigation strategy here
---			undeveloped
-		
---		formal_verification_performed() <=
---			** "Formal verification proves model satisfies requirement" **
---			-- AgreeCheck + confidence in results
-		
---		goal security_requirement_satisfied_in_implementation() <=
---			** "Cyber requirement is satisfied through the realization of the AADL system model" **
---			required_properties()
-		
---		strategy required_properties() <=
---			** "Argue over required properties of the components and platform" **
---			software_components_guarantee_assertions() and platform_components_guarantee_properties() and system_implementation_addresses_requirements()
-		
---		goal software_components_guarantee_assertions() <=
---			** "Software components guarantee required assertions" **
---			-- SPLAT
---			-- Attestation
---			-- Manual / legacy / simulink
-----			synthesized_code_correct()
---			undeveloped
-		
---		goal platform_components_guarantee_properties() <=
---			** "Platform components guarantee required properties" **
---			undeveloped
-		
---		goal system_implementation_addresses_requirements() <=
---			** "The implementation of the system model addresses the requirements" **
---			-- HAMR
---			-- CAmkES
---			-- seL4
---			undeveloped
+			
+		goal application_code_conforms_to_interface_and_requirements(comp : component) <=
+			** "The application code of the component conforms to its declared interface and requirements" **
+			application_code_exclusively_uses_interface_apis(comp) and 
+			application_code_runs_to_completion(comp) and 
+			component_output_satisfies_contract_on_every_dispatch(comp) and
+			component_output_satisfies_information_flow_specifications_on_every_dispatch(comp) and
+			component_execution_time_conforms_to_specified_wcet_on_every_dispatch(comp)
+			
+		goal application_code_exclusively_uses_interface_apis(comp : component) <=
+			** "The application source code of the component receives/sends its external inputs and outputs exclusively through APIs corresponding to the component's interface ports" **
+			tool_generated_apis_correctly_derived_from_model(comp) and
+			application_code_uses_tool_generated_apis(comp) and
+			library_usage_has_no_effect_outside_of_component_boundary(comp)
+			
+		goal tool_generated_apis_correctly_derived_from_model(comp : component) <=
+			** "Tool-generated component APIs are correctly derived from AADL component" **
+			undeveloped
+			
+		goal application_code_uses_tool_generated_apis(comp : component) <=
+			** "The application code uses tool-generated APIs for sending/receiving over ports" **
+			undeveloped
+			
+		goal library_usage_has_no_effect_outside_of_component_boundary(comp : component) <=
+			** "Libraries used by application code do not have communication pathways or state that lies outside of component boundaries" **
+			undeveloped
+			
+		goal application_code_runs_to_completion(comp : component) <=
+			** "Upon dispatch, the component application code runs to completion and computes a function from the application’s view of its input ports and local state to its output ports and local state" **
+			undeveloped
+			
+		goal component_output_satisfies_contract_on_every_dispatch(comp : component) <=
+			** "On every dispatch, the component implementation will produce an output satisfying the component contract or drop the input value" **
+			undeveloped
+			
+		goal component_output_satisfies_information_flow_specifications_on_every_dispatch(comp : component) <=
+			** "On every dispatch, the function computed by the component satisfies the component’s intra-component information flow specifications" **
+			undeveloped
+			
+		goal component_execution_time_conforms_to_specified_wcet_on_every_dispatch(comp : component) <=
+			** "On every dispatch, the execution time of the application code conforms to its specified worse-case execution time" **
+			undeveloped
+			
+		goal component_infrastructure_code_satisfies_aadl_semantics(comp : component) <=
+			** "The AADL run-time infrastructure code of the component satisfies AADL port and threading semantics" **
+			undeveloped
+			
+		goal component_deployment_context_achieves_required_assurance_properties(comp : component) <=
+			** "The platform deployment context of the component achieves its required assurance properties" **
+			identifiable_component_platform_deployment(comp) and
+			application_infrastructure_deployment_interface_identification(comp) and
+			port_correspondence_traceability(comp) and
+			component_dispatch(comp) and
+			infrastructure_application_non_interference(comp) and
+			specified_info_flow_directionality_enforced_by_deployment(comp) and
+			deployed_component_satisfies_functional_requirements(comp) and
+			deployed_component_satisfies_intra_component_flows(comp)
+			
+		goal identifiable_component_platform_deployment(comp : component) <=
+			** "There is an identifiable component platform deployment representing executing code such that all means of information ingress/egress to the component platform deployment are identified" **
+			undeveloped
+			
+		goal application_infrastructure_deployment_interface_identification(comp : component) <=
+			** "Component's deployment-level interface has clearly-defined portions of the interface that support interaction between the component application code and the application code in the system context, as well as infrastructure and run-time interactions necessary for component scheduling, infrastructure configuration, and other run-time system interactions necessary for the proper functioning of the component in its system context" **
+			undeveloped
+			
+		goal port_correspondence_traceability(comp : component) <=
+			** "All state and control flow associated with port communication to/from the component are identified and can be observed for the purposes of component verification and the application section of the deployment interface only includes representations of the AADL ports declared for the component" **
+			undeveloped
+			
+		goal component_dispatch(comp : component) <=
+			** "When system level scheduling associated with the AADL run-time is provided via the component's deployment-level infrastructure interface, the component infrastructure correctly achieves the appropriate port state of the component and the correct application code entry point invocation" **
+			undeveloped
+			
+		goal infrastructure_application_non_interference(comp : component) <=
+			** "Component infrastructure code for port communication, scheduling, and dispatching does not interfere with the application local state of the component" **
+			undeveloped
+			
+		goal specified_info_flow_directionality_enforced_by_deployment(comp : component) <=
+			** "Information flow directionality for the component's application section of deployment interface corresponds to the declared in/out port directions in the AADL model and is enforced by the deployment" **
+			undeveloped
+			
+		goal deployed_component_satisfies_functional_requirements(comp : component) <=
+			** "When given HAMR-compliant component application code that satisfies its functional requirements, the HAMR-built deployed component satisfies its functional requirements as observed via the application-portion of the deployment interface" **
+			undeveloped
+			
+		goal deployed_component_satisfies_intra_component_flows(comp : component) <=
+			** "When given HAMR-compliant component application code that satisfies the specified AADL intra-component flows, the HAMR-built deployed component satisfies the specified AADL intra-component flows as observed via the application-portion of the deployment interface" **
+			undeveloped
+			
+		goal platform_components_guarantee_required_properties() <=
+			** "Platform components guarantee required properties" **
+			undeveloped
+			
+		goal system_implementation_satisfies_security_requirements() <=
+			** "The implementation of the system model satisfies the requirements" **
+			undeveloped
 
 	**};
 end CASE_Assurance;

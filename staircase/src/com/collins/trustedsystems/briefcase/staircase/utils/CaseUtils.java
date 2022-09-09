@@ -14,6 +14,7 @@ import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
+import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.jface.text.source.SourceViewer;
 import org.eclipse.ui.IEditorDescriptor;
@@ -283,6 +284,12 @@ public class CaseUtils {
 		final FunctionDefinition requirementsSatisfiedGoal = ResoluteFactory.eINSTANCE.createFunctionDefinition();
 		requirementsSatisfiedGoal.setName("security_requirements_satisfied");
 		requirementsSatisfiedGoal.setClaimType("goal");
+		final Arg arg = ResoluteFactory.eINSTANCE.createArg();
+		final BaseType sysType = ResoluteFactory.eINSTANCE.createBaseType();
+		sysType.setType("system");
+		arg.setName("sys");
+		arg.setType(sysType);
+		requirementsSatisfiedGoal.getArgs().add(arg);
 		final ClaimBody claimBody = ResoluteFactory.eINSTANCE.createClaimBody();
 		final ClaimString claimStr = ResoluteFactory.eINSTANCE.createClaimString();
 		claimStr.setStr("Security requirements are satisfied");
@@ -304,6 +311,9 @@ public class CaseUtils {
 				break;
 			}
 		}
+		final IdExpr argExpr = ResoluteFactory.eINSTANCE.createIdExpr();
+		argExpr.setId(arg);
+		reqSatisfiedInImplExpr.getArgs().add(argExpr);
 		andExpr.setRight(reqSatisfiedInImplExpr);
 		claimBody.setExpr(andExpr);
 		requirementsSatisfiedGoal.setBody(claimBody);
@@ -354,6 +364,7 @@ public class CaseUtils {
 		requirementsComplete.getArgs().add(argExpr);
 		final FnCallExpr requirementsSatisfied = ResoluteFactory.eINSTANCE.createFnCallExpr();
 		requirementsSatisfied.setFn(requirementsSatisfiedGoal);
+		requirementsSatisfied.getArgs().add(EcoreUtil.copy(argExpr));
 		final BinaryExpr andExpr = ResoluteFactory.eINSTANCE.createBinaryExpr();
 		andExpr.setOp("and");
 		andExpr.setLeft(requirementsComplete);
@@ -384,8 +395,12 @@ public class CaseUtils {
 		return reqFolder;
 	}
 
-	public static IFile getCaseRequirementsFile() {
-		final IFile caseReqFile = TraverseProject.getCurrentProject().getFile(CASE_REQUIREMENTS_FILE);
+	public static IFile getCaseRequirementsFile(IProject project) {
+//		final IFile caseReqFile = TraverseProject.getCurrentProject().getFile(CASE_REQUIREMENTS_FILE);
+		if (project == null) {
+			return null;
+		}
+		final IFile caseReqFile = project.getFile(CASE_REQUIREMENTS_FILE);
 		if (!caseReqFile.exists()) {
 			initCaseRequirementsPackage();
 		}
@@ -399,6 +414,7 @@ public class CaseUtils {
 		if (window == null) {
 			return;
 		}
+		final IEditorPart activeEditor = window.getActivePage().getActiveEditor();
 		for (IEditorReference ref : window.getActivePage().getEditorReferences()) {
 			final IEditorPart editor = ref.getEditor(false);
 			if (editor == null) {
@@ -416,7 +432,7 @@ public class CaseUtils {
 		}
 
 		// CASE_Requirements isn't open, so open, format, save, and close it
-		final IFile file = getCaseRequirementsFile();
+		final IFile file = getCaseRequirementsFile(TraverseProject.getCurrentProject());
 		IWorkbenchPage page = null;
 		IEditorPart part = null;
 		IEditorReference editorRef = null;
@@ -451,6 +467,10 @@ public class CaseUtils {
 			}
 
 			((XtextEditor) part).close(false);
+		}
+
+		if (activeEditor != null) {
+			activeEditor.setFocus();
 		}
 	}
 

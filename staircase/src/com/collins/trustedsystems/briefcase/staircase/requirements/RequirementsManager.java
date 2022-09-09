@@ -11,14 +11,7 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.FileDialog;
-import org.eclipse.ui.IEditorDescriptor;
-import org.eclipse.ui.IEditorPart;
-import org.eclipse.ui.IWorkbenchPage;
-import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.part.FileEditorInput;
-import org.eclipse.xtext.ui.editor.XtextEditor;
-import org.eclipse.xtext.ui.editor.utils.EditorUtils;
 import org.osate.aadl2.AadlPackage;
 import org.osate.aadl2.AnnexLibrary;
 import org.osate.aadl2.ComponentImplementation;
@@ -27,6 +20,7 @@ import org.osate.aadl2.PrivatePackageSection;
 import org.osate.ui.dialogs.Dialog;
 
 import com.collins.trustedsystems.briefcase.staircase.utils.CaseUtils;
+import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
 import com.collins.trustedsystems.briefcase.util.ModelHashcode;
 import com.collins.trustedsystems.briefcase.util.TraverseProject;
 import com.rockwellcollins.atc.resolute.resolute.ClaimBody;
@@ -45,7 +39,7 @@ public class RequirementsManager {
 	private static IProject currentProject = null;
 	// Singleton instance
 	private static RequirementsManager instance = null;
-	private final RequirementsDatabaseHelper reqDb = new RequirementsDatabaseHelper();
+	private static RequirementsDatabaseHelper reqDb = null;
 
 	public static RequirementsManager getInstance() {
 		if (instance == null || currentProject == null) {
@@ -56,45 +50,46 @@ public class RequirementsManager {
 		return instance;
 	}
 
-	private static XtextEditor activeEditor = null;
-
-	public static void closeEditor(XtextEditor editor, boolean save) {
-		final IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
-		if (save) {
-			page.saveEditor(editor, false);
-		}
-
-		if (editor.equals(activeEditor)) {
-			return;
-		} else {
-			page.closeEditor(editor, false);
-		}
-	}
-
-	public static XtextEditor getEditor(IFile file) {
-		IWorkbenchPage page = null;
-		IEditorPart part = null;
-
-		activeEditor = EditorUtils.getActiveXtextEditor();
-
-		if (file.exists()) {
-			page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
-			final IEditorDescriptor desc = PlatformUI.getWorkbench().getEditorRegistry()
-					.getDefaultEditor(file.getName());
-			try {
-				part = page.openEditor(new FileEditorInput(file), desc.getId());
-			} catch (PartInitException e) {
-				e.printStackTrace();
-			}
-		}
-
-		if (part == null) {
-			return null;
-		}
-
-		return (XtextEditor) part;
-
-	}
+//	private static XtextEditor activeEditor = null;
+//
+//	public static void closeEditor(XtextEditor editor, boolean save) {
+//		final IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
+//		if (save) {
+//			page.saveEditor(editor, false);
+//		}
+//
+//		if (editor.equals(activeEditor)) {
+//			return;
+//		} else {
+//			page.closeEditor(editor, false);
+//		}
+//	}
+//
+//	public static XtextEditor getEditor(IFile file) {
+//		IWorkbenchPage page = null;
+//		IEditorPart part = null;
+//
+//		activeEditor = EditorUtils.getActiveXtextEditor();
+//
+//		if (file.exists()) {
+//
+//			page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
+//			final IEditorDescriptor desc = PlatformUI.getWorkbench().getEditorRegistry()
+//					.getDefaultEditor(file.getName());
+//			try {
+//				part = page.openEditor(new FileEditorInput(file), desc.getId());
+//			} catch (PartInitException e) {
+//				e.printStackTrace();
+//			}
+//		}
+//
+//		if (part == null) {
+//			return null;
+//		}
+//
+//		return (XtextEditor) part;
+//
+//	}
 
 	private RequirementsManager() {
 		// Initialize requirements list
@@ -103,13 +98,15 @@ public class RequirementsManager {
 			currentProject = TraverseProject.getCurrentProject();
 		}
 
+		reqDb = new RequirementsDatabaseHelper(currentProject);
+
 		// Read in any existing imported requirements
-		reqDb.importRequirements(findImportedRequirements());
+		reqDb.importRequirements(findImportedRequirements(currentProject));
 	}
 
 	public void clearRequirements() {
 		reqDb.reset();
-		reqDb.importRequirements(findImportedRequirements());
+		reqDb.importRequirements(findImportedRequirements(currentProject));
 	}
 
 
@@ -139,69 +136,76 @@ public class RequirementsManager {
 	 * or adding them if they're new
 	 * @param updatedReqs - list of requirements to add/update
 	 */
-	public void updateRequirements(List<CyberRequirement> updatedReqs) {
+	public boolean updateRequirements(List<CyberRequirement> updatedReqs) {
 
 		for (CyberRequirement r : updatedReqs) {
-			final CyberRequirement existing = reqDb.get(r);
-			if (existing == null) {
-				// not possible; signal error
-				throw new RuntimeException("Updated requirement not found in requirements database : " + r);
-			} else {
-				if (existing.getStatus() == CyberRequirement.toDo || existing.getStatus() == CyberRequirement.omit) {
-					switch (r.getStatus()) {
-					case CyberRequirement.toDo:
-					case CyberRequirement.omit:
-						// do nothing
-						break;
-					case CyberRequirement.add:
-						// add to model
-						System.out.println("Requirement " + r.getId());
-						r.insertClaimDefinition();
-						r.insertClaimCall();
-						if (r.getFormalize()) {
-							r.insertAgree();
-						}
-						break;
-					default:
-						// Unknown status; signal error
-						throw new RuntimeException("Updated requirement has invalid status : " + r);
-					}
-				} else if (existing.getStatus() == CyberRequirement.add) {
-					switch (r.getStatus()) {
-					case CyberRequirement.toDo:
-					case CyberRequirement.omit:
-						// remove resolute claim definition and claim call
-						r.removeClaimCall();
-						r.removeClaimDefinition();
-						if (existing.getFormalize()) {
-							r.removeAgree();
-						}
-						break;
-					case CyberRequirement.add:
-						if (existing.getFormalize() && !r.getFormalize()) {
-							r.removeAgree();
-						} else if (!existing.getFormalize() && r.getFormalize()) {
-							r.insertAgree();
-						}
-						break;
-					default:
-						// Unknown status; signal error
-						throw new RuntimeException("Updated requirement has invalid status : " + r);
-					}
+			try {
+				final CyberRequirement existing = reqDb.get(r);
+				if (existing == null) {
+					// not possible; signal error
+					throw new RuntimeException("Updated requirement not found in requirements database : " + r);
 				} else {
-					// Unknown status; signal error
-					throw new RuntimeException("Existing requirement has invalid status : " + existing);
+					if (existing.getStatus() == CyberRequirement.toDo
+							|| existing.getStatus() == CyberRequirement.omit) {
+						switch (r.getStatus()) {
+						case CyberRequirement.toDo:
+						case CyberRequirement.omit:
+							// do nothing
+							break;
+						case CyberRequirement.add:
+							// add to model
+							System.out.println("Requirement " + r.getId());
+							r.insertClaimDefinition();
+							r.insertClaimCall();
+							if (r.getFormalize()) {
+								r.insertAgree();
+							}
+							break;
+						default:
+							// Unknown status; signal error
+							throw new RuntimeException("Updated requirement has invalid status : " + r);
+						}
+					} else if (existing.getStatus() == CyberRequirement.add) {
+						switch (r.getStatus()) {
+						case CyberRequirement.toDo:
+						case CyberRequirement.omit:
+							// remove resolute claim definition and claim call
+							r.removeClaimCall();
+							r.removeClaimDefinition();
+							if (existing.getFormalize()) {
+								r.removeAgree();
+							}
+							break;
+						case CyberRequirement.add:
+							if (existing.getFormalize() && !r.getFormalize()) {
+								r.removeAgree();
+							} else if (!existing.getFormalize() && r.getFormalize()) {
+								r.insertAgree();
+							}
+							break;
+						default:
+							// Unknown status; signal error
+							throw new RuntimeException("Updated requirement has invalid status : " + r);
+						}
+					} else {
+						// Unknown status; signal error
+						throw new RuntimeException("Existing requirement has invalid status : " + existing);
+					}
 				}
+				reqDb.updateRequirement(r);
+			} catch (Exception e) {
+				BriefcaseNotifier.printError(e.getMessage());
+				return false;
 			}
 		}
 
-		updatedReqs.forEach(r -> reqDb.updateRequirement(r));
 		reqDb.saveRequirementsDatabase();
 		CaseUtils.formatCaseRequirements();
+		return true;
 	}
 
 	public boolean readRequirementFiles(boolean importRequirements, String filename) {
-		final List<CyberRequirement> existing = findImportedRequirements();
+		final List<CyberRequirement> existing = findImportedRequirements(currentProject);
 		final Set<String> reqIds = new HashSet<String>();
 		for (CyberRequirement r : existing) {
 			if (r.getId() != null && !r.getId().isEmpty() && !reqIds.add(r.getId())) {
@@ -220,23 +224,21 @@ public class RequirementsManager {
 			reqDb.importJsonRequirementsFiles(jsonReqFiles);
 		}
 		reqDb.importRequirements(existing);
-		// TODO: If the user cancels importing requirements the reqdb will may not be correct
-		// Commenting out following line should be ok
-//		reqDb.saveRequirementsDatabase();
 
 		return true;
 	}
 
-	public List<CyberRequirement> findImportedRequirements() {
+	public static List<CyberRequirement> findImportedRequirements(IProject project) {
 
-		final IFile file = CaseUtils.getCaseRequirementsFile();
-		final XtextEditor editor = getEditor(file);
+		final IFile file = CaseUtils.getCaseRequirementsFile(project);
+//		final XtextEditor editor = getEditor(file);
 
-		if (editor != null) {
-			final List<CyberRequirement> embeddedRequirements = editor.getDocument().readOnly(resource -> {
+//		if (editor != null) {
+//			final List<CyberRequirement> embeddedRequirements = editor.getDocument().readOnly(resource -> {
 
 				// Get modification context
-				final AadlPackage aadlPkg = CaseUtils.getCaseRequirementsPackage();
+//				final AadlPackage aadlPkg = CaseUtils.getCaseRequirementsPackage(project);
+				final AadlPackage aadlPkg = TraverseProject.getPackageInFile(file);
 				if (aadlPkg == null) {
 					return Collections.emptyList();
 				}
@@ -283,15 +285,15 @@ public class RequirementsManager {
 				}
 
 				return resoluteClauses;
-			});
+//			});
 
 			// Close editor, if necessary (no saving, read-only)
-			closeEditor(editor, false);
+//			closeEditor(editor, false);
 
-			return embeddedRequirements;
-		}
+//			return embeddedRequirements;
+//		}
 
-		return new ArrayList<CyberRequirement>();
+//		return new ArrayList<CyberRequirement>();
 	}
 
 

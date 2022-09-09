@@ -34,8 +34,8 @@ public class BriefcasePreferencePage extends FieldEditorPreferencePage implement
 
 		Label label = new Label(getFieldEditorParent(), SWT.NONE);
 		label.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1));
-		FontDescriptor boldDescriptor = FontDescriptor.createFrom(label.getFont()).setStyle(SWT.BOLD);
-		Font boldFont = boldDescriptor.createFont(label.getDisplay());
+		final FontDescriptor boldDescriptor = FontDescriptor.createFrom(label.getFont()).setStyle(SWT.BOLD);
+		final Font boldFont = boldDescriptor.createFont(label.getDisplay());
 		label.setFont(boldFont);
 		label.addDisposeListener(e -> boldFont.dispose());
 
@@ -59,7 +59,7 @@ public class BriefcasePreferencePage extends FieldEditorPreferencePage implement
 			@Override
 			protected String changePressed() {
 
-				FileDialog dlgSaveAs = new FileDialog(getShell(), SWT.SAVE | SWT.SHEET);
+				final FileDialog dlgSaveAs = new FileDialog(getShell(), SWT.SAVE | SWT.SHEET);
 				dlgSaveAs.setText("SPLAT log file");
 				if (!getTextControl().getText().isEmpty()) {
 					dlgSaveAs.setFileName(getTextControl().getText());
@@ -77,7 +77,7 @@ public class BriefcasePreferencePage extends FieldEditorPreferencePage implement
 
 				// Create the file if it doesn't exist
 				try {
-					File file = new File(fileName);
+					final File file = new File(fileName);
 					file.createNewFile();
 				} catch (IOException e) {
 					Dialog.showError("SPLAT log file - Error", "A problem occurred while creating the file.");
@@ -95,83 +95,6 @@ public class BriefcasePreferencePage extends FieldEditorPreferencePage implement
 			}
 		};
 		addField(splatLogFileFieldEditor);
-
-		label = new Label(getFieldEditorParent(), SWT.SEPARATOR | SWT.HORIZONTAL);
-		label.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 5));
-
-		label = new Label(getFieldEditorParent(), SWT.NONE);
-		label.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
-		label.setFont(boldFont);
-		label.addDisposeListener(e -> boldFont.dispose());
-		label.setText("Development Documents");
-
-		final FileFieldEditor reqReviewFileFieldEditor = new FileFieldEditor(
-				BriefcasePreferenceConstants.REQUIREMENTS_REVIEW_FILENAME, "Requirements review filename:", true,
-				getFieldEditorParent()) {
-
-			@Override
-			protected String changePressed() {
-
-				FileDialog dlgOpen = new FileDialog(getShell(), SWT.OPEN | SWT.SHEET);
-				dlgOpen.setText("Requirements review file");
-				if (!getTextControl().getText().isEmpty()) {
-					dlgOpen.setFileName(getTextControl().getText());
-				} else {
-					dlgOpen.setFileName("");
-				}
-				dlgOpen.setFilterExtensions(new String[] { "*.*" });
-				String fileName = dlgOpen.open();
-				if (fileName == null) {
-					return null;
-				} else {
-					fileName = fileName.trim();
-				}
-
-				return fileName;
-			}
-
-			@Override
-			protected boolean checkState() {
-				// Don't want to enforce proper path/filenaming
-				clearErrorMessage();
-				return true;
-			}
-		};
-		addField(reqReviewFileFieldEditor);
-
-		final FileFieldEditor agreeReviewFileFieldEditor = new FileFieldEditor(
-				BriefcasePreferenceConstants.AGREE_REVIEW_FILENAME, "Formal verification review filename:", true,
-				getFieldEditorParent()) {
-
-			@Override
-			protected String changePressed() {
-
-				FileDialog dlgOpen = new FileDialog(getShell(), SWT.OPEN | SWT.SHEET);
-				dlgOpen.setText("Formal verification review file");
-				if (!getTextControl().getText().isEmpty()) {
-					dlgOpen.setFileName(getTextControl().getText());
-				} else {
-					dlgOpen.setFileName("");
-				}
-				dlgOpen.setFilterExtensions(new String[] { "*.*" });
-				String fileName = dlgOpen.open();
-				if (fileName == null) {
-					return null;
-				} else {
-					fileName = fileName.trim();
-				}
-
-				return fileName;
-			}
-
-			@Override
-			protected boolean checkState() {
-				// Don't want to enforce proper path/filenaming
-				clearErrorMessage();
-				return true;
-			}
-		};
-		addField(agreeReviewFileFieldEditor);
 
 		label = new Label(getFieldEditorParent(), SWT.SEPARATOR | SWT.HORIZONTAL);
 		label.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 5));

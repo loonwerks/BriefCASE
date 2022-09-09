@@ -3,7 +3,6 @@ package com.collins.trustedsystems.briefcase.staircase.requirements;
 import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -163,38 +162,38 @@ public class JsonRequirementsFile {
 		return true;
 	}
 
-	/**
-	 * Removes requirements from jsonFile if they appear in reqList
-	 * @param reqList
-	 */
-	public void removeRequirements(final List<CyberRequirement> reqList) {
-//		Iterator<CyberRequirement> i = getRequirements().iterator();
-//		while (i.hasNext()) {
-//			CyberRequirement jsonReq = i.next();
-//			for (CyberRequirement req : reqList) {
-//				if (req.getType().equalsIgnoreCase(jsonReq.getType())
-//						&& req.getContext().equalsIgnoreCase(jsonReq.getContext())) {
-//					i.remove();
-//					break;
-//				}
+//	/**
+//	 * Removes requirements from jsonFile if they appear in reqList
+//	 * @param reqList
+//	 */
+//	public void removeRequirements(final List<CyberRequirement> reqList) {
+////		Iterator<CyberRequirement> i = getRequirements().iterator();
+////		while (i.hasNext()) {
+////			CyberRequirement jsonReq = i.next();
+////			for (CyberRequirement req : reqList) {
+////				if (req.getType().equalsIgnoreCase(jsonReq.getType())
+////						&& req.getContext().equalsIgnoreCase(jsonReq.getContext())) {
+////					i.remove();
+////					break;
+////				}
+////			}
+////		}
+//
+//		reqList.forEach(r -> removeRequirement(r));
+//	}
+
+//	private void removeRequirement(final CyberRequirement req) {
+//		for (Iterator<CyberRequirement> reqIter = getRequirements().iterator(); reqIter.hasNext();) {
+//			final CyberRequirement jsonReq = reqIter.next();
+//			if (equals(jsonReq, req)) {
+//				reqIter.remove();
+//				return;
 //			}
 //		}
+//	}
 
-		reqList.forEach(r -> removeRequirement(r));
-	}
-
-	private void removeRequirement(final CyberRequirement req) {
-		for (Iterator<CyberRequirement> reqIter = getRequirements().iterator(); reqIter.hasNext();) {
-			final CyberRequirement jsonReq = reqIter.next();
-			if (equals(jsonReq, req)) {
-				reqIter.remove();
-				return;
-			}
-		}
-	}
-
-	private boolean equals(final CyberRequirement req1, final CyberRequirement req2) {
-		return req1.getType().equalsIgnoreCase(req2.getType()) && req1.getContext().equalsIgnoreCase(req2.getContext());
-	}
+//	private boolean equals(final CyberRequirement req1, final CyberRequirement req2) {
+//		return req1.getType().equalsIgnoreCase(req2.getType()) && req1.getContext().equalsIgnoreCase(req2.getContext());
+//	}
 
 }

@@ -3,13 +3,14 @@ package com.collins.trustedsystems.briefcase.assurance;
 import java.io.File;
 import java.util.List;
 
-import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.resources.IProject;
 
-import com.collins.trustedsystems.briefcase.preferences.BriefcasePreferenceConstants;
+import com.collins.trustedsystems.briefcase.assurance.preferences.AssurancePreferenceConstants;
 import com.collins.trustedsystems.briefcase.staircase.requirements.CyberRequirement;
 import com.collins.trustedsystems.briefcase.staircase.requirements.JsonRequirementsFile;
 import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsDatabaseHelper;
 import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsManager;
+import com.collins.trustedsystems.briefcase.util.Filesystem;
 import com.collins.trustedsystems.briefcase.util.ModelHashcode;
 import com.rockwellcollins.atc.resolute.analysis.execution.EvaluationContext;
 import com.rockwellcollins.atc.resolute.analysis.execution.ResoluteExternalFunctionLibrary;
@@ -28,7 +29,7 @@ public class Assurance extends ResoluteExternalFunctionLibrary {
 		this.context = context;
 
 		switch (function.toLowerCase()) {
-		case "security_requirements_imported":
+		case "security_requirements_imported_or_omitted_with_rationale":
 			return security_requirements_imported_or_omitted_with_rationale();
 		case "security_analysis_performed_on_current_model":
 			return security_analysis_performed_on_current_model();
@@ -38,21 +39,41 @@ public class Assurance extends ResoluteExternalFunctionLibrary {
 			return get_security_requirements_review();
 		case "get_agree_results_review":
 			return get_agree_results_review();
+//		case "get_requirement":
+//			return getRequirement();
+//		case "get_field": {
+//			ResoluteValue arg0 = args.get(0);
+//			ResoluteValue arg1 = args.get(1);
+//			assert (arg0 instanceof ResoluteRecordValue);
+//			assert (arg1.isString());
+//			return getField(arg0, arg1.getString());
+//		}
+//		case "get_name": {
+//			ResoluteValue arg0 = args.get(0);
+//			assert (arg0 instanceof ResoluteRecordValue);
+//			return getName(arg0);
+//		}
 		}
 
 		throw new ResoluteFailException("Function " + function + " not part of BriefCASE Assurance library.",
 				context.getThisInstance().getSubcomponent());
 	}
 
+	private IProject getCurrentProject() {
+		return Filesystem.getFile(context.getThisInstance().eResource().getURI()).getProject();
+	}
+
 	private BoolValue security_requirements_imported_or_omitted_with_rationale() {
 
-		final RequirementsDatabaseHelper reqDb = new RequirementsDatabaseHelper();
-		final List<CyberRequirement> importedReqs = RequirementsManager.getInstance().findImportedRequirements();
+		final IProject currentProject = getCurrentProject();
+		final RequirementsDatabaseHelper reqDb = new RequirementsDatabaseHelper(currentProject);
+		final List<CyberRequirement> importedReqs = RequirementsManager.findImportedRequirements(currentProject);
 
 		// Each requirement should have a corresponding goal in CASE_Requirements
 		for (CyberRequirement req : reqDb.getAddRequirements()) {
 			if (!importedReqs.contains(req)) {
-				throw new ResoluteFailException("Requirement " + req.getId() + " is not imported into model.",
+				throw new ResoluteFailException(
+						"All imported requirements have a corresponding goal in CASE_Requirements",
 						context.getThisInstance().getSubcomponent());
 			}
 		}
@@ -60,14 +81,15 @@ public class Assurance extends ResoluteExternalFunctionLibrary {
 		// There should be no unaddressed ("todo") requirements
 		if (!reqDb.getToDoRequirements().isEmpty()) {
 			throw new ResoluteFailException(
-					"Not all generated requirements from the most recent cyber analysis have been addressed.",
+					"All generated requirements from the most recent cyber analysis have been addressed",
 					context.getThisInstance().getSubcomponent());
 		}
 
+		// All omitted requirements should have rationale
 		for (CyberRequirement req : reqDb.getOmittedRequirements()) {
 			if (req.getRationale().isBlank()) {
 				throw new ResoluteFailException(
-						"Requirement " + req.getId() + " was omitted, but no rationale was provided.",
+						"All omitted requirements have rationale provided",
 						context.getThisInstance().getSubcomponent());
 			}
 		}
@@ -78,24 +100,24 @@ public class Assurance extends ResoluteExternalFunctionLibrary {
 	private BoolValue security_analysis_performed_on_current_model() {
 
 		// Get analysis results file from .reqdb
-		final RequirementsDatabaseHelper reqDb = new RequirementsDatabaseHelper();
+		final RequirementsDatabaseHelper reqDb = new RequirementsDatabaseHelper(getCurrentProject());
 		final String analysisOutputFilename = reqDb.getAnalysisOutputFilename();
 		if (analysisOutputFilename.isBlank()) {
 			throw new ResoluteFailException(
-					"Unable to determine most recent cyber analysis output.",
+					"[ERROR] Unable to determine most recent cyber analysis output",
 					context.getThisInstance().getSubcomponent());
 		}
 		final File file = new File(analysisOutputFilename);
 		if (!file.exists()) {
 			throw new ResoluteFailException(
-					"Unable to find most recent cyber analysis output " + analysisOutputFilename + ".",
+					"[ERROR] Unable to find most recent cyber analysis output " + analysisOutputFilename,
 					context.getThisInstance().getSubcomponent());
 		}
 		// Parse Json
 		final JsonRequirementsFile jsonFile = new JsonRequirementsFile();
 		if (!jsonFile.importFile(file)) {
 			throw new ResoluteFailException(
-					"Unable to read most recent cyber analysis output " + analysisOutputFilename + ".",
+					"[ERROR] Unable to read most recent cyber analysis output " + analysisOutputFilename,
 					context.getThisInstance().getSubcomponent());
 		}
 		// Get model hashcode from analysis results file
@@ -109,7 +131,7 @@ public class Assurance extends ResoluteExternalFunctionLibrary {
 			return new BoolValue(analysisModelHashcode.contentEquals(currentModelHashcode));
 		} catch (Exception e) {
 			throw new ResoluteFailException(
-					"Unable to determine if most recent security analysis was performed on current model.",
+					"[ERROR] Unable to determine if most recent security analysis was performed on current model",
 					context.getThisInstance().getSubcomponent());
 		}
 
@@ -118,16 +140,16 @@ public class Assurance extends ResoluteExternalFunctionLibrary {
 	private BoolValue security_analysis_produces_no_applicable_requirements() {
 
 		// Get analysis results file from .reqdb
-		final RequirementsDatabaseHelper reqDb = new RequirementsDatabaseHelper();
+		final RequirementsDatabaseHelper reqDb = new RequirementsDatabaseHelper(getCurrentProject());
 		final String analysisOutputFilename = reqDb.getAnalysisOutputFilename();
 		if (analysisOutputFilename.isBlank()) {
-			throw new ResoluteFailException("Unable to determine most recent cyber analysis output.",
+			throw new ResoluteFailException("[ERROR] Unable to determine most recent cyber analysis output",
 					context.getThisInstance().getSubcomponent());
 		}
 		final File file = new File(analysisOutputFilename);
 		if (!file.exists()) {
 			throw new ResoluteFailException(
-					"Unable to find most recent cyber analysis output " + analysisOutputFilename + ".",
+					"[ERROR] Unable to find most recent cyber analysis output " + analysisOutputFilename,
 					context.getThisInstance().getSubcomponent());
 		}
 
@@ -135,15 +157,14 @@ public class Assurance extends ResoluteExternalFunctionLibrary {
 		final JsonRequirementsFile jsonFile = new JsonRequirementsFile();
 		if (!jsonFile.importFile(file)) {
 			throw new ResoluteFailException(
-					"Unable to read most recent cyber analysis output " + analysisOutputFilename + ".",
+					"[ERROR] Unable to read most recent cyber analysis output " + analysisOutputFilename,
 					context.getThisInstance().getSubcomponent());
 		}
 
 		// Any requirements are in omission log (in .reqdb as omitted)
 		for (CyberRequirement req : jsonFile.getRequirements()) {
 			if (!reqDb.getOmittedRequirements().contains(req)) {
-				throw new ResoluteFailException("Most recent cyber analysis generated requirement " + req.getId()
-						+ " that has not been addressed.", context.getThisInstance().getSubcomponent());
+				return new BoolValue(false);
 			}
 		}
 
@@ -151,9 +172,9 @@ public class Assurance extends ResoluteExternalFunctionLibrary {
 	}
 
 	private StringValue get_security_requirements_review() {
-		final String filename = Platform.getPreferencesService()
-				.getString("com.collins.trustedsystems.briefcase",
-						BriefcasePreferenceConstants.REQUIREMENTS_REVIEW_FILENAME, "", null);
+		final String filename = Activator.getDefault()
+				.getPreferenceStore()
+				.getString(AssurancePreferenceConstants.REQUIREMENTS_REVIEW_FILENAME);
 		final File file = new File(filename);
 		if (file.exists()) {
 			return new StringValue(filename);
@@ -163,9 +184,9 @@ public class Assurance extends ResoluteExternalFunctionLibrary {
 	}
 
 	private StringValue get_agree_results_review() {
-		final String filename = Platform.getPreferencesService()
-				.getString("com.collins.trustedsystems.briefcase", BriefcasePreferenceConstants.AGREE_REVIEW_FILENAME,
-						"", null);
+		final String filename = Activator.getDefault()
+				.getPreferenceStore()
+				.getString(AssurancePreferenceConstants.AGREE_REVIEW_FILENAME);
 		final File file = new File(filename);
 		if (file.exists()) {
 			return new StringValue(filename);
@@ -173,5 +194,23 @@ public class Assurance extends ResoluteExternalFunctionLibrary {
 			return new StringValue("");
 		}
 	}
+
+//	public ResoluteRecordValue getRequirement() {
+//		Map<String, ResoluteValue> fields = new HashMap<>();
+//		fields.put("Name", new StringValue("Req1"));
+//		fields.put("Description", new StringValue("This is a requirement"));
+//		ResoluteRecordValue record = new ResoluteRecordValue(fields);
+//		return record;
+//	}
+//
+//	public ResoluteValue getField(ResoluteValue requirement, String fieldName) {
+//		ResoluteRecordValue req = (ResoluteRecordValue) requirement;
+//		return req.getField(fieldName);
+//	}
+//
+//	public ResoluteValue getName(ResoluteValue requirement) {
+//		ResoluteRecordValue req = (ResoluteRecordValue) requirement;
+//		return req.getField("Name");
+//	}
 
 }

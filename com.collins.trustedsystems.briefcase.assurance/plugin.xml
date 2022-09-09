@@ -9,5 +9,20 @@
             typeClass="com.collins.trustedsystems.briefcase.assurance.AssuranceType">
       </externalLibrary>
    </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            category="com.collins.trustedsystems.briefcase.preferences.BriefcasePreferencePage"
+            class="com.collins.trustedsystems.briefcase.assurance.preferences.AssurancePreferencePage"
+            id="com.collins.trustedsystems.briefcase.assurance.preferences.AssurancePreferencePage"
+            name="Assurance">
+      </page>
+   </extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="com.collins.trustedsystems.briefcase.assurance.preferences.AssurancePreferenceInitializer">
+      </initializer>
+   </extension>
 
 </plugin>

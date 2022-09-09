@@ -93,9 +93,12 @@ public class ImportRequirementsHandler extends AbstractHandler {
 			Dialog.showInfo("Requirements Manager", "No requirements found in model.");
 		} else if (wizard.open() == SWT.OK) {
 			final List<CyberRequirement> updatedReqs = wizard.getRequirements();
-			reqMgr.updateRequirements(updatedReqs);
-			BriefcaseNotifier.notify("Requirements Manager", "Requirements import complete.");
-			return true;
+			if (reqMgr.updateRequirements(updatedReqs)) {
+				BriefcaseNotifier.notify("Requirements Manager", "Requirements import complete.");
+				return true;
+			} else {
+				BriefcaseNotifier.notify("Requirements Manager", "Requirements import encountered errors.");
+			}
 		}
 
 		return false;

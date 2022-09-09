@@ -11,7 +11,8 @@ Require-Bundle: org.eclipse.ui,
  org.osate.aadl2,
  com.rockwellcollins.atc.resolute,
  com.collins.trustedsystems.briefcase.staircase,
- com.collins.trustedsystems.briefcase
+ com.collins.trustedsystems.briefcase,
+ org.eclipse.core.resources
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Automatic-Module-Name: com.collins.trustedsystems.briefcase.assurance
 Bundle-ActivationPolicy: lazy

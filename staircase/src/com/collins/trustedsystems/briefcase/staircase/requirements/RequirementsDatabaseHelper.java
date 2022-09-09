@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.xtext.ui.editor.XtextEditor;
 import org.osate.aadl2.AadlPackage;
@@ -36,6 +37,7 @@ public class RequirementsDatabaseHelper {
 	private HashMap<String, CyberRequirement> requirements;
 	private HashMap<String, String> idToKey;
 	private String analysisOutputFilename = "";
+	private IProject currentProject = null;
 
 	private String makeKey(CyberRequirement req) {
 		return req.getType() + req.getContext();
@@ -48,6 +50,14 @@ public class RequirementsDatabaseHelper {
 	public RequirementsDatabaseHelper() {
 		requirements = new HashMap<String, CyberRequirement>();
 		idToKey = new HashMap<String, String>();
+		currentProject = TraverseProject.getCurrentProject();
+		readRequirementsDatabase();
+	}
+
+	public RequirementsDatabaseHelper(IProject currentProject) {
+		requirements = new HashMap<String, CyberRequirement>();
+		idToKey = new HashMap<String, String>();
+		this.currentProject = currentProject;
 		readRequirementsDatabase();
 	}
 
@@ -59,20 +69,28 @@ public class RequirementsDatabaseHelper {
 
 	public void readRequirementsDatabase() {
 		// Read database from the physical requirements database file
-		final IPath reqFilePath = TraverseProject.getCurrentProject()
+		final IPath reqFilePath = currentProject
 				.getFile(CaseUtils.CASE_REQUIREMENTS_DATABASE_FILE)
 				.getLocation();
 		File reqFile = null;
 		if (reqFilePath != null) {
 			reqFile = reqFilePath.toFile();
 		}
-		final JsonRequirementsFile jsonReqFile = new JsonRequirementsFile();
-		if (!reqFile.exists() || !jsonReqFile.importFile(reqFile)) {
-//			Dialog.showInfo("Missing requirements database",
-//					"No requirements database found. Starting a new database.");
-		} else {
+//		final JsonRequirementsFile jsonReqFile = new JsonRequirementsFile();
+//		if (!reqFile.exists() || !jsonReqFile.importFile(reqFile)) {
+////			Dialog.showInfo("Missing requirements database",
+////					"No requirements database found. Starting a new database.");
+//		} else {
+//			// Add the requirements in this file to the accumulated list of requirements
+//			importRequirements(jsonReqFile.getRequirements());
+//			analysisOutputFilename = jsonReqFile.getFilename();
+//		}
+
+		final RequirementsDatabaseFile reqDbFile = new RequirementsDatabaseFile();
+		if (reqFile.exists() && reqDbFile.importFile(reqFile)) {
 			// Add the requirements in this file to the accumulated list of requirements
-			importRequirements(jsonReqFile.getRequirements());
+			importRequirements(reqDbFile.getRequirements());
+			analysisOutputFilename = reqDbFile.getFilename();
 		}
 	}
 
@@ -81,19 +99,25 @@ public class RequirementsDatabaseHelper {
 		if (requirements.isEmpty()) {
 			return;
 		}
-		final IPath reqFilePath = TraverseProject.getCurrentProject()
+		final IPath reqFilePath = currentProject
 				.getFile(CaseUtils.CASE_REQUIREMENTS_DATABASE_FILE)
 				.getLocation();
 		File reqFile = null;
 		if (reqFilePath != null) {
 			reqFile = reqFilePath.toFile();
 		}
-		final JsonRequirementsFile jsonReqFile = new JsonRequirementsFile(CyberRequirement.notApplicable,
-				LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd-HHmmss")),
-				CyberRequirement.notApplicable, CyberRequirement.notApplicable,
-				analysisOutputFilename, getRequirements());
-		if (!jsonReqFile.exportFile(reqFile)) {
-			throw new RuntimeException("Could not save cyber requirements file " + reqFile.getName() + ".");
+//		final JsonRequirementsFile jsonReqFile = new JsonRequirementsFile(CyberRequirement.notApplicable,
+//				LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd-HHmmss")),
+//				CyberRequirement.notApplicable, CyberRequirement.notApplicable,
+//				analysisOutputFilename, getRequirements());
+//		if (!jsonReqFile.exportFile(reqFile)) {
+//			throw new RuntimeException("Could not save cyber requirements file " + reqFile.getName() + ".");
+//		}
+		final RequirementsDatabaseFile reqDbFile = new RequirementsDatabaseFile(
+				LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd-HHmmss")), analysisOutputFilename,
+				getRequirements());
+		if (!reqDbFile.exportFile(reqFile)) {
+			throw new RuntimeException("Could not save requirements database " + reqFile.getName() + ".");
 		}
 	}
 
