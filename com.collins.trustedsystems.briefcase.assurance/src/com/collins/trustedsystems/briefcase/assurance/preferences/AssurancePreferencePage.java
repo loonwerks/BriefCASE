@@ -11,7 +11,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
-import com.collins.trustedsystems.briefcase.Activator;
+import com.collins.trustedsystems.briefcase.assurance.Activator;
 
 public class AssurancePreferencePage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
 

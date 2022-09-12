@@ -427,6 +427,9 @@ public class CaseUtils {
 					editor.doSave(new NullProgressMonitor());
 				}
 
+				if (activeEditor != null) {
+					activeEditor.setFocus();
+				}
 				return;
 			}
 		}

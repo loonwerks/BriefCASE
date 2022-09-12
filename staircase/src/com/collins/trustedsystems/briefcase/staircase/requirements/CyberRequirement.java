@@ -77,12 +77,12 @@ import com.rockwellcollins.atc.resolute.resolute.UndevelopedExpr;
 public class CyberRequirement {
 
 	// Requirement status
-	// TODO: change them to enum
 	public static final String toDo = "ToDo";
 	public static final String add = "Import";
 	public static final String omit = "Omit";
 	public static final String unknown = "Unknown";
-	public static final String notApplicable = "N/A";
+//	public static final String notApplicable = "N/A";
+	public static final String notApplicable = "";
 	private static final boolean addQuotes = true;
 
 	private final static String FALSE = "False";
@@ -98,7 +98,6 @@ public class CyberRequirement {
 	private String context = ""; // this is the qualified name of the component
 	private boolean formalize = false;
 	private String rationale = "";
-//	private long date = 0L;
 	private String date = "";
 	private String tool = "";
 	private String status = toDo;
@@ -801,6 +800,51 @@ public class CyberRequirement {
 
 	}
 
+	// Checks whether a requirement has been mitigated via model transform
+	public boolean isMitigated() {
+
+		// Get CASE_Requirements package
+		final AadlPackage pkg = CaseUtils.getCaseRequirementsPackage();
+
+		PrivatePackageSection priv8 = pkg.getOwnedPrivateSection();
+		if (priv8 == null) {
+			return false;
+		}
+
+		DefaultAnnexLibrary defResLib = null;
+		ResoluteLibrary resLib = null;
+		for (AnnexLibrary library : priv8.getOwnedAnnexLibraries()) {
+			if (library instanceof DefaultAnnexLibrary && library.getName().equalsIgnoreCase("resolute")) {
+				defResLib = (DefaultAnnexLibrary) library;
+				resLib = (ResoluteLibrary) defResLib.getParsedAnnexLibrary();
+				break;
+			}
+		}
+		if (defResLib == null) {
+			return false;
+		}
+		for (Iterator<Definition> i = resLib.getDefinitions().iterator(); i.hasNext();) {
+			final Definition def = i.next();
+			if (def != null && def instanceof FunctionDefinition && def.hasName()
+					&& def.getName().equalsIgnoreCase(getId())) {
+
+				final ClaimBody body = (ClaimBody) ((FunctionDefinition) def).getBody();
+				final Expr expr = body.getExpr();
+				if (expr instanceof UndevelopedExpr) {
+					return false;
+				} else if (expr instanceof FnCallExpr && ((FnCallExpr) expr).getFn()
+						.getName()
+						.equalsIgnoreCase(AgreePropCheckedClaim.AGREE_PROP_CHECKED)) {
+					return false;
+				} else {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
 
 	public void removeClaimDefinition() {
 
@@ -1127,7 +1171,6 @@ public class CyberRequirement {
 	}
 
 
-
 	/**
 	 * Removes expressions matching the name argument from the expr argument.
 	 * The name argument is a {@link String} that represents the name of the function call (for example, Agree_Prop_Checked).
@@ -1199,7 +1242,6 @@ public class CyberRequirement {
 		if (getDate().isBlank()) {
 			claimAttributes.add(createResoluteContext(GENERATED_ON, "Unknown"));
 		} else {
-//			LocalDateTime localDateTime = LocalDateTime.parse(getDate(), DateTimeFormatter.ofPattern("yyyy-MM-dd-HHmmss"));
 			claimAttributes.add(createResoluteContext(GENERATED_ON, getDate()));
 		}
 		claimAttributes.add(createResoluteContext(REQ_COMPONENT, this.getContext()));
@@ -1363,15 +1405,6 @@ public class CyberRequirement {
 		}
 
 		final String date = getContext(claimBody, GENERATED_ON);
-//		long date;
-//		try {
-//			date = DateFormat.getDateInstance().parse(dateString).getTime() / 1000;
-//		} catch (ParseException e) {
-//			e.printStackTrace();
-//			System.out.println("Error in parsing date from resolute requirement: " + dateString);
-//			date = 0L;
-//		}
-
 		final String tool = getContext(claimBody, GENERATED_BY);
 		final String component = getContext(claimBody, REQ_COMPONENT);
 		final boolean formalized = getContext(claimBody, FORMALIZED).equalsIgnoreCase(TRUE);

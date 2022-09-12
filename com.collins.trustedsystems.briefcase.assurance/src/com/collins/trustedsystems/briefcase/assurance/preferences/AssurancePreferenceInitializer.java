@@ -3,7 +3,7 @@ package com.collins.trustedsystems.briefcase.assurance.preferences;
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.jface.preference.IPreferenceStore;
 
-import com.collins.trustedsystems.briefcase.Activator;
+import com.collins.trustedsystems.briefcase.assurance.Activator;
 
 /**
  * Class used to initialize default preference values.

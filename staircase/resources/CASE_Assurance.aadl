@@ -56,18 +56,21 @@ private
 			
 		goal deployed_sw_components_satisfy_requirements(sys : system) <=
 			** "Deployed software components satisfy their requirements" **
-			forall(comp : {c for (c : get_subcomponents({sys})) | is_thread(c)}) . 
-				requirements_stated_in_terms_of_interface(comp) and 
-				application_code_conforms_to_interface_and_requirements(comp) and 
-				component_infrastructure_code_satisfies_aadl_semantics(comp) and 
-				component_deployment_context_achieves_required_assurance_properties(comp)
+			forall(comp : {c for (c : get_subcomponents({sys})) | is_thread(c)}) . deployed_sw_component_satisfies_requirements(comp)
+				
+		goal deployed_sw_component_satisfies_requirements(comp : component) <=
+			** "Deployed software component " comp " satisfies its requirements" **
+			requirements_stated_in_terms_of_interface(comp) and 
+			application_code_conforms_to_interface_and_requirements(comp) and 
+			component_infrastructure_code_satisfies_aadl_semantics(comp) and 
+			component_deployment_context_achieves_required_assurance_properties(comp)
 			
 		goal requirements_stated_in_terms_of_interface(comp : component) <=
-			** "The requirements of the component are stated in terms of the AADL component's interface and the publicly disclosed component local state" **
+			** "The requirements of component " comp " are stated in terms of the AADL component's interface and the publicly disclosed component local state" **
 			undeveloped
 			
 		goal application_code_conforms_to_interface_and_requirements(comp : component) <=
-			** "The application code of the component conforms to its declared interface and requirements" **
+			** "The application code of component " comp " conforms to its declared interface and requirements" **
 			application_code_exclusively_uses_interface_apis(comp) and 
 			application_code_runs_to_completion(comp) and 
 			component_output_satisfies_contract_on_every_dispatch(comp) and
@@ -75,7 +78,7 @@ private
 			component_execution_time_conforms_to_specified_wcet_on_every_dispatch(comp)
 			
 		goal application_code_exclusively_uses_interface_apis(comp : component) <=
-			** "The application source code of the component receives/sends its external inputs and outputs exclusively through APIs corresponding to the component's interface ports" **
+			** "The application source code of component " comp " receives/sends its external inputs and outputs exclusively through APIs corresponding to the component's interface ports" **
 			tool_generated_apis_correctly_derived_from_model(comp) and
 			application_code_uses_tool_generated_apis(comp) and
 			library_usage_has_no_effect_outside_of_component_boundary(comp)

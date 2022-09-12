@@ -39,20 +39,6 @@ public class Assurance extends ResoluteExternalFunctionLibrary {
 			return get_security_requirements_review();
 		case "get_agree_results_review":
 			return get_agree_results_review();
-//		case "get_requirement":
-//			return getRequirement();
-//		case "get_field": {
-//			ResoluteValue arg0 = args.get(0);
-//			ResoluteValue arg1 = args.get(1);
-//			assert (arg0 instanceof ResoluteRecordValue);
-//			assert (arg1.isString());
-//			return getField(arg0, arg1.getString());
-//		}
-//		case "get_name": {
-//			ResoluteValue arg0 = args.get(0);
-//			assert (arg0 instanceof ResoluteRecordValue);
-//			return getName(arg0);
-//		}
 		}
 
 		throw new ResoluteFailException("Function " + function + " not part of BriefCASE Assurance library.",
@@ -194,23 +180,5 @@ public class Assurance extends ResoluteExternalFunctionLibrary {
 			return new StringValue("");
 		}
 	}
-
-//	public ResoluteRecordValue getRequirement() {
-//		Map<String, ResoluteValue> fields = new HashMap<>();
-//		fields.put("Name", new StringValue("Req1"));
-//		fields.put("Description", new StringValue("This is a requirement"));
-//		ResoluteRecordValue record = new ResoluteRecordValue(fields);
-//		return record;
-//	}
-//
-//	public ResoluteValue getField(ResoluteValue requirement, String fieldName) {
-//		ResoluteRecordValue req = (ResoluteRecordValue) requirement;
-//		return req.getField(fieldName);
-//	}
-//
-//	public ResoluteValue getName(ResoluteValue requirement) {
-//		ResoluteRecordValue req = (ResoluteRecordValue) requirement;
-//		return req.getField("Name");
-//	}
 
 }

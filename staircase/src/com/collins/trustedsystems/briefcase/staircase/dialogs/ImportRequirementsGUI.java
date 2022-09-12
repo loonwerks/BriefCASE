@@ -147,6 +147,24 @@ public class ImportRequirementsGUI extends Dialog {
 		cmbStatus = new Combo(composite, SWT.NONE);
 		cmbStatus.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 		cmbStatus.setItems(this.status.toArray(new String[0]));
+		cmbStatus.addSelectionListener(new SelectionListener() {
+
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				if (cmbStatus.getText().equalsIgnoreCase(CyberRequirement.omit)) {
+					txtReason.setEnabled(true);
+				} else {
+					txtReason.setEnabled(false);
+					txtReason.setText("");
+				}
+			}
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {
+				widgetSelected(e);
+			}
+
+		});
 		new Label(composite, SWT.NONE);
 		new Label(composite, SWT.NONE);
 		new Label(composite, SWT.NONE);
@@ -256,6 +274,12 @@ public class ImportRequirementsGUI extends Dialog {
 				final CyberRequirement r = requirements.get(index);
 				final String reqId = r.getId();
 				cmbStatus.select(getStatusIndex(r.getStatus()));
+				if (cmbStatus.getText().equalsIgnoreCase(CyberRequirement.omit)) {
+					txtReason.setEnabled(true);
+				} else {
+					txtReason.setEnabled(false);
+					txtReason.setText("");
+				}
 				lblGenTool2.setText(r.getTool());
 				lblType2.setText(r.getType());
 				txtID.setText(reqId);
@@ -275,7 +299,6 @@ public class ImportRequirementsGUI extends Dialog {
 
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e) {
-				// TODO Auto-generated method stub
 
 			}
 		});
