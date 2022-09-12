@@ -51,12 +51,14 @@
             <menu
                   id="com.collins.trustedsystems.briefcase.menus.outline.resiliency"
                   label="Cyber Resiliency">
+ <!--
                <command
                      commandId="com.collins.trustedsystems.briefcase.staircase.commands.ModelAnnotations"
                      id="com.collins.trustedsystems.briefcase.menus.outline.resiliency.ModelAnnotations"
                      label="Model Annotations..."
                      style="push">
                </command>
+-->
                <menu
                      id="com.collins.trustedsystems.briefcase.menus.outline.resiliency.transformations"
                      label="Model Transformations">
@@ -163,12 +165,14 @@
             <menu
                   id="com.collins.trustedsystems.briefcase.menus.menubar.resiliency"
                   label="Cyber Resiliency">
+<!--
                <command
                      commandId="com.collins.trustedsystems.briefcase.staircase.commands.ModelAnnotations"
                      id="com.collins.trustedsystems.briefcase.menus.menubar.resiliency.ModelAnnotations"
                      label="Model Annotations..."
                      style="push">
                </command>
+-->
                <menu
                      id="com.collins.trustedsystems.briefcase.menus.menubar.resiliency.transformations"
                      label="Model Transformations">
@@ -291,12 +295,14 @@
             <menu
                   id="com.collins.trustedsystems.briefcase.menus.editor.resiliency"
                   label="Cyber Resiliency">
+<!--
                <command
                      commandId="com.collins.trustedsystems.briefcase.staircase.commands.ModelAnnotations"
                      id="com.collins.trustedsystems.briefcase.menus.editor.resiliency.ModelAnnotations"
                      label="Model Annotations..."
                      style="push">
                </command>
+-->
                <menu
                      id="com.collins.trustedsystems.briefcase.menus.editor.resiliency.transformations"
                      label="Model Transformations">
@@ -347,12 +353,6 @@
                      id="com.collins.trustedsystems.briefcase.menus.editor.resiliency.synthesis"
                      label="Synthesis Tools">
                </menu>
-               <command
-                     commandId="com.collins.trustedsystems.briefcase.staircase.commands.AddProxy"
-                     id="com.collins.trustedsystems.briefcase.menus.menubar.resiliency.transformations.AddProxy"
-                     label="Add Proxies..."
-                     style="push">
-               </command>
             </menu>
             <menu
                   id="com.collins.trustedsystems.briefcase.menus.editor.build"
@@ -413,12 +413,14 @@
             <menu
                   id="com.collins.trustedsystems.briefcase.menus.diagram.resiliency"
                   label="Cyber Resiliency">
+<!--
                <command
                      commandId="com.collins.trustedsystems.briefcase.staircase.commands.ModelAnnotations"
                      id="com.collins.trustedsystems.briefcase.menus.diagram.resiliency.ModelAnnotations"
                      label="Model Annotations..."
                      style="push">
                </command>
+-->
                <menu
                      id="com.collins.trustedsystems.briefcase.menus.diagram.resiliency.transformations"
                      label="Model Transformations">
@@ -520,10 +522,12 @@
             id="com.collins.trustedsystems.briefcase.staircase.commands.Sel4Transform"
             name="Transform for seL4 build">
       </command>
+<!--
       <command
             id="com.collins.trustedsystems.briefcase.staircase.commands.ModelAnnotations"
             name="Model Annotations">
       </command>
+-->
       <command
             id="com.collins.trustedsystems.briefcase.staircase.commands.FilterChecker"
             name="Filter Checker">
@@ -563,10 +567,12 @@
             class="com.collins.trustedsystems.briefcase.staircase.handlers.SwitchTransformHandler"
             commandId="com.collins.trustedsystems.briefcase.staircase.commands.AddSwitch">
       </handler>
+<!--
       <handler
             class="com.collins.trustedsystems.briefcase.staircase.handlers.ModelAnnotationsHandler"
             commandId="com.collins.trustedsystems.briefcase.staircase.commands.ModelAnnotations">
       </handler>
+-->
       <handler
             class="com.collins.trustedsystems.briefcase.staircase.handlers.ImportRequirementsHandler"
             commandId="com.collins.trustedsystems.briefcase.staircase.commands.ManageRequirements">
