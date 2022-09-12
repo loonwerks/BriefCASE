@@ -18,13 +18,13 @@ class JsonFormatter extends PropertiesFormatter {
 
 	def dispatch void format(JsonAnnexLibrary jsonannexlibrary, extension IFormattableDocument document) {
 		// TODO: format HiddenRegions around keywords, attributes, cross references, etc. 
-		jsonannexlibrary.getJsonAnnexElement().surround[noIndentation];
+		jsonannexlibrary.getJsonAnnexElement().surround[noIndentation].prepend[newLines=1];
 		format(jsonannexlibrary.getJsonAnnexElement(), document);
 	}
 
 	def dispatch void format(JsonAnnexSubclause jsonannexsubclause, extension IFormattableDocument document) {
 		// TODO: format HiddenRegions around keywords, attributes, cross references, etc. 
-		jsonannexsubclause.getJsonAnnexElement().surround[noIndentation];
+		jsonannexsubclause.getJsonAnnexElement().surround[noIndentation].prepend[newLines=1];
 		format(jsonannexsubclause.getJsonAnnexElement(), document);
 	}
 

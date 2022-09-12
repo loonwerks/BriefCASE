@@ -91,7 +91,7 @@ public class ModelAccess extends ResoluteExternalFunctionLibrary {
 	private ResoluteValue getComponentFrom(NamedElement parent, String compName) {
 
 		if (!(parent instanceof ComponentInstance)) {
-			throw new ResoluteFailException(parent + " must be a component implementation.",
+			throw new ResoluteFailException("[ERROR] " + parent + " must be a component implementation.",
 					context.getThisInstance().getSubcomponent());
 		}
 
@@ -103,6 +103,7 @@ public class ModelAccess extends ResoluteExternalFunctionLibrary {
 		compName = compName.replace(ci.getComponentClassifier().getQualifiedName() + ".", "");
 
 		final ComponentInstance leaf = getLeafContainer(ci, compName);
+
 		if (leaf != null) {
 			for (ComponentInstance sub : leaf.getComponentInstances()) {
 				if (sub.getName().equalsIgnoreCase(compName.substring(compName.lastIndexOf(".") + 1))) {
@@ -110,8 +111,9 @@ public class ModelAccess extends ResoluteExternalFunctionLibrary {
 				}
 			}
 		}
+    
 		throw new ResoluteFailException(
-				"Could not find subcomponent " + ci.getComponentClassifier().getQualifiedName() + "." + compName,
+				"[ERROR] Could not find subcomponent " + ci.getComponentClassifier().getQualifiedName() + "." + compName,
 				context.getThisInstance().getSubcomponent());
 	}
 
@@ -121,13 +123,14 @@ public class ModelAccess extends ResoluteExternalFunctionLibrary {
 
 	private ResoluteValue getComponentSetFrom(NamedElement parent, String compNames) {
 		if (!(parent instanceof ComponentInstance)) {
-			throw new ResoluteFailException(parent + " must be a component implementation.",
+			throw new ResoluteFailException("[ERROR] " + parent + " must be a component implementation.",
 					context.getThisInstance().getSubcomponent());
 		}
 		if (!compNames.startsWith("{") || !compNames.endsWith("}")) {
-			throw new ResoluteFailException("Component names string is malformed.",
+			throw new ResoluteFailException("[ERROR] Component names string is malformed.",
 					context.getThisInstance().getSubcomponent());
 		}
+
 		final ComponentInstance ci = (ComponentInstance) parent;
 		final String[] comps = compNames.replace("{", "").replace("}", "").split(",");
 		final Set<NamedElementValue> setValue = new HashSet<>();
@@ -145,7 +148,7 @@ public class ModelAccess extends ResoluteExternalFunctionLibrary {
 				}
 				if (!compFound) {
 					throw new ResoluteFailException(
-							"Could not find subcomponent " + ci.getComponentClassifier().getQualifiedName() + "."
+							"[ERROR] Could not find subcomponent " + ci.getComponentClassifier().getQualifiedName() + "."
 									+ compName,
 							context.getThisInstance().getSubcomponent());
 				}
@@ -160,7 +163,7 @@ public class ModelAccess extends ResoluteExternalFunctionLibrary {
 
 	private ResoluteValue getPortFrom(NamedElement parent, String portName) {
 		if (!(parent instanceof ComponentInstance)) {
-			throw new ResoluteFailException(parent + " must be a component implementation.",
+			throw new ResoluteFailException("[ERROR] " + parent + " must be a component implementation.",
 					context.getThisInstance().getSubcomponent());
 		}
 
@@ -168,6 +171,7 @@ public class ModelAccess extends ResoluteExternalFunctionLibrary {
 		portName = portName.replace(ci.getComponentClassifier().getQualifiedName() + ".", "");
 
 		final ComponentInstance leaf = getLeafContainer(ci, portName);
+
 		if (leaf != null) {
 			for (FeatureInstance port : leaf.getFeatureInstances()) {
 				if (port.getName().equalsIgnoreCase(portName.substring(portName.lastIndexOf(".") + 1))) {
@@ -175,8 +179,9 @@ public class ModelAccess extends ResoluteExternalFunctionLibrary {
 				}
 			}
 		}
+
 		throw new ResoluteFailException(
-				"Could not find port " + ci.getComponentClassifier().getQualifiedName() + "." + portName,
+				"[ERROR] Could not find port " + ci.getComponentClassifier().getQualifiedName() + "." + portName,
 				context.getThisInstance().getSubcomponent());
 	}
 
@@ -186,7 +191,7 @@ public class ModelAccess extends ResoluteExternalFunctionLibrary {
 
 	private ResoluteValue getConnectionFrom(NamedElement parent, String connName) {
 		if (!(parent instanceof ComponentInstance)) {
-			throw new ResoluteFailException(parent + " must be a component implementation.",
+			throw new ResoluteFailException("[ERROR] " + parent + " must be a component implementation.",
 					context.getThisInstance().getSubcomponent());
 		}
 
@@ -194,6 +199,7 @@ public class ModelAccess extends ResoluteExternalFunctionLibrary {
 		connName = connName.replace(ci.getComponentClassifier().getQualifiedName() + ".", "");
 
 		final ComponentInstance leaf = getLeafContainer(ci, connName);
+
 		if (leaf != null && leaf.getComponentClassifier() instanceof ComponentImplementation) {
 			ComponentImplementation compImpl = (ComponentImplementation) leaf.getComponentClassifier();
 			for (Connection conn : compImpl.getOwnedConnections()) {
@@ -202,8 +208,9 @@ public class ModelAccess extends ResoluteExternalFunctionLibrary {
 				}
 			}
 		}
+
 		throw new ResoluteFailException(
-				"Could not find connection " + ci.getComponentClassifier().getQualifiedName() + "." + connName,
+				"[ERROR] Could not find connection " + ci.getComponentClassifier().getQualifiedName() + "." + connName,
 				context.getThisInstance().getSubcomponent());
 	}
 
@@ -215,7 +222,7 @@ public class ModelAccess extends ResoluteExternalFunctionLibrary {
 				}
 			}
 		}
-		throw new IllegalArgumentException("Unable to find connection " + connection.getName() + " in instance of "
+		throw new ResoluteFailException("[ERROR] Unable to find connection " + connection.getName() + " in instance of "
 				+ instance.getComponentClassifier().getName());
 	}
 

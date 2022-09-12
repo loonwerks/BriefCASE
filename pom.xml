@@ -4,7 +4,7 @@
 
 	<groupId>com.collins.trustedsystems.briefcase</groupId>
 	<artifactId>com.collins.trustedsystems.briefcase.parent</artifactId>
-	<version>0.7.1-SNAPSHOT</version>
+	<version>0.9.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<modules>
@@ -18,7 +18,8 @@
 		<module>com.collins.trustedsystems.briefcase.agreecheck</module>
 		<module>com.collins.trustedsystems.briefcase.agreelib</module>
 		<module>toolcheck</module>
-		<module>com.collins.trustedsystems.briefcase.getaadl</module>
+		<module>com.collins.trustedsystems.briefcase.modelaccess</module>
+		<module>com.collins.trustedsystems.briefcase.fileaccess</module>
 		<module>feature</module>
 		<module>target-platform</module>
 		<module>repository</module>
@@ -394,7 +395,8 @@
 		<repository>
 			<id>Osate2</id>
 			<layout>p2</layout>
-			<url>https://osate-build.sei.cmu.edu/download/osate/testing/updates/</url>
+			<!-- <url>https://osate-build.sei.cmu.edu/download/osate/testing/updates/</url> -->
+			<url>https://osate-build.sei.cmu.edu/download/osate/stable/2.10.2/updates/</url>
 		</repository>
 		<repository>
 			<id>Formal-Methods-Workbench-Updates</id>

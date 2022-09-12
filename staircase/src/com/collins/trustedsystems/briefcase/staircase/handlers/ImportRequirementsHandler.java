@@ -38,8 +38,10 @@ public class ImportRequirementsHandler extends AbstractHandler {
 		if (importRequirements) {
 			final FileDialog dlgReqFile = new FileDialog(
 					PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), SWT.OPEN);
+			dlgReqFile.setText("Select requirements file to import");
 			dlgReqFile.setFilterPath(project.getLocation().append("Requirements").toOSString());
-			dlgReqFile.setText("Select requirements file to import.");
+			final String[] filterExts = { "*.json", "*.*" };
+			dlgReqFile.setFilterExtensions(filterExts);
 			filename = dlgReqFile.open();
 			if (filename == null) {
 				return null;

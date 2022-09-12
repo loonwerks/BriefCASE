@@ -16,7 +16,6 @@ import com.google.gson.stream.JsonReader;
 public class JsonRequirementsFile {
 	private String tool = "";
 	private String implementation = "";
-//	private long date = 0L;
 	private String date = "";
 	private String hashcode = "";
 	private String filename = "";
@@ -128,6 +127,7 @@ public class JsonRequirementsFile {
 					}
 				}
 			} else if (this.tool.equalsIgnoreCase(DCRYPPS)) {
+
 				if (!jsonObject.has(REQUIREMENTS)) {
 					return false;
 				}
@@ -161,39 +161,5 @@ public class JsonRequirementsFile {
 		}
 		return true;
 	}
-
-//	/**
-//	 * Removes requirements from jsonFile if they appear in reqList
-//	 * @param reqList
-//	 */
-//	public void removeRequirements(final List<CyberRequirement> reqList) {
-////		Iterator<CyberRequirement> i = getRequirements().iterator();
-////		while (i.hasNext()) {
-////			CyberRequirement jsonReq = i.next();
-////			for (CyberRequirement req : reqList) {
-////				if (req.getType().equalsIgnoreCase(jsonReq.getType())
-////						&& req.getContext().equalsIgnoreCase(jsonReq.getContext())) {
-////					i.remove();
-////					break;
-////				}
-////			}
-////		}
-//
-//		reqList.forEach(r -> removeRequirement(r));
-//	}
-
-//	private void removeRequirement(final CyberRequirement req) {
-//		for (Iterator<CyberRequirement> reqIter = getRequirements().iterator(); reqIter.hasNext();) {
-//			final CyberRequirement jsonReq = reqIter.next();
-//			if (equals(jsonReq, req)) {
-//				reqIter.remove();
-//				return;
-//			}
-//		}
-//	}
-
-//	private boolean equals(final CyberRequirement req1, final CyberRequirement req2) {
-//		return req1.getType().equalsIgnoreCase(req2.getType()) && req1.getContext().equalsIgnoreCase(req2.getContext());
-//	}
 
 }
