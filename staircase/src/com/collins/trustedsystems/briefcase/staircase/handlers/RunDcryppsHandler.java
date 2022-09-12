@@ -41,6 +41,7 @@ import com.collins.trustedsystems.briefcase.util.Filesystem;
 import com.collins.trustedsystems.briefcase.util.ModelHashcode;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
@@ -72,6 +73,7 @@ public class RunDcryppsHandler extends AadlHandler {
 //	private final static String NO_COST_GUIDANCE = "no-cost-guidance";
 //	private final static String TARGET_CONFIDENCE = "targetConfidence";
 //	private final static double TARGET_CONFIDENCE_VAL = 0.96;
+	private final static String SUCCESS = "success";
 	private final static String PCC = "pcc";
 
 	@Override

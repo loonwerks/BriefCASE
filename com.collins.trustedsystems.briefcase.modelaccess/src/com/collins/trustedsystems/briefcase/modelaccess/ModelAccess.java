@@ -111,7 +111,7 @@ public class ModelAccess extends ResoluteExternalFunctionLibrary {
 				}
 			}
 		}
-    
+
 		throw new ResoluteFailException(
 				"[ERROR] Could not find subcomponent " + ci.getComponentClassifier().getQualifiedName() + "." + compName,
 				context.getThisInstance().getSubcomponent());
@@ -223,7 +223,7 @@ public class ModelAccess extends ResoluteExternalFunctionLibrary {
 			}
 		}
 		throw new ResoluteFailException("[ERROR] Unable to find connection " + connection.getName() + " in instance of "
-				+ instance.getComponentClassifier().getName());
+				+ instance.getComponentClassifier().getName(), context.getThisInstance().getSubcomponent());
 	}
 
 	private ComponentInstance getLeafContainer(ComponentInstance parent, String elementName) {

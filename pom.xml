@@ -19,7 +19,6 @@
 		<module>com.collins.trustedsystems.briefcase.agreelib</module>
 		<module>toolcheck</module>
 		<module>com.collins.trustedsystems.briefcase.modelaccess</module>
-		<module>com.collins.trustedsystems.briefcase.fileaccess</module>
 		<module>feature</module>
 		<module>target-platform</module>
 		<module>repository</module>
