@@ -87,7 +87,10 @@ public class JsonUtil<T> {
 
 	public void writeObject(T data, File file) throws Exception {
 		try {
-			Gson gson = new Gson();
+//			Gson gson = new Gson();
+			Gson gson = new GsonBuilder()
+					.excludeFieldsWithModifiers(Modifier.STATIC, Modifier.TRANSIENT, Modifier.VOLATILE)
+					.create();
 			JsonWriter jsonWriter = new JsonWriter(new FileWriter(file));
 			jsonWriter.setIndent("    ");
 			gson.toJson(data, this.cls, jsonWriter);

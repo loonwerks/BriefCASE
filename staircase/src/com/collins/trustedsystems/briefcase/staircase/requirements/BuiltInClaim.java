@@ -1,6 +1,5 @@
 package com.collins.trustedsystems.briefcase.staircase.requirements;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.osate.aadl2.AadlPackage;
@@ -10,109 +9,43 @@ import org.osate.aadl2.PrivatePackageSection;
 import org.osate.aadl2.PublicPackageSection;
 
 import com.collins.trustedsystems.briefcase.staircase.utils.CaseUtils;
-import com.rockwellcollins.atc.resolute.analysis.execution.ExprComparator;
-import com.rockwellcollins.atc.resolute.resolute.Arg;
-import com.rockwellcollins.atc.resolute.resolute.ArgueStatement;
 import com.rockwellcollins.atc.resolute.resolute.Definition;
 import com.rockwellcollins.atc.resolute.resolute.Expr;
 import com.rockwellcollins.atc.resolute.resolute.FnCallExpr;
 import com.rockwellcollins.atc.resolute.resolute.FunctionDefinition;
+import com.rockwellcollins.atc.resolute.resolute.ResoluteFactory;
 import com.rockwellcollins.atc.resolute.resolute.ResoluteLibrary;
 
 public abstract class BuiltInClaim {
 
-	public final String claim;
+	protected final String claim;
 
 	public BuiltInClaim(String claim) {
 		this.claim = claim;
 	}
 
-	public abstract List<Expr> getCallArgs();
-
-	public abstract List<Arg> getDefinitionParams();
+	protected abstract List<Expr> getClaimArgs();
 
 	public String getName() {
 		return this.claim;
 	}
 
-	protected FunctionDefinition buildClaimDefinition(FunctionDefinition reqClaimDef) {
-
-		final List<Arg> defParams = getDefinitionParams();
-
-		final ClaimBuilder builder = new ClaimBuilder(reqClaimDef);
-		final List<Arg> fnCallArgs = new ArrayList<>();
-
-		// If the parameter isn't already in the function definition, add it
-		for (Arg arg : defParams) {
-			boolean argFound = false;
-			for (Arg a : reqClaimDef.getArgs()) {
-				if (a.getName().equalsIgnoreCase(arg.getName())) {
-					argFound = true;
-					fnCallArgs.add(a);
-					break;
-				}
-			}
-			if (!argFound) {
-				Arg a = builder.addArg(arg);
-				fnCallArgs.add(a);
-			}
-
-		}
-
-		// Add the call to the built-in claim with arguments
-		final FnCallExpr fnCallExpr = Create.fnCallExpr(getBuiltInClaimDefinition(reqClaimDef));
-		for (Arg arg : fnCallArgs) {
-			fnCallExpr.getArgs().add(Create.id(arg));
-		}
-
-		builder.addClaimExpr(fnCallExpr);
-
-		return builder.build();
+	protected FnCallExpr getClaimCall() {
+		final FnCallExpr claimCall = ResoluteFactory.eINSTANCE.createFnCallExpr();
+		claimCall.setFn(getBuiltInClaimDefinition());
+		claimCall.getArgs().addAll(getClaimArgs());
+		return claimCall;
 	}
 
 
-	protected ArgueStatement buildClaimCall(ArgueStatement argue) {
-
-		// Get current claim call for the requirement (could be null if there isn't one)
-		FnCallExpr fnCallExpr = null;
-		if (argue != null && argue.getExpr() instanceof FnCallExpr) {
-			fnCallExpr = (FnCallExpr) argue.getExpr();
-		}
-
-		// Get the required call arguments from the built-in claim
-		final List<Expr> callArgs = getCallArgs();
-
-		final ClaimCallBuilder builder = new ClaimCallBuilder(argue);
-
-		for (Expr arg : callArgs) {
-			boolean argFound = false;
-			if (fnCallExpr != null) {
-				for (Expr e : fnCallExpr.getArgs()) {
-
-					if (ExprComparator.compare(arg, e)) {
-						argFound = true;
-						break;
-					}
-				}
-			}
-			if (!argFound) {
-				builder.addArg(arg);
-			}
-		}
-
-		return builder.build();
-	}
-
-
-	private AadlPackage importCasePackage(FunctionDefinition reqClaimDef) {
-
-		if (reqClaimDef == null || this.claim == null) {
-			return null;
-		}
-
+	/**
+	 * Imports CASE_Model_Transformations package into CASE_Requirements
+	 * @return CASE_Model_Transformations package
+	 */
+	private AadlPackage importModelTransformationsPackage() {
 		final AadlPackage contextPkg = CaseUtils.getCaseRequirementsPackage();
 		if (contextPkg == null) {
-			throw new RuntimeException("Could not find containing package for " + reqClaimDef.getName());
+			throw new RuntimeException("Could not find CASE_Requirements package");
 		}
 
 		PrivatePackageSection priv8 = contextPkg.getOwnedPrivateSection();
@@ -125,17 +58,16 @@ public abstract class BuiltInClaim {
 		}
 
 		return CaseUtils.getCaseModelTransformationsPackage();
-
 	}
 
-	protected FunctionDefinition getBuiltInClaimDefinition(FunctionDefinition reqClaimDef) {
+	protected FunctionDefinition getBuiltInClaimDefinition() {
 
-		final AadlPackage casePkg = importCasePackage(reqClaimDef);
+		final AadlPackage pkg = importModelTransformationsPackage();
 
-		if (casePkg == null || this.claim == null) {
+		if (pkg == null || this.claim == null) {
 			return null;
 		}
-		final PublicPackageSection publicSection = casePkg.getOwnedPublicSection();
+		final PublicPackageSection publicSection = pkg.getOwnedPublicSection();
 		for (AnnexLibrary annexLibrary : publicSection.getOwnedAnnexLibraries()) {
 			final DefaultAnnexLibrary defaultLib = (DefaultAnnexLibrary) annexLibrary;
 			if (defaultLib.getParsedAnnexLibrary() instanceof ResoluteLibrary) {

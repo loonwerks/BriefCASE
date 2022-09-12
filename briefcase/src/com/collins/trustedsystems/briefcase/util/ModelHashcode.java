@@ -23,6 +23,21 @@ import org.osate.aadl2.ModelUnit;
 
 public class ModelHashcode {
 
+	private String hashcode = "";
+
+	public ModelHashcode(Element root) {
+		try {
+			this.hashcode = getHashcode(root);
+		} catch (Exception e) {
+
+		}
+	}
+
+	@Override
+	public String toString() {
+		return this.hashcode;
+	}
+
 	/**
 	 * Collects files that contain the current model and its references.
 	 * @return String - A combined hash for all model files.

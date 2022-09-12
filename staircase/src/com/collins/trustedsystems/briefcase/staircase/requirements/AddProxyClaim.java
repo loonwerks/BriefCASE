@@ -3,7 +3,6 @@ package com.collins.trustedsystems.briefcase.staircase.requirements;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.rockwellcollins.atc.resolute.resolute.Arg;
 import com.rockwellcollins.atc.resolute.resolute.Expr;
 
 public class AddProxyClaim extends BuiltInClaim {
@@ -16,15 +15,9 @@ public class AddProxyClaim extends BuiltInClaim {
 	}
 
 	@Override
-	public List<Expr> getCallArgs() {
-		final List<Expr> callArgs = new ArrayList<>();
-		return callArgs;
-	}
-
-	@Override
-	public List<Arg> getDefinitionParams() {
-		final List<Arg> defParams = new ArrayList<>();
-		return defParams;
+	public List<Expr> getClaimArgs() {
+		final List<Expr> claimArgs = new ArrayList<>();
+		return claimArgs;
 	}
 
 }

@@ -2,9 +2,13 @@ package com.collins.trustedsystems.briefcase.util;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -77,6 +81,34 @@ public class Filesystem {
 		} catch (CoreException e) {
 			System.err.println("Error: trouble writing file.");
 			e.printStackTrace();
+		}
+	}
+
+	public static void copyDirectory(File sourceDirectory, File destinationDirectory) throws IOException {
+		if (!destinationDirectory.exists()) {
+			destinationDirectory.mkdir();
+		}
+		for (String f : sourceDirectory.list()) {
+			copyDirectoryCompatibityMode(new File(sourceDirectory, f), new File(destinationDirectory, f));
+		}
+	}
+
+	public static void copyDirectoryCompatibityMode(File source, File destination) throws IOException {
+		if (source.isDirectory()) {
+			copyDirectory(source, destination);
+		} else {
+			copyFile(source, destination);
+		}
+	}
+
+	public static void copyFile(File sourceFile, File destinationFile) throws IOException {
+		try (InputStream in = new FileInputStream(sourceFile);
+				OutputStream out = new FileOutputStream(destinationFile)) {
+			byte[] buf = new byte[1024];
+			int length;
+			while ((length = in.read(buf)) > 0) {
+				out.write(buf, 0, length);
+			}
 		}
 	}
 

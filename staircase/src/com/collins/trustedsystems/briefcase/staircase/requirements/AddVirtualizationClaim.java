@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.osate.aadl2.Subcomponent;
 
-import com.rockwellcollins.atc.resolute.resolute.Arg;
 import com.rockwellcollins.atc.resolute.resolute.Expr;
 
 public class AddVirtualizationClaim extends BuiltInClaim {
@@ -22,23 +21,21 @@ public class AddVirtualizationClaim extends BuiltInClaim {
 	}
 
 	@Override
-	public List<Expr> getCallArgs() {
-		final List<Expr> callArgs = new ArrayList<>();
-		final List<Expr> boundComps = new ArrayList<>();
+	public List<Expr> getClaimArgs() {
+		final List<Expr> claimArgs = new ArrayList<>();
 		final String sysQualName = virtualProcessor.getContainingClassifier().getQualifiedName() + ".";
-		boundComponents.forEach(c -> boundComps.add(Create.THIS(sysQualName + c)));
-		callArgs.add(Create.setExpr(boundComps));
+		String boundComps = "{";
+		for (int i = 0; i < boundComponents.size(); ++i) {
+			boundComps += sysQualName + boundComponents.get(i);
+			if (i < boundComponents.size() - 1) {
+				boundComps += ",";
+			}
+		}
+		boundComps += "}";
+		claimArgs.add(Create.stringExpr(boundComps));
+		claimArgs.add(Create.stringExpr(this.virtualProcessor.getName()));
 
-		callArgs.add(Create.THIS(this.virtualProcessor));
-		return callArgs;
-	}
-
-	@Override
-	public List<Arg> getDefinitionParams() {
-		final List<Arg> defParams = new ArrayList<>();
-		defParams.add(Create.arg("vm_components", Create.setType(Create.baseType("component"))));
-		defParams.add(Create.arg("virtual_machine", Create.baseType("component")));
-		return defParams;
+		return claimArgs;
 	}
 
 }

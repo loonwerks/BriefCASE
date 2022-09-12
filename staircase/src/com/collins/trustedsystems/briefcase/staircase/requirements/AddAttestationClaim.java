@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.osate.aadl2.Subcomponent;
 
-import com.rockwellcollins.atc.resolute.resolute.Arg;
 import com.rockwellcollins.atc.resolute.resolute.Expr;
 
 public class AddAttestationClaim extends BuiltInClaim {
@@ -27,23 +26,13 @@ public class AddAttestationClaim extends BuiltInClaim {
 	}
 
 	@Override
-	public List<Expr> getCallArgs() {
-		final List<Expr> callArgs = new ArrayList<>();
+	public List<Expr> getClaimArgs() {
+		final List<Expr> claimArgs = new ArrayList<>();
 		final String qualifiedName = this.reqContext.substring(0, this.reqContext.lastIndexOf("."));
-		callArgs.add(Create.THIS(qualifiedName, this.commDriver));
-		callArgs.add(Create.THIS(qualifiedName, this.attestationManager));
-		callArgs.add(Create.THIS(qualifiedName, this.attestationGate));
-		return callArgs;
-	}
-
-	@Override
-	public List<Arg> getDefinitionParams() {
-		final List<Arg> defParams = new ArrayList<>();
-//		defParams.add(Create.arg("comm_driver", Create.baseType("component")));
-		defParams.add(Create.arg("comp_context", Create.baseType("component")));
-		defParams.add(Create.arg("attestation_manager", Create.baseType("component")));
-		defParams.add(Create.arg("attestation_gate", Create.baseType("component")));
-		return defParams;
+		claimArgs.add(Create.stringExpr(qualifiedName + "." + this.commDriver.getName()));
+		claimArgs.add(Create.stringExpr(qualifiedName + "." + this.attestationManager.getName()));
+		claimArgs.add(Create.stringExpr(qualifiedName + "." + this.attestationGate.getName()));
+		return claimArgs;
 	}
 
 }

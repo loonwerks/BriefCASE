@@ -21,11 +21,7 @@ ARISING FROM, OUT OF OR IN CONNECTION WITH THE DATA OR THE USE OR OTHER DEALINGS
 package com.collins.trustedsystems.briefcase.attestation;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
@@ -58,7 +54,7 @@ public class AttestationAccess {
 		// Copy attestation implementation
 		try {
 			File sourceDirectory = new File(getSourceDirectory());
-			copyDirectory(sourceDirectory, destinationDirectory);
+			Filesystem.copyDirectory(sourceDirectory, destinationDirectory);
 			project.refreshLocal(IResource.DEPTH_INFINITE, new NullProgressMonitor());
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -82,31 +78,4 @@ public class AttestationAccess {
 		}
 	}
 
-	private static void copyDirectory(File sourceDirectory, File destinationDirectory) throws IOException {
-		if (!destinationDirectory.exists()) {
-			destinationDirectory.mkdir();
-		}
-		for (String f : sourceDirectory.list()) {
-			copyDirectoryCompatibityMode(new File(sourceDirectory, f), new File(destinationDirectory, f));
-		}
-	}
-
-	public static void copyDirectoryCompatibityMode(File source, File destination) throws IOException {
-		if (source.isDirectory()) {
-			copyDirectory(source, destination);
-		} else {
-			copyFile(source, destination);
-		}
-	}
-
-	private static void copyFile(File sourceFile, File destinationFile) throws IOException {
-		try (InputStream in = new FileInputStream(sourceFile);
-				OutputStream out = new FileOutputStream(destinationFile)) {
-			byte[] buf = new byte[1024];
-			int length;
-			while ((length = in.read(buf)) > 0) {
-				out.write(buf, 0, length);
-			}
-		}
-	}
 }

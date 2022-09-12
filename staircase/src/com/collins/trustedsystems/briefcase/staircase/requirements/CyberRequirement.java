@@ -1,56 +1,66 @@
 package com.collins.trustedsystems.briefcase.staircase.requirements;
 
-import java.text.DateFormat;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Objects;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.emf.common.command.Command;
+import org.eclipse.emf.common.util.ECollections;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.common.util.TreeIterator;
+import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.ecore.resource.ResourceSet;
+import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.eclipse.emf.ecore.util.EcoreUtil;
+import org.eclipse.emf.transaction.RecordingCommand;
+import org.eclipse.emf.transaction.TransactionalCommandStack;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
+import org.eclipse.emf.workspace.WorkspaceEditingDomainFactory;
 import org.eclipse.xtext.EcoreUtil2;
+import org.eclipse.xtext.resource.SaveOptions;
 import org.osate.aadl2.Aadl2Factory;
 import org.osate.aadl2.Aadl2Package;
 import org.osate.aadl2.AadlPackage;
 import org.osate.aadl2.AnnexLibrary;
 import org.osate.aadl2.AnnexSubclause;
+import org.osate.aadl2.BooleanLiteral;
 import org.osate.aadl2.Classifier;
 import org.osate.aadl2.ComponentImplementation;
 import org.osate.aadl2.DefaultAnnexLibrary;
 import org.osate.aadl2.DefaultAnnexSubclause;
 import org.osate.aadl2.NamedElement;
+import org.osate.aadl2.PackageSection;
 import org.osate.aadl2.PrivatePackageSection;
 import org.osate.aadl2.StringLiteral;
 import org.osate.aadl2.Subcomponent;
+import org.osate.aadl2.modelsupport.util.AadlUtil;
 import org.osate.aadl2.util.Aadl2Util;
 import org.osate.ui.dialogs.Dialog;
 
 import com.collins.trustedsystems.briefcase.staircase.utils.CaseUtils;
+import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
 import com.collins.trustedsystems.briefcase.util.Filesystem;
 import com.collins.trustedsystems.briefcase.util.TraverseProject;
 import com.rockwellcollins.atc.agree.agree.AgreeContract;
 import com.rockwellcollins.atc.agree.agree.AgreeContractSubclause;
 import com.rockwellcollins.atc.agree.agree.AgreeFactory;
+import com.rockwellcollins.atc.agree.agree.AssumeStatement;
+import com.rockwellcollins.atc.agree.agree.BoolLitExpr;
 import com.rockwellcollins.atc.agree.agree.NamedSpecStatement;
 import com.rockwellcollins.atc.agree.agree.SpecStatement;
-import com.rockwellcollins.atc.agree.parsing.AgreeAnnexParser;
 import com.rockwellcollins.atc.resolute.resolute.AnalysisStatement;
 import com.rockwellcollins.atc.resolute.resolute.ArgueStatement;
 import com.rockwellcollins.atc.resolute.resolute.BinaryExpr;
 import com.rockwellcollins.atc.resolute.resolute.ClaimBody;
 import com.rockwellcollins.atc.resolute.resolute.ClaimContext;
 import com.rockwellcollins.atc.resolute.resolute.Definition;
-import com.rockwellcollins.atc.resolute.resolute.DefinitionBody;
 import com.rockwellcollins.atc.resolute.resolute.Expr;
 import com.rockwellcollins.atc.resolute.resolute.FnCallExpr;
 import com.rockwellcollins.atc.resolute.resolute.FunctionDefinition;
@@ -58,6 +68,7 @@ import com.rockwellcollins.atc.resolute.resolute.ResoluteFactory;
 import com.rockwellcollins.atc.resolute.resolute.ResoluteLibrary;
 import com.rockwellcollins.atc.resolute.resolute.ResoluteSubclause;
 import com.rockwellcollins.atc.resolute.resolute.StringExpr;
+import com.rockwellcollins.atc.resolute.resolute.UndevelopedExpr;
 
 /**
  * @author jbabar
@@ -66,58 +77,44 @@ import com.rockwellcollins.atc.resolute.resolute.StringExpr;
 public class CyberRequirement {
 
 	// Requirement status
-	// TODO: change them to enum
-	public static final String addPlusAgree = "Formalize";
 	public static final String toDo = "ToDo";
 	public static final String add = "Import";
 	public static final String omit = "Omit";
 	public static final String unknown = "Unknown";
-	public static final String notApplicable = "N/A";
+//	public static final String notApplicable = "N/A";
+	public static final String notApplicable = "";
 	private static final boolean addQuotes = true;
+
+	private final static String FALSE = "False";
+	private final static String TRUE = "True";
+	private final static String FORMALIZED = "Formalized";
+	private final static String GENERATED_BY = "Generated_By";
+	private final static String GENERATED_ON = "Generated_On";
+	private final static String REQ_COMPONENT = "Req_Component";
 
 	private String type = ""; // this is the requirement classification type as defined by the TA1 tool
 	private String id = "";
 	private String text = "";
 	private String context = ""; // this is the qualified name of the component
+	private boolean formalize = false;
 	private String rationale = "";
-	private long date = 0L;
+	private String date = "";
 	private String tool = "";
 	private String status = toDo;
 
 	transient private String subcomponentQualifiedName = null;
 
-//	transient private FunctionDefinition savedClaimDefinition = null;
-
-	public static String False() {
-		return "False";
-	}
-
-	public static String formalized() {
-		return "Formalized";
-	}
-
-	public static String generatedBy() {
-		return "Generated_By";
-	}
-
-	public static String generatedOn() {
-		return "Generated_On";
-	}
-
-	public static String reqComponent() {
-		return "Req_Component";
-	}
-
-	public static String True() {
-		return "True";
-	}
+	private final static Comparator<Definition> alphabetical = (o1, o2) -> o1.getName().compareTo(o2.getName());
 
 	public CyberRequirement(CyberRequirement req) {
 		this(req.getDate(), req.getTool(), req.getStatus(), req.getType(), req.getId(), req.getText(), req.getContext(),
+				req.getFormalize(),
 				req.getRationale());
 	}
 
-	public CyberRequirement(long date, String tool, String status, String type, String id, String text, String context,
+	public CyberRequirement(String date, String tool, String status, String type, String id, String text,
+			String context,
+			boolean formalize,
 			String rationale) {
 		this.date = date;
 		this.tool = (tool == null ? unknown : tool);
@@ -125,17 +122,18 @@ public class CyberRequirement {
 		this.id = (id == null ? "" : id);
 		this.text = (text == null ? "" : text);
 		this.context = (context == null ? "" : context);
+		this.formalize = formalize;
 		this.rationale = (rationale == null ? notApplicable : rationale);
 		this.status = ((status == null || toDo.equals(status)) ? toDo
-				: add.equals(status) ? add : addPlusAgree.equals(status) ? addPlusAgree : omit);
+				: add.equals(status) ? add : omit);
 	}
 
 	public CyberRequirement(String type) {
-		this(0L, null, null, type, null, null, null, null);
+		this("", null, null, type, null, null, null, false, null);
 	}
 
 	protected CyberRequirement() {
-		this(0L, null, null, null, null, null, null, null);
+		this("", null, null, null, null, null, null, false, null);
 	}
 
 	public boolean completelyEqual(Object obj) {
@@ -149,7 +147,7 @@ public class CyberRequirement {
 			return false;
 		}
 		CyberRequirement other = (CyberRequirement) obj;
-		return Objects.equals(context, other.context) && date == other.date && Objects.equals(id, other.id)
+		return Objects.equals(context, other.context) && date.equals(other.date) && Objects.equals(id, other.id)
 				&& Objects.equals(rationale, other.rationale) && Objects.equals(status, other.status)
 				&& Objects.equals(text, other.text) && Objects.equals(tool, other.tool)
 				&& Objects.equals(type, other.type);
@@ -175,7 +173,7 @@ public class CyberRequirement {
 		return context;
 	}
 
-	public long getDate() {
+	public String getDate() {
 		return date;
 	}
 
@@ -183,14 +181,15 @@ public class CyberRequirement {
 		return id;
 	}
 
+	public boolean getFormalize() {
+		return formalize;
+	}
+
 	public String getRationale() {
 		return rationale;
 	}
 
-	//	public Classifier getImplementationClassifier() {
-//		return getImplementationClassifier(this.context);
-//	}
-//
+
 	public FunctionDefinition getResoluteClaim() {
 		// Get AADL Package
 		final AadlPackage aadlPkg = CaseUtils.getCaseRequirementsPackage();
@@ -240,75 +239,25 @@ public class CyberRequirement {
 		return type;
 	}
 
-	public boolean hasAgree() {
-		return status == addPlusAgree;
-	}
-
 	@Override
 	public int hashCode() {
 		return Objects.hash(context, type);
-	}
-
-//	public void insert() {
-//		final boolean formalize = hasAgree();
-//		List<BuiltInClaim> claims = new ArrayList<>();
-//		BaseClaim baseClaim = new BaseClaim(this);
-//		AgreePropCheckedClaim agreeClaim = new AgreePropCheckedClaim(getId(), getContext());
-//		claims.add(baseClaim);
-//		if (formalize) {
-//			claims.add(agreeClaim);
-//		}
-//
-//		// Insert claim definition
-//		// Get the file to insert into
-//		IFile file = CaseUtils.getCaseRequirementsFile();
-//		XtextEditor editor = RequirementsManager.getEditor(file);
-//
-//		if (editor == null) {
-//			throw new RuntimeException("Cannot open claim definition file: " + file);
-//		}
-//
-//		editor.getDocument().modify(resource -> {
-//			insertClaimDef(claims, resource);
-//			return null;
-//		});
-//
-//		// Close editor, if necessary
-//		RequirementsManager.closeEditor(editor, true);
-//
-//		// Insert claim call (prove statement)
-//		// Get the file to insert into
-//		file = getContainingFile();
-//		editor = RequirementsManager.getEditor(file);
-//
-//		if (editor == null) {
-//			return;
-//		}
-//
-//		editor.getDocument().modify(resource -> {
-//			insertClaimCall(claims, resource);
-////			insertClaimCall(agreeClaim, resource);
-//			return null;
-//		});
-//
-//		// Close editor, if necessary
-//		RequirementsManager.closeEditor(editor, true);
-//	}
-
-	public void setAgree() {
-		status = addPlusAgree;
 	}
 
 	public void setContext(String context) {
 		this.context = context;
 	}
 
-	public void setDate(long date) {
+	public void setDate(String date) {
 		this.date = date;
 	}
 
 	public void setId(String id) {
 		this.id = id;
+	}
+
+	public void setFormalize(boolean formalize) {
+		this.formalize = formalize;
 	}
 
 	public void setRationale(String rationale) {
@@ -335,6 +284,16 @@ public class CyberRequirement {
 		return getContainingFile(context);
 	}
 
+	public Resource getContainingResource() {
+		return getContainingResource(getContainingFile());
+	}
+
+	public Resource getContainingResource(IFile file) {
+		final ResourceSet resourceSet = new ResourceSetImpl();
+		final URI uri = URI.createPlatformResourceURI(file.getFullPath().toString(), true);
+		return resourceSet.getResource(uri, true);
+	}
+
 	public IFile getSubcomponentContainingFile() {
 		subcomponentQualifiedName = getSubcomponentQualifiedName(context);
 		return getContainingFile(subcomponentQualifiedName);
@@ -347,73 +306,509 @@ public class CyberRequirement {
 		return subcomponentQualifiedName;
 	}
 
-	//	public void insertClaimCall(List<BuiltInClaim> claims, Resource resource) {
-	//
-	//		if (claims == null || claims.isEmpty()) {
-	//			return;
-	//		}
-	//
-	//		Classifier modificationContext = getClaimCallModificationContext(resource);
-	//
-	//		// Build Claim Call
-	//		ProveStatement currentClaimCall = getClaimCall(modificationContext);
-	//
-	//		for (BuiltInClaim claim : claims) {
-	//			currentClaimCall = claim.buildClaimCall(currentClaimCall);
-	//		}
-	//
-	//		if (currentClaimCall == null) {
-	//			throw new RuntimeException("Unable to generate the claim call.");
-	//		}
-	//
-	//		DefaultAnnexSubclause subclause = null;
-	//		ResoluteSubclause resclause = null;
-	//		for (AnnexSubclause sc : modificationContext.getOwnedAnnexSubclauses()) {
-	//			if (sc instanceof DefaultAnnexSubclause && sc.getName().equalsIgnoreCase("resolute")) {
-	//				subclause = (DefaultAnnexSubclause) sc;
-	//				resclause = EcoreUtil.copy((ResoluteSubclause) subclause.getParsedAnnexSubclause());
-	//				break;
-	//			}
-	//		}
-	//
-	//		if (subclause == null) {
-	//			subclause = (DefaultAnnexSubclause) modificationContext
-	//					.createOwnedAnnexSubclause(Aadl2Package.eINSTANCE.getDefaultAnnexSubclause());
-	//			subclause.setName("resolute");
-	//			subclause.setSourceText("{** **}");
-	//
-	//			resclause = ResoluteFactory.eINSTANCE.createResoluteSubclause();
-	//		}
-	//
-	//		// If the prove statement already exists, remove it
-	//		for (Iterator<AnalysisStatement> i = resclause.getProves().iterator(); i.hasNext();) {
-	//			AnalysisStatement as = i.next();
-	//			if (as instanceof ProveStatement) {
-	//				Expr expr = ((ProveStatement) as).getExpr();
-	//				if (expr instanceof FnCallExpr) {
-	//					FunctionDefinition fd = ((FnCallExpr) expr).getFn();
-	//					if (fd != null && fd.getName() != null && fd.getName().equalsIgnoreCase(getId())) {
-	//						i.remove();
-	//						break;
-	//					}
-	//				}
-	//			}
-	//		}
-	//
-	//		resclause.getProves().add(currentClaimCall);
-	//		subclause.setParsedAnnexSubclause(resclause);
-	//	}
+	public void insertClaimDefinition() {
 
-	public static void sortClaimDefinitions(Resource resource) {
 		// Get modification context
-		final AadlPackage pkg = getClaimDefinitionPackage(resource);
-		if (pkg == null) {
+		final AadlPackage pkg = CaseUtils.getCaseRequirementsPackage();
+		final Resource aadlResource = pkg.eResource();
+		final TransactionalEditingDomain domain = WorkspaceEditingDomainFactory.INSTANCE
+				.createEditingDomain(aadlResource.getResourceSet());
+
+		// We execute this command on the command stack because otherwise, we will not
+		// have write permissions on the editing domain.
+		final Command cmd = new RecordingCommand(domain) {
+
+			@Override
+			protected void doExecute() {
+
+				final ClaimBuilder builder = new ClaimBuilder(getId());
+				// create the claim string
+				final String claimString = "[" + getType() + "] " + getText();
+				builder.addClaimString(claimString);
+				builder.addClaimExpr(Create.UNDEVELOPED());
+
+				final FunctionDefinition claimDefinition = builder.build();
+				final ClaimBody claimBody = (ClaimBody) claimDefinition.getBody();
+				setClaimContexts(claimBody);
+
+				PrivatePackageSection priv8 = pkg.getOwnedPrivateSection();
+				if (priv8 == null) {
+					priv8 = pkg.createOwnedPrivateSection();
+				}
+
+				DefaultAnnexLibrary defResLib = null;
+				ResoluteLibrary resLib = null;
+				for (AnnexLibrary library : priv8.getOwnedAnnexLibraries()) {
+					if (library instanceof DefaultAnnexLibrary && library.getName().equalsIgnoreCase("resolute")) {
+						defResLib = (DefaultAnnexLibrary) library;
+						resLib = EcoreUtil.copy((ResoluteLibrary) defResLib.getParsedAnnexLibrary());
+						break;
+					}
+				}
+
+				if (defResLib == null) {
+					defResLib = (DefaultAnnexLibrary) priv8
+							.createOwnedAnnexLibrary(Aadl2Package.eINSTANCE.getDefaultAnnexLibrary());
+					defResLib.setName("resolute");
+					defResLib.setSourceText("{** **}");
+					resLib = ResoluteFactory.eINSTANCE.createResoluteLibrary();
+				}
+
+				for (Iterator<Definition> i = resLib.getDefinitions().iterator(); i.hasNext();) {
+					final Definition def = i.next();
+					if (def != null && def instanceof FunctionDefinition && def.hasName()
+							&& def.getName().equalsIgnoreCase(claimDefinition.getName())) {
+						i.remove();
+						break;
+					}
+				}
+
+				resLib.getDefinitions().add(claimDefinition);
+				ECollections.sort(resLib.getDefinitions(), alphabetical);
+				defResLib.setParsedAnnexLibrary(resLib);
+			}
+		};
+
+		try {
+			((TransactionalCommandStack) domain.getCommandStack()).execute(cmd, null);
+
+			// We're done: Save the model
+			aadlResource.save(SaveOptions.newBuilder().format().getOptions().toOptionsMap());
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		domain.dispose();
+
+	}
+
+
+	public void insertClaimCall() {
+
+		// Add the top-level goal and argue statement if they don't already exist
+
+		final Classifier modificationContext = getModificationContext();
+		if (modificationContext == null) {
+			return;
+		}
+		final Resource aadlResource = modificationContext.eResource();
+
+		final TransactionalEditingDomain domain = WorkspaceEditingDomainFactory.INSTANCE
+				.createEditingDomain();
+
+		final AadlPackage reqPackage = CaseUtils.getCaseRequirementsPackage();
+
+
+		// We execute this command on the command stack because otherwise, we will not
+		// have write permissions on the editing domain.
+		final Command cmd = new RecordingCommand(domain) {
+
+			@Override
+			protected void doExecute() {
+
+				DefaultAnnexLibrary annexLib = null;
+				ResoluteLibrary resLib = null;
+				final String topLevelGoalName = modificationContext.getName().replace(".", "_") + "_cyber_resilient";
+				final PackageSection pkgSection = AadlUtil.getContainingPackageSection(modificationContext);
+				CaseUtils.importCaseRequirementsPackage(pkgSection);
+
+				for (AnnexLibrary library : pkgSection.getOwnedAnnexLibraries()) {
+					if (library instanceof DefaultAnnexLibrary && library.getName().equalsIgnoreCase("resolute")) {
+						annexLib = (DefaultAnnexLibrary) library;
+						resLib = EcoreUtil.copy((ResoluteLibrary) annexLib.getParsedAnnexLibrary());
+						break;
+					}
+				}
+
+				if (annexLib == null) {
+					annexLib = (DefaultAnnexLibrary) pkgSection
+							.createOwnedAnnexLibrary(Aadl2Package.eINSTANCE.getDefaultAnnexLibrary());
+					annexLib.setName("resolute");
+					annexLib.setSourceText("{** **}");
+					resLib = ResoluteFactory.eINSTANCE.createResoluteLibrary();
+				}
+
+				for (Iterator<Definition> i = resLib.getDefinitions().iterator(); i.hasNext();) {
+					final Definition def = i.next();
+					if (def.getName().equalsIgnoreCase(topLevelGoalName)) {
+						i.remove();
+					} else if (def.getName().equalsIgnoreCase("security_requirements_satisfied")) {
+						i.remove();
+					} else if (def.getName().equalsIgnoreCase("security_requirements_satisfied_in_model")) {
+						i.remove();
+					}
+				}
+
+				final FunctionDefinition requirementsSatisfiedInModelClaim = CaseUtils
+						.createRequirementsSatisfiedInModelGoal();
+				final FunctionDefinition requirementsSatisfiedClaim = CaseUtils
+						.createRequirementsSatisfiedGoal(modificationContext, requirementsSatisfiedInModelClaim);
+				final FunctionDefinition topLevelClaim = CaseUtils.createTopLevelGoal(modificationContext,
+						requirementsSatisfiedClaim);
+
+				Expr currentExpr = requirementsSatisfiedInModelClaim.getBody().getExpr();
+				for (AnnexLibrary reqAnnexLib : reqPackage.getOwnedPrivateSection().getOwnedAnnexLibraries()) {
+					if (reqAnnexLib.getName().equalsIgnoreCase("resolute")) {
+
+						final ResoluteLibrary resReqLib = (ResoluteLibrary) ((DefaultAnnexLibrary) reqAnnexLib)
+								.getParsedAnnexLibrary();
+						for (Definition def : resReqLib.getDefinitions()) {
+
+							if (!(def instanceof FunctionDefinition)
+									|| !(((FunctionDefinition) def).getBody() instanceof ClaimBody)) {
+								continue;
+							}
+							final ClaimBody body = (ClaimBody) ((FunctionDefinition) def).getBody();
+							for (NamedElement attribute : body.getAttributes()) {
+								if (attribute instanceof ClaimContext
+										&& attribute.getName().equalsIgnoreCase(REQ_COMPONENT)) {
+									final ClaimContext ctx = (ClaimContext) attribute;
+									final String comp = ((StringExpr) ctx.getExpr()).getVal()
+											.getValue()
+											.replace("\"", "");
+									final Classifier classifier = getImplementationClassifier(comp);
+									if (classifier != null && classifier.getQualifiedName()
+											.equalsIgnoreCase(modificationContext.getQualifiedName())) {
+										final FnCallExpr fnCallExpr = ResoluteFactory.eINSTANCE.createFnCallExpr();
+										fnCallExpr.setFn((FunctionDefinition) def);
+										if (currentExpr instanceof UndevelopedExpr) {
+											currentExpr = fnCallExpr;
+										} else {
+											final BinaryExpr bExpr = ResoluteFactory.eINSTANCE.createBinaryExpr();
+											bExpr.setOp("and");
+											bExpr.setLeft(currentExpr);
+											bExpr.setRight(fnCallExpr);
+											currentExpr = EcoreUtil.copy(bExpr);
+										}
+									}
+									break;
+								}
+							}
+						}
+						break;
+					}
+				}
+
+				requirementsSatisfiedInModelClaim.getBody().setExpr(currentExpr);
+				resLib.getDefinitions().add(topLevelClaim);
+				resLib.getDefinitions().add(requirementsSatisfiedClaim);
+				resLib.getDefinitions().add(requirementsSatisfiedInModelClaim);
+				annexLib.setParsedAnnexLibrary(resLib);
+
+				// Check to see if the 'argue' statement has been created
+				// If not, create it
+				DefaultAnnexSubclause subclause = null;
+				for (AnnexSubclause sc : modificationContext.getOwnedAnnexSubclauses()) {
+					if (sc instanceof DefaultAnnexSubclause && sc.getName().equalsIgnoreCase("resolute")) {
+						subclause = (DefaultAnnexSubclause) sc;
+						break;
+					}
+				}
+				if (subclause == null) {
+					subclause = (DefaultAnnexSubclause) modificationContext
+							.createOwnedAnnexSubclause(Aadl2Package.eINSTANCE.getDefaultAnnexSubclause());
+					subclause.setName("resolute");
+					subclause.setSourceText("{** **}");
+					subclause.setParsedAnnexSubclause(ResoluteFactory.eINSTANCE.createResoluteSubclause());
+				}
+
+				final ResoluteSubclause resclause = EcoreUtil
+						.copy((ResoluteSubclause) subclause.getParsedAnnexSubclause());
+
+				ArgueStatement argueStatement = null;
+				for (Iterator<AnalysisStatement> i = resclause.getAnalyses().iterator(); i.hasNext();) {
+					final AnalysisStatement as = i.next();
+					if (as instanceof ArgueStatement) {
+						final Expr expr = ((ArgueStatement) as).getExpr();
+						if (expr instanceof FnCallExpr) {
+							final FunctionDefinition fd = ((FnCallExpr) expr).getFn();
+							if (fd != null && fd.hasName() && fd.getName().equalsIgnoreCase(topLevelGoalName)) {
+								argueStatement = (ArgueStatement) as;
+								break;
+							}
+						}
+					}
+				}
+
+				if (argueStatement == null) {
+					argueStatement = ResoluteFactory.eINSTANCE.createArgueStatement();
+					argueStatement.setTag("argue");
+					final FnCallExpr argueExpr = ResoluteFactory.eINSTANCE.createFnCallExpr();
+					argueExpr.setFn(topLevelClaim);
+					argueExpr.getArgs().add(ResoluteFactory.eINSTANCE.createThisExpr());
+					argueStatement.setExpr(argueExpr);
+					resclause.getAnalyses().add(argueStatement);
+					subclause.setParsedAnnexSubclause(resclause);
+				}
+			}
+		};
+
+		try {
+			((TransactionalCommandStack) domain.getCommandStack()).execute(cmd, null);
+
+			// We're done: Save the model
+			aadlResource.save(SaveOptions.newBuilder().format().getOptions().toOptionsMap());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		domain.dispose();
+
+	}
+
+	public void insertAgree() {
+		insertAgreeSpec();
+		updateClaimDefinition(new AgreePropCheckedClaim(getId(), getContext()));
+		updateFormalize();
+	}
+
+	private void insertAgreeSpec() {
+
+		final Resource aadlResource = getContainingResource(getSubcomponentContainingFile());
+		final TransactionalEditingDomain domain = WorkspaceEditingDomainFactory.INSTANCE
+				.createEditingDomain();
+
+		// We execute this command on the command stack because otherwise, we will not
+		// have write permissions on the editing domain.
+		final Command cmd = new RecordingCommand(domain) {
+
+			@Override
+			protected void doExecute() {
+
+				final Classifier modificationContext = getModificationContext(aadlResource,
+						getSubcomponentQualifiedName());
+				if (modificationContext == null) {
+					throw new RuntimeException("Unable to determine requirement context.");
+				}
+
+				DefaultAnnexSubclause subclause = null;
+				AgreeContractSubclause agreeSubclause = null;
+				for (AnnexSubclause sc : modificationContext.getOwnedAnnexSubclauses()) {
+					if (sc instanceof DefaultAnnexSubclause && sc.getName().equalsIgnoreCase("agree")) {
+						subclause = (DefaultAnnexSubclause) sc;
+						agreeSubclause = EcoreUtil.copy((AgreeContractSubclause) subclause.getParsedAnnexSubclause());
+						break;
+					}
+				}
+
+				if (subclause == null) {
+					subclause = (DefaultAnnexSubclause) modificationContext
+							.createOwnedAnnexSubclause(Aadl2Package.eINSTANCE.getDefaultAnnexSubclause());
+					subclause.setName("agree");
+					subclause.setSourceText("{** **}");
+
+					agreeSubclause = AgreeFactory.eINSTANCE.createAgreeContractSubclause();
+				} else {
+					// If an agree statement with this id already exists, do nothing
+					for (SpecStatement spec : ((AgreeContract) agreeSubclause.getContract()).getSpecs()) {
+						if (spec instanceof NamedSpecStatement) {
+							if (((NamedSpecStatement) spec).getName().equalsIgnoreCase(id)) {
+								Dialog.showError("Formalize Requirement",
+										"Requirement " + id + " has already been formalized in AGREE.");
+								return;
+							}
+						}
+					}
+				}
+
+				final AssumeStatement agreeSpec = AgreeFactory.eINSTANCE.createAssumeStatement();
+				agreeSpec.setName(id);
+				agreeSpec.setStr(text);
+				final BoolLitExpr falseExpr = AgreeFactory.eINSTANCE.createBoolLitExpr();
+				final BooleanLiteral boolLit = Aadl2Factory.eINSTANCE.createBooleanLiteral();
+				boolLit.setValue(false);
+				falseExpr.setVal(boolLit);
+				agreeSpec.setExpr(falseExpr);
+
+				AgreeContract contract = (AgreeContract) agreeSubclause.getContract();
+				if (contract == null) {
+					// Add an empty contract to agreeSubclause
+					contract = AgreeFactory.eINSTANCE.createAgreeContract();
+					agreeSubclause.setContract(contract);
+				}
+
+				contract.getSpecs().add(agreeSpec);
+				subclause.setParsedAnnexSubclause(agreeSubclause);
+			}
+		};
+
+		try {
+			((TransactionalCommandStack) domain.getCommandStack()).execute(cmd, null);
+
+			// We're done: Save the model
+			aadlResource.save(SaveOptions.newBuilder().format().getOptions().toOptionsMap());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		domain.dispose();
+
+	}
+
+
+	public void updateClaimDefinition(BuiltInClaim claim) {
+		if (claim == null) {
 			return;
 		}
 
-		final PrivatePackageSection priv8 = pkg.getOwnedPrivateSection();
+		// Get modification context
+		final AadlPackage pkg = CaseUtils.getCaseRequirementsPackage();
+
+		final Resource aadlResource = pkg.eResource();
+		final TransactionalEditingDomain domain = WorkspaceEditingDomainFactory.INSTANCE.createEditingDomain();
+
+		// We execute this command on the command stack because otherwise, we will not
+		// have write permissions on the editing domain.
+		final Command cmd = new RecordingCommand(domain) {
+
+			@Override
+			protected void doExecute() {
+
+				PrivatePackageSection priv8 = pkg.getOwnedPrivateSection();
+				if (priv8 == null) {
+					priv8 = pkg.createOwnedPrivateSection();
+				}
+
+				DefaultAnnexLibrary defResLib = null;
+				ResoluteLibrary resLib = null;
+				for (AnnexLibrary library : priv8.getOwnedAnnexLibraries()) {
+					if (library instanceof DefaultAnnexLibrary && library.getName().equalsIgnoreCase("resolute")) {
+						defResLib = (DefaultAnnexLibrary) library;
+						resLib = EcoreUtil.copy((ResoluteLibrary) defResLib.getParsedAnnexLibrary());
+						break;
+					}
+				}
+				if (defResLib == null) {
+					BriefcaseNotifier.printError("Could not find requirement " + getId() + " in CASE_Requirements.");
+					return;
+				}
+				FunctionDefinition claimDefinition = null;
+				for (Iterator<Definition> i = resLib.getDefinitions().iterator(); i.hasNext();) {
+					final Definition def = i.next();
+					if (def != null && def instanceof FunctionDefinition && def.hasName()
+							&& def.getName().equalsIgnoreCase(getId())) {
+						claimDefinition = (FunctionDefinition) def;
+						i.remove();
+						break;
+					}
+				}
+				if (claimDefinition == null) {
+					BriefcaseNotifier.printError("Could not find requirement " + getId() + " in CASE_Requirements.");
+					return;
+				}
+
+				final ClaimBody body = (ClaimBody) claimDefinition.getBody();
+				if (body.getExpr() instanceof UndevelopedExpr) {
+					body.setExpr(claim.getClaimCall());
+				} else {
+					BinaryExpr bExpr = ResoluteFactory.eINSTANCE.createBinaryExpr();
+					bExpr.setOp("and");
+					bExpr.setLeft(body.getExpr());
+					bExpr.setRight(claim.getClaimCall());
+					body.setExpr(bExpr);
+				}
+
+				resLib.getDefinitions().add(claimDefinition);
+				ECollections.sort(resLib.getDefinitions(), alphabetical);
+				defResLib.setParsedAnnexLibrary(resLib);
+			}
+		};
+
+		try {
+			((TransactionalCommandStack) domain.getCommandStack()).execute(cmd, null);
+
+			// We're done: Save the model
+			aadlResource.save(SaveOptions.newBuilder().format().getOptions().toOptionsMap());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		domain.dispose();
+
+	}
+
+	private void updateFormalize() {
+
+		// Get modification context
+		final AadlPackage pkg = CaseUtils.getCaseRequirementsPackage();
+
+		final Resource aadlResource = pkg.eResource();
+		final TransactionalEditingDomain domain = WorkspaceEditingDomainFactory.INSTANCE.createEditingDomain();
+
+		// We execute this command on the command stack because otherwise, we will not
+		// have write permissions on the editing domain.
+		final Command cmd = new RecordingCommand(domain) {
+
+			@Override
+			protected void doExecute() {
+
+				PrivatePackageSection priv8 = pkg.getOwnedPrivateSection();
+				if (priv8 == null) {
+					priv8 = pkg.createOwnedPrivateSection();
+				}
+
+				DefaultAnnexLibrary defResLib = null;
+				ResoluteLibrary resLib = null;
+				for (AnnexLibrary library : priv8.getOwnedAnnexLibraries()) {
+					if (library instanceof DefaultAnnexLibrary && library.getName().equalsIgnoreCase("resolute")) {
+						defResLib = (DefaultAnnexLibrary) library;
+						resLib = EcoreUtil.copy((ResoluteLibrary) defResLib.getParsedAnnexLibrary());
+						break;
+					}
+				}
+				if (defResLib == null) {
+					if (getFormalize()) {
+						BriefcaseNotifier
+								.printError("Could not find requirement " + getId() + " in CASE_Requirements.");
+					}
+					return;
+				}
+				FunctionDefinition claimDefinition = null;
+				for (Iterator<Definition> i = resLib.getDefinitions().iterator(); i.hasNext();) {
+					final Definition def = i.next();
+					if (def != null && def instanceof FunctionDefinition && def.hasName()
+							&& def.getName().equalsIgnoreCase(getId())) {
+						claimDefinition = (FunctionDefinition) def;
+						i.remove();
+						break;
+					}
+				}
+				if (claimDefinition == null) {
+					if (getFormalize()) {
+						BriefcaseNotifier
+								.printError("Could not find requirement " + getId() + " in CASE_Requirements.");
+					}
+					return;
+				}
+
+				setClaimContexts((ClaimBody) claimDefinition.getBody());
+
+				resLib.getDefinitions().add(claimDefinition);
+				ECollections.sort(resLib.getDefinitions(), alphabetical);
+				defResLib.setParsedAnnexLibrary(resLib);
+			}
+		};
+
+		try {
+			((TransactionalCommandStack) domain.getCommandStack()).execute(cmd, null);
+
+			// We're done: Save the model
+			aadlResource.save(SaveOptions.newBuilder().format().getOptions().toOptionsMap());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		domain.dispose();
+
+	}
+
+	// Checks whether a requirement has been mitigated via model transform
+	public boolean isMitigated() {
+
+		// Get CASE_Requirements package
+		final AadlPackage pkg = CaseUtils.getCaseRequirementsPackage();
+
+		PrivatePackageSection priv8 = pkg.getOwnedPrivateSection();
 		if (priv8 == null) {
-			return;
+			return false;
 		}
 
 		DefaultAnnexLibrary defResLib = null;
@@ -421,394 +816,347 @@ public class CyberRequirement {
 		for (AnnexLibrary library : priv8.getOwnedAnnexLibraries()) {
 			if (library instanceof DefaultAnnexLibrary && library.getName().equalsIgnoreCase("resolute")) {
 				defResLib = (DefaultAnnexLibrary) library;
-				resLib = EcoreUtil.copy((ResoluteLibrary) defResLib.getParsedAnnexLibrary());
+				resLib = (ResoluteLibrary) defResLib.getParsedAnnexLibrary();
 				break;
 			}
 		}
+		if (defResLib == null) {
+			return false;
+		}
+		for (Iterator<Definition> i = resLib.getDefinitions().iterator(); i.hasNext();) {
+			final Definition def = i.next();
+			if (def != null && def instanceof FunctionDefinition && def.hasName()
+					&& def.getName().equalsIgnoreCase(getId())) {
 
-		if (defResLib == null || resLib == null) {
-			return;
+				final ClaimBody body = (ClaimBody) ((FunctionDefinition) def).getBody();
+				final Expr expr = body.getExpr();
+				if (expr instanceof UndevelopedExpr) {
+					return false;
+				} else if (expr instanceof FnCallExpr && ((FnCallExpr) expr).getFn()
+						.getName()
+						.equalsIgnoreCase(AgreePropCheckedClaim.AGREE_PROP_CHECKED)) {
+					return false;
+				} else {
+					return true;
+				}
+			}
 		}
 
-		final Comparator<Definition> cyreqComp = (o1, o2) -> o1.getName().compareTo(o2.getName());
-		final List<Definition> list = new ArrayList<Definition>();
-		list.addAll(resLib.getDefinitions());
-		list.sort(cyreqComp);
-		resLib.getDefinitions().clear();
-		for (Definition d : list) {
-			resLib.getDefinitions().add(d);
-		}
-		defResLib.setParsedAnnexLibrary(resLib);
+		return false;
 	}
 
-	public void insertClaimDef(Resource resource, BuiltInClaim claim) {
-			if (claim == null) {
-				throw new RuntimeException("NULL claim.");
-			}
 
-			// Get modification context
-			final AadlPackage pkg = getClaimDefinitionPackage(resource);
+	public void removeClaimDefinition() {
 
-			FunctionDefinition currentClaimDefinition = getClaimDefinition(pkg);
-			currentClaimDefinition = claim.buildClaimDefinition(currentClaimDefinition);
+		// Get modification context
+		final AadlPackage pkg = CaseUtils.getCaseRequirementsPackage();
 
-			if (currentClaimDefinition == null) {
-				throw new RuntimeException(
-						"Null claim definition cannnot be inserted into package (" + pkg.getQualifiedName() + ").");
-			}
+		final Resource aadlResource = pkg.eResource();
+		final TransactionalEditingDomain domain = WorkspaceEditingDomainFactory.INSTANCE.createEditingDomain();
 
-			if (claim instanceof BaseClaim || claim instanceof AgreePropCheckedClaim) {
-				final ClaimBody claimBody = (ClaimBody) currentClaimDefinition.getBody();
-				setClaimContexts(claimBody);
-			}
+		// We execute this command on the command stack because otherwise, we will not
+		// have write permissions on the editing domain.
+		final Command cmd = new RecordingCommand(domain) {
 
-			PrivatePackageSection priv8 = pkg.getOwnedPrivateSection();
-			if (priv8 == null) {
-				priv8 = pkg.createOwnedPrivateSection();
-			}
+			@Override
+			protected void doExecute() {
 
-			DefaultAnnexLibrary defResLib = null;
-			ResoluteLibrary resLib = null;
-			for (AnnexLibrary library : priv8.getOwnedAnnexLibraries()) {
-				if (library instanceof DefaultAnnexLibrary && library.getName().equalsIgnoreCase("resolute")) {
-					defResLib = (DefaultAnnexLibrary) library;
-					resLib = EcoreUtil.copy((ResoluteLibrary) defResLib.getParsedAnnexLibrary());
-					break;
+				PrivatePackageSection priv8 = pkg.getOwnedPrivateSection();
+				if (priv8 == null) {
+					priv8 = pkg.createOwnedPrivateSection();
 				}
-			}
 
-			if (defResLib == null) {
-				defResLib = (DefaultAnnexLibrary) priv8
-						.createOwnedAnnexLibrary(Aadl2Package.eINSTANCE.getDefaultAnnexLibrary());
-				defResLib.setName("resolute");
-				defResLib.setSourceText("{** **}");
-				resLib = ResoluteFactory.eINSTANCE.createResoluteLibrary();
-			}
-
-	//		// If this function definition already exists, remove it
-	//		Iterator<Definition> i = resLib.getDefinitions().iterator();
-	//		while (i.hasNext()) {
-	//			Definition def = i.next();
-	//			if (def.getName().equalsIgnoreCase(currentClaimDefinition.getName())) {
-	//				for (Iterator<EObject> iterator = def.eCrossReferences().iterator(); iterator
-	//								.hasNext();) {
-	//					EObject eObject = iterator.next();
-	//					System.out.println(eObject);
-	//				}
-	//				i.remove();
-	//				break;
-	//			}
-	//		}
-
-	//		savedClaimDefinition = null;
-	//		for (Iterator<Definition> i = resLib.getDefinitions().iterator(); i.hasNext();) {
-	//			Definition def = i.next();
-	//			if (def != null && def instanceof FunctionDefinition && def.hasName()
-	//					&& def.getName().equalsIgnoreCase(currentClaimDefinition.getName())) {
-	//				savedClaimDefinition = (FunctionDefinition) def;
-	//				break;
-	//			}
-	//		}
-	//
-	//		if (savedClaimDefinition != null) {
-	//			resLib.getDefinitions().remove(savedClaimDefinition);
-	//		}
-
-			for (Iterator<Definition> i = resLib.getDefinitions().iterator(); i.hasNext();) {
-				final Definition def = i.next();
-				if (def != null && def instanceof FunctionDefinition && def.hasName()
-						&& def.getName().equalsIgnoreCase(currentClaimDefinition.getName())) {
-					i.remove();
-					break;
-				}
-			}
-
-			resLib.getDefinitions().add(currentClaimDefinition);
-			defResLib.setParsedAnnexLibrary(resLib);
-		}
-
-	public void insertClaimCall(Resource resource, BuiltInClaim claim) {
-		if (claim == null) {
-			return;
-		}
-
-		final Classifier modificationContext = getClaimCallModificationContext(resource);
-
-		DefaultAnnexSubclause subclause = null;
-		for (AnnexSubclause sc : modificationContext.getOwnedAnnexSubclauses()) {
-			if (sc instanceof DefaultAnnexSubclause && sc.getName().equalsIgnoreCase("resolute")) {
-				subclause = (DefaultAnnexSubclause) sc;
-				break;
-			}
-		}
-
-		if (subclause == null) {
-			subclause = (DefaultAnnexSubclause) modificationContext
-					.createOwnedAnnexSubclause(Aadl2Package.eINSTANCE.getDefaultAnnexSubclause());
-			subclause.setName("resolute");
-			subclause.setSourceText("{** **}");
-			subclause.setParsedAnnexSubclause(ResoluteFactory.eINSTANCE.createResoluteSubclause());
-		}
-
-		final ResoluteSubclause resclause = EcoreUtil.copy((ResoluteSubclause) subclause.getParsedAnnexSubclause());
-
-		final boolean debug = true;
-
-		if (debug) {
-			System.out.println("Statements in resclause before changes: " + resclause);
-		}
-
-		// If the argue statement already exists, remove it
-		ArgueStatement oldClaimCall = null;
-		for (Iterator<AnalysisStatement> i = resclause.getAnalyses().iterator(); i.hasNext();) {
-			final AnalysisStatement as = i.next();
-			System.out.println(as);
-			if (as instanceof ArgueStatement) {
-				final Expr expr = ((ArgueStatement) as).getExpr();
-				if (expr instanceof FnCallExpr) {
-					final FunctionDefinition fd = ((FnCallExpr) expr).getFn();
-					if (debug) {
-						System.out.println(fd.toString());
+				DefaultAnnexLibrary defResLib = null;
+				ResoluteLibrary resLib = null;
+				for (AnnexLibrary library : priv8.getOwnedAnnexLibraries()) {
+					if (library instanceof DefaultAnnexLibrary && library.getName().equalsIgnoreCase("resolute")) {
+						defResLib = (DefaultAnnexLibrary) library;
+						resLib = (ResoluteLibrary) defResLib.getParsedAnnexLibrary();
+						break;
 					}
-//					if (fd != null && (fd == savedClaimDefinition
-//							|| (fd.hasName() && fd.getName().equalsIgnoreCase(getId())))) {
-					if (fd != null && fd.hasName() && fd.getName().equalsIgnoreCase(getId())) {
-						oldClaimCall = (ArgueStatement) as;
+				}
+				if (defResLib == null) {
+					return;
+				}
+				for (Iterator<Definition> i = resLib.getDefinitions().iterator(); i.hasNext();) {
+					final Definition def = i.next();
+					if (def != null && def instanceof FunctionDefinition && def.hasName()
+							&& def.getName().equalsIgnoreCase(getId())) {
+						i.remove();
 						break;
 					}
 				}
 			}
+
+		};
+
+		try {
+			((TransactionalCommandStack) domain.getCommandStack()).execute(cmd, null);
+
+			// We're done: Save the model
+			aadlResource.save(SaveOptions.newBuilder().format().getOptions().toOptionsMap());
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 
-		// Build Claim Call
-		final ArgueStatement newClaimCall = claim.buildClaimCall(oldClaimCall);
+		domain.dispose();
 
-		if (newClaimCall == null) {
-			throw new RuntimeException("Unable to generate the claim call.");
+	}
+
+
+	public void removeClaimCall() {
+
+		final TransactionalEditingDomain domain = WorkspaceEditingDomainFactory.INSTANCE.createEditingDomain();
+		final Classifier modificationContext = getModificationContext();
+		final Resource aadlResource = modificationContext.eResource();
+
+		// We execute this command on the command stack because otherwise, we will not
+		// have write permissions on the editing domain.
+		final Command cmd = new RecordingCommand(domain) {
+
+			@Override
+			protected void doExecute() {
+
+				final AadlPackage reqPackage = CaseUtils.getCaseRequirementsPackage();
+
+				DefaultAnnexLibrary annexLib = null;
+				ResoluteLibrary resLib = null;
+				final String topLevelGoalName = modificationContext.getName().replace(".", "_") + "_cyber_resilient";
+				final PackageSection pkgSection = AadlUtil.getContainingPackageSection(modificationContext);
+
+				for (AnnexLibrary library : pkgSection.getOwnedAnnexLibraries()) {
+					if (library instanceof DefaultAnnexLibrary && library.getName().equalsIgnoreCase("resolute")) {
+						annexLib = (DefaultAnnexLibrary) library;
+						resLib = EcoreUtil.copy((ResoluteLibrary) annexLib.getParsedAnnexLibrary());
+						break;
+					}
+				}
+				if (annexLib == null) {
+					return;
+				}
+
+				for (Iterator<Definition> i = resLib.getDefinitions().iterator(); i.hasNext();) {
+					final Definition def = i.next();
+					if (def.getName().equalsIgnoreCase(topLevelGoalName)) {
+						i.remove();
+					} else if (def.getName().equalsIgnoreCase("security_requirements_satisfied")) {
+						i.remove();
+					} else if (def.getName().equalsIgnoreCase("security_requirements_satisfied_in_model")) {
+						i.remove();
+					}
+				}
+
+				final FunctionDefinition requirementsSatisfiedInModelClaim = CaseUtils
+						.createRequirementsSatisfiedInModelGoal();
+				final FunctionDefinition requirementsSatisfiedClaim = CaseUtils
+						.createRequirementsSatisfiedGoal(modificationContext, requirementsSatisfiedInModelClaim);
+				final FunctionDefinition topLevelClaim = CaseUtils.createTopLevelGoal(modificationContext,
+						requirementsSatisfiedClaim);
+
+				Expr currentExpr = requirementsSatisfiedInModelClaim.getBody().getExpr();
+				for (AnnexLibrary reqAnnexLib : reqPackage.getOwnedPrivateSection().getOwnedAnnexLibraries()) {
+					if (reqAnnexLib.getName().equalsIgnoreCase("resolute")) {
+
+						final ResoluteLibrary resReqLib = (ResoluteLibrary) ((DefaultAnnexLibrary) reqAnnexLib)
+								.getParsedAnnexLibrary();
+						for (Definition def : resReqLib.getDefinitions()) {
+
+							if (def.getName().equalsIgnoreCase(getId())) {
+								continue;
+							} else if (!(def instanceof FunctionDefinition)
+									|| !(((FunctionDefinition) def).getBody() instanceof ClaimBody)) {
+								continue;
+							}
+
+							final ClaimBody body = (ClaimBody) ((FunctionDefinition) def).getBody();
+							for (NamedElement attribute : body.getAttributes()) {
+								if (attribute instanceof ClaimContext
+										&& attribute.getName().equalsIgnoreCase(REQ_COMPONENT)) {
+									final ClaimContext ctx = (ClaimContext) attribute;
+									final String comp = ((StringExpr) ctx.getExpr()).getVal()
+											.getValue()
+											.replace("\"", "");
+
+									final Classifier classifier = getImplementationClassifier(comp);
+									if (classifier != null && classifier.getQualifiedName()
+											.equalsIgnoreCase(modificationContext.getQualifiedName())) {
+										final FnCallExpr fnCallExpr = ResoluteFactory.eINSTANCE.createFnCallExpr();
+										fnCallExpr.setFn((FunctionDefinition) def);
+										if (currentExpr instanceof UndevelopedExpr) {
+											currentExpr = fnCallExpr;
+										} else {
+											final BinaryExpr bExpr = ResoluteFactory.eINSTANCE.createBinaryExpr();
+											bExpr.setOp("and");
+											bExpr.setLeft(currentExpr);
+											bExpr.setRight(fnCallExpr);
+											currentExpr = EcoreUtil.copy(bExpr);
+										}
+									}
+									break;
+								}
+							}
+						}
+						break;
+					}
+				}
+
+				requirementsSatisfiedInModelClaim.getBody().setExpr(currentExpr);
+				resLib.getDefinitions().add(topLevelClaim);
+				resLib.getDefinitions().add(requirementsSatisfiedClaim);
+				resLib.getDefinitions().add(requirementsSatisfiedInModelClaim);
+				annexLib.setParsedAnnexLibrary(resLib);
+
+			}
+		};
+
+		try {
+			((TransactionalCommandStack) domain.getCommandStack()).execute(cmd, null);
+
+			// We're done: Save the model
+			aadlResource.save(SaveOptions.newBuilder().format().getOptions().toOptionsMap());
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 
-		resclause.getAnalyses().add(newClaimCall);
-		if (oldClaimCall != null) {
-			resclause.getAnalyses().remove(oldClaimCall);
-		}
-		subclause.setParsedAnnexSubclause(resclause);
+		domain.dispose();
+	}
 
-		if (debug) {
-			System.out.println("Statements in resclause after changes: " + resclause);
-			for (Iterator<AnalysisStatement> i = resclause.getAnalyses().iterator(); i.hasNext();) {
-				final AnalysisStatement as = i.next();
-				System.out.println(as);
-				if (as instanceof ArgueStatement) {
-					final Expr expr = ((ArgueStatement) as).getExpr();
-					if (expr instanceof FnCallExpr) {
-						final FunctionDefinition fd = ((FnCallExpr) expr).getFn();
-						System.out.println(fd.toString());
+	public void removeAgree() {
+		removeAgreeSpec();
+		removeAgreeCheckClaim();
+		updateFormalize();
+	}
+
+	private void removeAgreeSpec() {
+
+		final Resource aadlResource = getContainingResource(getSubcomponentContainingFile());
+		final TransactionalEditingDomain domain = WorkspaceEditingDomainFactory.INSTANCE.createEditingDomain();
+
+		// We execute this command on the command stack because otherwise, we will not
+		// have write permissions on the editing domain.
+		final Command cmd = new RecordingCommand(domain) {
+
+			@Override
+			protected void doExecute() {
+
+				final Classifier modificationContext = getModificationContext(aadlResource,
+						getSubcomponentQualifiedName());
+
+				DefaultAnnexSubclause subclause = null;
+				AgreeContractSubclause agreeSubclause = null;
+				for (Iterator<AnnexSubclause> i = modificationContext.getOwnedAnnexSubclauses().iterator(); i
+						.hasNext();) {
+					AnnexSubclause sc = i.next();
+					if (sc.getName().equalsIgnoreCase("agree")) {
+						subclause = (DefaultAnnexSubclause) sc;
+						agreeSubclause = (AgreeContractSubclause) subclause.getParsedAnnexSubclause();
+
+						// If an agree statement with this id already exists, remove it
+						for (Iterator<SpecStatement> j = ((AgreeContract) agreeSubclause.getContract()).getSpecs()
+								.listIterator(); j.hasNext();) {
+							final SpecStatement spec = j.next();
+							if (spec instanceof NamedSpecStatement) {
+								if (((NamedSpecStatement) spec).getName().equalsIgnoreCase(getId())) {
+									// found; remove and return
+									j.remove();
+									if (((AgreeContract) agreeSubclause.getContract()).getSpecs().isEmpty()) {
+										i.remove();
+									}
+									return;
+								}
+							}
+						}
+
+						break;
 					}
 				}
 			}
+		};
+
+		try {
+			((TransactionalCommandStack) domain.getCommandStack()).execute(cmd, null);
+
+			// We're done: Save the model
+			aadlResource.save(SaveOptions.newBuilder().format().getOptions().toOptionsMap());
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
+
+		domain.dispose();
+
 	}
 
-	public void insertAgree(Resource resource) {
-		insertAgree(resource, getSubcomponentQualifiedName());
-	}
-
-	public void insertAgree(Resource resource, String qualifiedComponentName) {
-
-		final Classifier modificationContext = getModificationContext(resource, qualifiedComponentName);
-		if (modificationContext == null) {
-			throw new RuntimeException("Unable to determine requirement context.");
-		}
-
-		DefaultAnnexSubclause subclause = null;
-		AgreeContractSubclause agreeSubclause = null;
-		for (AnnexSubclause sc : modificationContext.getOwnedAnnexSubclauses()) {
-			if (sc instanceof DefaultAnnexSubclause && sc.getName().equalsIgnoreCase("agree")) {
-				subclause = (DefaultAnnexSubclause) sc;
-				agreeSubclause = EcoreUtil.copy((AgreeContractSubclause) subclause.getParsedAnnexSubclause());
-				break;
-			}
-		}
-
-		if (subclause == null) {
-			subclause = (DefaultAnnexSubclause) modificationContext
-					.createOwnedAnnexSubclause(Aadl2Package.eINSTANCE.getDefaultAnnexSubclause());
-			subclause.setName("agree");
-			subclause.setSourceText("{** **}");
-
-			agreeSubclause = AgreeFactory.eINSTANCE.createAgreeContractSubclause();
-		} else {
-			// If an agree statement with this id already exists, do nothing
-			for (SpecStatement spec : ((AgreeContract) agreeSubclause.getContract()).getSpecs()) {
-				if (spec instanceof NamedSpecStatement) {
-					if (((NamedSpecStatement) spec).getName().equalsIgnoreCase(id)) {
-						Dialog.showError("Formalize Requirement",
-								"Requirement " + id + " has already been formalized in AGREE.");
-						return;
-					}
-				}
-			}
-		}
-
-		String assume = "assume ";
-		if (!id.isEmpty()) {
-			assume += id + " ";
-		}
-		assume += "\"" + text + "\" : false;";
-		final AgreeAnnexParser parser = new AgreeAnnexParser();
-		final NamedSpecStatement agreeSpec = parser.parseNamedSpecStatement(assume);
-
-		AgreeContract contract = (AgreeContract) agreeSubclause.getContract();
-		if (contract == null) {
-			// Add an empty contract to agreeSubclause
-			contract = AgreeFactory.eINSTANCE.createAgreeContract();
-			agreeSubclause.setContract(contract);
-		}
-
-		contract.getSpecs().add(agreeSpec);
-		subclause.setParsedAnnexSubclause(agreeSubclause);
-	}
-
-	public FunctionDefinition removeClaimDef(Resource resource, BuiltInClaim claim) {
-		if (claim == null) {
-			throw new RuntimeException("Cannot remove claim definition for a NULL claim.");
-		}
-
-		if (resource == null) {
-			throw new RuntimeException("Cannot remove claim definition from a NULL resource.");
-		}
+	private void removeAgreeCheckClaim() {
 
 		// Get modification context
-		final AadlPackage aadlPkg = getResoluteModificationContext(resource, CaseUtils.CASE_REQUIREMENTS_NAME);
-		if (aadlPkg == null) {
-			throw new RuntimeException("Unable to determine requirement context.");
-		}
+		final AadlPackage pkg = CaseUtils.getCaseRequirementsPackage();
 
-		if (claim instanceof BaseClaim) {
-			return removeBaseClaimDefinition(aadlPkg);
-		} else if (claim instanceof AgreePropCheckedClaim) {
-			removeBuiltInClaimDefinition(aadlPkg, claim);
-			return null;
-		} else {
-			throw new RuntimeException("Can only remove BaseClaim or AgreePropCheckedClaim. Cannot remove: " + claim);
-		}
-	}
+		final Resource aadlResource = pkg.eResource();
+		final TransactionalEditingDomain domain = WorkspaceEditingDomainFactory.INSTANCE.createEditingDomain();
 
-	public boolean removeClaimCall(Resource resource) {
+		// We execute this command on the command stack because otherwise, we will not
+		// have write permissions on the editing domain.
+		final Command cmd = new RecordingCommand(domain) {
 
-			if (resource == null) {
-				throw new RuntimeException("Unable to determine requirement context.");
-			}
+			@Override
+			protected void doExecute() {
 
-			// Get modification context
-			final Classifier implementationContext = getImplementationClassifier(getContext());
-			if (implementationContext == null) {
-				throw new RuntimeException("Unable to determine requirement context.");
-			}
-			final Classifier claimCallModificationContext = getModificationContext(resource,
-					implementationContext.getQualifiedName());
-			if (claimCallModificationContext == null) {
-				throw new RuntimeException("Unable to determine requirement context.");
-			}
-
-			DefaultAnnexSubclause subclause = null;
-			ResoluteSubclause resclause = null;
-			for (AnnexSubclause sc : claimCallModificationContext.getOwnedAnnexSubclauses()) {
-				if (sc instanceof DefaultAnnexSubclause && sc.getName().equalsIgnoreCase("resolute")) {
-					subclause = (DefaultAnnexSubclause) sc;
-					resclause = EcoreUtil.copy((ResoluteSubclause) subclause.getParsedAnnexSubclause());
-					break;
+				PrivatePackageSection priv8 = pkg.getOwnedPrivateSection();
+				if (priv8 == null) {
+					priv8 = pkg.createOwnedPrivateSection();
 				}
-			}
 
-			if (subclause == null) {
-				throw new RuntimeException("Unable to determine requirement resolute annex for: " + getContext());
-			}
-
-			// If the prove statement already exists, remove it
-			boolean updated = false; // tracks if the list of prove statements has been modified
-			for (Iterator<AnalysisStatement> i = resclause.getAnalyses().iterator(); i.hasNext();) {
-				final AnalysisStatement as = i.next();
-				if (as instanceof ArgueStatement) {
-					final Expr expr = ((ArgueStatement) as).getExpr();
-					if (expr instanceof FnCallExpr) {
-						final FunctionDefinition fd = ((FnCallExpr) expr).getFn();
-						if (fd != null && fd.getName() != null && fd.getName().equalsIgnoreCase(getId())) {
-							i.remove();
-							updated = true;
-							break;
-						}
+				DefaultAnnexLibrary defResLib = null;
+				ResoluteLibrary resLib = null;
+				for (AnnexLibrary library : priv8.getOwnedAnnexLibraries()) {
+					if (library instanceof DefaultAnnexLibrary && library.getName().equalsIgnoreCase("resolute")) {
+						defResLib = (DefaultAnnexLibrary) library;
+						resLib = EcoreUtil.copy((ResoluteLibrary) defResLib.getParsedAnnexLibrary());
+						break;
 					}
 				}
-			}
-
-			if (updated) {
-				subclause.setParsedAnnexSubclause(resclause);
-			}
-			return updated;
-
-	//		// If the prove statement exists, remove it.
-	//		int oldSize = resclause.getProves().size();
-	//		resclause.getProves().removeIf(as -> {
-	//			if (as instanceof ProveStatement) {
-	//				ProveStatement prove = (ProveStatement) as;
-	//				Expr expr = prove.getExpr();
-	//				if (expr instanceof FnCallExpr) {
-	//					FnCallExpr fnCallExpr = (FnCallExpr) expr;
-	//					FunctionDefinition fd = fnCallExpr.getFn();
-	//					if (fd != null && fd.getName() != null && fd.getName().equalsIgnoreCase(getId())) {
-	//						return true;
-	//					}
-	//				}
-	//			}
-	//			return false;
-	//		});
-	//
-	//		if (resclause.getProves().size() != oldSize) {
-	//			subclause.setParsedAnnexSubclause(resclause);
-	//			return true;
-	//		}
-	//		return false;
-
-		}
-
-	public boolean removeAgree(Resource resource) {
-		return removeAgree(resource, getSubcomponentQualifiedName());
-	}
-
-	public boolean removeAgree(Resource resource, String qualifiedComponentName) {
-
-		final Classifier modificationContext = getModificationContext(resource, qualifiedComponentName);
-		if (modificationContext == null) {
-			throw new RuntimeException("Unable to determine requirement context.");
-		}
-
-		DefaultAnnexSubclause subclause = null;
-		AgreeContractSubclause agreeSubclause = null;
-		for (AnnexSubclause sc : modificationContext.getOwnedAnnexSubclauses()) {
-			if (sc instanceof DefaultAnnexSubclause && sc.getName().equalsIgnoreCase("agree")) {
-				subclause = (DefaultAnnexSubclause) sc;
-				agreeSubclause = EcoreUtil.copy((AgreeContractSubclause) subclause.getParsedAnnexSubclause());
-				break;
-			}
-		}
-
-		if (agreeSubclause != null) {
-			// If an agree statement with this id already exists, remove it
-			for (ListIterator<SpecStatement> iterator = ((AgreeContract) agreeSubclause.getContract()).getSpecs()
-					.listIterator(); iterator.hasNext();) {
-				final SpecStatement spec = iterator.next();
-				if (spec instanceof NamedSpecStatement) {
-					if (((NamedSpecStatement) spec).getName().equalsIgnoreCase(id)) {
-						// found; remove and return
-						iterator.remove();
-						subclause.setParsedAnnexSubclause(agreeSubclause);
-						return true;
+				if (defResLib == null) {
+					return;
+				}
+				FunctionDefinition claimDefinition = null;
+				for (Iterator<Definition> i = resLib.getDefinitions().iterator(); i.hasNext();) {
+					final Definition def = i.next();
+					if (def != null && def instanceof FunctionDefinition && def.hasName()
+							&& def.getName().equalsIgnoreCase(getId())) {
+						claimDefinition = (FunctionDefinition) def;
+						i.remove();
+						break;
 					}
 				}
+				if (claimDefinition == null) {
+					return;
+				}
+
+				Expr newExpr = removeClaim(claimDefinition.getBody().getExpr(),
+						AgreePropCheckedClaim.AGREE_PROP_CHECKED);
+				if (newExpr == null) {
+					newExpr = Create.UNDEVELOPED();
+				}
+				claimDefinition.getBody().setExpr(newExpr);
+
+				resLib.getDefinitions().add(claimDefinition);
+				ECollections.sort(resLib.getDefinitions(), alphabetical);
+				defResLib.setParsedAnnexLibrary(resLib);
 			}
+
+		};
+
+		try {
+			((TransactionalCommandStack) domain.getCommandStack()).execute(cmd, null);
+
+			// We're done: Save the model
+			aadlResource.save(SaveOptions.newBuilder().format().getOptions().toOptionsMap());
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-		return false;
+
+		domain.dispose();
+
 	}
 
 	private ClaimContext createResoluteContext(String contextName, String contextValue) {
@@ -822,112 +1170,6 @@ public class CyberRequirement {
 		return context;
 	}
 
-	private Classifier getClaimCallModificationContext(Resource resource) {
-		// Get modification context
-		final Classifier implementationContext = getImplementationClassifier(context);
-		if (implementationContext == null) {
-			throw new RuntimeException("Unable to determine requirement context.");
-		}
-		final Classifier claimCallModificationContext = getModificationContext(resource,
-				implementationContext.getQualifiedName());
-		if (claimCallModificationContext == null) {
-			throw new RuntimeException("Unable to determine requirement context.");
-		}
-		return claimCallModificationContext;
-	}
-
-	private FunctionDefinition getClaimDefinition(AadlPackage modificationContext) {
-		final ResoluteLibrary resLib = getResoluteLibrary(modificationContext);
-		if (resLib == null) {
-			throw new RuntimeException("Could not find resolute library for " + modificationContext);
-		}
-
-		// If this function definition already exists, remove it
-		final Iterator<Definition> i = resLib.getDefinitions().iterator();
-		while (i.hasNext()) {
-			Definition def = i.next();
-			if (def instanceof FunctionDefinition && def.getName().equalsIgnoreCase(getId())) {
-				return (FunctionDefinition) def;
-			}
-		}
-
-		return null;
-	}
-
-	private static AadlPackage getClaimDefinitionPackage(Resource resource) {
-		final AadlPackage claimsPackage = getResoluteModificationContext(resource, CaseUtils.CASE_REQUIREMENTS_NAME);
-		if (claimsPackage == null) {
-			throw new RuntimeException("Unable to determine claims definitions resolute package.");
-		}
-		return claimsPackage;
-	}
-
-	private FunctionDefinition removeBaseClaimDefinition(AadlPackage pkg) {
-		final DefaultAnnexLibrary defResLib = getResoluteDefaultAnnexLibrary(pkg);
-		if (defResLib == null) {
-			throw new RuntimeException("Could not find resolute library for " + pkg);
-		}
-
-		final ResoluteLibrary resLib = getResoluteLibrary(defResLib, true);
-		if (resLib == null) {
-			throw new RuntimeException("Could not find resolute library for " + pkg);
-		}
-
-		// If this function definition already exists, remove it
-		final Iterator<Definition> i = resLib.getDefinitions().iterator();
-		while (i.hasNext()) {
-			final Definition def = i.next();
-			if (def instanceof FunctionDefinition && def.getName().equalsIgnoreCase(getId())) {
-				i.remove();
-				defResLib.setParsedAnnexLibrary(resLib);
-				return (FunctionDefinition) def;
-			}
-		}
-		return null;
-	}
-
-	private boolean removeBuiltInClaimDefinition(AadlPackage pkg, BuiltInClaim claim) {
-		final DefaultAnnexLibrary defResLib = getResoluteDefaultAnnexLibrary(pkg);
-		if (defResLib == null) {
-			throw new RuntimeException("Could not find resolute library for " + pkg);
-		}
-
-		final ResoluteLibrary resLib = getResoluteLibrary(defResLib, true);
-		if (resLib == null) {
-			throw new RuntimeException("Could not find resolute library for " + pkg);
-		}
-
-		// If this function definition already exists, remove it
-		final Iterator<Definition> i = resLib.getDefinitions().iterator();
-		while (i.hasNext()) {
-			final Definition def = i.next();
-			if (def instanceof FunctionDefinition && def.getName().equalsIgnoreCase(getId())) {
-				final FunctionDefinition fd = (FunctionDefinition) def;
-				final DefinitionBody body = fd.getBody();
-				final Expr expr = removeClaim(body.getExpr(), claim.getName());
-				body.setExpr(expr == null ? Create.FALSE() : expr);
-				if (body instanceof ClaimBody) {
-					final ClaimBody claimBody = (ClaimBody) body;
-					for (NamedElement claimAttribute : claimBody.getAttributes()) {
-						if (claimAttribute instanceof ClaimContext) {
-							final ClaimContext claimContext = (ClaimContext) claimAttribute;
-							if (claimContext.getName().equalsIgnoreCase(formalized())) {
-								final StringLiteral stringLiteral = Aadl2Factory.eINSTANCE.createStringLiteral();
-								stringLiteral.setValue(getStringLiteral(False()));
-								final StringExpr stringExpr = ResoluteFactory.eINSTANCE.createStringExpr();
-								stringExpr.setVal(stringLiteral);
-								claimContext.setExpr(stringExpr);
-								break;
-							}
-						}
-					}
-				}
-				defResLib.setParsedAnnexLibrary(resLib);
-				return true;
-			}
-		}
-		return false;
-	}
 
 	/**
 	 * Removes expressions matching the name argument from the expr argument.
@@ -961,8 +1203,7 @@ public class CyberRequirement {
 			}
 		} else {
 			// unexpected expression
-			throw new RuntimeException(
-					"Unexpected expression encountered. Exepecting FnCallExpr or BinaryExpr but found this: " + expr);
+			return null;
 		}
 		return expr;
 	}
@@ -972,7 +1213,7 @@ public class CyberRequirement {
 		return addQuotes ? ("\"" + string + "\"") : string;
 	}
 
-	static String getContext(ClaimBody claimBody, String context) {
+	private static String getContext(ClaimBody claimBody, String context) {
 		if (claimBody != null) {
 			for (NamedElement claimAttribute : claimBody.getAttributes()) {
 				if (claimAttribute instanceof ClaimContext) {
@@ -997,16 +1238,19 @@ public class CyberRequirement {
 		// Annotate claim with requirement information
 		final EList<NamedElement> claimAttributes = claimBody.getAttributes();
 		claimAttributes.clear();
-		claimAttributes.add(createResoluteContext(generatedBy(), getTool()));
+		claimAttributes.add(createResoluteContext(GENERATED_BY, getTool()));
+		if (getDate().isBlank()) {
+			claimAttributes.add(createResoluteContext(GENERATED_ON, "Unknown"));
+		} else {
+			claimAttributes.add(createResoluteContext(GENERATED_ON, getDate()));
+		}
+		claimAttributes.add(createResoluteContext(REQ_COMPONENT, this.getContext()));
 		claimAttributes.add(
-				createResoluteContext(generatedOn(), DateFormat.getDateInstance().format(new Date(getDate() * 1000))));
-		claimAttributes.add(createResoluteContext(reqComponent(), this.getContext()));
-		claimAttributes.add(
-				createResoluteContext(formalized(), (getStatus() == CyberRequirement.addPlusAgree ? True() : False())));
+				createResoluteContext(FORMALIZED, (getFormalize() ? TRUE : FALSE)));
 
 	}
 
-	public static IFile getContainingFile(String context) {
+	private static IFile getContainingFile(String context) {
 		final Classifier classifier = getImplementationClassifier(context);
 		if (classifier == null) {
 			return null;
@@ -1014,7 +1258,7 @@ public class CyberRequirement {
 		return Filesystem.getFile(classifier.eResource().getURI());
 	}
 
-	public static String getSubcomponentQualifiedName(String qualifiedName) {
+	private static String getSubcomponentQualifiedName(String qualifiedName) {
 
 		if (!qualifiedName.contains("::")) {
 			return null;
@@ -1060,10 +1304,10 @@ public class CyberRequirement {
 		return null;
 	}
 
-	public static IFile getSubcomponentContainingFile(String qualifiedName) {
-		return getContainingFile(getSubcomponentQualifiedName(qualifiedName));
-	}
 
+	private Classifier getModificationContext() {
+		return getImplementationClassifier(context);
+	}
 	/**
 	 * Return the containing component implementation referred to in the qualified name
 	 * @param qualifiedName
@@ -1145,52 +1389,6 @@ public class CyberRequirement {
 		return modificationContext;
 	}
 
-	static DefaultAnnexLibrary getResoluteDefaultAnnexLibrary(AadlPackage pkg) {
-		if (pkg == null) {
-			throw new RuntimeException("Null AADL Package");
-		}
-		final PrivatePackageSection priv8 = pkg.getOwnedPrivateSection();
-		if (priv8 == null) {
-			throw new RuntimeException("Could not find private package section for " + pkg);
-		}
-
-		for (AnnexLibrary library : priv8.getOwnedAnnexLibraries()) {
-			if (library instanceof DefaultAnnexLibrary && library.getName().equalsIgnoreCase("resolute")) {
-				return (DefaultAnnexLibrary) library;
-			}
-		}
-		return null;
-	}
-
-	static ResoluteLibrary getResoluteLibrary(DefaultAnnexLibrary defResLib, boolean copy) {
-		return (defResLib == null || !defResLib.getName().equalsIgnoreCase("resolute")) ? null
-				: (copy ? EcoreUtil.copy((ResoluteLibrary) defResLib.getParsedAnnexLibrary())
-						: (ResoluteLibrary) defResLib.getParsedAnnexLibrary());
-	}
-
-	static ResoluteLibrary getResoluteLibrary(AadlPackage pkg) {
-		return getResoluteLibrary(getResoluteDefaultAnnexLibrary(pkg), true);
-	}
-
-	static AadlPackage getResoluteModificationContext(Resource resource, String qualifiedName) {
-		// Get modification context
-		AadlPackage modificationContext = null;
-		final TreeIterator<EObject> x = EcoreUtil.getAllContents(resource, true);
-		while (x.hasNext()) {
-			final EObject next = x.next();
-			if (next instanceof NamedElement) {
-				final NamedElement nextElement = (NamedElement) next;
-				if (nextElement.getQualifiedName() != null
-						&& nextElement.getQualifiedName().equalsIgnoreCase(qualifiedName)) {
-					if (nextElement instanceof AadlPackage) {
-						modificationContext = (AadlPackage) nextElement;
-					}
-					break;
-				}
-			}
-		}
-		return modificationContext;
-	}
 
 	/**
 	 * Claim String expected format: [type] description
@@ -1200,32 +1398,24 @@ public class CyberRequirement {
 	 * @return
 	 */
 	static CyberRequirement parseClaimString(String id, String claimString, ClaimBody claimBody) {
+
 		if (id == null || claimBody == null || claimString == null || !claimString.matches("\\[.+\\]\\s.+")) {
 			throw new RuntimeException("Invalid arguments: (id : " + id + ") (claimString : " + claimString
 					+ ") (claimBody : " + claimBody + ")");
 		}
 
-		final String dateString = getContext(claimBody, generatedOn());
-		long date;
-		try {
-			date = DateFormat.getDateInstance().parse(dateString).getTime() / 1000;
-		} catch (ParseException e) {
-			e.printStackTrace();
-			System.out.println("Error in parsing date from resolute requirement: " + dateString);
-			date = 0L;
-		}
-
-		final String tool = getContext(claimBody, generatedBy());
-		final String component = getContext(claimBody, reqComponent());
-		final String status = getContext(claimBody, formalized()).equalsIgnoreCase(True())
-				? CyberRequirement.addPlusAgree
-				: CyberRequirement.add;
+		final String date = getContext(claimBody, GENERATED_ON);
+		final String tool = getContext(claimBody, GENERATED_BY);
+		final String component = getContext(claimBody, REQ_COMPONENT);
+		final boolean formalized = getContext(claimBody, FORMALIZED).equalsIgnoreCase(TRUE);
+		final String status = CyberRequirement.add;
 
 		final int start = claimString.indexOf('[');
 		final int end = claimString.indexOf(']');
 		final String text = claimString.substring(end + 1).trim();
 		final String type = claimString.substring(start + 1, end).trim();
 
-		return new CyberRequirement(date, tool, status, type, id, text, component, CyberRequirement.notApplicable);
+		return new CyberRequirement(date, tool, status, type, id, text, component, formalized,
+				CyberRequirement.notApplicable);
 	}
 }

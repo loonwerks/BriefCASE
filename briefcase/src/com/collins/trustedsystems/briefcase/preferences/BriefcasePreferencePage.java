@@ -34,8 +34,8 @@ public class BriefcasePreferencePage extends FieldEditorPreferencePage implement
 
 		Label label = new Label(getFieldEditorParent(), SWT.NONE);
 		label.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1));
-		FontDescriptor boldDescriptor = FontDescriptor.createFrom(label.getFont()).setStyle(SWT.BOLD);
-		Font boldFont = boldDescriptor.createFont(label.getDisplay());
+		final FontDescriptor boldDescriptor = FontDescriptor.createFrom(label.getFont()).setStyle(SWT.BOLD);
+		final Font boldFont = boldDescriptor.createFont(label.getDisplay());
 		label.setFont(boldFont);
 		label.addDisposeListener(e -> boldFont.dispose());
 
@@ -59,7 +59,7 @@ public class BriefcasePreferencePage extends FieldEditorPreferencePage implement
 			@Override
 			protected String changePressed() {
 
-				FileDialog dlgSaveAs = new FileDialog(getShell(), SWT.SAVE | SWT.SHEET);
+				final FileDialog dlgSaveAs = new FileDialog(getShell(), SWT.SAVE | SWT.SHEET);
 				dlgSaveAs.setText("SPLAT log file");
 				if (!getTextControl().getText().isEmpty()) {
 					dlgSaveAs.setFileName(getTextControl().getText());
@@ -77,7 +77,7 @@ public class BriefcasePreferencePage extends FieldEditorPreferencePage implement
 
 				// Create the file if it doesn't exist
 				try {
-					File file = new File(fileName);
+					final File file = new File(fileName);
 					file.createNewFile();
 				} catch (IOException e) {
 					Dialog.showError("SPLAT log file - Error", "A problem occurred while creating the file.");

@@ -606,6 +606,10 @@
             file="resources/CASE_Model_Transformations.aadl"
             id="com.collins.trustedsystems.briefcase.staircase.aadlcontribution.casemodeltransformations">
       </aadlcontribution>
+      <aadlcontribution
+            file="resources/CASE_Assurance.aadl"
+            id="com.collins.trustedsystems.briefcase.staircase.aadlcontribution.caseassurance">
+      </aadlcontribution>
    </extension>
 
 </plugin>
