@@ -264,10 +264,10 @@ public class CaseUtils {
 		return pkg;
 	}
 
-	public static FunctionDefinition createRequirementsSatisfiedInModelGoal() {
+	public static FunctionDefinition createRequirementsSatisfiedInModelGoal(String goalPrefix) {
 		final FunctionDefinition requirementsSatisfiedInModelGoal = ResoluteFactory.eINSTANCE
 				.createFunctionDefinition();
-		requirementsSatisfiedInModelGoal.setName("security_requirements_satisfied_in_model");
+		requirementsSatisfiedInModelGoal.setName(goalPrefix + "security_requirements_satisfied_in_model");
 		requirementsSatisfiedInModelGoal.setClaimType("goal");
 		final ClaimBody claimBody = ResoluteFactory.eINSTANCE.createClaimBody();
 		final ClaimString claimStr = ResoluteFactory.eINSTANCE.createClaimString();
@@ -281,8 +281,10 @@ public class CaseUtils {
 
 	public static FunctionDefinition createRequirementsSatisfiedGoal(Classifier system,
 			FunctionDefinition requirementsSatisfiedInModelGoal) {
+
+		final String goalPrefix = system.getName().replace(".", "_") + "_";
 		final FunctionDefinition requirementsSatisfiedGoal = ResoluteFactory.eINSTANCE.createFunctionDefinition();
-		requirementsSatisfiedGoal.setName("security_requirements_satisfied");
+		requirementsSatisfiedGoal.setName(goalPrefix + "security_requirements_satisfied");
 		requirementsSatisfiedGoal.setClaimType("goal");
 		final Arg arg = ResoluteFactory.eINSTANCE.createArg();
 		final BaseType sysType = ResoluteFactory.eINSTANCE.createBaseType();
@@ -323,8 +325,9 @@ public class CaseUtils {
 	public static FunctionDefinition createTopLevelGoal(Classifier system,
 			FunctionDefinition requirementsSatisfiedGoal) {
 
+		final String goalPrefix = system.getName().replace(".", "_") + "_";
 		final FunctionDefinition topLevelGoal = ResoluteFactory.eINSTANCE.createFunctionDefinition();
-		topLevelGoal.setName(system.getName().replace(".", "_") + "_cyber_resilient");
+		topLevelGoal.setName(goalPrefix + "cyber_resilient");
 		topLevelGoal.setClaimType("goal");
 		final Arg arg = ResoluteFactory.eINSTANCE.createArg();
 		final BaseType sysType = ResoluteFactory.eINSTANCE.createBaseType();

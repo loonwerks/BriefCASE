@@ -114,6 +114,10 @@
                   id="com.collins.trustedsystems.briefcase.menus.outline.build"
                   label="System Build">
             </menu>
+            <menu
+                  id="com.collins.trustedsystems.briefcase.menus.outline.assurance"
+                  label="Cyber Assurance">
+            </menu>
          </menu>
       </menuContribution>
       <menuContribution
@@ -223,6 +227,14 @@
                      id="com.collins.trustedsystems.briefcase.menus.menubar.resiliency.synthesis"
                      label="Synthesis Tools">
                </menu>
+            </menu>
+            <menu
+                  id="com.collins.trustedsystems.briefcase.menus.menubar.build"
+                  label="System Build">
+            </menu>
+            <menu
+                  id="com.collins.trustedsystems.briefcase.menus.menubar.assurance"
+                  label="Cyber Assurance">
             </menu>
          </menu>
       </menuContribution>
@@ -358,6 +370,10 @@
                   id="com.collins.trustedsystems.briefcase.menus.editor.build"
                   label="System Build">
             </menu>
+            <menu
+                  id="com.collins.trustedsystems.briefcase.menus.editor.assurance"
+                  label="Cyber Assurance">
+            </menu>
          </menu>
       </menuContribution>
       <menuContribution
@@ -475,6 +491,10 @@
             <menu
                   id="com.collins.trustedsystems.briefcase.menus.diagram.build"
                   label="System Build">
+            </menu>
+            <menu
+                  id="com.collins.trustedsystems.briefcase.menus.diagram.assurance"
+                  label="Cyber Assurance">
             </menu>
          </menu>
       </menuContribution>

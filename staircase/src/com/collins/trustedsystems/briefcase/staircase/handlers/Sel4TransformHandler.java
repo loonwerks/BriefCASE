@@ -119,36 +119,16 @@ public class Sel4TransformHandler extends AadlHandler {
 		final Sel4TransformDialog wizard = new Sel4TransformDialog(
 				PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell());
 
-//		if (selectedSubcomponent.getComponentType().getCategory() != ComponentCategory.SYSTEM
-//				|| !isSoftwareSubcomponent(selectedSubcomponent)
-//				|| selectedSubcomponent.getComponentImplementation().getOwnedSubcomponents().size() <= 1) {
-//			sel4Subcomponent = selectedSubcomponent.getName();
-//		} else {
+		wizard.create(selectedSubcomponent);
+		if (wizard.open() == Window.OK) {
+			sel4Subcomponent = wizard.getSelectedSubcomponent();
+			sel4Requirement = wizard.getRequirement();
+		} else {
+			return;
+		}
 
-			wizard.create(selectedSubcomponent);
-			if (wizard.open() == Window.OK) {
-				sel4Subcomponent = wizard.getSelectedSubcomponent();
-				sel4Requirement = wizard.getRequirement();
-			} else {
-				return;
-			}
-//		}
-
-//		SystemInstance systemInstance = null;
-//		try {
-//			systemInstance = InstantiateModel.buildInstanceModelFile(si);
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
-//		if (systemInstance == null) {
-//			Dialog.showError("seL4 Transform", "Unable to instantiate model.");
-//			return;
-//		}
-
-//		final Subcomponent sub = getSubcomponentFromPath(si, sel4Subcomponent);
 		Subcomponent sub = null;
 		final List<Subcomponent> subs = getSubcomponentsFromPath(si, sel4Subcomponent);
-//		if (sub == null) {
 		if (subs.isEmpty()) {
 			Dialog.showError("seL4 Transform", "Selected subcomponent " + sel4Subcomponent + " cannot be found.");
 			return;
@@ -158,7 +138,6 @@ public class Sel4TransformHandler extends AadlHandler {
 
 		// Check that selected subcomponent is bound to a processor
 		// (could be specified on subcomponent or containing component impl)
-//		final ContainmentPathElement processor = getProcessor(sub);
 		ContainmentPathElement proc = null;
 		final ListIterator<Subcomponent> subIterator = subs.listIterator(subs.size());
 		while (subIterator.hasPrevious()) {
@@ -216,10 +195,9 @@ public class Sel4TransformHandler extends AadlHandler {
 
 		if (result) {
 
-			// TODO: Add sel4_transform claims to resolute prove statement, if applicable
+			// Add sel4_transform claims to resolute prove statement, if applicable
 			if (!sel4Requirement.isEmpty()) {
 				final CyberRequirement req = RequirementsManager.getInstance().getRequirement(sel4Requirement);
-//				Sel4TransformClaim claim = new Sel4TransformClaim(req.getContext(), si, sel4Subcomponent);
 				Sel4TransformClaim claim = new Sel4TransformClaim(req.getContext());
 				RequirementsManager.getInstance().modifyRequirement(sel4Requirement, claim);
 			}
@@ -229,7 +207,6 @@ public class Sel4TransformHandler extends AadlHandler {
 			// Format and save
 			format(true);
 
-//			saveChanges(false);
 		} else {
 			BriefcaseNotifier.printError("seL4 transform failed.");
 		}
@@ -336,6 +313,7 @@ public class Sel4TransformHandler extends AadlHandler {
 			// We're done: Save the model
 			aadlResource.save(SaveOptions.newBuilder().format().getOptions().toOptionsMap());
 		} catch (Exception e) {
+			e.printStackTrace();
 			return false;
 		} finally {
 			domain.dispose();

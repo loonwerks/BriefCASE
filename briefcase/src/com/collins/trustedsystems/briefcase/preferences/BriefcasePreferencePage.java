@@ -111,6 +111,46 @@ public class BriefcasePreferencePage extends FieldEditorPreferencePage implement
 		addField(new StringFieldEditor(BriefcasePreferenceConstants.KU_IMPL_FOLDER,
 				"KU Attestation implementation folder name", getFieldEditorParent()));
 
+		label = new Label(getFieldEditorParent(), SWT.NONE);
+		label.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
+		label.setFont(boldFont);
+		label.addDisposeListener(e -> boldFont.dispose());
+		label.setText("Artifact Definition");
+
+		final FileFieldEditor reqReviewFileFieldEditor = new FileFieldEditor(
+				BriefcasePreferenceConstants.ARTIFACT_DEFINITION_FILENAME, "Artifact definition filename:", true,
+				getFieldEditorParent()) {
+
+			@Override
+			protected String changePressed() {
+
+				FileDialog dlgOpen = new FileDialog(getShell(), SWT.OPEN | SWT.SHEET);
+				dlgOpen.setText("Artifact definition file");
+				if (!getTextControl().getText().isEmpty()) {
+					dlgOpen.setFileName(getTextControl().getText());
+				} else {
+					dlgOpen.setFileName("");
+				}
+				dlgOpen.setFilterExtensions(new String[] { "*.json", "*.*" });
+				String fileName = dlgOpen.open();
+				if (fileName == null) {
+					return null;
+				} else {
+					fileName = fileName.trim();
+				}
+
+				return fileName;
+			}
+
+			@Override
+			protected boolean checkState() {
+				// Don't want to enforce proper path/filenaming
+				clearErrorMessage();
+				return true;
+			}
+		};
+		addField(reqReviewFileFieldEditor);
+
 	}
 
 	private void configureEnabledFieldEditors() {
