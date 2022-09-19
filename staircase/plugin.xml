@@ -117,6 +117,29 @@
             <menu
                   id="com.collins.trustedsystems.briefcase.menus.outline.assurance"
                   label="Cyber Assurance">
+               <command
+                     commandId="com.rockwellcollins.atc.resolute.analysis.commands.resolute"
+                     label="Run Resolute"
+                     style="push">
+               </command>
+               <command
+                     commandId="com.rockwellcollins.atc.resolute.analysis.commands.resolint"
+                     label="Run Resolint"
+                     style="push">
+               </command>
+               <menu
+                     label="AGREE">
+                  <command
+                        commandId="com.rockwellcollins.atc.agree.analysis.commands.verifySingle"
+                        label="Verify Single Layer"
+                        style="push">
+                  </command>
+                  <command
+                        commandId="com.rockwellcollins.atc.agree.analysis.commands.verifyAll"
+                        label="Verify All Layers"
+                        style="push">
+                  </command>
+               </menu>
             </menu>
          </menu>
       </menuContribution>
@@ -235,6 +258,29 @@
             <menu
                   id="com.collins.trustedsystems.briefcase.menus.menubar.assurance"
                   label="Cyber Assurance">
+               <command
+                     commandId="com.rockwellcollins.atc.resolute.analysis.commands.resolute"
+                     label="Run Resolute"
+                     style="push">
+               </command>
+               <command
+                     commandId="com.rockwellcollins.atc.resolute.analysis.commands.resolint"
+                     label="Run Resolint"
+                     style="push">
+               </command>
+               <menu
+                     label="AGREE">
+                  <command
+                        commandId="com.rockwellcollins.atc.agree.analysis.commands.verifySingle"
+                        label="Verify Single Layer"
+                        style="push">
+                  </command>
+                  <command
+                        commandId="com.rockwellcollins.atc.agree.analysis.commands.verifyAll"
+                        label="Verify All Layers"
+                        style="push">
+                  </command>
+               </menu>
             </menu>
          </menu>
       </menuContribution>
@@ -373,6 +419,29 @@
             <menu
                   id="com.collins.trustedsystems.briefcase.menus.editor.assurance"
                   label="Cyber Assurance">
+               <command
+                     commandId="com.rockwellcollins.atc.resolute.analysis.commands.resolute"
+                     label="Run Resolute"
+                     style="push">
+               </command>
+               <command
+                     commandId="com.rockwellcollins.atc.resolute.analysis.commands.resolint"
+                     label="Run Resolint"
+                     style="push">
+               </command>
+               <menu
+                     label="AGREE">
+                  <command
+                        commandId="com.rockwellcollins.atc.agree.analysis.commands.verifySingle"
+                        label="Verify Single Layer"
+                        style="push">
+                  </command>
+                  <command
+                        commandId="com.rockwellcollins.atc.agree.analysis.commands.verifyAll"
+                        label="Verify All Layers"
+                        style="push">
+                  </command>
+               </menu>
             </menu>
          </menu>
       </menuContribution>
@@ -495,6 +564,29 @@
             <menu
                   id="com.collins.trustedsystems.briefcase.menus.diagram.assurance"
                   label="Cyber Assurance">
+               <command
+                     commandId="com.rockwellcollins.atc.resolute.analysis.commands.resolute"
+                     label="Run Resolute"
+                     style="push">
+               </command>
+               <command
+                     commandId="com.rockwellcollins.atc.resolute.analysis.commands.resolint"
+                     label="Run Resolint"
+                     style="push">
+               </command>
+               <menu
+                     label="AGREE">
+                  <command
+                        commandId="com.rockwellcollins.atc.agree.analysis.commands.verifySingle"
+                        label="Verify Single Layer"
+                        style="push">
+                  </command>
+                  <command
+                        commandId="com.rockwellcollins.atc.agree.analysis.commands.verifyAll"
+                        label="Verify All Layers"
+                        style="push">
+                  </command>
+               </menu>
             </menu>
          </menu>
       </menuContribution>

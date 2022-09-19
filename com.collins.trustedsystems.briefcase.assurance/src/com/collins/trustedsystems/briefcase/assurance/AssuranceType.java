@@ -12,8 +12,8 @@ public class AssuranceType extends ResoluteExternalFunctionLibraryType {
 	public final static String SECURITY_REQUIREMENTS_IMPORTED_OR_OMITTED_WITH_RATIONALE = "security_requirements_imported_or_omitted_with_rationale";
 	public final static String SECURITY_ANALYSIS_PERFORMED_ON_CURRENT_MODEL = "security_analysis_performed_on_current_model";
 	public final static String SECURITY_ANALYSIS_PRODUCES_NO_APPLICABLE_REQUIREMENTS = "security_analysis_produces_no_applicable_requirements";
-	public final static String GET_SECURITY_REQUIREMENTS_REVIEW = "get_security_requirements_review";
-	public final static String GET_AGREE_RESULTS_REVIEW = "get_agree_results_review";
+	public final static String SECURITY_REQUIREMENTS_REVIEW = "security_requirements_review";
+	public final static String AGREE_RESULTS_REVIEW = "agree_results_review";
 	public final static String REQUIREMENTS_STATED_IN_TERMS_OF_INTERFACE = "requirements_stated_in_terms_of_interface";
 	public final static String TOOL_GENERATED_APIS_CORRECTLY_DERIVED_FROM_MODEL = "tool_generated_apis_correctly_derived_from_model";
 	public final static String APPLICATION_CODE_USES_TOOL_GENERATED_APIS = "application_code_uses_tool_generated_apis";
@@ -40,6 +40,8 @@ public class AssuranceType extends ResoluteExternalFunctionLibraryType {
 		case SECURITY_REQUIREMENTS_IMPORTED_OR_OMITTED_WITH_RATIONALE:
 		case SECURITY_ANALYSIS_PERFORMED_ON_CURRENT_MODEL:
 		case SECURITY_ANALYSIS_PRODUCES_NO_APPLICABLE_REQUIREMENTS:
+		case SECURITY_REQUIREMENTS_REVIEW:
+		case AGREE_RESULTS_REVIEW:
 		case REQUIREMENTS_STATED_IN_TERMS_OF_INTERFACE:
 		case TOOL_GENERATED_APIS_CORRECTLY_DERIVED_FROM_MODEL:
 		case APPLICATION_CODE_USES_TOOL_GENERATED_APIS:
@@ -58,9 +60,6 @@ public class AssuranceType extends ResoluteExternalFunctionLibraryType {
 		case DEPLOYED_COMPONENT_SATISFIES_FUNCTIONAL_REQUIREMENTS:
 		case PLATFORM_COMPONENTS_GUARANTEE_REQUIRED_PROPERTIES:
 			return BaseType.BOOL;
-		case GET_SECURITY_REQUIREMENTS_REVIEW:
-		case GET_AGREE_RESULTS_REVIEW:
-			return BaseType.STRING;
 		default:
 			return BaseType.FAIL;
 		}
@@ -73,8 +72,8 @@ public class AssuranceType extends ResoluteExternalFunctionLibraryType {
 		case SECURITY_REQUIREMENTS_IMPORTED_OR_OMITTED_WITH_RATIONALE:
 		case SECURITY_ANALYSIS_PERFORMED_ON_CURRENT_MODEL:
 		case SECURITY_ANALYSIS_PRODUCES_NO_APPLICABLE_REQUIREMENTS:
-		case GET_SECURITY_REQUIREMENTS_REVIEW:
-		case GET_AGREE_RESULTS_REVIEW:
+		case SECURITY_REQUIREMENTS_REVIEW:
+		case AGREE_RESULTS_REVIEW:
 			break;
 		case REQUIREMENTS_STATED_IN_TERMS_OF_INTERFACE:
 		case TOOL_GENERATED_APIS_CORRECTLY_DERIVED_FROM_MODEL:

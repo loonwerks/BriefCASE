@@ -10,5 +10,4 @@ public class BriefcasePreferenceConstants {
 	public static final String SPLAT_LOG_FILENAME = "splatLogFilename";
 	public static final String COMPONENT_SOURCE_FOLDER = "componentSourceFolder";
 	public static final String KU_IMPL_FOLDER = "kuImplFolder";
-	public static final String ARTIFACT_DEFINITION_FILENAME = "artifactDefinitionFilename";
 }

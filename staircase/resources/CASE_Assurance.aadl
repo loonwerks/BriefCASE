@@ -10,11 +10,7 @@ private
 
 		goal security_requirements_reviewed() <=
 			** "Security requirements were reviewed" **
-			let document_location : string = BriefCASE.get_security_requirements_review();
-			if document_location = "" then 
-				false
-			else 
-				solution : document_location
+			BriefCASE.security_requirements_review()
 		
 		goal security_requirements_imported_or_omitted_with_rationale() <=
 			** "Security requirements were imported into model or omitted with rationale" **
@@ -41,11 +37,7 @@ private
 			
 		goal confidence_in_agree_results() <=
 			** "AGREE results were reviewed" **
-			let document_location : string = BriefCASE.get_agree_results_review();
-			if document_location = "" then 
-				false
-			else 
-				solution : document_location
+			BriefCASE.agree_results_review()
 		
 		goal security_requirements_satisfied_in_implementation(sys : system) <=
 			** "Security requirements are satisfied through the realization of the system model" **
@@ -74,7 +66,7 @@ private
 			application_code_exclusively_uses_interface_apis(comp) and 
 			application_code_runs_to_completion(comp) and 
 			component_output_satisfies_contract_on_every_dispatch(comp) and
-			component_output_satisfies_information_flow_specifications_on_every_dispatch(comp) and
+			((flow_specifications(comp) or end_to_end_flows(comp)) => component_output_satisfies_information_flow_specifications_on_every_dispatch(comp)) and
 			component_execution_time_conforms_to_specified_wcet_on_every_dispatch(comp)
 			
 		goal application_code_exclusively_uses_interface_apis(comp : component) <=
@@ -124,7 +116,7 @@ private
 			infrastructure_application_non_interference(comp) and
 			specified_information_flow_directionality_enforced_by_deployment(comp) and
 			deployed_component_satisfies_functional_requirements(comp) and
-			deployed_component_satisfies_intra_component_flows(comp)
+			((flow_specifications(comp) or end_to_end_flows(comp)) => deployed_component_satisfies_intra_component_flows(comp))
 			
 		goal identifiable_component_platform_deployment(comp : component) <=
 			** "There is an identifiable component platform deployment representing executing code such that all means of information ingress/egress to the component platform deployment are identified" **

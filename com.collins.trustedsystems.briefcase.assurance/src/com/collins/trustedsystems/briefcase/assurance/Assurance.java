@@ -16,7 +16,6 @@ import org.osate.aadl2.NamedElement;
 import org.osate.aadl2.instance.ComponentInstance;
 
 import com.collins.trustedsystems.briefcase.assurance.artifact.ArtifactDescriptionManager;
-import com.collins.trustedsystems.briefcase.assurance.preferences.AssurancePreferenceConstants;
 import com.collins.trustedsystems.briefcase.staircase.requirements.CyberRequirement;
 import com.collins.trustedsystems.briefcase.staircase.requirements.JsonRequirementsFile;
 import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsDatabaseHelper;
@@ -33,7 +32,6 @@ import com.rockwellcollins.atc.resolute.analysis.execution.ResoluteExternalFunct
 import com.rockwellcollins.atc.resolute.analysis.execution.ResoluteFailException;
 import com.rockwellcollins.atc.resolute.analysis.values.BoolValue;
 import com.rockwellcollins.atc.resolute.analysis.values.ResoluteValue;
-import com.rockwellcollins.atc.resolute.analysis.values.StringValue;
 
 public class Assurance extends ResoluteExternalFunctionLibrary {
 
@@ -51,10 +49,8 @@ public class Assurance extends ResoluteExternalFunctionLibrary {
 			return security_analysis_performed_on_current_model();
 		case AssuranceType.SECURITY_ANALYSIS_PRODUCES_NO_APPLICABLE_REQUIREMENTS:
 			return security_analysis_produces_no_applicable_requirements();
-		case AssuranceType.GET_SECURITY_REQUIREMENTS_REVIEW:
-			return get_security_requirements_review();
-		case AssuranceType.GET_AGREE_RESULTS_REVIEW:
-			return get_agree_results_review();
+		case AssuranceType.SECURITY_REQUIREMENTS_REVIEW:
+		case AssuranceType.AGREE_RESULTS_REVIEW:
 		case AssuranceType.REQUIREMENTS_STATED_IN_TERMS_OF_INTERFACE:
 		case AssuranceType.TOOL_GENERATED_APIS_CORRECTLY_DERIVED_FROM_MODEL:
 		case AssuranceType.APPLICATION_CODE_USES_TOOL_GENERATED_APIS:
@@ -371,30 +367,6 @@ public class Assurance extends ResoluteExternalFunctionLibrary {
 		}
 
 		return new BoolValue(true);
-	}
-
-	private StringValue get_security_requirements_review() {
-		final String filename = Activator.getDefault()
-				.getPreferenceStore()
-				.getString(AssurancePreferenceConstants.REQUIREMENTS_REVIEW_FILENAME);
-		final File file = new File(filename);
-		if (file.exists()) {
-			return new StringValue(filename);
-		} else {
-			return new StringValue("");
-		}
-	}
-
-	private StringValue get_agree_results_review() {
-		final String filename = Activator.getDefault()
-				.getPreferenceStore()
-				.getString(AssurancePreferenceConstants.AGREE_REVIEW_FILENAME);
-		final File file = new File(filename);
-		if (file.exists()) {
-			return new StringValue(filename);
-		} else {
-			return new StringValue("");
-		}
 	}
 
 }
