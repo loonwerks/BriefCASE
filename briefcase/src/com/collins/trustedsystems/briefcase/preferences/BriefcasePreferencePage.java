@@ -110,7 +110,6 @@ public class BriefcasePreferencePage extends FieldEditorPreferencePage implement
 
 		addField(new StringFieldEditor(BriefcasePreferenceConstants.KU_IMPL_FOLDER,
 				"KU Attestation implementation folder name", getFieldEditorParent()));
-
 	}
 
 	private void configureEnabledFieldEditors() {

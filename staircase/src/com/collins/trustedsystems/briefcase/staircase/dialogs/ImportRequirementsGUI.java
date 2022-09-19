@@ -467,7 +467,7 @@ public class ImportRequirementsGUI extends Dialog {
 			final CyberRequirement req = requirements.get(i);
 
 			// Check for invalid requirement
-			if (req.getStatus() != CyberRequirement.toDo) {
+			if (!CyberRequirement.toDo.equals(req.getStatus())) {
 
 				// Find the context (component, connection, etc) in the model
 				final Classifier contextClassifier = CyberRequirement.getImplementationClassifier(req.getContext());
@@ -532,26 +532,30 @@ public class ImportRequirementsGUI extends Dialog {
 
 		ComponentImplementation ci = compImpl;
 
-		for (int i = 2; i < parts.length; i++) {
-			boolean partFound = false;
-			for (Subcomponent subcomp : ci.getOwnedSubcomponents()) {
-				if (subcomp.getName().equalsIgnoreCase(parts[i])) {
-					ci = subcomp.getComponentImplementation();
-					partFound = true;
-					break;
-				}
-			}
-			if (!partFound) {
-				for (Connection conn : ci.getOwnedConnections()) {
-					if (conn.getName().equalsIgnoreCase(parts[i])) {
+		try {
+			for (int i = 2; i < parts.length; i++) {
+				boolean partFound = false;
+				for (Subcomponent subcomp : ci.getOwnedSubcomponents()) {
+					if (subcomp.getName().equalsIgnoreCase(parts[i])) {
+						ci = subcomp.getComponentImplementation();
 						partFound = true;
 						break;
 					}
 				}
+				if (!partFound) {
+					for (Connection conn : ci.getOwnedConnections()) {
+						if (conn.getName().equalsIgnoreCase(parts[i])) {
+							partFound = true;
+							break;
+						}
+					}
+				}
+				if (!partFound) {
+					return false;
+				}
 			}
-			if (!partFound) {
-				return false;
-			}
+		} catch (Exception e) {
+			return false;
 		}
 		return true;
 	}

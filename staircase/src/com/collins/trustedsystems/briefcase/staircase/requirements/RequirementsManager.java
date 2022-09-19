@@ -97,15 +97,23 @@ public class RequirementsManager {
 	 */
 	public boolean updateRequirements(List<CyberRequirement> updatedReqs) {
 
+		final Set<String> implementationClassifiers = new HashSet<>();
 		for (CyberRequirement r : updatedReqs) {
 			try {
+				final String[] parts = r.getContext().split("\\.");
+				// Capture just the implementation name
+				String classifierQualifiedName = parts[0];
+				if (parts.length > 1) {
+					classifierQualifiedName += "." + parts[1];
+				}
+				implementationClassifiers.add(classifierQualifiedName);
 				final CyberRequirement existing = reqDb.get(r);
 				if (existing == null) {
 					// not possible; signal error
 					throw new RuntimeException("Updated requirement not found in requirements database : " + r);
 				} else {
-					if (existing.getStatus() == CyberRequirement.toDo
-							|| existing.getStatus() == CyberRequirement.omit) {
+					if (CyberRequirement.toDo.equals(existing.getStatus())
+							|| CyberRequirement.omit.equals(existing.getStatus())) {
 						switch (r.getStatus()) {
 						case CyberRequirement.toDo:
 						case CyberRequirement.omit:
@@ -115,7 +123,6 @@ public class RequirementsManager {
 							// add to model
 							System.out.println("Requirement " + r.getId());
 							r.insertClaimDefinition();
-							r.insertClaimCall();
 							if (r.getFormalize()) {
 								r.insertAgree();
 							}
@@ -124,7 +131,7 @@ public class RequirementsManager {
 							// Unknown status; signal error
 							throw new RuntimeException("Updated requirement has invalid status : " + r);
 						}
-					} else if (existing.getStatus() == CyberRequirement.add) {
+					} else if (CyberRequirement.add.equals(existing.getStatus())) {
 						switch (r.getStatus()) {
 						case CyberRequirement.toDo:
 						case CyberRequirement.omit:
@@ -134,7 +141,6 @@ public class RequirementsManager {
 								continue;
 							}
 							// remove resolute claim definition and claim call
-							r.removeClaimCall();
 							r.removeClaimDefinition();
 							if (existing.getFormalize()) {
 								r.removeAgree();
@@ -162,11 +168,14 @@ public class RequirementsManager {
 				return false;
 			}
 		}
-
+		for (String implementationClassifier : implementationClassifiers) {
+			CyberRequirement.updateClaimCall(implementationClassifier);
+		}
 		reqDb.saveRequirementsDatabase();
 		CaseUtils.formatCaseRequirements();
 		return true;
 	}
+
 
 	public boolean readRequirementFiles(boolean importRequirements, String filename) {
 		final List<CyberRequirement> existing = findImportedRequirements(currentProject);
