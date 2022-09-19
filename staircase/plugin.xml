@@ -114,7 +114,7 @@
                   id="com.collins.trustedsystems.briefcase.menus.outline.build"
                   label="System Build">
                <command
-                     commandId="org.sireum.commands.launchhamr.generator"
+                     commandId="org.sireum.commands.launchhamr"
                      label="HAMR Code Generation"
                      style="push">
                </command>
@@ -260,7 +260,7 @@
                   id="com.collins.trustedsystems.briefcase.menus.menubar.build"
                   label="System Build">
                <command
-                     commandId="org.sireum.commands.launchhamr.generator"
+                     commandId="org.sireum.commands.launchhamr"
                      label="HAMR Code Generation"
                      style="push">
                </command>
@@ -426,7 +426,7 @@
                   id="com.collins.trustedsystems.briefcase.menus.editor.build"
                   label="System Build">
                <command
-                     commandId="org.sireum.commands.launchhamr.generator"
+                     commandId="org.sireum.commands.launchhamr"
                      label="HAMR Code Generation"
                      style="push">
                </command>
@@ -576,7 +576,7 @@
                   id="com.collins.trustedsystems.briefcase.menus.diagram.build"
                   label="System Build">
                <command
-                     commandId="org.sireum.commands.launchhamr.generator"
+                     commandId="org.sireum.commands.launchhamr"
                      label="HAMR Code Generation"
                      style="push">
                </command>
