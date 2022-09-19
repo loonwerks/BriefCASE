@@ -6,8 +6,8 @@ import java.io.FileReader;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.emf.common.util.URI;
-import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseTrackAdapter;
@@ -36,7 +36,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 
-public class ArtifactDescriptionManager extends Dialog {
+public class ArtifactDescriptionManager extends TitleAreaDialog {
 
 	public final static String ARTIFACT_DESCRIPTION_FILE = "artifactDescriptionFile";
 	public final static String ARTIFACT_FILE_LOCATION = "file_location";
@@ -85,9 +85,15 @@ public class ArtifactDescriptionManager extends Dialog {
 
 	public ArtifactDescriptionManager(Shell parentShell, IProject project) {
 		super(parentShell);
-		parentShell.setText("Assurance Artifact Description Manager");
-		this.project = project;
+		setHelpAvailable(false);
 
+		this.project = project;
+	}
+
+	@Override
+	public void create() {
+		super.create();
+		setTitle("Assurance Artifact Description Manager");
 	}
 
 	@Override
@@ -135,18 +141,9 @@ public class ArtifactDescriptionManager extends Dialog {
 
 				updateAndSave();
 
-				lstClaims.removeAll();
-				// Initialize artifact definition object
-				for (String claim : claims) {
-					lstClaims.add(claim);
-					initializeArtifactDescription(claim);
-				}
-				hashcode = artifactDescriptionFile.hashCode();
+				txtArtifactDescriptionFile.setText("");
 
-				lstClaims.setSelection(0);
-				claimIndex = 0;
-				lstClaims.notifyListeners(SWT.Selection, null);
-
+				populateClaims();
 			}
 		});
 		newButton.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
@@ -155,13 +152,16 @@ public class ArtifactDescriptionManager extends Dialog {
 		txtArtifactDescriptionFile.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
 		txtArtifactDescriptionFile.setEditable(false);
 		txtArtifactDescriptionFile
-				.setText(Activator.getDefault().getPreferenceStore().getDefaultString(ARTIFACT_DESCRIPTION_FILE));
+				.setText(Activator.getDefault().getPreferenceStore().getString(ARTIFACT_DESCRIPTION_FILE));
 
 		final Button openButton = new Button(container, SWT.PUSH);
 		openButton.setText("Open...");
 		openButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent event) {
+
+				updateAndSave();
+
 				final FileDialog fileDialog = new FileDialog(getParentShell());
 				fileDialog.setText("Select artifact description file");
 				fileDialog.setFilterExtensions(new String[] { "*.json", "*.*" });
@@ -176,44 +176,13 @@ public class ArtifactDescriptionManager extends Dialog {
 				}
 				filename = filename + fileDialog.getFileName();
 
-				// Load file
-				JsonElement jsonFile = null;
-				try {
-					final JsonReader jsonReader = new JsonReader(new FileReader(new File(filename)));
-					final JsonParser jsonParser = new JsonParser();
-					jsonFile = jsonParser.parse(jsonReader);
-					jsonReader.close();
-				} catch (Exception e) {
-					org.osate.ui.dialogs.Dialog.showError("Artifact Description Manager",
-							"Unable to read artifact definition file.");
-					return;
-				}
-
-				if (!jsonFile.isJsonObject()) {
-					org.osate.ui.dialogs.Dialog.showError("Artifact Description Manager",
-							"Malformed artifact definition file.");
-					return;
-				}
-				artifactDescriptionFile = jsonFile.getAsJsonObject();
-				hashcode = artifactDescriptionFile.hashCode();
-				lstClaims.removeAll();
-				// Make sure all the claims have entries
-				for (String claim : claims) {
-					lstClaims.add(claim);
-					if (!artifactDescriptionFile.has(claim)) {
-						initializeArtifactDescription(claim);
-					}
-				}
-
 				// Add filename to textbox
 				txtArtifactDescriptionFile.setText(filename);
 
 				// Update preference store
 				Activator.getDefault().getPreferenceStore().setValue(ARTIFACT_DESCRIPTION_FILE, filename);
 
-				lstClaims.setSelection(0);
-				claimIndex = -1;
-				lstClaims.notifyListeners(SWT.Selection, null);
+				populateClaims();
 
 			}
 		});
@@ -239,12 +208,16 @@ public class ArtifactDescriptionManager extends Dialog {
 						.getAsJsonObject()
 						.get(ARTIFACT_FILE_LOCATION)
 						.getAsString());
-				cboEvaluation.setText(artifactDescriptionFile.get(lstClaims.getItem(claimIndex))
+				String type = artifactDescriptionFile.get(lstClaims.getItem(claimIndex))
 						.getAsJsonObject()
 						.get(EVALUATION)
 						.getAsJsonObject()
 						.get(TYPE)
-						.getAsString());
+						.getAsString();
+				if (type.isBlank()) {
+					type = SELECT_EVALUATION;
+				}
+				cboEvaluation.setText(type);
 				cboEvaluation.notifyListeners(SWT.Selection, null);
 			}
 		});
@@ -296,16 +269,15 @@ public class ArtifactDescriptionManager extends Dialog {
 
 		cboEvaluation = new Combo(container, SWT.BORDER);
 		cboEvaluation.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false, 3, 1));
-		cboEvaluation.add("<Select Evaluation>");
+		cboEvaluation.add(SELECT_EVALUATION);
 		cboEvaluation.add(REGEX);
 		cboEvaluation.add(EXISTS);
 
 		cboEvaluation.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent event) {
-				if (SELECT_EVALUATION.equals(cboEvaluation.getText())) {
-					return;
-				} else if (REGEX.equals(cboEvaluation.getText())) {
+
+				if (REGEX.equals(cboEvaluation.getText())) {
 					lblRegex.setVisible(true);
 					txtRegex.setVisible(true);
 					String regex = "";
@@ -353,8 +325,7 @@ public class ArtifactDescriptionManager extends Dialog {
 			}
 		});
 
-		cboEvaluation.select(0);
-		cboEvaluation.notifyListeners(SWT.Selection, null);
+		cboEvaluation.setText(SELECT_EVALUATION);
 
 	}
 
@@ -402,7 +373,8 @@ public class ArtifactDescriptionManager extends Dialog {
 		final JsonObject claim = new JsonObject();
 		claim.addProperty(ARTIFACT_FILE_LOCATION, txtArtifactLocation.getText());
 		final JsonObject evaluation = new JsonObject();
-		evaluation.addProperty(TYPE, cboEvaluation.getText());
+		final String type = SELECT_EVALUATION.equals(cboEvaluation.getText()) ? "" : cboEvaluation.getText();
+		evaluation.addProperty(TYPE, type);
 		switch (cboEvaluation.getText()) {
 		case REGEX:
 			evaluation.addProperty(REGEX, txtRegex.getText());
@@ -445,9 +417,9 @@ public class ArtifactDescriptionManager extends Dialog {
 					}
 					String filename = fileDialog.getFilterPath();
 					if (!filename.isEmpty()) {
-						filename = filename.concat(File.separator);
+						filename += File.separator;
 					}
-					filename = filename + fileDialog.getFileName();
+					filename += fileDialog.getFileName();
 
 					// Add filename to textbox
 					txtArtifactDescriptionFile.setText(filename);
@@ -466,12 +438,46 @@ public class ArtifactDescriptionManager extends Dialog {
 	}
 
 	private void populateClaims() {
+
+		// Load file, if specified
+		final String artifactDescriptionFilename = txtArtifactDescriptionFile.getText();
+		if (artifactDescriptionFilename.isBlank()) {
+			artifactDescriptionFile = new JsonObject();
+		} else {
+			JsonElement jsonFile = null;
+			try {
+				final JsonReader jsonReader = new JsonReader(new FileReader(new File(artifactDescriptionFilename)));
+				final JsonParser jsonParser = new JsonParser();
+				jsonFile = jsonParser.parse(jsonReader);
+				jsonReader.close();
+			} catch (Exception e) {
+				org.osate.ui.dialogs.Dialog.showError("Artifact Description Manager",
+						"Unable to read artifact definition file.");
+				return;
+			}
+
+			if (!jsonFile.isJsonObject()) {
+				org.osate.ui.dialogs.Dialog.showError("Artifact Description Manager",
+						"Malformed artifact definition file.");
+				return;
+			}
+			artifactDescriptionFile = jsonFile.getAsJsonObject();
+		}
+
+		lstClaims.removeAll();
+		// Make sure all the claims have entries
 		for (String claim : claims) {
 			lstClaims.add(claim);
-			initializeArtifactDescription(claim);
+			if (!artifactDescriptionFile.has(claim)) {
+				initializeArtifactDescription(claim);
+			}
 		}
+
+		hashcode = artifactDescriptionFile.hashCode();
+
 		lstClaims.setSelection(0);
-		claimIndex = 0;
+		claimIndex = -1;
+		lstClaims.notifyListeners(SWT.Selection, null);
 	}
 
 }

@@ -16,7 +16,7 @@
             locationURI="popup:com.collins.trustedsystems.briefcase.menus.outline.assurance?after=additions">
          <command
                commandId="com.collins.trustedsystems.briefcase.assurance.ArtifactDescriptionManager"
-               label="Artifact Description Manager"
+               label="Open Artifact Description Manager..."
                style="push">
          </command>
       </menuContribution>
@@ -25,7 +25,7 @@
             locationURI="popup:com.collins.trustedsystems.briefcase.menus.editor.assurance">
          <command
                commandId="com.collins.trustedsystems.briefcase.assurance.ArtifactDescriptionManager"
-               label="Artifact Description Manager"
+               label="Open Artifact Description Manager..."
                style="push">
          </command>
       </menuContribution>
@@ -34,7 +34,7 @@
             locationURI="menu:com.collins.trustedsystems.briefcase.menus.menubar.assurance">
          <command
                commandId="com.collins.trustedsystems.briefcase.assurance.ArtifactDescriptionManager"
-               label="Artifact Description Manager"
+               label="Open Artifact Description Manager..."
                style="push">
          </command>
       </menuContribution>
@@ -43,7 +43,7 @@
             locationURI="popup:com.collins.trustedsystems.briefcase.menus.diagram.assurance">
          <command
                commandId="com.collins.trustedsystems.briefcase.assurance.ArtifactDescriptionManager"
-               label="Artifact Description Manager"
+               label="Open Artifact Description Manager..."
                style="push">
          </command>
       </menuContribution>
@@ -52,7 +52,7 @@
          point="org.eclipse.ui.commands">
       <command
             id="com.collins.trustedsystems.briefcase.assurance.ArtifactDescriptionManager"
-            name="Artifact Description Manager">
+            name="Open Artifact Description Manager...">
       </command>
    </extension>
    <extension
