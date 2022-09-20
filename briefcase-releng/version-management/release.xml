@@ -3,6 +3,7 @@
 	<feature name="com.collins.trustedsystems.briefcase.feature" version="0.7.1">
 		<plugin name="com.collins.trustedsystems.briefcase" version="0.7.1"/>
 		<plugin name="com.collins.trustedsystems.briefcase.attestation" version="0.7.1"/>
+		<plugin name="com.collins.trustedsystems.briefcase.assurance" version="0.7.1"/>
 		<plugin name="com.collins.trustedsystems.briefcase.splat" version="0.7.1"/>
 		<plugin name="com.collins.trustedsystems.briefcase.staircase" version="0.7.1"/>
 		<plugin name="com.collins.trustedsystems.briefcase.toolcheck" version="0.7.1"/>
@@ -17,6 +18,7 @@
 	<plugin name="com.collins.trustedsystems.briefcase.agreecheck" version="0.7.1"/>
 	<plugin name="com.collins.trustedsystems.briefcase.agreelib" version="0.7.1"/>
 	<plugin name="com.collins.trustedsystems.briefcase.attestation" version="0.7.1"/>
+	<plugin name="com.collins.trustedsystems.briefcase.assurance" version="0.7.1"/>
 	<plugin name="com.collins.trustedsystems.briefcase.json" version="0.7.1"/>
 	<plugin name="com.collins.trustedsystems.briefcase.json.export" version="0.7.1"/>
 	<plugin name="com.collins.trustedsystems.briefcase.json.ui" version="0.7.1"/>
