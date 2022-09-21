@@ -51,6 +51,7 @@ import org.osate.aadl2.PortCategory;
 import org.osate.aadl2.PortConnection;
 import org.osate.aadl2.ProcessImplementation;
 import org.osate.aadl2.Property;
+import org.osate.aadl2.RangeValue;
 import org.osate.aadl2.Realization;
 import org.osate.aadl2.StringLiteral;
 import org.osate.aadl2.Subcomponent;
@@ -108,9 +109,13 @@ public class AttestationTransformHandler extends AadlHandler {
 	private String attestationGateSubcomponentName;
 	private String attestationManagerDispatchProtocol;
 	private String attestationManagerPeriod;
+	private String attestationManagerExecutionTime;
+	private Integer attestationManagerDomain;
 	private String attestationManagerStackSize;
 	private String attestationGateDispatchProtocol;
 	private String attestationGatePeriod;
+	private String attestationGateExecutionTime;
+	private Integer attestationGateDomain;
 	private String attestationGateStackSize;
 	private String requestMessageDataType;
 	private String responseMessageDataType;
@@ -208,8 +213,12 @@ public class AttestationTransformHandler extends AadlHandler {
 			}
 			attestationManagerDispatchProtocol = wizard.getMgrDispatchProtocol();
 			attestationManagerPeriod = wizard.getMgrPeriod();
+			attestationManagerExecutionTime = wizard.getMgrExecutionTime();
+			attestationManagerDomain = wizard.getMgrDomain();
 			attestationGateDispatchProtocol = wizard.getGateDispatchProtocol();
 			attestationGatePeriod = wizard.getGatePeriod();
+			attestationGateExecutionTime = wizard.getGateExecutionTime();
+			attestationGateDomain = wizard.getGateDomain();
 			attestationManagerStackSize = wizard.getMgrStackSize();
 			attestationGateStackSize = wizard.getGateStackSize();
 			requestMessageDataType = wizard.getRequestMessageDataType();
@@ -444,7 +453,7 @@ public class AttestationTransformHandler extends AadlHandler {
 					((ProcessImplementation) commDriverImpl).getOwnedPortConnections().clear();
 
 					ThreadSubcomponent threadSub = Sel4TransformHandler
-							.insertThreadInSel4Process((ProcessImplementation) commDriverImpl, null, null, null);
+							.insertThreadInSel4Process((ProcessImplementation) commDriverImpl, null, null, null, null);
 
 					threadSub.setName(subName);
 
@@ -596,6 +605,41 @@ public class AttestationTransformHandler extends AadlHandler {
 					periodLit.setValue(Long.parseLong(attestationManagerPeriod.replaceAll("[\\D]", "").trim()));
 					periodLit.setUnit(unit);
 					attestationManagerImpl.setPropertyValue(periodProp, periodLit);
+				}
+
+				// Execution Time
+				if (compCategory == ComponentCategory.THREAD && !attestationManagerExecutionTime.isEmpty()) {
+					final Property executionTimeProp = GetProperties.lookupPropertyDefinition(attestationManagerImpl,
+							TimingProperties._NAME, TimingProperties.COMPUTE_EXECUTION_TIME);
+					String[] parts = attestationManagerExecutionTime.split("\\.\\.");
+					final UnitLiteral unitMin = Aadl2Factory.eINSTANCE.createUnitLiteral();
+					unitMin.setName(parts[0].replaceAll("[\\d]", "").trim());
+					final IntegerLiteral executionTimeMin = Aadl2Factory.eINSTANCE.createIntegerLiteral();
+					executionTimeMin.setBase(0);
+					executionTimeMin.setValue(Long.parseLong(parts[0].replaceAll("[\\D]", "").trim()));
+					executionTimeMin.setUnit(unitMin);
+					final UnitLiteral unitMax = Aadl2Factory.eINSTANCE.createUnitLiteral();
+					unitMax.setName(parts[1].replaceAll("[\\d]", "").trim());
+					final IntegerLiteral executionTimeMax = Aadl2Factory.eINSTANCE.createIntegerLiteral();
+					executionTimeMax.setBase(0);
+					executionTimeMax.setValue(Long.parseLong(parts[1].replaceAll("[\\D]", "").trim()));
+					executionTimeMax.setUnit(unitMax);
+					final RangeValue executionTimeRange = Aadl2Factory.eINSTANCE.createRangeValue();
+					executionTimeRange.setMinimum(executionTimeMin);
+					executionTimeRange.setMaximum(executionTimeMax);
+					attestationManagerImpl.setPropertyValue(executionTimeProp, executionTimeRange);
+				}
+
+				// Domain
+				if (compCategory == ComponentCategory.PROCESS && attestationManagerDomain != null) {
+					if (CaseUtils.importCaseSchedulingPackage(pkgSection)) {
+						final Property domainProp = GetProperties.lookupPropertyDefinition(attestationManagerImpl,
+								CaseUtils.CASE_SCHEDULING_NAME, "Domain");
+						final IntegerLiteral domainLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
+						domainLit.setBase(0);
+						domainLit.setValue(attestationManagerDomain);
+						attestationManagerImpl.setPropertyValue(domainProp, domainLit);
+					}
 				}
 
 				// Stack Size
@@ -856,6 +900,39 @@ public class AttestationTransformHandler extends AadlHandler {
 					attestationGateImpl.setPropertyValue(periodProp, periodLit);
 				}
 
+				// Execution Time
+				if (compCategory == ComponentCategory.THREAD && !attestationGateExecutionTime.isEmpty()) {
+					final Property executionTimeProp = GetProperties.lookupPropertyDefinition(attestationGateImpl,
+							TimingProperties._NAME, TimingProperties.COMPUTE_EXECUTION_TIME);
+					String[] parts = attestationGateExecutionTime.split("\\.\\.");
+					final UnitLiteral unit = Aadl2Factory.eINSTANCE.createUnitLiteral();
+					unit.setName(attestationGateExecutionTime.replaceAll("[\\d]", "").trim());
+					final IntegerLiteral executionTimeMin = Aadl2Factory.eINSTANCE.createIntegerLiteral();
+					executionTimeMin.setBase(0);
+					executionTimeMin.setValue(Long.parseLong(parts[0].replaceAll("[\\D]", "").trim()));
+					executionTimeMin.setUnit(unit);
+					final IntegerLiteral executionTimeMax = Aadl2Factory.eINSTANCE.createIntegerLiteral();
+					executionTimeMin.setBase(0);
+					executionTimeMin.setValue(Long.parseLong(parts[1].replaceAll("[\\D]", "").trim()));
+					executionTimeMin.setUnit(unit);
+					final RangeValue executionTimeRange = Aadl2Factory.eINSTANCE.createRangeValue();
+					executionTimeRange.setMinimum(executionTimeMin);
+					executionTimeRange.setMaximum(executionTimeMax);
+					attestationGateImpl.setPropertyValue(executionTimeProp, executionTimeRange);
+				}
+
+				// Domain
+				if (compCategory == ComponentCategory.PROCESS && attestationGateDomain != null) {
+					if (CaseUtils.importCaseSchedulingPackage(pkgSection)) {
+						final Property domainProp = GetProperties.lookupPropertyDefinition(attestationGateImpl,
+								CaseUtils.CASE_SCHEDULING_NAME, "Domain");
+						final IntegerLiteral domainLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
+						domainLit.setBase(0);
+						domainLit.setValue(attestationGateDomain);
+						attestationGateImpl.setPropertyValue(domainProp, domainLit);
+					}
+				}
+
 				// Stack size
 				if (compCategory == ComponentCategory.THREAD && !attestationGateStackSize.isEmpty()) {
 					final Property stackSizeProp = GetProperties.lookupPropertyDefinition(attestationGateImpl,
@@ -1026,7 +1103,8 @@ public class AttestationTransformHandler extends AadlHandler {
 				if (isSel4Process) {
 
 					Sel4TransformHandler.insertThreadInSel4Process((ProcessImplementation) attestationManagerImpl,
-							attestationManagerDispatchProtocol, attestationManagerStackSize, null);
+							attestationManagerDispatchProtocol, attestationManagerExecutionTime,
+							attestationManagerStackSize, null);
 
 					// Create 'lift contract' statement in process implementation.
 					// This will be done even if an AGREE property hasn't been specified yet.
@@ -1038,7 +1116,8 @@ public class AttestationTransformHandler extends AadlHandler {
 							"{**" + System.lineSeparator() + "lift contract;" + System.lineSeparator() + "**}");
 
 					Sel4TransformHandler.insertThreadInSel4Process((ProcessImplementation) attestationGateImpl,
-							attestationGateDispatchProtocol, attestationGateStackSize, null);
+							attestationGateDispatchProtocol, attestationGateExecutionTime, attestationGateStackSize,
+							null);
 
 				}
 

@@ -3,6 +3,7 @@ package com.collins.trustedsystems.briefcase.staircase.dialogs;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
@@ -32,6 +33,7 @@ import org.osate.aadl2.SystemImplementation;
 import org.osate.aadl2.modelsupport.util.AadlUtil;
 import org.osate.ui.dialogs.Dialog;
 
+import com.collins.trustedsystems.briefcase.preferences.BriefcasePreferenceConstants;
 import com.collins.trustedsystems.briefcase.staircase.handlers.FilterTransformHandler;
 import com.collins.trustedsystems.briefcase.staircase.requirements.CyberRequirement;
 import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsManager;
@@ -55,6 +57,8 @@ public class FilterTransformDialog extends TitleAreaDialog {
 	private List<Button> btnDispatchProtocol = new ArrayList<>();
 	private Label lblPeriodField;
 	private Text txtPeriod;
+	private Text txtExecutionTime;
+	private Text txtDomain;
 	private Text txtStackSize;
 	private Text txtInputPortName;
 	private Text txtOutputPortName;
@@ -67,6 +71,8 @@ public class FilterTransformDialog extends TitleAreaDialog {
 	private boolean createThread = false;
 	private String filterDispatchProtocol = "";
 	private String filterPeriod = "";
+	private String filterExecutionTime = "";
+	private Integer filterDomain = null;
 	private String filterStackSize = "";
 	private String filterInputPortName = "";
 	private String filterOutputPortName = "";
@@ -172,7 +178,15 @@ public class FilterTransformDialog extends TitleAreaDialog {
 			createCreateThreadField(container);
 		}
 		createDispatchProtocolField(container);
-		txtStackSize = TransformDialogUtil.createTextField(container, "Stack size", "");
+		txtExecutionTime = TransformDialogUtil.createTextField(container, "Execution time",
+				Platform.getPreferencesService()
+						.getString("com.collins.trustedsystems.briefcase", BriefcasePreferenceConstants.EXECUTION_TIME,
+								"", null));
+		if (context instanceof SystemImplementation) {
+			txtDomain = TransformDialogUtil.createTextField(container, "Domain", "");
+		}
+		txtStackSize = TransformDialogUtil.createTextField(container, "Stack size", Platform.getPreferencesService()
+				.getString("com.collins.trustedsystems.briefcase", BriefcasePreferenceConstants.STACK_SIZE, "", null));
 		createPortNamesField(container);
 
 		btnLogPortType = TransformDialogUtil.createLogPortField(container);
@@ -244,7 +258,9 @@ public class FilterTransformDialog extends TitleAreaDialog {
 
 		final Button btnNoProtocol = new Button(protocolGroup, SWT.RADIO);
 		btnNoProtocol.setText("None");
-		btnNoProtocol.setSelection(true);
+		btnNoProtocol.setSelection(Platform.getPreferencesService()
+				.getBoolean("com.collins.trustedsystems.briefcase", BriefcasePreferenceConstants.DISPATCH_PROTOCOL_NONE,
+						false, null));
 		btnNoProtocol.addSelectionListener(new SelectionListener() {
 
 			@Override
@@ -253,6 +269,10 @@ public class FilterTransformDialog extends TitleAreaDialog {
 				txtPeriod.setEnabled(!btnNoProtocol.getSelection());
 				if (btnNoProtocol.getSelection()) {
 					txtPeriod.setText("");
+				} else {
+					txtPeriod.setText(Platform.getPreferencesService()
+							.getString("com.collins.trustedsystems.briefcase", BriefcasePreferenceConstants.PERIOD, "",
+									null));
 				}
 			}
 
@@ -264,11 +284,15 @@ public class FilterTransformDialog extends TitleAreaDialog {
 
 		final Button btnPeriodic = new Button(protocolGroup, SWT.RADIO);
 		btnPeriodic.setText("Periodic");
-		btnPeriodic.setSelection(false);
+		btnPeriodic.setSelection(Platform.getPreferencesService()
+				.getBoolean("com.collins.trustedsystems.briefcase",
+						BriefcasePreferenceConstants.DISPATCH_PROTOCOL_PERIODIC, true, null));
 
 		final Button btnSporadic = new Button(protocolGroup, SWT.RADIO);
 		btnSporadic.setText("Sporadic");
-		btnSporadic.setSelection(false);
+		btnSporadic.setSelection(Platform.getPreferencesService()
+				.getBoolean("com.collins.trustedsystems.briefcase",
+						BriefcasePreferenceConstants.DISPATCH_PROTOCOL_SPORADIC, false, null));
 
 		lblPeriodField = new Label(container, SWT.NONE);
 		lblPeriodField.setText("Period");
@@ -285,6 +309,7 @@ public class FilterTransformDialog extends TitleAreaDialog {
 		btnDispatchProtocol.add(btnPeriodic);
 		btnDispatchProtocol.add(btnSporadic);
 
+		btnNoProtocol.notifyListeners(SWT.Selection, null);
 	}
 
 	/**
@@ -343,6 +368,7 @@ public class FilterTransformDialog extends TitleAreaDialog {
 		}
 
 		// Filter Component Name
+		txtFilterComponentName.setText(txtFilterComponentName.getText().trim());
 		if (!txtFilterComponentName.getText().isEmpty()
 				&& !ModelTransformUtils.isValidName(txtFilterComponentName.getText())) {
 			Dialog.showError("Filter Transform", "Filter component name " + txtFilterComponentName.getText()
@@ -360,6 +386,7 @@ public class FilterTransformDialog extends TitleAreaDialog {
 		}
 
 		// Filter Subcomponent Instance Name
+		txtFilterSubcomponentName.setText(txtFilterSubcomponentName.getText().trim());
 		if (!txtFilterSubcomponentName.getText().isEmpty()
 				&& !ModelTransformUtils.isValidName(txtFilterSubcomponentName.getText())) {
 			Dialog.showError("Filter Transform",
@@ -398,6 +425,33 @@ public class FilterTransformDialog extends TitleAreaDialog {
 				}
 				break;
 			}
+		}
+
+		// Execution Time
+		if (txtExecutionTime.getText().isEmpty()
+				|| txtExecutionTime.getText()
+						.matches(
+								"((\\d)+(\\s)*(ps|ns|us|ms|sec|min|hr)?\\.\\.(\\d)+(\\s)*(ps|ns|us|ms|sec|min|hr)?)")) {
+			filterExecutionTime = txtExecutionTime.getText();
+		} else {
+			Dialog.showError("Filter Transform", "Filter execution time " + txtExecutionTime.getText()
+					+ " is malformed. See the AADL definition of Compute_Execution_Time in Timing_Properties.aadl.");
+			return false;
+		}
+
+		// Domain
+		try {
+			if (txtDomain != null && !txtDomain.getText().isBlank()) {
+				filterDomain = Integer.parseInt(txtDomain.getText().trim());
+				if (filterDomain < 2) {
+					throw new Exception();
+				}
+			}
+		} catch (Exception e) {
+			Dialog.showError("Filter Transform",
+					"Filter domain " + txtDomain.getText() + " must be an integer greater than 1.");
+			filterDomain = null;
+			return false;
 		}
 
 		// Stack Size
@@ -490,6 +544,14 @@ public class FilterTransformDialog extends TitleAreaDialog {
 
 	public String getPeriod() {
 		return filterPeriod;
+	}
+
+	public String getExecutionTime() {
+		return filterExecutionTime;
+	}
+
+	public Integer getDomain() {
+		return filterDomain;
 	}
 
 	public String getStackSize() {

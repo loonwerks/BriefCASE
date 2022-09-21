@@ -51,11 +51,8 @@ public class RequirementsManager {
 	}
 
 	private RequirementsManager() {
-		// Initialize requirements list
 
-		if (currentProject == null) {
-			currentProject = TraverseProject.getCurrentProject();
-		}
+		currentProject = TraverseProject.getCurrentProject();
 
 		reqDb = new RequirementsDatabaseHelper(currentProject);
 
@@ -268,6 +265,8 @@ public class RequirementsManager {
 			final FileDialog dlgReqFile = new FileDialog(
 					PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(),
 					SWT.MULTI);
+			final String[] filterExts = { "*.json", "*.txt", "*.*" };
+			dlgReqFile.setFilterExtensions(filterExts);
 			dlgReqFile.setText("Select requirements file to import.");
 			dlgReqFile.open();
 			for (String fn : dlgReqFile.getFileNames()) {

@@ -76,15 +76,6 @@ public class RequirementsDatabaseHelper {
 		if (reqFilePath != null) {
 			reqFile = reqFilePath.toFile();
 		}
-//		final JsonRequirementsFile jsonReqFile = new JsonRequirementsFile();
-//		if (!reqFile.exists() || !jsonReqFile.importFile(reqFile)) {
-////			Dialog.showInfo("Missing requirements database",
-////					"No requirements database found. Starting a new database.");
-//		} else {
-//			// Add the requirements in this file to the accumulated list of requirements
-//			importRequirements(jsonReqFile.getRequirements());
-//			analysisOutputFilename = jsonReqFile.getFilename();
-//		}
 
 		final RequirementsDatabaseFile reqDbFile = new RequirementsDatabaseFile();
 		if (reqFile.exists() && reqDbFile.importFile(reqFile)) {
@@ -106,13 +97,7 @@ public class RequirementsDatabaseHelper {
 		if (reqFilePath != null) {
 			reqFile = reqFilePath.toFile();
 		}
-//		final JsonRequirementsFile jsonReqFile = new JsonRequirementsFile(CyberRequirement.notApplicable,
-//				LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd-HHmmss")),
-//				CyberRequirement.notApplicable, CyberRequirement.notApplicable,
-//				analysisOutputFilename, getRequirements());
-//		if (!jsonReqFile.exportFile(reqFile)) {
-//			throw new RuntimeException("Could not save cyber requirements file " + reqFile.getName() + ".");
-//		}
+
 		final RequirementsDatabaseFile reqDbFile = new RequirementsDatabaseFile(
 				LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd-HHmmss")), analysisOutputFilename,
 				getRequirements());

@@ -34,10 +34,12 @@ import org.osate.aadl2.DefaultAnnexLibrary;
 import org.osate.aadl2.ModelUnit;
 import org.osate.aadl2.PackageSection;
 import org.osate.aadl2.PrivatePackageSection;
+import org.osate.aadl2.PropertySet;
 import org.osate.aadl2.StringLiteral;
-import org.osate.ui.dialogs.Dialog;
+import org.osate.pluginsupport.PluginSupportUtil;
 
 import com.collins.trustedsystems.briefcase.staircase.Activator;
+import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
 import com.collins.trustedsystems.briefcase.util.TraverseProject;
 import com.rockwellcollins.atc.resolute.resolute.Arg;
 import com.rockwellcollins.atc.resolute.resolute.BaseType;
@@ -65,7 +67,8 @@ public class CaseUtils {
 	public static final String CASE_REQUIREMENTS_DIR = "Requirements";
 	public static final String CASE_REQUIREMENTS_FILE = CASE_REQUIREMENTS_DIR + "/" + CASE_REQUIREMENTS_NAME + ".aadl";
 	public static final String CASE_REQUIREMENTS_DATABASE_FILE = ".reqdb";
-
+	public static final String CASE_SCHEDULING_NAME = "CASE_Scheduling";
+	public static final String CASE_SCHEDULING_FILE = CASE_SCHEDULING_NAME + ".aadl";
 
 	/**
 	 * Adds the CASE_Model_Transformations file to the list of imported model units via the 'with' statement
@@ -91,8 +94,7 @@ public class CaseUtils {
 			// Try importing the resource
 			casePackage = getCaseModelTransformationsPackage();
 			if (casePackage == null) {
-				Dialog.showError("Could not import " + CASE_MODEL_TRANSFORMATIONS_NAME,
-						"Package " + CASE_MODEL_TRANSFORMATIONS_NAME + " could not be found.");
+				BriefcaseNotifier.printError("Could not import " + CASE_MODEL_TRANSFORMATIONS_NAME);
 				return false;
 			}
 			// Add as "importedUnit" to package section
@@ -139,14 +141,58 @@ public class CaseUtils {
 			// Try importing the resource
 			casePackage = getCaseRequirementsPackage();
 			if (casePackage == null) {
-				Dialog.showError("Could not import " + CASE_REQUIREMENTS_NAME,
-						"Package " + CASE_REQUIREMENTS_NAME + " could not be found.");
+				BriefcaseNotifier.printError("Could not import " + CASE_REQUIREMENTS_NAME);
 				return false;
 			}
 			// Add as "importedUnit" to package section
 			pkgSection.getImportedUnits().add(casePackage);
 		}
 		return true;
+	}
+
+	public static boolean importCaseSchedulingPackage(PackageSection pkgSection) {
+		// First check if CASE_Scheduling file has already been imported in the model
+		PropertySet propSet = null;
+
+		for (ModelUnit modelUnit : pkgSection.getImportedUnits()) {
+			if (modelUnit instanceof AadlPackage && modelUnit.hasName()) {
+				if (modelUnit.getName().equalsIgnoreCase(CASE_SCHEDULING_NAME)) {
+					propSet = (PropertySet) modelUnit;
+					break;
+				}
+			}
+		}
+		if (propSet == null) {
+			// Try importing the resource
+			propSet = getCaseSchedulingPackage();
+			if (propSet == null) {
+				BriefcaseNotifier.printError("Could not import " + CASE_SCHEDULING_NAME);
+				return false;
+			}
+			// Add as "importedUnit" to package section
+			pkgSection.getImportedUnits().add(propSet);
+		}
+		return true;
+	}
+
+	/**
+	 * Gets the CASE Scheduling Package
+	 * @return AadlPackage
+	 */
+	public static PropertySet getCaseSchedulingPackage() {
+		PropertySet propSet = null;
+		for (URI uri : PluginSupportUtil.getContributedAadl()) {
+			if (CASE_SCHEDULING_FILE.equals(uri.lastSegment())) {
+				final ResourceSet resourceSet = new ResourceSetImpl();
+				final Resource r = resourceSet.getResource(uri, true);
+				final EObject eObj = r.getContents().get(0);
+				if (eObj instanceof PropertySet) {
+					propSet = (PropertySet) eObj;
+				}
+				break;
+			}
+		}
+		return propSet;
 	}
 
 	/**
@@ -240,7 +286,7 @@ public class CaseUtils {
 			try {
 				caseReqFile.create(source, false, new NullProgressMonitor());
 			} catch (CoreException e) {
-				System.out.println("CASE_Requirements package not created successfully.");
+				BriefcaseNotifier.printError("CASE_Requirements package not created successfully.");
 				e.printStackTrace();
 				return null;
 			}
@@ -255,7 +301,7 @@ public class CaseUtils {
 			}
 		}
 		if (pkg == null) {
-			System.out.println("CASE_Requirements package was not created successfully.");
+			BriefcaseNotifier.printError("CASE_Requirements package was not created successfully.");
 		} else {
 			System.out.println("CASE_Requirements package was created successfully.");
 		}
@@ -390,7 +436,7 @@ public class CaseUtils {
 			try {
 				reqFolder.create(false, true, new NullProgressMonitor());
 			} catch (CoreException e) {
-				System.out.println("Requirements folder could not be created.");
+				BriefcaseNotifier.printError("Requirements folder could not be created.");
 				e.printStackTrace();
 				return null;
 			}

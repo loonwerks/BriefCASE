@@ -76,7 +76,7 @@ public class ModelHashcode {
 			dis.close();
 		}
 
-		return new String(md.digest()).trim();
+		return new String(md.digest()).trim().replace("\\", "\\\\");
 	}
 
 	/**

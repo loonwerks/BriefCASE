@@ -108,16 +108,12 @@
                <menu
                      id="com.collins.trustedsystems.briefcase.menus.outline.resiliency.synthesis"
                      label="Synthesis Tools">
+                  <command
+                        commandId="org.sireum.commands.launchhamr"
+                        label="HAMR Code Generation"
+                        style="push">
+                  </command>
                </menu>
-            </menu>
-            <menu
-                  id="com.collins.trustedsystems.briefcase.menus.outline.build"
-                  label="System Build">
-               <command
-                     commandId="org.sireum.commands.launchhamr"
-                     label="HAMR Code Generation"
-                     style="push">
-               </command>
             </menu>
             <menu
                   id="com.collins.trustedsystems.briefcase.menus.outline.assurance"
@@ -254,16 +250,12 @@
                <menu
                      id="com.collins.trustedsystems.briefcase.menus.menubar.resiliency.synthesis"
                      label="Synthesis Tools">
+                  <command
+                        commandId="org.sireum.commands.launchhamr"
+                        label="HAMR Code Generation"
+                        style="push">
+                  </command>
                </menu>
-            </menu>
-            <menu
-                  id="com.collins.trustedsystems.briefcase.menus.menubar.build"
-                  label="System Build">
-               <command
-                     commandId="org.sireum.commands.launchhamr"
-                     label="HAMR Code Generation"
-                     style="push">
-               </command>
             </menu>
             <menu
                   id="com.collins.trustedsystems.briefcase.menus.menubar.assurance"
@@ -420,16 +412,12 @@
                <menu
                      id="com.collins.trustedsystems.briefcase.menus.editor.resiliency.synthesis"
                      label="Synthesis Tools">
+                  <command
+                        commandId="org.sireum.commands.launchhamr"
+                        label="HAMR Code Generation"
+                        style="push">
+                  </command>
                </menu>
-            </menu>
-            <menu
-                  id="com.collins.trustedsystems.briefcase.menus.editor.build"
-                  label="System Build">
-               <command
-                     commandId="org.sireum.commands.launchhamr"
-                     label="HAMR Code Generation"
-                     style="push">
-               </command>
             </menu>
             <menu
                   id="com.collins.trustedsystems.briefcase.menus.editor.assurance"
@@ -570,16 +558,12 @@
                <menu
                      id="com.collins.trustedsystems.briefcase.menus.diagram.resiliency.synthesis"
                      label="Synthesis Tools">
+                  <command
+                        commandId="org.sireum.commands.launchhamr"
+                        label="HAMR Code Generation"
+                        style="push">
+                  </command>
                </menu>
-            </menu>
-            <menu
-                  id="com.collins.trustedsystems.briefcase.menus.diagram.build"
-                  label="System Build">
-               <command
-                     commandId="org.sireum.commands.launchhamr"
-                     label="HAMR Code Generation"
-                     style="push">
-               </command>
             </menu>
             <menu
                   id="com.collins.trustedsystems.briefcase.menus.diagram.assurance"

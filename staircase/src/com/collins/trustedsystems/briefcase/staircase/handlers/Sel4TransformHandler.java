@@ -57,6 +57,7 @@ import org.osate.aadl2.ProcessorSubcomponent;
 import org.osate.aadl2.Property;
 import org.osate.aadl2.PropertyAssociation;
 import org.osate.aadl2.PropertyExpression;
+import org.osate.aadl2.RangeValue;
 import org.osate.aadl2.Realization;
 import org.osate.aadl2.ReferenceValue;
 import org.osate.aadl2.Subcomponent;
@@ -76,6 +77,7 @@ import org.osate.ui.dialogs.Dialog;
 import org.osate.xtext.aadl2.properties.util.GetProperties;
 import org.osate.xtext.aadl2.properties.util.MemoryProperties;
 import org.osate.xtext.aadl2.properties.util.ThreadProperties;
+import org.osate.xtext.aadl2.properties.util.TimingProperties;
 
 import com.collins.trustedsystems.briefcase.staircase.dialogs.Sel4TransformDialog;
 import com.collins.trustedsystems.briefcase.staircase.requirements.CyberRequirement;
@@ -874,7 +876,7 @@ public class Sel4TransformHandler extends AadlHandler {
 	 * Inserts a single thread into a designated seL4 process
 	 */
 	public static ThreadSubcomponent insertThreadInSel4Process(ProcessImplementation processImpl,
-			String dispatchProtocol, String stackSize, String agreeClauses) {
+			String dispatchProtocol, String executionTime, String stackSize, String agreeClauses) {
 
 		final PackageSection pkgSection = (PackageSection) processImpl.eContainer();
 
@@ -940,6 +942,29 @@ public class Sel4TransformHandler extends AadlHandler {
 			final NamedValue nv = Aadl2Factory.eINSTANCE.createNamedValue();
 			nv.setNamedValue(dispatchProtocolLit);
 			threadImpl.setPropertyValue(dispatchProtocolProp, nv);
+		}
+
+		// Execution Time
+		if (executionTime != null && !executionTime.isEmpty()) {
+			final Property executionTimeProp = GetProperties.lookupPropertyDefinition(threadImpl,
+					TimingProperties._NAME, TimingProperties.COMPUTE_EXECUTION_TIME);
+			String[] parts = executionTime.split("\\.\\.");
+			final UnitLiteral unitMin = Aadl2Factory.eINSTANCE.createUnitLiteral();
+			unitMin.setName(parts[0].replaceAll("[\\d]", "").trim());
+			final IntegerLiteral executionTimeMin = Aadl2Factory.eINSTANCE.createIntegerLiteral();
+			executionTimeMin.setBase(0);
+			executionTimeMin.setValue(Long.parseLong(parts[0].replaceAll("[\\D]", "").trim()));
+			executionTimeMin.setUnit(unitMin);
+			final UnitLiteral unitMax = Aadl2Factory.eINSTANCE.createUnitLiteral();
+			unitMax.setName(parts[1].replaceAll("[\\d]", "").trim());
+			final IntegerLiteral executionTimeMax = Aadl2Factory.eINSTANCE.createIntegerLiteral();
+			executionTimeMax.setBase(0);
+			executionTimeMax.setValue(Long.parseLong(parts[1].replaceAll("[\\D]", "").trim()));
+			executionTimeMax.setUnit(unitMax);
+			final RangeValue executionTimeRange = Aadl2Factory.eINSTANCE.createRangeValue();
+			executionTimeRange.setMinimum(executionTimeMin);
+			executionTimeRange.setMaximum(executionTimeMax);
+			threadImpl.setPropertyValue(executionTimeProp, executionTimeRange);
 		}
 
 		// Stack Size

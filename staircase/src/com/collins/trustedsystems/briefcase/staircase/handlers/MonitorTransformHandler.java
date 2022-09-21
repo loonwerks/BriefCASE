@@ -43,6 +43,7 @@ import org.osate.aadl2.Port;
 import org.osate.aadl2.PortCategory;
 import org.osate.aadl2.ProcessImplementation;
 import org.osate.aadl2.Property;
+import org.osate.aadl2.RangeValue;
 import org.osate.aadl2.Realization;
 import org.osate.aadl2.Subcomponent;
 import org.osate.aadl2.UnitLiteral;
@@ -60,6 +61,7 @@ import com.collins.trustedsystems.briefcase.staircase.requirements.CyberRequirem
 import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsManager;
 import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
 import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils.MITIGATION_TYPE;
+import com.collins.trustedsystems.briefcase.staircase.utils.CaseUtils;
 import com.collins.trustedsystems.briefcase.staircase.utils.ComponentCreateHelper;
 import com.collins.trustedsystems.briefcase.staircase.utils.ModelTransformUtils;
 import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
@@ -80,6 +82,8 @@ public class MonitorTransformHandler extends AadlHandler {
 	private String observationGatePortName;
 	private String dispatchProtocol;
 	private String period;
+	private String executionTime;
+	private Integer monitorDomain;
 	private String stackSize;
 	private String resetPortName;
 	private String resetPort;
@@ -160,6 +164,8 @@ public class MonitorTransformHandler extends AadlHandler {
 			isSel4Process = wizard.createThread();
 			dispatchProtocol = wizard.getDispatchProtocol();
 			period = wizard.getPeriod();
+			executionTime = wizard.getExecutionTime();
+			monitorDomain = wizard.getDomain();
 			stackSize = wizard.getStackSize();
 			referencePorts = wizard.getReferencePorts();
 			alertPortName = wizard.getAlertPortName();
@@ -566,6 +572,41 @@ public class MonitorTransformHandler extends AadlHandler {
 					monitorImpl.setPropertyValue(periodProp, periodLit);
 				}
 
+				// Execution Time
+				if (compCategory == ComponentCategory.THREAD && !executionTime.isEmpty()) {
+					final Property executionTimeProp = GetProperties.lookupPropertyDefinition(monitorImpl,
+							TimingProperties._NAME, TimingProperties.COMPUTE_EXECUTION_TIME);
+					String[] parts = executionTime.split("\\.\\.");
+					final UnitLiteral unitMin = Aadl2Factory.eINSTANCE.createUnitLiteral();
+					unitMin.setName(parts[0].replaceAll("[\\d]", "").trim());
+					final IntegerLiteral executionTimeMin = Aadl2Factory.eINSTANCE.createIntegerLiteral();
+					executionTimeMin.setBase(0);
+					executionTimeMin.setValue(Long.parseLong(parts[0].replaceAll("[\\D]", "").trim()));
+					executionTimeMin.setUnit(unitMin);
+					final UnitLiteral unitMax = Aadl2Factory.eINSTANCE.createUnitLiteral();
+					unitMax.setName(parts[1].replaceAll("[\\d]", "").trim());
+					final IntegerLiteral executionTimeMax = Aadl2Factory.eINSTANCE.createIntegerLiteral();
+					executionTimeMax.setBase(0);
+					executionTimeMax.setValue(Long.parseLong(parts[1].replaceAll("[\\D]", "").trim()));
+					executionTimeMax.setUnit(unitMax);
+					final RangeValue executionTimeRange = Aadl2Factory.eINSTANCE.createRangeValue();
+					executionTimeRange.setMinimum(executionTimeMin);
+					executionTimeRange.setMaximum(executionTimeMax);
+					monitorImpl.setPropertyValue(executionTimeProp, executionTimeRange);
+				}
+
+				// Domain
+				if (compCategory == ComponentCategory.PROCESS && monitorDomain != null) {
+					if (CaseUtils.importCaseSchedulingPackage(pkgSection)) {
+						final Property domainProp = GetProperties.lookupPropertyDefinition(monitorImpl,
+								CaseUtils.CASE_SCHEDULING_NAME, "Domain");
+						final IntegerLiteral domainLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
+						domainLit.setBase(0);
+						domainLit.setValue(monitorDomain);
+						monitorImpl.setPropertyValue(domainProp, domainLit);
+					}
+				}
+
 				// Stack Size
 				if (compCategory == ComponentCategory.THREAD && !stackSize.isEmpty()) {
 					final Property stackSizeProp = GetProperties.lookupPropertyDefinition(monitorImpl,
@@ -792,7 +833,7 @@ public class MonitorTransformHandler extends AadlHandler {
 							"{**" + System.lineSeparator() + "lift contract;" + System.lineSeparator() + "**}");
 
 					Sel4TransformHandler.insertThreadInSel4Process((ProcessImplementation) monitorImpl,
-							dispatchProtocol, stackSize, agreeClauses.toString());
+							dispatchProtocol, executionTime, stackSize, agreeClauses.toString());
 				}
 
 				// Add add_monitor claims to resolute prove statement, if applicable

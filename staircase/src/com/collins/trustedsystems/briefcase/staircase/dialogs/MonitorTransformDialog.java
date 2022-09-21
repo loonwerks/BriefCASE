@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
@@ -35,6 +36,7 @@ import org.osate.aadl2.SystemImplementation;
 import org.osate.aadl2.modelsupport.util.AadlUtil;
 import org.osate.ui.dialogs.Dialog;
 
+import com.collins.trustedsystems.briefcase.preferences.BriefcasePreferenceConstants;
 import com.collins.trustedsystems.briefcase.staircase.dialogs.MultiPortSelector.PortDirection;
 import com.collins.trustedsystems.briefcase.staircase.handlers.MonitorTransformHandler;
 import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsManager;
@@ -70,6 +72,8 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 	private List<Button> btnDispatchProtocol = new ArrayList<>();
 	private Label lblPeriodField;
 	private Text txtPeriod;
+	private Text txtExecutionTime;
+	private Text txtDomain;
 	private Text txtStackSize;
 	private Combo cboMonitorRequirement;
 	private Text txtAgreeProperty;
@@ -91,6 +95,8 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 	private boolean createThread = false;
 	private String dispatchProtocol = "";
 	private String period = "";
+	private String executionTime = "";
+	private Integer domain = null;
 	private String stackSize = "";
 	private String monitorRequirement = "";
 	private String agreeProperty = "";
@@ -193,7 +199,15 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 			createCreateThreadField(container);
 		}
 		createDispatchProtocolField(container);
-		txtStackSize = TransformDialogUtil.createTextField(container, "Stack size", "");
+		txtExecutionTime = TransformDialogUtil.createTextField(container, "Execution time",
+				Platform.getPreferencesService()
+						.getString("com.collins.trustedsystems.briefcase", BriefcasePreferenceConstants.EXECUTION_TIME,
+								"", null));
+		if (context instanceof SystemImplementation) {
+			txtDomain = TransformDialogUtil.createTextField(container, "Domain", "");
+		}
+		txtStackSize = TransformDialogUtil.createTextField(container, "Stack size", Platform.getPreferencesService()
+				.getString("com.collins.trustedsystems.briefcase", BriefcasePreferenceConstants.STACK_SIZE, "", null));
 		cboMonitorRequirement = TransformDialogUtil.createComboField(container, "Requirement", requirements,
 				NO_REQUIREMENT_SELECTED);
 		txtAgreeProperty = TransformDialogUtil.createTextField(container, "Monitor policy", "");
@@ -484,7 +498,9 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 
 		final Button btnNoProtocol = new Button(protocolGroup, SWT.RADIO);
 		btnNoProtocol.setText("None");
-		btnNoProtocol.setSelection(true);
+		btnNoProtocol.setSelection(Platform.getPreferencesService()
+				.getBoolean("com.collins.trustedsystems.briefcase", BriefcasePreferenceConstants.DISPATCH_PROTOCOL_NONE,
+						false, null));
 		btnNoProtocol.addSelectionListener(new SelectionListener() {
 
 			@Override
@@ -493,6 +509,10 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 				txtPeriod.setEnabled(!btnNoProtocol.getSelection());
 				if (btnNoProtocol.getSelection()) {
 					txtPeriod.setText("");
+				} else {
+					txtPeriod.setText(Platform.getPreferencesService()
+							.getString("com.collins.trustedsystems.briefcase", BriefcasePreferenceConstants.PERIOD, "",
+									null));
 				}
 			}
 
@@ -504,11 +524,15 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 
 		final Button btnPeriodic = new Button(protocolGroup, SWT.RADIO);
 		btnPeriodic.setText("Periodic");
-		btnPeriodic.setSelection(false);
+		btnPeriodic.setSelection(Platform.getPreferencesService()
+				.getBoolean("com.collins.trustedsystems.briefcase",
+						BriefcasePreferenceConstants.DISPATCH_PROTOCOL_PERIODIC, true, null));
 
 		final Button btnSporadic = new Button(protocolGroup, SWT.RADIO);
 		btnSporadic.setText("Sporadic");
-		btnSporadic.setSelection(false);
+		btnSporadic.setSelection(Platform.getPreferencesService()
+				.getBoolean("com.collins.trustedsystems.briefcase",
+						BriefcasePreferenceConstants.DISPATCH_PROTOCOL_SPORADIC, false, null));
 
 		lblPeriodField = new Label(container, SWT.NONE);
 		lblPeriodField.setText("Period");
@@ -526,6 +550,7 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 		btnDispatchProtocol.add(btnPeriodic);
 		btnDispatchProtocol.add(btnSporadic);
 
+		btnNoProtocol.notifyListeners(SWT.Selection, null);
 	}
 
 
@@ -748,6 +773,33 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 			}
 		}
 
+		// Execution Time
+		if (txtExecutionTime.getText().isEmpty()
+				|| txtExecutionTime.getText()
+						.matches(
+								"((\\d)+(\\s)*(ps|ns|us|ms|sec|min|hr)?\\.\\.(\\d)+(\\s)*(ps|ns|us|ms|sec|min|hr)?)")) {
+			executionTime = txtExecutionTime.getText();
+		} else {
+			Dialog.showError("Monitor Transform", "Monitor execution time " + txtExecutionTime.getText()
+					+ " is malformed. See the AADL definition of Compute_Execution_Time in Timing_Properties.aadl.");
+			return false;
+		}
+
+		// Domain
+		try {
+			if (txtDomain != null && !txtDomain.getText().isBlank()) {
+				domain = Integer.parseInt(txtDomain.getText().trim());
+				if (domain < 2) {
+					throw new Exception();
+				}
+			}
+		} catch (Exception e) {
+			Dialog.showError("Monitor Transform",
+					"Monitor domain " + txtDomain.getText() + " must be an integer greater than 1.");
+			domain = null;
+			return false;
+		}
+
 		// Stack Size
 		if (txtStackSize.getText().isEmpty()
 				|| txtStackSize.getText().matches("((\\d)+(\\s)*(bits|Bytes|KByte|MByte|GByte|TByte)?)")) {
@@ -850,6 +902,14 @@ public class MonitorTransformDialog extends TitleAreaDialog {
 
 	public String getPeriod() {
 		return period;
+	}
+
+	public String getExecutionTime() {
+		return executionTime;
+	}
+
+	public Integer getDomain() {
+		return domain;
 	}
 
 	public String getStackSize() {

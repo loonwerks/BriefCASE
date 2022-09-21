@@ -22,5 +22,14 @@ public class BriefcasePreferenceInitializer extends AbstractPreferenceInitialize
 				ResourcesPlugin.getWorkspace().getRoot().getLocation().toOSString() + File.separator + "splat.log");
 		store.setDefault(BriefcasePreferenceConstants.COMPONENT_SOURCE_FOLDER, "Component_Source");
 		store.setDefault(BriefcasePreferenceConstants.KU_IMPL_FOLDER, "KU_Attestation");
+		store.setDefault(BriefcasePreferenceConstants.EXECUTION_TIME, "10ms..50ms");
+		store.setDefault(BriefcasePreferenceConstants.PERIOD, "500ms");
+		store.setDefault(BriefcasePreferenceConstants.EXECUTION_TIME, "10ms..50ms");
+		store.setDefault(BriefcasePreferenceConstants.STACK_SIZE, "1048576 Bytes");
+		store.setDefault(BriefcasePreferenceConstants.DISPATCH_PROTOCOL,
+				BriefcasePreferenceConstants.DISPATCH_PROTOCOL_PERIODIC);
+		store.setDefault(BriefcasePreferenceConstants.DISPATCH_PROTOCOL_NONE, false);
+		store.setDefault(BriefcasePreferenceConstants.DISPATCH_PROTOCOL_PERIODIC, true);
+		store.setDefault(BriefcasePreferenceConstants.DISPATCH_PROTOCOL_SPORADIC, false);
 	}
 }

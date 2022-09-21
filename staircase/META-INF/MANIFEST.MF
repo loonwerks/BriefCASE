@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: c
+Bundle-Name: com.collins.trustedsystems.briefcase.staircase
 Bundle-SymbolicName: com.collins.trustedsystems.briefcase.staircase;singleton:=true
 Bundle-Version: 0.9.0.qualifier
 Automatic-Module-Name: com.collins.trustedsystems.briefcase.staircase

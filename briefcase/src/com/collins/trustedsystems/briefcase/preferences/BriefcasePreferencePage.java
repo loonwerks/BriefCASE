@@ -6,6 +6,7 @@ import java.io.IOException;
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.FileFieldEditor;
+import org.eclipse.jface.preference.RadioGroupFieldEditor;
 import org.eclipse.jface.preference.StringFieldEditor;
 import org.eclipse.jface.resource.FontDescriptor;
 import org.eclipse.jface.util.PropertyChangeEvent;
@@ -36,6 +37,22 @@ public class BriefcasePreferencePage extends FieldEditorPreferencePage implement
 		label.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1));
 		final FontDescriptor boldDescriptor = FontDescriptor.createFrom(label.getFont()).setStyle(SWT.BOLD);
 		final Font boldFont = boldDescriptor.createFont(label.getDisplay());
+		label.setFont(boldFont);
+		label.addDisposeListener(e -> boldFont.dispose());
+		label.setText("Transform default values");
+
+		addField(new RadioGroupFieldEditor(BriefcasePreferenceConstants.DISPATCH_PROTOCOL, "Dispatch protocol", 3,
+				new String[][] { { "None", BriefcasePreferenceConstants.DISPATCH_PROTOCOL_NONE },
+						{ "Periodic", BriefcasePreferenceConstants.DISPATCH_PROTOCOL_PERIODIC },
+						{ "Sporadic", BriefcasePreferenceConstants.DISPATCH_PROTOCOL_SPORADIC } },
+				getFieldEditorParent(), true));
+		addField(new StringFieldEditor(BriefcasePreferenceConstants.PERIOD, "Period", getFieldEditorParent()));
+		addField(new StringFieldEditor(BriefcasePreferenceConstants.EXECUTION_TIME, "Maximum execution time",
+				getFieldEditorParent()));
+		addField(new StringFieldEditor(BriefcasePreferenceConstants.STACK_SIZE, "Stack size", getFieldEditorParent()));
+
+		label = new Label(getFieldEditorParent(), SWT.NONE);
+		label.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1));
 		label.setFont(boldFont);
 		label.addDisposeListener(e -> boldFont.dispose());
 

@@ -19,6 +19,10 @@
                label="Open Artifact Description Manager..."
                style="push">
          </command>
+         <separator
+               name="com.collins.trustedsystems.briefcase.assurance.separator1"
+               visible="true">
+         </separator>
       </menuContribution>
       <menuContribution
             allPopups="false"
@@ -28,6 +32,10 @@
                label="Open Artifact Description Manager..."
                style="push">
          </command>
+         <separator
+               name="com.collins.trustedsystems.briefcase.assurance.separator2"
+               visible="true">
+         </separator>
       </menuContribution>
       <menuContribution
             allPopups="false"
@@ -37,6 +45,10 @@
                label="Open Artifact Description Manager..."
                style="push">
          </command>
+         <separator
+               name="com.collins.trustedsystems.briefcase.assurance.separator3"
+               visible="true">
+         </separator>
       </menuContribution>
       <menuContribution
             allPopups="false"
@@ -46,6 +58,10 @@
                label="Open Artifact Description Manager..."
                style="push">
          </command>
+         <separator
+               name="com.collins.trustedsystems.briefcase.assurance.separator4"
+               visible="true">
+         </separator>
       </menuContribution>
    </extension>
    <extension

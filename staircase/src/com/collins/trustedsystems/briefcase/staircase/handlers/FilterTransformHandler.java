@@ -39,6 +39,7 @@ import org.osate.aadl2.Port;
 import org.osate.aadl2.PortCategory;
 import org.osate.aadl2.ProcessImplementation;
 import org.osate.aadl2.Property;
+import org.osate.aadl2.RangeValue;
 import org.osate.aadl2.Realization;
 import org.osate.aadl2.Subcomponent;
 import org.osate.aadl2.UnitLiteral;
@@ -55,6 +56,7 @@ import com.collins.trustedsystems.briefcase.staircase.requirements.CyberRequirem
 import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsManager;
 import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
 import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils.MITIGATION_TYPE;
+import com.collins.trustedsystems.briefcase.staircase.utils.CaseUtils;
 import com.collins.trustedsystems.briefcase.staircase.utils.ComponentCreateHelper;
 import com.collins.trustedsystems.briefcase.staircase.utils.ModelTransformUtils;
 import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
@@ -72,6 +74,8 @@ public class FilterTransformHandler extends AadlHandler {
 	private String filterSubcomponentName;
 	private String filterDispatchProtocol;
 	private String filterPeriod;
+	private String filterExecutionTime;
+	private Integer filterDomain;
 	private String filterStackSize;
 	private String inputPortName;
 	private String outputPortName;
@@ -146,6 +150,8 @@ public class FilterTransformHandler extends AadlHandler {
 			isSel4Process = wizard.createThread();
 			filterDispatchProtocol = wizard.getDispatchProtocol();
 			filterPeriod = wizard.getPeriod();
+			filterExecutionTime = wizard.getExecutionTime();
+			filterDomain = wizard.getDomain();
 			filterStackSize = wizard.getStackSize();
 			inputPortName = wizard.getInputPortName();
 			if (inputPortName == "") {
@@ -357,6 +363,41 @@ public class FilterTransformHandler extends AadlHandler {
 					filterImpl.setPropertyValue(periodProp, periodLit);
 				}
 
+				// Execution Time
+				if (compCategory == ComponentCategory.THREAD && !filterExecutionTime.isEmpty()) {
+					final Property executionTimeProp = GetProperties.lookupPropertyDefinition(filterImpl,
+							TimingProperties._NAME, TimingProperties.COMPUTE_EXECUTION_TIME);
+					String[] parts = filterExecutionTime.split("\\.\\.");
+					final UnitLiteral unitMin = Aadl2Factory.eINSTANCE.createUnitLiteral();
+					unitMin.setName(parts[0].replaceAll("[\\d]", "").trim());
+					final IntegerLiteral executionTimeMin = Aadl2Factory.eINSTANCE.createIntegerLiteral();
+					executionTimeMin.setBase(0);
+					executionTimeMin.setValue(Long.parseLong(parts[0].replaceAll("[\\D]", "").trim()));
+					executionTimeMin.setUnit(unitMin);
+					final UnitLiteral unitMax = Aadl2Factory.eINSTANCE.createUnitLiteral();
+					unitMax.setName(parts[1].replaceAll("[\\d]", "").trim());
+					final IntegerLiteral executionTimeMax = Aadl2Factory.eINSTANCE.createIntegerLiteral();
+					executionTimeMax.setBase(0);
+					executionTimeMax.setValue(Long.parseLong(parts[1].replaceAll("[\\D]", "").trim()));
+					executionTimeMax.setUnit(unitMax);
+					final RangeValue executionTimeRange = Aadl2Factory.eINSTANCE.createRangeValue();
+					executionTimeRange.setMinimum(executionTimeMin);
+					executionTimeRange.setMaximum(executionTimeMax);
+					filterImpl.setPropertyValue(executionTimeProp, executionTimeRange);
+				}
+
+				// Domain
+				if (compCategory == ComponentCategory.PROCESS && filterDomain != null) {
+					if (CaseUtils.importCaseSchedulingPackage(pkgSection)) {
+						final Property domainProp = GetProperties.lookupPropertyDefinition(filterImpl,
+								CaseUtils.CASE_SCHEDULING_NAME, "Domain");
+						final IntegerLiteral domainLit = Aadl2Factory.eINSTANCE.createIntegerLiteral();
+						domainLit.setBase(0);
+						domainLit.setValue(filterDomain);
+						filterImpl.setPropertyValue(domainProp, domainLit);
+					}
+				}
+
 				// Stack Size
 				if (compCategory == ComponentCategory.THREAD && !filterStackSize.isEmpty()) {
 					final Property stackSizeProp = GetProperties.lookupPropertyDefinition(filterImpl,
@@ -477,7 +518,7 @@ public class FilterTransformHandler extends AadlHandler {
 							"{**" + System.lineSeparator() + "lift contract;" + System.lineSeparator() + "**}");
 
 					Sel4TransformHandler.insertThreadInSel4Process((ProcessImplementation) filterImpl,
-							filterDispatchProtocol, filterStackSize, agreeClauses.toString());
+							filterDispatchProtocol, filterExecutionTime, filterStackSize, agreeClauses.toString());
 
 				}
 

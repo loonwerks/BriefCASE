@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
@@ -37,6 +38,7 @@ import org.osate.aadl2.SystemImplementation;
 import org.osate.aadl2.modelsupport.util.AadlUtil;
 import org.osate.ui.dialogs.Dialog;
 
+import com.collins.trustedsystems.briefcase.preferences.BriefcasePreferenceConstants;
 import com.collins.trustedsystems.briefcase.staircase.handlers.AttestationTransformHandler;
 import com.collins.trustedsystems.briefcase.staircase.requirements.RequirementsManager;
 import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
@@ -67,12 +69,16 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 	private List<Button> btnMgrDispatchProtocol = new ArrayList<>();
 	private Label lblMgrPeriodField;
 	private Text txtMgrPeriod;
+	private Text txtMgrExecutionTime;
+	private Text txtMgrDomain;
 	private Text txtMgrStackSize;
 	private Label lblGateDispatchProtocolField;
 	private Group gateProtocolGroup;
 	private List<Button> btnGateDispatchProtocol = new ArrayList<>();
 	private Label lblGatePeriodField;
 	private Text txtGatePeriod;
+	private Text txtGateExecutionTime;
+	private Text txtGateDomain;
 	private Text txtGateStackSize;
 	private List<Button> btnMgrLogPortType = new ArrayList<>();
 	private List<Button> btnGateLogPortType = new ArrayList<>();
@@ -93,9 +99,13 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 	private Map<String, List<String>> gatePortNames = new HashMap<>();
 	private String mgrDispatchProtocol = "";
 	private String mgrPeriod = "";
+	private String mgrExecutionTime = "";
+	private Integer mgrDomain = null;
 	private String mgrStackSize = "";
 	private String gateDispatchProtocol = "";
 	private String gatePeriod = "";
+	private String gateExecutionTime = "";
+	private Integer gateDomain = null;
 	private String gateStackSize = "";
 	private PortCategory mgrLogPortType = null;
 	private PortCategory gateLogPortType = null;
@@ -236,7 +246,15 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 				types);
 		txtIdListDataType = TransformDialogUtil.createDataTypeField(container, "ID list data type", types);
 		createMgrDispatchProtocolField(container);
-		txtMgrStackSize = TransformDialogUtil.createTextField(container, "Stack size", "");
+		txtMgrExecutionTime = TransformDialogUtil.createTextField(container, "Execution time",
+				Platform.getPreferencesService()
+						.getString("com.collins.trustedsystems.briefcase", BriefcasePreferenceConstants.EXECUTION_TIME,
+								"", null));
+		if (context instanceof SystemImplementation) {
+			txtMgrDomain = TransformDialogUtil.createTextField(container, "Domain", "");
+		}
+		txtMgrStackSize = TransformDialogUtil.createTextField(container, "Stack size", Platform.getPreferencesService()
+				.getString("com.collins.trustedsystems.briefcase", BriefcasePreferenceConstants.STACK_SIZE, "", null));
 		btnMgrLogPortType = TransformDialogUtil.createLogPortField(container);
 		createUseKUImplementationField(container);
 
@@ -273,7 +291,17 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		miscContainer.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 		miscContainer.setLayout(new GridLayout(2, false));
 		createGateDispatchProtocolField(miscContainer);
-		txtGateStackSize = TransformDialogUtil.createTextField(miscContainer, "Stack size", "");
+		txtGateExecutionTime = TransformDialogUtil.createTextField(miscContainer, "Execution time",
+				Platform.getPreferencesService()
+						.getString("com.collins.trustedsystems.briefcase", BriefcasePreferenceConstants.EXECUTION_TIME,
+								"", null));
+		if (context instanceof SystemImplementation) {
+			txtGateDomain = TransformDialogUtil.createTextField(miscContainer, "Domain", "");
+		}
+		txtGateStackSize = TransformDialogUtil.createTextField(miscContainer, "Stack size",
+				Platform.getPreferencesService()
+						.getString("com.collins.trustedsystems.briefcase", BriefcasePreferenceConstants.STACK_SIZE, "",
+								null));
 		btnGateLogPortType = TransformDialogUtil.createLogPortField(miscContainer);
 
 		gateTab.setControl(container);
@@ -398,7 +426,9 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 
 		final Button btnNoProtocol = new Button(mgrProtocolGroup, SWT.RADIO);
 		btnNoProtocol.setText("None");
-		btnNoProtocol.setSelection(true);
+		btnNoProtocol.setSelection(Platform.getPreferencesService()
+				.getBoolean("com.collins.trustedsystems.briefcase", BriefcasePreferenceConstants.DISPATCH_PROTOCOL_NONE,
+						false, null));
 		btnNoProtocol.addSelectionListener(new SelectionListener() {
 
 			@Override
@@ -407,6 +437,10 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 				txtMgrPeriod.setEnabled(!btnNoProtocol.getSelection());
 				if (btnNoProtocol.getSelection()) {
 					txtMgrPeriod.setText("");
+				} else {
+					txtMgrPeriod.setText(Platform.getPreferencesService()
+							.getString("com.collins.trustedsystems.briefcase", BriefcasePreferenceConstants.PERIOD, "",
+									null));
 				}
 			}
 
@@ -418,11 +452,15 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 
 		final Button btnPeriodic = new Button(mgrProtocolGroup, SWT.RADIO);
 		btnPeriodic.setText("Periodic");
-		btnPeriodic.setSelection(false);
+		btnPeriodic.setSelection(Platform.getPreferencesService()
+				.getBoolean("com.collins.trustedsystems.briefcase",
+						BriefcasePreferenceConstants.DISPATCH_PROTOCOL_PERIODIC, true, null));
 
 		final Button btnSporadic = new Button(mgrProtocolGroup, SWT.RADIO);
 		btnSporadic.setText("Sporadic");
-		btnSporadic.setSelection(false);
+		btnSporadic.setSelection(Platform.getPreferencesService()
+				.getBoolean("com.collins.trustedsystems.briefcase",
+						BriefcasePreferenceConstants.DISPATCH_PROTOCOL_SPORADIC, false, null));
 
 		final GridData dataInfoField = new GridData();
 		dataInfoField.grabExcessHorizontalSpace = true;
@@ -441,6 +479,8 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		btnMgrDispatchProtocol.add(btnNoProtocol);
 		btnMgrDispatchProtocol.add(btnPeriodic);
 		btnMgrDispatchProtocol.add(btnSporadic);
+
+		btnNoProtocol.notifyListeners(SWT.Selection, null);
 
 	}
 
@@ -463,7 +503,9 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 
 		final Button btnNoProtocol = new Button(gateProtocolGroup, SWT.RADIO);
 		btnNoProtocol.setText("None");
-		btnNoProtocol.setSelection(true);
+		btnNoProtocol.setSelection(Platform.getPreferencesService()
+				.getBoolean("com.collins.trustedsystems.briefcase", BriefcasePreferenceConstants.DISPATCH_PROTOCOL_NONE,
+						false, null));
 		btnNoProtocol.addSelectionListener(new SelectionListener() {
 
 			@Override
@@ -472,6 +514,10 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 				txtGatePeriod.setEnabled(!btnNoProtocol.getSelection());
 				if (btnNoProtocol.getSelection()) {
 					txtGatePeriod.setText("");
+				} else {
+					txtGatePeriod.setText(Platform.getPreferencesService()
+							.getString("com.collins.trustedsystems.briefcase", BriefcasePreferenceConstants.PERIOD, "",
+									null));
 				}
 			}
 
@@ -483,11 +529,15 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 
 		final Button btnPeriodic = new Button(gateProtocolGroup, SWT.RADIO);
 		btnPeriodic.setText("Periodic");
-		btnPeriodic.setSelection(false);
+		btnPeriodic.setSelection(Platform.getPreferencesService()
+				.getBoolean("com.collins.trustedsystems.briefcase",
+						BriefcasePreferenceConstants.DISPATCH_PROTOCOL_PERIODIC, true, null));
 
 		final Button btnSporadic = new Button(gateProtocolGroup, SWT.RADIO);
 		btnSporadic.setText("Sporadic");
-		btnSporadic.setSelection(false);
+		btnSporadic.setSelection(Platform.getPreferencesService()
+				.getBoolean("com.collins.trustedsystems.briefcase",
+						BriefcasePreferenceConstants.DISPATCH_PROTOCOL_SPORADIC, false, null));
 
 		final GridData dataInfoField = new GridData();
 		dataInfoField.grabExcessHorizontalSpace = true;
@@ -506,6 +556,8 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		btnGateDispatchProtocol.add(btnNoProtocol);
 		btnGateDispatchProtocol.add(btnPeriodic);
 		btnGateDispatchProtocol.add(btnSporadic);
+
+		btnNoProtocol.notifyListeners(SWT.Selection, null);
 
 	}
 
@@ -610,7 +662,7 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 
 		// Comm driver
 		if (cboCommDrivers != null) {
-			commDriver = cboCommDrivers.getText();
+			commDriver = cboCommDrivers.getText().trim();
 			if (commDriver.isEmpty() || commDriver.contentEquals(NO_COMM_DRIVER_SELECTED)
 					|| !commDrivers.contains(commDriver)) {
 				Dialog.showError("Attestation Transform", "A communication driver must be specified.");
@@ -619,6 +671,7 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		}
 
 		// Attestation Manager Component Name
+		txtMgrComponentName.setText(txtMgrComponentName.getText().trim());
 		if (!txtMgrComponentName.getText().isEmpty()
 				&& !ModelTransformUtils.isValidName(txtMgrComponentName.getText())) {
 			Dialog.showError("Attestation Transform",
@@ -639,6 +692,7 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		}
 
 		// Attestation Gate Component Name
+		txtGateComponentName.setText(txtGateComponentName.getText().trim());
 		if (!txtGateComponentName.getText().isEmpty()
 				&& !ModelTransformUtils.isValidName(txtGateComponentName.getText())) {
 			Dialog.showError("Attestation Transform",
@@ -659,6 +713,7 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		}
 
 		// Attestation Manager Subcomponent Instance Name
+		txtMgrSubcomponentName.setText(txtMgrSubcomponentName.getText().trim());
 		if (!txtMgrSubcomponentName.getText().isEmpty()
 				&& !ModelTransformUtils.isValidName(txtMgrSubcomponentName.getText())) {
 			Dialog.showError("Attestation Transform",
@@ -680,6 +735,7 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		}
 
 		// Attestation Gate Subcomponent Instance Name
+		txtGateSubcomponentName.setText(txtGateSubcomponentName.getText().trim());
 		if (!txtGateSubcomponentName.getText().isEmpty()
 				&& !ModelTransformUtils.isValidName(txtGateSubcomponentName.getText())) {
 			Dialog.showError("Attestation Transform",
@@ -701,7 +757,8 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		}
 
 		// Request Message Data Type
-		if (!txtRequestMessageDataType.getText().isEmpty() && !txtRequestMessageDataType.getText().contains("::")) {
+		txtRequestMessageDataType.setText(txtRequestMessageDataType.getText().trim());
+		if (!txtRequestMessageDataType.getText().isBlank() && !txtRequestMessageDataType.getText().contains("::")) {
 			// Check if type is defined in current package
 			if (AadlUtil.findNamedElementInList(componentsInPackage, txtRequestMessageDataType.getText()) == null) {
 				Dialog.showError("Attestation Transform",
@@ -748,6 +805,7 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 //		}
 
 		// ID List Data Type
+		txtIdListDataType.setText(txtIdListDataType.getText().trim());
 		if (!txtIdListDataType.getText().isEmpty() && !txtIdListDataType.getText().contains("::")) {
 			// Check if type is defined in current package
 			if (AadlUtil.findNamedElementInList(componentsInPackage, txtIdListDataType.getText()) == null) {
@@ -822,6 +880,64 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 				}
 				break;
 			}
+		}
+
+		// Mgr Execution Time
+		if (txtMgrExecutionTime.getText().isEmpty()
+				|| txtMgrExecutionTime.getText()
+						.matches(
+								"((\\d)+(\\s)*(ps|ns|us|ms|sec|min|hr)?\\.\\.(\\d)+(\\s)*(ps|ns|us|ms|sec|min|hr)?)")) {
+			mgrExecutionTime = txtMgrExecutionTime.getText();
+		} else {
+			Dialog.showError("Attestation Transform", "Attestation Manager execution time "
+					+ txtMgrExecutionTime.getText()
+					+ " is malformed. See the AADL definition of Compute_Execution_Time in Timing_Properties.aadl.");
+			folder.setSelection(MGR_TAB_IDX);
+			return false;
+		}
+
+		// Gate Execution Time
+		if (txtGateExecutionTime.getText().isEmpty() || txtGateExecutionTime.getText()
+				.matches("((\\d)+(\\s)*(ps|ns|us|ms|sec|min|hr)?\\.\\.(\\d)+(\\s)*(ps|ns|us|ms|sec|min|hr)?)")) {
+			gateExecutionTime = txtGateExecutionTime.getText();
+		} else {
+			Dialog.showError("Attestation Transform", "Attestation Gate execution time "
+					+ txtGateExecutionTime.getText()
+					+ " is malformed. See the AADL definition of Compute_Execution_Time in Timing_Properties.aadl.");
+			folder.setSelection(GATE_TAB_IDX);
+			return false;
+		}
+
+		// Mgr Domain
+		try {
+			if (txtMgrDomain != null && !txtMgrDomain.getText().isBlank()) {
+				mgrDomain = Integer.parseInt(txtMgrDomain.getText().trim());
+				if (mgrDomain < 2) {
+					throw new Exception();
+				}
+			}
+		} catch (Exception e) {
+			Dialog.showError("Attestation Transform",
+					"Attestation Manager domain " + txtMgrDomain.getText() + " must be an integer greater than 1.");
+			mgrDomain = null;
+			folder.setSelection(MGR_TAB_IDX);
+			return false;
+		}
+
+		// Gate Domain
+		try {
+			if (txtGateDomain != null && !txtGateDomain.getText().isBlank()) {
+				gateDomain = Integer.parseInt(txtGateDomain.getText().trim());
+				if (gateDomain < 2) {
+					throw new Exception();
+				}
+			}
+		} catch (Exception e) {
+			Dialog.showError("Attestation Transform",
+					"Attestation Gate domain " + txtGateDomain.getText() + " must be an integer greater than 1.");
+			gateDomain = null;
+			folder.setSelection(GATE_TAB_IDX);
+			return false;
 		}
 
 		// Mgr Stack Size
@@ -940,6 +1056,14 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		return mgrPeriod;
 	}
 
+	public String getMgrExecutionTime() {
+		return mgrExecutionTime;
+	}
+
+	public Integer getMgrDomain() {
+		return mgrDomain;
+	}
+
 	public String getMgrStackSize() {
 		return mgrStackSize;
 	}
@@ -950,6 +1074,14 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 
 	public String getGatePeriod() {
 		return gatePeriod;
+	}
+
+	public String getGateExecutionTime() {
+		return gateExecutionTime;
+	}
+
+	public Integer getGateDomain() {
+		return gateDomain;
 	}
 
 	public String getGateStackSize() {
