@@ -13,6 +13,8 @@ import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IWorkbench;
@@ -34,25 +36,47 @@ public class BriefcasePreferencePage extends FieldEditorPreferencePage implement
 	public void createFieldEditors() {
 
 		Label label = new Label(getFieldEditorParent(), SWT.NONE);
-		label.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1));
+		label.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false, 3, 1));
 		final FontDescriptor boldDescriptor = FontDescriptor.createFrom(label.getFont()).setStyle(SWT.BOLD);
 		final Font boldFont = boldDescriptor.createFont(label.getDisplay());
 		label.setFont(boldFont);
 		label.addDisposeListener(e -> boldFont.dispose());
 		label.setText("Transform default values");
 
-		addField(new RadioGroupFieldEditor(BriefcasePreferenceConstants.DISPATCH_PROTOCOL, "Dispatch protocol", 3,
+		addField(new RadioGroupFieldEditor(BriefcasePreferenceConstants.DISPATCH_PROTOCOL, "Dispatch Protocol", 3,
 				new String[][] { { "None", BriefcasePreferenceConstants.DISPATCH_PROTOCOL_NONE },
 						{ "Periodic", BriefcasePreferenceConstants.DISPATCH_PROTOCOL_PERIODIC },
 						{ "Sporadic", BriefcasePreferenceConstants.DISPATCH_PROTOCOL_SPORADIC } },
-				getFieldEditorParent(), true));
+				getFieldEditorParent(), false) {
+			@Override
+			public int getNumberOfControls() {
+				return 2;
+			}
+
+			@Override
+			protected void adjustForNumColumns(int numColumns) {
+
+			}
+
+			@Override
+			protected void doFillIntoGrid(Composite parent, int numColumns) {
+				getLabelControl(parent);
+				final Control control = getRadioBoxControl(parent);
+				final GridData gd = new GridData();
+				gd.horizontalSpan = 2;
+				control.setLayoutData(gd);
+			}
+		});
 		addField(new StringFieldEditor(BriefcasePreferenceConstants.PERIOD, "Period", getFieldEditorParent()));
 		addField(new StringFieldEditor(BriefcasePreferenceConstants.EXECUTION_TIME, "Maximum execution time",
 				getFieldEditorParent()));
 		addField(new StringFieldEditor(BriefcasePreferenceConstants.STACK_SIZE, "Stack size", getFieldEditorParent()));
 
+		label = new Label(getFieldEditorParent(), SWT.SEPARATOR | SWT.HORIZONTAL);
+		label.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 5));
+
 		label = new Label(getFieldEditorParent(), SWT.NONE);
-		label.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1));
+		label.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1));
 		label.setFont(boldFont);
 		label.addDisposeListener(e -> boldFont.dispose());
 

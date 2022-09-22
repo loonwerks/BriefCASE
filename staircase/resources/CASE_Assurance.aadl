@@ -41,7 +41,7 @@ private
 		
 		goal security_requirements_satisfied_in_implementation(sys : system) <=
 			** "Security requirements are satisfied through the realization of the system model" **
-			strategy: "Argue over the required properties of the components and platform"
+			strategy: "Argue over the required properties of the components and platform";
 			deployed_sw_components_satisfy_requirements(sys) and 
 			platform_components_guarantee_required_properties(sys) and 
 			system_implementation_satisfies_security_requirements()
@@ -66,7 +66,7 @@ private
 			application_code_exclusively_uses_interface_apis(comp) and 
 			application_code_runs_to_completion(comp) and 
 			component_output_satisfies_contract_on_every_dispatch(comp) and
-			((flow_specifications(comp) or end_to_end_flows(comp)) => component_output_satisfies_information_flow_specifications_on_every_dispatch(comp)) and
+			((size(flow_specifications(comp)) > 0 or size(end_to_end_flows(comp)) > 0) => component_output_satisfies_information_flow_specifications_on_every_dispatch(comp)) and
 			component_execution_time_conforms_to_specified_wcet_on_every_dispatch(comp)
 			
 		goal application_code_exclusively_uses_interface_apis(comp : component) <=
@@ -116,7 +116,7 @@ private
 			infrastructure_application_non_interference(comp) and
 			specified_information_flow_directionality_enforced_by_deployment(comp) and
 			deployed_component_satisfies_functional_requirements(comp) and
-			((flow_specifications(comp) or end_to_end_flows(comp)) => deployed_component_satisfies_intra_component_flows(comp))
+			((size(flow_specifications(comp)) > 0 or size(end_to_end_flows(comp)) > 0) => deployed_component_satisfies_intra_component_flows(comp))
 			
 		goal identifiable_component_platform_deployment(comp : component) <=
 			** "There is an identifiable component platform deployment representing executing code such that all means of information ingress/egress to the component platform deployment are identified" **
