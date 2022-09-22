@@ -245,7 +245,7 @@ public class Assurance extends ResoluteExternalFunctionLibrary {
 
 	// Returns a file corresponding to either an absolute or relative path
 	private File getFile(String filename) throws Exception {
-		File file = new File(filename);
+		final File file = new File(filename);
 		if (file.exists()) {
 			return file;
 		} else if (!file.isAbsolute()) {

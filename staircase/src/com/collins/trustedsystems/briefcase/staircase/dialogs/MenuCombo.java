@@ -35,6 +35,11 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Text;
+import org.osate.aadl2.ComponentImplementation;
+import org.osate.aadl2.DataClassifier;
+import org.osate.aadl2.DataImplementation;
+import org.osate.aadl2.DataType;
+import org.osate.aadl2.Subcomponent;
 
 public class MenuCombo {
 
@@ -89,6 +94,104 @@ public class MenuCombo {
 		menu = mgr.createContextMenu(button);
 		button.setMenu(menu);
 
+	}
+
+	public MenuCombo(Composite parent, Map<String, List<DataClassifier>> items, boolean includeFields) {
+
+		final Composite control = new Composite(parent, SWT.NONE);
+		control.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+		GridLayout layout = new GridLayout(2, false);
+		layout.marginWidth = 0;
+		control.setLayout(layout);
+
+		final GridData dataInfoField = new GridData();
+		dataInfoField.grabExcessHorizontalSpace = true;
+		dataInfoField.horizontalAlignment = SWT.FILL;
+		dataInfoField.grabExcessVerticalSpace = false;
+
+		text = new Text(control, SWT.BORDER);
+		text.setLayoutData(dataInfoField);
+		button = new Button(control, SWT.NONE);
+		button.setText("...");
+		button.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(final SelectionEvent e) {
+				menu.setLocation(button.toDisplay(new Point(0, 0)));
+				menu.setVisible(true);
+			}
+		});
+
+		final MenuManager mgr = new MenuManager();
+
+		for (Map.Entry<String, List<DataClassifier>> item : items.entrySet()) {
+
+			final MenuManager packageMenu = new MenuManager();
+			packageMenu.setMenuText(item.getKey());
+
+			for (DataClassifier classifier : item.getValue()) {
+
+				if (classifier instanceof DataType) {
+					packageMenu.add(new Action(classifier.getName()) {
+						@Override
+						public void run() {
+							text.setText(classifier.getQualifiedName());
+						}
+					});
+				} else if (classifier instanceof DataImplementation) {
+
+					final MenuManager typeMenu = new MenuManager();
+					typeMenu.setMenuText(classifier.getName());
+
+					if (includeFields) {
+						for (Subcomponent sub : ((DataImplementation) classifier).getAllSubcomponents()) {
+							createMenu(typeMenu, sub, classifier.getQualifiedName());
+						}
+						packageMenu.add(typeMenu);
+					} else {
+						packageMenu.add(new Action(classifier.getName()) {
+							@Override
+							public void run() {
+								text.setText(classifier.getQualifiedName());
+							}
+						});
+					}
+				}
+			}
+			mgr.add(packageMenu);
+		}
+
+		menu = mgr.createContextMenu(button);
+		button.setMenu(menu);
+
+	}
+
+	private void createMenu(MenuManager typeMenu, Subcomponent comp, String qualifiedName) {
+
+		if (comp.getClassifier() instanceof ComponentImplementation) {
+			final ComponentImplementation compImpl = comp.getComponentImplementation();
+			if (compImpl.getAllSubcomponents().isEmpty()) {
+				typeMenu.add(new Action(comp.getName()) {
+					@Override
+					public void run() {
+						text.setText(qualifiedName + "." + comp.getName());
+					}
+				});
+			} else {
+				MenuManager subTypeMenu = new MenuManager();
+				subTypeMenu.setMenuText(comp.getName());
+				for (Subcomponent sub : compImpl.getAllSubcomponents()) {
+					createMenu(subTypeMenu, sub, qualifiedName + "." + comp.getName());
+				}
+				typeMenu.add(subTypeMenu);
+			}
+		} else {
+			typeMenu.add(new Action(comp.getName()) {
+				@Override
+				public void run() {
+					text.setText(qualifiedName + "." + comp.getName());
+				}
+			});
+		}
 	}
 
 	public String getText() {

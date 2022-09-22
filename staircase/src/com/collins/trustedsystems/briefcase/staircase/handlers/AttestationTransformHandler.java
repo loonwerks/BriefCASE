@@ -120,15 +120,15 @@ public class AttestationTransformHandler extends AadlHandler {
 	private String requestMessageDataType;
 	private String responseMessageDataType;
 	private long cacheTimeout;
-//	private long cacheSize;
 	private String idListDataType;
+	private Integer maxTrustedIds;
+	private String sourceField;
 	private Map<String, List<String>> attestationGatePortNames;
 	private PortCategory attestationManagerLogPortType;
 	private PortCategory attestationGateLogPortType;
 	private String attestationRequirement;
 	private boolean useKUImplementation;
 //	private String attestationManagerAgreeProperty;
-//	private String attestationGateAgreeProperty;
 	private boolean isSel4Process = false;
 
 	@Override
@@ -224,15 +224,15 @@ public class AttestationTransformHandler extends AadlHandler {
 			requestMessageDataType = wizard.getRequestMessageDataType();
 			responseMessageDataType = wizard.getResponseMessageDataType();
 			cacheTimeout = wizard.getCacheTimeout();
-//			cacheSize = wizard.getCacheSize();
 			idListDataType = wizard.getIdListDataType();
+			maxTrustedIds = wizard.getMaxTrustedIds();
+			sourceField = wizard.getSourceField();
 			attestationGatePortNames = wizard.getGatePortNames();
 			attestationManagerLogPortType = wizard.getMgrLogPortType();
 			attestationGateLogPortType = wizard.getGateLogPortType();
 			isSel4Process = wizard.createThread();
 			useKUImplementation = wizard.useKUImplementation();
 			attestationRequirement = wizard.getRequirement();
-//			attestationGateAgreeProperty = wizard.getGateAgreeProperty();
 		} else {
 			return;
 		}
@@ -578,11 +578,6 @@ public class AttestationTransformHandler extends AadlHandler {
 					CasePropertyUtils.setCacheTimeout(attestationManagerImpl, cacheTimeout);
 				}
 
-//				// CASE_Properties::CACHE_SIZE property
-//				if (cacheSize > 0) {
-//					CasePropertyUtils.setCacheSize(attestationManagerImpl, cacheSize);
-//				}
-
 				// Dispatch protocol property
 				if (compCategory == ComponentCategory.THREAD && !attestationManagerDispatchProtocol.isEmpty()) {
 					final Property dispatchProtocolProp = GetProperties.lookupPropertyDefinition(attestationManagerImpl,
@@ -704,8 +699,8 @@ public class AttestationTransformHandler extends AadlHandler {
 						.createOwnedClassifier(ComponentCreateHelper.getTypeClass(compCategory));
 				// Give it a unique name
 				final String agName = ModelTransformUtils.getUniqueName(attestationGateComponentName, true,
-						pkgSection.getOwnedClassifiers()) + (isSel4Process ? "_seL4" : "");
-				attestationGateType.setName(agName);
+						pkgSection.getOwnedClassifiers());
+				attestationGateType.setName(agName + (isSel4Process ? "_seL4" : ""));
 
 				// Create Attestation Gate ports
 				// To do this we need to look at the current connections of the comm driver in the implementation
@@ -832,23 +827,6 @@ public class AttestationTransformHandler extends AadlHandler {
 				// CASE_Properties:Gating Property
 				CasePropertyUtils.setMitigationType(attestationGateType, MITIGATION_TYPE.GATE);
 
-//				// CASE_Properties::Component_Spec property
-//				String attestationGatePropId = "";
-//				for (String commPortName : attestationGatePortNames.keySet()) {
-//					if (!attestationGatePropId.isEmpty()) {
-//						attestationGatePropId += ",";
-//					}
-//					if (attestationGatePortNames.get(commPortName).isEmpty()) {
-//						attestationGatePropId += attestationGateType.getName() + "_" + commPortName + "_out";
-//					} else {
-//						attestationGatePropId += attestationGateType.getName() + "_"
-//								+ attestationGatePortNames.get(commPortName).get(1);
-//					}
-//				}
-//				if (!attestationGatePropId.isEmpty()) {
-//					CasePropertyUtils.setCompSpec(attestationGateType, attestationGatePropId);
-//				}
-
 				// Move attestation gate to top of file
 //				pkgSection.getOwnedClassifiers().move(0, pkgSection.getOwnedClassifiers().size() - 1);
 				try {
@@ -862,7 +840,7 @@ public class AttestationTransformHandler extends AadlHandler {
 				// Create Attestation Gate implementation
 				final ComponentImplementation attestationGateImpl = (ComponentImplementation) pkgSection
 						.createOwnedClassifier(ComponentCreateHelper.getImplClass(compCategory));
-				attestationGateImpl.setName(agName + ".Impl");
+				attestationGateImpl.setName(attestationGateType.getName() + ".Impl");
 				final Realization gateRealization = attestationGateImpl.createOwnedRealization();
 				gateRealization.setImplemented(attestationGateType);
 
@@ -1075,30 +1053,72 @@ public class AttestationTransformHandler extends AadlHandler {
 
 				}
 
-//				// Add AGREE statements
-//				StringBuilder agreeClauses = new StringBuilder();
-//				agreeClauses.append("{**" + System.lineSeparator());
-//
-//				agreeClauses.append("fun IS_TRUSTED(srcid : " + idListDataType + ") : bool = (exists id in "
-//						+ AM_PORT_TRUSTED_IDS_NAME + ", (id = srcid));" + System.lineSeparator());
-//				agreeClauses.append("eq selection : int =" + System.lineSeparator());
-//				// TODO: Feature groups
-//				for (Feature f : attestationGateType.getOwnedFeatures()) {
-//					if (f instanceof EventPort || f instanceof EventDataPort) {
-//						if (((Port)f).isIn() && !f.getName().equalsIgnoreCase(AM_PORT_TRUSTED_IDS_NAME)) {
-//							agreeClauses.append("if event(" + f.getName() + ") and IS_TRUSTED()");
-//						}
-//					} else if (f instanceof DataPort) {
-//
-//					}
-//				}
-//
-//				agreeClauses.append("**}");
-//
-//				final DefaultAnnexSubclause annexSubclauseImpl = ComponentCreateHelper
-//						.createOwnedAnnexSubclause(attestationGateType);
-//				annexSubclauseImpl.setName("agree");
-//				annexSubclauseImpl.setSourceText(agreeClauses.toString());
+				// Add AGREE statements
+				final StringBuilder agreeClauses = new StringBuilder();
+				if (maxTrustedIds != null && maxTrustedIds > 0 && !idListDataType.isBlank() && !sourceField.isBlank()) {
+
+					// CASE_Properties::Component_Spec property
+					String attestationGatePropId = "";
+					for (String commPortName : attestationGatePortNames.keySet()) {
+						if (!attestationGatePropId.isEmpty()) {
+							attestationGatePropId += ",";
+						}
+						if (attestationGatePortNames.get(commPortName).isEmpty()) {
+							attestationGatePropId += agName + "_" + commPortName + "_out";
+						} else {
+							attestationGatePropId += agName + "_"
+									+ attestationGatePortNames.get(commPortName).get(1);
+						}
+					}
+					if (!attestationGatePropId.isEmpty()) {
+						CasePropertyUtils.setCompSpec(attestationGateType, attestationGatePropId);
+					}
+
+					agreeClauses.append("{**" + System.lineSeparator());
+
+					final String default_trustedid_list = idListDataType + " { value = [| "
+							+ String.join(", ", Collections.nCopies(maxTrustedIds, "0")) + " |] }";
+					agreeClauses.append("eq trusted_ids : " + idListDataType
+							+ " = (if event(TrustedIds) then TrustedIds else " + default_trustedid_list
+							+ ") -> (if event(TrustedIds) then TrustedIds else pre(trusted_ids));"
+							+ System.lineSeparator());
+
+					final String[] sourceMsgParts = sourceField.split("\\.");
+					final String sourceMsgType = sourceMsgParts.length > 1 ? sourceMsgParts[0] + "." + sourceMsgParts[1]
+							: sourceMsgParts[0];
+					final String sourceMsgField = sourceMsgParts.length > 1
+							? "." + String.join(".", Arrays.copyOfRange(sourceMsgParts, 2, sourceMsgParts.length))
+							: "";
+					agreeClauses.append("fun IS_TRUSTED(command : " + sourceMsgType + ", ids : " + idListDataType
+							+ ") : bool = exists i in ids.value, command" + sourceMsgField + " = i;"
+							+ System.lineSeparator());
+
+					for (String commPortName : attestationGatePortNames.keySet()) {
+						String portNameIn = "";
+						String portNameOut = "";
+						if (attestationGatePortNames.get(commPortName).isEmpty()) {
+							portNameIn = commPortName + "_in";
+							portNameOut = commPortName + "_out";
+						} else {
+							portNameIn = attestationGatePortNames.get(commPortName).get(0);
+							portNameOut = attestationGatePortNames.get(commPortName).get(1);
+						}
+						agreeClauses.append("guarantee " + agName + "_" + portNameOut
+								+ " \"The gate shall output only data from trusted sources\" : if event(" + portNameIn
+								+ ") and IS_TRUSTED(" + portNameIn + ", trusted_ids) then event(" + portNameOut
+								+ ") and " + portNameOut + " = " + portNameIn + " else not event(" + portNameOut + ");"
+								+ System.lineSeparator());
+					}
+
+					agreeClauses.append("**}");
+
+					if (!isSel4Process) {
+						final DefaultAnnexSubclause annexSubclauseImpl = ComponentCreateHelper
+								.createOwnedAnnexSubclause(attestationGateType);
+						annexSubclauseImpl.setName("agree");
+						annexSubclauseImpl.setSourceText(agreeClauses.toString());
+					}
+				}
 
 				if (isSel4Process) {
 
@@ -1109,15 +1129,15 @@ public class AttestationTransformHandler extends AadlHandler {
 					// Create 'lift contract' statement in process implementation.
 					// This will be done even if an AGREE property hasn't been specified yet.
 					// That way if one is manually added later, everything will still work.
-					final DefaultAnnexSubclause annexSubclauseImpl = ComponentCreateHelper
+					final DefaultAnnexSubclause annexSubclause = ComponentCreateHelper
 							.createOwnedAnnexSubclause(attestationGateImpl);
-					annexSubclauseImpl.setName("agree");
-					annexSubclauseImpl.setSourceText(
+					annexSubclause.setName("agree");
+					annexSubclause.setSourceText(
 							"{**" + System.lineSeparator() + "lift contract;" + System.lineSeparator() + "**}");
 
 					Sel4TransformHandler.insertThreadInSel4Process((ProcessImplementation) attestationGateImpl,
 							attestationGateDispatchProtocol, attestationGateExecutionTime, attestationGateStackSize,
-							null);
+							agreeClauses.toString());
 
 				}
 

@@ -12,6 +12,7 @@ import org.osate.aadl2.AadlPackage;
 import org.osate.aadl2.Classifier;
 import org.osate.aadl2.ComponentImplementation;
 import org.osate.aadl2.ConnectionEnd;
+import org.osate.aadl2.DataClassifier;
 import org.osate.aadl2.DataImplementation;
 import org.osate.aadl2.DataType;
 import org.osate.aadl2.DirectedFeature;
@@ -304,6 +305,53 @@ public class ModelTransformUtils {
 				}
 				if (!packageTypes.isEmpty()) {
 					types.put(aadlPkg.getName(), packageTypes);
+				}
+			}
+		}
+
+		return types;
+	}
+
+	/**
+	 * Returns a list of data types and data implementations for each
+	 * package visible to obj
+	 * @param obj
+	 * @return
+	 */
+	public static Map<String, List<DataClassifier>> getVisibleDataClassifiers(EObject obj) {
+		if (obj == null) {
+			return null;
+		}
+		final Map<String, List<DataClassifier>> types = new HashMap<>();
+
+		// Look in current package
+		final PackageSection pkgSection = AadlUtil.getContainingPackageSection(obj);
+		if (pkgSection == null) {
+			return null;
+		}
+
+		List<DataClassifier> classifiers = new ArrayList<>();
+		for (Classifier c : pkgSection.getOwnedClassifiers()) {
+			if (c instanceof DataClassifier) {
+				classifiers.add((DataClassifier) c);
+			}
+		}
+		if (!classifiers.isEmpty()) {
+			types.put(AadlUtil.getContainingPackage(pkgSection).getName(), classifiers);
+		}
+
+		// Look in referenced packages specified in with clause
+		for (ModelUnit modelUnit : pkgSection.getImportedUnits()) {
+			if (modelUnit instanceof AadlPackage) {
+				final AadlPackage aadlPkg = (AadlPackage) modelUnit;
+				classifiers.clear();
+				for (Classifier c : aadlPkg.getOwnedPublicSection().getOwnedClassifiers()) {
+					if (c instanceof DataClassifier) {
+						classifiers.add((DataClassifier) c);
+					}
+				}
+				if (!classifiers.isEmpty()) {
+					types.put(aadlPkg.getName(), classifiers);
 				}
 			}
 		}

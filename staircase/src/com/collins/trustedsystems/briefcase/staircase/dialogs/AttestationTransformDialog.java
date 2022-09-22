@@ -31,6 +31,7 @@ import org.eclipse.swt.widgets.Text;
 import org.osate.aadl2.Classifier;
 import org.osate.aadl2.ComponentImplementation;
 import org.osate.aadl2.Context;
+import org.osate.aadl2.DataClassifier;
 import org.osate.aadl2.PortCategory;
 import org.osate.aadl2.PortConnection;
 import org.osate.aadl2.Subcomponent;
@@ -61,8 +62,9 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 	private MenuCombo txtRequestMessageDataType;
 	private MenuCombo txtResponseMessageDataType;
 	private Text txtCacheTimeout;
-//	private Combo cboCacheSize;
 	private MenuCombo txtIdListDataType;
+	private Text txtMaxTrustedIds;
+	private MenuCombo txtSourceField;
 	private PortNamesControl pncPortNames = null;
 	private Label lblMgrDispatchProtocolField;
 	private Group mgrProtocolGroup;
@@ -86,7 +88,6 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 	private Label lblUseKUImplementationField;
 	private Button btnUseKUImplementation;
 	private Combo cboRequirement;
-//	private Text txtGateAgreeProperty;
 	private String attestationManagerComponentName;
 	private String attestationGateComponentName;
 	private String attestationManagerSubcomponentName;
@@ -94,8 +95,9 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 	private String requestMessageDataType = "";
 	private String responseMessageDataType = "";
 	private long cacheTimeout = 0;
-//	private long cacheSize = 0;
 	private String idListDataType = "";
+	private Integer maxTrustedIds = null;
+	private String sourceField = "";
 	private Map<String, List<String>> gatePortNames = new HashMap<>();
 	private String mgrDispatchProtocol = "";
 	private String mgrPeriod = "";
@@ -114,11 +116,9 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 	private boolean createThread = false;
 	private boolean useKUImplementation = true;
 	private List<String> requirements = new ArrayList<>();
-	private Map<String, List<String>> types = new HashMap<>();
-//	private String gateAgreeProperty;
+	private Map<String, List<DataClassifier>> types = new HashMap<>();
 
-//	private static final int MAX_CACHE_SIZE = 6;
-//	private static final int DEFAULT_CACHE_SIZE = 4;
+	private static final String MAX_TRUSTED_IDS = "4";
 
 	private static final int MGR_TAB_IDX = 0;
 	private static final int GATE_TAB_IDX = 1;
@@ -170,7 +170,7 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		}
 
 		// Populate package::type list
-		types = ModelTransformUtils.getTypes(context);
+		types = ModelTransformUtils.getVisibleDataClassifiers(context);
 
 		// Populate requirements list
 		RequirementsManager.getInstance().getImportedRequirements().forEach(r -> requirements.add(r.getId()));
@@ -241,10 +241,14 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 				ModelTransformUtils.getUniqueName(AttestationTransformHandler.AM_SUBCOMP_NAME, true,
 						context.getOwnedSubcomponents()));
 		txtRequestMessageDataType = TransformDialogUtil.createDataTypeField(container, "Request Message data type",
-				types);
+				types, false);
 		txtResponseMessageDataType = TransformDialogUtil.createDataTypeField(container, "Response Message data type",
-				types);
-		txtIdListDataType = TransformDialogUtil.createDataTypeField(container, "ID list data type", types);
+				types, false);
+		txtIdListDataType = TransformDialogUtil.createDataTypeField(container, "Trusted ID list data type",
+				ModelTransformUtils.getVisibleDataClassifiers(context), false);
+		txtMaxTrustedIds = TransformDialogUtil.createTextField(container, "Max Trusted IDs", MAX_TRUSTED_IDS);
+		txtSourceField = TransformDialogUtil.createDataTypeField(container, "Source ID field name",
+				types, true);
 		createMgrDispatchProtocolField(container);
 		txtMgrExecutionTime = TransformDialogUtil.createTextField(container, "Execution time",
 				Platform.getPreferencesService()
@@ -796,14 +800,6 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 //			return false;
 //		}
 
-//		// Cache Size
-//		try {
-//			cacheSize = Long.parseLong(cboCacheSize.getText());
-//		} catch (NumberFormatException e) {
-//			Dialog.showError("Attestation Transform", "Value of Cache Size must be an integer.");
-//			return false;
-//		}
-
 		// ID List Data Type
 		txtIdListDataType.setText(txtIdListDataType.getText().trim());
 		if (!txtIdListDataType.getText().isEmpty() && !txtIdListDataType.getText().contains("::")) {
@@ -817,6 +813,36 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 			}
 		}
 		idListDataType = txtIdListDataType.getText();
+
+		// Max trusted IDs
+		try {
+			if (!txtMaxTrustedIds.getText().isBlank()) {
+				maxTrustedIds = Integer.parseInt(txtMaxTrustedIds.getText().trim());
+				if (maxTrustedIds <= 0) {
+					throw new Exception();
+				}
+			}
+		} catch (Exception e) {
+			Dialog.showError("Attestation Transform", "Max trusted IDs must be an integer greater than 0.");
+			maxTrustedIds = null;
+			folder.setSelection(MGR_TAB_IDX);
+			return false;
+		}
+
+		// Source field
+		txtSourceField.setText(txtSourceField.getText().trim());
+		if (!txtSourceField.getText().isEmpty() && !txtSourceField.getText().contains("::")) {
+			// Check if type is defined in current package
+			if (AadlUtil.findNamedElementInList(componentsInPackage, txtSourceField.getText()) == null) {
+				Dialog.showError("Attestation Transform",
+						"Source field data type was not found in package "
+								+ AadlUtil.getContainingPackage(context).getName()
+								+ ". Enter the data type's qualified name if it is defined in a different package.");
+				folder.setSelection(MGR_TAB_IDX);
+				return false;
+			}
+		}
+		sourceField = txtSourceField.getText();
 
 		// Gate port names
 		gatePortNames = pncPortNames.getContents();
@@ -994,9 +1020,6 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 			return false;
 		}
 
-//		// AGREE
-//		gateAgreeProperty = txtGateAgreeProperty.getText();
-
 		return true;
 	}
 
@@ -1032,12 +1055,16 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 		return cacheTimeout;
 	}
 
-//	public long getCacheSize() {
-//		return cacheSize;
-//	}
-
 	public String getIdListDataType() {
 		return idListDataType;
+	}
+
+	public Integer getMaxTrustedIds() {
+		return maxTrustedIds;
+	}
+
+	public String getSourceField() {
+		return sourceField;
 	}
 
 	public Map<String, List<String>> getGatePortNames() {
@@ -1103,9 +1130,5 @@ public class AttestationTransformDialog extends TitleAreaDialog {
 	public String getRequirement() {
 		return requirement;
 	}
-
-//	public String getGateAgreeProperty() {
-//		return gateAgreeProperty;
-//	}
 
 }

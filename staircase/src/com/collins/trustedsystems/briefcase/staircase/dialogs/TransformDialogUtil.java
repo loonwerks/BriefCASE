@@ -13,6 +13,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
+import org.osate.aadl2.DataClassifier;
 
 public class TransformDialogUtil {
 
@@ -57,6 +58,19 @@ public class TransformDialogUtil {
 		dataInfoField.horizontalAlignment = SWT.FILL;
 		dataInfoField.grabExcessVerticalSpace = false;
 		return new MenuCombo(container, types);
+	}
+
+	public static MenuCombo createDataTypeField(Composite container, String labelText,
+			Map<String, List<DataClassifier>> types, boolean includeFields) {
+
+		final Label lblRequestMessageDataTypeField = new Label(container, SWT.NONE);
+		lblRequestMessageDataTypeField.setText(labelText);
+
+		final GridData dataInfoField = new GridData();
+		dataInfoField.grabExcessHorizontalSpace = true;
+		dataInfoField.horizontalAlignment = SWT.FILL;
+		dataInfoField.grabExcessVerticalSpace = false;
+		return new MenuCombo(container, types, includeFields);
 	}
 
 
