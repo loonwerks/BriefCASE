@@ -155,7 +155,7 @@ public class CaseUtils {
 		PropertySet propSet = null;
 
 		for (ModelUnit modelUnit : pkgSection.getImportedUnits()) {
-			if (modelUnit instanceof AadlPackage && modelUnit.hasName()) {
+			if (modelUnit instanceof PropertySet && modelUnit.hasName()) {
 				if (modelUnit.getName().equalsIgnoreCase(CASE_SCHEDULING_NAME)) {
 					propSet = (PropertySet) modelUnit;
 					break;
