@@ -40,7 +40,7 @@ public class ImportRequirementsHandler extends AbstractHandler {
 					PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), SWT.OPEN);
 			dlgReqFile.setText("Select requirements file to import");
 			dlgReqFile.setFilterPath(project.getLocation().append("Requirements").toOSString());
-			final String[] filterExts = { "*.json", "*.txt", "*.*" };
+			final String[] filterExts = { "*.*", "*.json", "*.txt" };
 			dlgReqFile.setFilterExtensions(filterExts);
 			filename = dlgReqFile.open();
 			if (filename == null) {
@@ -86,14 +86,19 @@ public class ImportRequirementsHandler extends AbstractHandler {
 			return false;
 		}
 
+		final List<CyberRequirement> requirements = reqMgr.getRequirements();
+		if (requirements.isEmpty()) {
+			Dialog.showInfo("Requirements Manager", "No requirements were found in the model"
+					+ (importRequirements ? " or in file " + filename : "") + ".");
+			return false;
+		}
+
 		final ImportRequirementsGUI wizard = new ImportRequirementsGUI(
 				PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(),
 				importRequirements ? ImportRequirementsGUI.IMPORT : ImportRequirementsGUI.MANAGE);
-		wizard.setRequirements(reqMgr.getRequirements());
+		wizard.setRequirements(requirements);
 
-		if (wizard.getRequirements().isEmpty()) {
-			Dialog.showInfo("Requirements Manager", "No requirements found in model.");
-		} else if (wizard.open() == SWT.OK) {
+		if (wizard.open() == SWT.OK) {
 			final List<CyberRequirement> updatedReqs = wizard.getRequirements();
 			if (reqMgr.updateRequirements(updatedReqs)) {
 				BriefcaseNotifier.notify("Requirements Manager", "Requirements import complete.");

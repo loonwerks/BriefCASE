@@ -156,7 +156,7 @@ public class RequirementsDatabaseHelper {
 			final AadlPackage pkg = TraverseProject.getPackageInFile(file);
 			for (NamedElement e : pkg.getOwnedPublicSection().getOwnedClassifiers()) {
 				if (e instanceof ComponentImplementation && e.getName().equalsIgnoreCase(topLevelImplName)) {
-					System.out.println("Found complement implementation: " + e.getQualifiedName());
+					System.out.println("Found component implementation: " + e.getQualifiedName());
 					return (ComponentImplementation) e;
 				}
 			}

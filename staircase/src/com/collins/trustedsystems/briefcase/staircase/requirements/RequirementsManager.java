@@ -9,9 +9,6 @@ import java.util.Set;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.FileDialog;
-import org.eclipse.ui.PlatformUI;
 import org.osate.aadl2.AadlPackage;
 import org.osate.aadl2.AnnexLibrary;
 import org.osate.aadl2.ComponentImplementation;
@@ -94,7 +91,7 @@ public class RequirementsManager {
 	 */
 	public boolean updateRequirements(List<CyberRequirement> updatedReqs) {
 
-		final Set<String> implementationClassifiers = new HashSet<>();
+		final Set<String> implementationClassifiersToUpdate = new HashSet<>();
 		for (CyberRequirement r : updatedReqs) {
 			try {
 				final String[] parts = r.getContext().split("\\.");
@@ -103,7 +100,7 @@ public class RequirementsManager {
 				if (parts.length > 1) {
 					classifierQualifiedName += "." + parts[1];
 				}
-				implementationClassifiers.add(classifierQualifiedName);
+
 				final CyberRequirement existing = reqDb.get(r);
 				if (existing == null) {
 					// not possible; signal error
@@ -123,6 +120,7 @@ public class RequirementsManager {
 							if (r.getFormalize()) {
 								r.insertAgree();
 							}
+							implementationClassifiersToUpdate.add(classifierQualifiedName);
 							break;
 						default:
 							// Unknown status; signal error
@@ -142,6 +140,7 @@ public class RequirementsManager {
 							if (existing.getFormalize()) {
 								r.removeAgree();
 							}
+							implementationClassifiersToUpdate.add(classifierQualifiedName);
 							break;
 						case CyberRequirement.add:
 							if (existing.getFormalize() && !r.getFormalize()) {
@@ -165,7 +164,7 @@ public class RequirementsManager {
 				return false;
 			}
 		}
-		for (String implementationClassifier : implementationClassifiers) {
+		for (String implementationClassifier : implementationClassifiersToUpdate) {
 			CyberRequirement.updateClaimCall(implementationClassifier);
 		}
 		reqDb.saveRequirementsDatabase();
@@ -186,12 +185,12 @@ public class RequirementsManager {
 		}
 
 		if (importRequirements) {
-			final List<JsonRequirementsFile> jsonReqFiles = readInputFiles(filename);
-			if (jsonReqFiles.isEmpty()) {
+			final JsonRequirementsFile jsonReqFile = readInputFile(filename);
+			if (jsonReqFile == null) {
 				return false;
 			}
 			reqDb.reset();
-			reqDb.importJsonRequirementsFiles(jsonReqFiles);
+			reqDb.importJsonRequirementsFile(jsonReqFile);
 		}
 		reqDb.importRequirements(existing);
 
@@ -253,70 +252,46 @@ public class RequirementsManager {
 	}
 
 
-	protected List<JsonRequirementsFile> readInputFiles(String filename) {
-		final List<JsonRequirementsFile> reqs = new ArrayList<>();
-		final List<String> filenames = new ArrayList<String>();
-		String filterPath = null;
+	protected JsonRequirementsFile readInputFile(String filename) {
 
 		// If a filename was passed to this command, open the file.
-		// Otherwise, prompt the user for the file
-		// TODO: only allow a single file to be selected?
-		if (filename == null || filename.isEmpty()) {
-			final FileDialog dlgReqFile = new FileDialog(
-					PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(),
-					SWT.MULTI);
-			final String[] filterExts = { "*.json", "*.txt", "*.*" };
-			dlgReqFile.setFilterExtensions(filterExts);
-			dlgReqFile.setText("Select requirements file to import.");
-			dlgReqFile.open();
-			for (String fn : dlgReqFile.getFileNames()) {
-				filenames.add(fn);
-			}
-			filterPath = dlgReqFile.getFilterPath();
-		} else {
-			filenames.add(filename);
+		if (filename == null || filename.isBlank()) {
+			return null;
 		}
 
-		for (String fn : filenames) {
-			final File reqFile = new File(filterPath, fn);
-			if (!reqFile.exists()) {
-				Dialog.showError("File not found",
-						"Cannot find the requirements file " + reqFile.getAbsolutePath() + ".");
-				continue;
-			}
-			final JsonRequirementsFile jsonFile = new JsonRequirementsFile();
-			if (!jsonFile.importFile(reqFile)) {
-				Dialog.showError("Problem with " + reqFile.getName(),
-						"Could not load cyber requirements file " + reqFile.getName() + ".");
-				continue;
-			}
-			// Alert user if there aren't any requirements to import
-			if (jsonFile.getRequirements().isEmpty()) {
-				Dialog.showError("No new requirements to import", reqFile.getName()
-						+ " does not contain any requirements that are not already present in this model.");
-				continue;
-			}
-
-			// Alert user if the model has changed since the requirements were generated
-			try {
-				final ComponentImplementation ci = reqDb
-						.getComponentImplementationInCurrentEditor(jsonFile.getImplementation());
-				if (ci == null || !jsonFile.getHashcode().contentEquals(ModelHashcode.getHashcode(ci))) {
-					throw new Exception();
-				}
-			} catch (Exception e) {
-				if (!Dialog.askQuestion("Import Requirements",
-						"The model has changed since requirements in file " + reqFile.getName()
-								+ " were generated, and therefore may no longer be applicable.  Import anyway?")) {
-					continue;
-				}
-			}
-
-			// Add the requirements in this file to the accumulated list of requirements
-			reqs.add(jsonFile);
+		final File reqFile = new File(filename);
+		if (!reqFile.exists()) {
+			Dialog.showError("Requirements Manager",
+					"Cannot find the requirements file " + reqFile.getAbsolutePath() + ".");
+			return null;
+		}
+		final JsonRequirementsFile jsonFile = new JsonRequirementsFile();
+		if (!jsonFile.importFile(reqFile)) {
+			Dialog.showError("Requirements Manager",
+					"Could not load cyber requirements file " + reqFile.getName() + ".");
+			return null;
+		}
+		// Alert user if there aren't any requirements to import
+		if (jsonFile.getRequirements().isEmpty()) {
+			BriefcaseNotifier.printInfo(reqFile.getName() + " does not contain any new requirements");
 		}
 
-		return reqs;
+		// Alert user if the model has changed since the requirements were generated
+		try {
+			final ComponentImplementation ci = reqDb
+					.getComponentImplementationInCurrentEditor(jsonFile.getImplementation());
+			if (ci == null || !jsonFile.getHashcode().contentEquals(ModelHashcode.getHashcode(ci))) {
+				throw new Exception();
+			}
+		} catch (Exception e) {
+			if (!Dialog.askQuestion("Requirements Manager",
+					"The model has changed since requirements in file " + reqFile.getName()
+							+ " were generated, and therefore may no longer be applicable.  Import anyway?")) {
+				return null;
+			}
+		}
+
+		return jsonFile;
 	}
 
 }

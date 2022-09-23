@@ -93,7 +93,7 @@ public
 			let driver : component = ModelAccess.GetComponent(comm_driver);
 			let manager : component = ModelAccess.GetComponent(attestation_manager);
 			let gate : component = ModelAccess.GetComponent(attestation_gate);
-			attestation_manager_exists(driver, manager) and attestation_manager_not_bypassed(driver, manager, gate) and component_implemented(manager, "attestation") and component_implemented(gate, "SPLAT")
+			attestation_manager_exists(driver, manager) and attestation_components_not_bypassed(driver, manager, gate) and component_implemented(manager, "attestation") and component_implemented(gate, "SPLAT")
 		
 		-- Strategy for proper insertion of virtualization
 		strategy add_virtualization(bound_components : string, virtual_machine : string) <=
@@ -235,9 +235,9 @@ public
 			-- check that the attestation manager only has attestation request/response connections to the comm driver
 			is_comm_driver(comm_driver) and has_mitigation_type(attestation_manager, CASE_Properties::Attesting) 
 						
-		-- Evidence that communication from the comm driver cannot bypass attestation manager
-		attestation_manager_not_bypassed(comm_driver : component, attestation_manager : component, attestation_gate : component) <=
-			** "Attestation Manager cannot be bypassed" **
+		-- Evidence that communication from the comm driver cannot bypass attestation components
+		attestation_components_not_bypassed(comm_driver : component, attestation_manager : component, attestation_gate : component) <=
+			** "Attestation components cannot be bypassed" **
 			-- all outgoing connections from the comm driver to components inside the 
 			-- parent of the comm driver connect to the attestation manager or attestation gate
 			let out_conns : {connection} = {conn for (conn : connections(comm_driver)) | source_component(conn) = comm_driver and not (destination_component(conn) = parent(comm_driver))};
