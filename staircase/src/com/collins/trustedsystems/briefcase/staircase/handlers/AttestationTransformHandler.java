@@ -240,11 +240,14 @@ public class AttestationTransformHandler extends AadlHandler {
 		// Insert the attestation manager
 		if (insertAttestationComponents(selectedSubcomponent)) {
 
-			// Add attestation implementation, if requested
+			// Add attestation implementation and compile cakeml, if requested
 			if (useKUImplementation) {
 				if (!AttestationAccess.createSourceDirectory()) {
 					Dialog.showWarning("Attestation Transform",
 							"Attestation components were added to the model, but the KU implementation source code could not be copied into the project");
+				} else if (!AttestationAccess.compileCakeSource()) {
+					Dialog.showWarning("Attestation Transform",
+							"Attestation components were added to the model, but the KU implementation source code could not be compiled");
 				}
 			}
 

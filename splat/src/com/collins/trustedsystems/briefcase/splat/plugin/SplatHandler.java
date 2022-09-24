@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.eclipse.core.resources.IFile;
@@ -65,6 +66,8 @@ public class SplatHandler extends AadlHandler {
 	static final String bundleId = "com.collins.trustedsystems.briefcase.splat";
 	private final static String FOLDER_PACKAGE_DELIMITER = "_";
 	private String outputDir = "";
+	private String componentSourceFolderName = "";
+	private MessageConsoleStream out = null;
 
 	private MessageConsole findConsole(String name) {
 		final ConsolePlugin plugin = ConsolePlugin.getDefault();
@@ -83,6 +86,12 @@ public class SplatHandler extends AadlHandler {
 
 	@Override
 	protected void runCommand(EObject eObj) {
+
+		// This only works on linux
+		if (!System.getProperty("os.name", "generic").toLowerCase(Locale.ENGLISH).contains("nux")) {
+			Dialog.showError("SPLAT", "SPLAT synthesis is only supported on Linux operating systems.");
+			return;
+		}
 
 		// Check if a component implementation is selected
 		if (!(eObj instanceof ComponentImplementation)) {
@@ -113,22 +122,25 @@ public class SplatHandler extends AadlHandler {
 			final String splatPath = (FileLocator
 					.toFileURL(FileLocator.find(bundle, new Path("resources/splat"), null))).getFile();
 
-			final MessageConsole console = findConsole("SPLAT");
-			final MessageConsoleStream out = console.newMessageStream();
 			final IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindow(executionEvent);
 			final IWorkbenchPage page = window.getActivePage();
 			final IConsoleView view = (IConsoleView) page.showView(IConsoleConstants.ID_CONSOLE_VIEW);
+			final MessageConsole console = findConsole("SPLAT");
+			out = console.newMessageStream();
 
 			// command line parameters
 			final List<String> cmdLineArgs = new ArrayList<>();
-
 			cmdLineArgs.add(splatPath);
 			cmdLineArgs.add("-outdir");
 
-			final String componentSourceFolderName = Platform.getPreferencesService()
-					.getString(
-					"com.collins.trustedsystems.briefcase", BriefcasePreferenceConstants.COMPONENT_SOURCE_FOLDER, "",
-					null);
+			componentSourceFolderName = Activator.getDefault()
+					.getPreferenceStore()
+					.getString(BriefcasePreferenceConstants.COMPONENT_SOURCE_FOLDER);
+			if (componentSourceFolderName.isBlank()) {
+				componentSourceFolderName = Activator.getDefault()
+						.getPreferenceStore()
+						.getDefaultString(BriefcasePreferenceConstants.COMPONENT_SOURCE_FOLDER);
+			}
 			final IProject project = TraverseProject.getCurrentProject();
 			outputDir = URI.createURI(project.getLocation().toString()).appendSegment(componentSourceFolderName)
 					.toString();
@@ -149,25 +161,34 @@ public class SplatHandler extends AadlHandler {
 			view.display(console);
 
 			String s = null;
+			final List<String> componentSourceDirectories = new ArrayList<>();
 			while ((s = stdErr.readLine()) != null) {
+				if (s.startsWith("Code written to directory: ")) {
+					componentSourceDirectories.add(s.replace("Code written to directory: ", ""));
+				}
 				out.println(s);
 			}
 
-			final int exitVal = clientProcess.waitFor();
+			int exitVal = clientProcess.waitFor();
 			if (exitVal == 0) {
+
+				// Compile
+				exitVal = compileCakeSource(componentSourceDirectories);
 
 				// refresh project directory
 				project.refreshLocal(IResource.DEPTH_INFINITE, new NullProgressMonitor());
 
 				// Insert the location of the source code into the filter component implementations in the model
-				insertSourceCodeLocation(componentSourceFolderName);
+				insertSourceCodeLocation(componentSourceDirectories);
 
 				// update log
 				if (Activator.getDefault().getPreferenceStore()
 						.getBoolean(BriefcasePreferenceConstants.SPLAT_GENERATE_LOG)) {
 					updateLog();
 				}
+			}
 
+			if (exitVal == 0) {
 				out.println("SPLAT completed successfully.");
 			} else {
 				out.println("SPLAT has encountered an error and was unable to complete.");
@@ -184,22 +205,51 @@ public class SplatHandler extends AadlHandler {
 		return;
 	}
 
+	private int compileCakeSource(List<String> componentSourceDirectories) {
+
+		int status = 0;
+		for (String compDir : componentSourceDirectories) {
+
+			final String comp = compDir.replace(outputDir + "/", "");
+			final List<String> cmdLineArgs = new ArrayList<>();
+			cmdLineArgs.add("bash");
+			cmdLineArgs.add("make.sh");
+			cmdLineArgs.add(comp);
+
+			try {
+				out.print("Compiling CakeML code for " + comp + "... ");
+				final Runtime rt = Runtime.getRuntime();
+				rt.exec("chmod a+x " + compDir);
+				final String[] subCmds = cmdLineArgs.toArray(new String[cmdLineArgs.size()]);
+				final Process clientProcess = Runtime.getRuntime().exec(subCmds);
+
+				final int exitVal = clientProcess.waitFor();
+				if (exitVal == 0) {
+					out.println("Success");
+				} else {
+					out.println("Failure");
+					status = -1;
+				}
+			} catch (Exception e) {
+				out.println("Failure");
+				out.println("\t" + e.getMessage());
+				status = -1;
+			}
+		}
+		return status;
+	}
 
 
-	private void insertSourceCodeLocation(String componentSourceFolderName) {
-
-		// Look in the SPLAT output directory for high-assurance components (each will be in its own folder)
+	private void insertSourceCodeLocation(List<String> componentSourceDirectories) {
 
 		// Get all the folders in the output directory
-		final File dir = new File(outputDir);
-		final String[] compDirs = dir.list((current, name) -> new File(current, name).isDirectory());
 		final Map<AadlPackage, List<String>> pkgMap = new HashMap<>();
 
 		for (AadlPackage pkg : TraverseProject.getPackagesInProject(TraverseProject.getCurrentProject())) {
 			final List<String> compNames = new ArrayList<>();
-			for (String d : compDirs) {
-				if (d.startsWith(pkg.getName() + "_")) {
-					compNames.add(d.substring(pkg.getName().length() + 1));
+			for (String d : componentSourceDirectories) {
+				if (d.replace(outputDir + "/", "").startsWith(pkg.getName() + "_")) {
+					compNames.add(d.replace(outputDir + "/", "").substring(pkg.getName().length() + 1));
 				}
 			}
 

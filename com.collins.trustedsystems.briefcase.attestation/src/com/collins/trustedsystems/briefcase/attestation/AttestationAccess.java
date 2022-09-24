@@ -22,6 +22,9 @@ package com.collins.trustedsystems.briefcase.attestation;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
@@ -33,18 +36,34 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.emf.common.util.URI;
 import org.osgi.framework.Bundle;
 
+import com.collins.trustedsystems.briefcase.Activator;
 import com.collins.trustedsystems.briefcase.preferences.BriefcasePreferenceConstants;
+import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
 import com.collins.trustedsystems.briefcase.util.Filesystem;
 import com.collins.trustedsystems.briefcase.util.TraverseProject;
 
 public class AttestationAccess {
+
+	private final static String BUILD = "build";
+
 	public static boolean createSourceDirectory() {
 		final IProject project = TraverseProject.getCurrentProject();
-		final String componentSourceFolderName = Platform.getPreferencesService().getString(
-				"com.collins.trustedsystems.briefcase", BriefcasePreferenceConstants.COMPONENT_SOURCE_FOLDER, "", null);
-		final String kuImplFolderName = Platform.getPreferencesService().getString(
-				"com.collins.trustedsystems.briefcase",
-				BriefcasePreferenceConstants.KU_IMPL_FOLDER, "", null);
+		String componentSourceFolderName = Activator.getDefault()
+				.getPreferenceStore()
+				.getString(BriefcasePreferenceConstants.COMPONENT_SOURCE_FOLDER);
+		if (componentSourceFolderName.isBlank()) {
+			componentSourceFolderName = Activator.getDefault()
+					.getPreferenceStore()
+					.getDefaultString(BriefcasePreferenceConstants.COMPONENT_SOURCE_FOLDER);
+		}
+		String kuImplFolderName = Activator.getDefault()
+				.getPreferenceStore()
+				.getString(BriefcasePreferenceConstants.KU_IMPL_FOLDER);
+		if (kuImplFolderName.isBlank()) {
+			kuImplFolderName = Activator.getDefault()
+					.getPreferenceStore()
+					.getDefaultString(BriefcasePreferenceConstants.KU_IMPL_FOLDER);
+		}
 		URI uri = URI.createPlatformResourceURI(project.getFullPath().toString(), true);
 		Filesystem.createFolder(uri, new String[] { componentSourceFolderName, kuImplFolderName });
 		uri = URI.createURI(project.getLocation().toString()).appendSegment(componentSourceFolderName)
@@ -66,6 +85,65 @@ public class AttestationAccess {
 			return false;
 		}
 		return true;
+	}
+
+	public static boolean compileCakeSource() {
+
+		// This only works on linux
+		if (!System.getProperty("os.name", "generic").toLowerCase(Locale.ENGLISH).contains("nux")) {
+			BriefcaseNotifier.printWarning(
+					"Attestation Manager CakeML compilation is only supported on Linux operating systems");
+			return false;
+		}
+
+		final IProject project = TraverseProject.getCurrentProject();
+		String componentSourceFolderName = Activator.getDefault()
+				.getPreferenceStore()
+				.getString(BriefcasePreferenceConstants.COMPONENT_SOURCE_FOLDER);
+		if (componentSourceFolderName.isBlank()) {
+			componentSourceFolderName = Activator.getDefault()
+					.getPreferenceStore()
+					.getDefaultString(BriefcasePreferenceConstants.COMPONENT_SOURCE_FOLDER);
+		}
+		String kuImplFolderName = Activator.getDefault()
+				.getPreferenceStore()
+				.getString(BriefcasePreferenceConstants.KU_IMPL_FOLDER);
+		if (kuImplFolderName.isBlank()) {
+			kuImplFolderName = Activator.getDefault()
+					.getPreferenceStore()
+					.getDefaultString(BriefcasePreferenceConstants.KU_IMPL_FOLDER);
+		}
+		final URI buildUri = URI.createURI(project.getLocation().toString())
+				.appendSegment(componentSourceFolderName)
+				.appendSegment(kuImplFolderName)
+				.appendSegment(BUILD);
+		// If build dir doesn't exist, create it
+		final File buildDir = new File(buildUri.toString());
+		if (!buildDir.exists()) {
+			Filesystem.createFolder(buildUri.trimSegments(1), new String[] { BUILD });
+		}
+
+		final List<String> cmdLineArgs = new ArrayList<>();
+		cmdLineArgs.add("cmake");
+		cmdLineArgs.add("..");
+
+		try {
+
+			final Runtime rt = Runtime.getRuntime();
+			rt.exec("chmod a+x " + buildUri.toString());
+			final String[] subCmds = cmdLineArgs.toArray(new String[cmdLineArgs.size()]);
+			final Process clientProcess = Runtime.getRuntime().exec(subCmds);
+
+			final int exitVal = clientProcess.waitFor();
+			if (exitVal == 0) {
+				return true;
+			} else {
+				return false;
+			}
+		} catch (Exception e) {
+			return false;
+		}
+
 	}
 
 	private static String getSourceDirectory() {
