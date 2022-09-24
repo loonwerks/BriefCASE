@@ -100,12 +100,20 @@ public class ImportRequirementsHandler extends AbstractHandler {
 
 		if (wizard.open() == SWT.OK) {
 			final List<CyberRequirement> updatedReqs = wizard.getRequirements();
-			if (reqMgr.updateRequirements(updatedReqs)) {
+			try {
+				final boolean updated = reqMgr.updateRequirements(updatedReqs);
 				BriefcaseNotifier.notify("Requirements Manager", "Requirements import complete.");
-				return true;
-			} else {
+				return updated;
+			} catch (Exception e) {
+				BriefcaseNotifier.printError(e.getMessage());
 				BriefcaseNotifier.notify("Requirements Manager", "Requirements import encountered errors.");
 			}
+//			if (reqMgr.updateRequirements(updatedReqs)) {
+//				BriefcaseNotifier.notify("Requirements Manager", "Requirements import complete.");
+//				return true;
+//			} else {
+//				BriefcaseNotifier.notify("Requirements Manager", "Requirements import encountered errors.");
+//			}
 		}
 
 		return false;

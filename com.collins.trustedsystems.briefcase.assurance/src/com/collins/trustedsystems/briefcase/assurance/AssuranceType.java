@@ -32,6 +32,7 @@ public class AssuranceType extends ResoluteExternalFunctionLibraryType {
 	public final static String DEPLOYED_COMPONENT_SATISFIES_FUNCTIONAL_REQUIREMENTS = "deployed_component_satisfies_functional_requirements";
 	public final static String DEPLOYED_COMPONENT_SATISFIES_INTRA_COMPONENT_FLOWS = "deployed_component_satisfies_intra_component_flows";
 	public final static String PLATFORM_COMPONENTS_GUARANTEE_REQUIRED_PROPERTIES = "platform_components_guarantee_required_properties";
+	public final static String SYSTEM_IMPLEMENTATION_SATISFIES_SECURITY_REQUIREMENTS = "system_implementation_satisfies_security_requirements";
 
 	@Override
 	public ResoluteType getType(String function) {
@@ -59,6 +60,7 @@ public class AssuranceType extends ResoluteExternalFunctionLibraryType {
 		case SPECIFIED_INFORMATION_FLOW_DIRECTIONALITY_ENFORCED_BY_DEPLOYMENT:
 		case DEPLOYED_COMPONENT_SATISFIES_FUNCTIONAL_REQUIREMENTS:
 		case PLATFORM_COMPONENTS_GUARANTEE_REQUIRED_PROPERTIES:
+		case SYSTEM_IMPLEMENTATION_SATISFIES_SECURITY_REQUIREMENTS:
 			return BaseType.BOOL;
 		default:
 			return BaseType.FAIL;
@@ -95,6 +97,7 @@ public class AssuranceType extends ResoluteExternalFunctionLibraryType {
 			args.add(BaseType.COMPONENT);
 			break;
 		case PLATFORM_COMPONENTS_GUARANTEE_REQUIRED_PROPERTIES:
+		case SYSTEM_IMPLEMENTATION_SATISFIES_SECURITY_REQUIREMENTS:
 			args.add(BaseType.SYSTEM);
 			break;
 		default:

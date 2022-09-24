@@ -89,87 +89,91 @@ public class RequirementsManager {
 	 * or adding them if they're new
 	 * @param updatedReqs - list of requirements to add/update
 	 */
-	public boolean updateRequirements(List<CyberRequirement> updatedReqs) {
+	public boolean updateRequirements(List<CyberRequirement> updatedReqs) throws Exception {
 
 		final Set<String> implementationClassifiersToUpdate = new HashSet<>();
+		boolean caseRequirementsUpdated = false;
 		for (CyberRequirement r : updatedReqs) {
-			try {
-				final String[] parts = r.getContext().split("\\.");
-				// Capture just the implementation name
-				String classifierQualifiedName = parts[0];
-				if (parts.length > 1) {
-					classifierQualifiedName += "." + parts[1];
-				}
 
-				final CyberRequirement existing = reqDb.get(r);
-				if (existing == null) {
-					// not possible; signal error
-					throw new RuntimeException("Updated requirement not found in requirements database : " + r);
-				} else {
-					if (CyberRequirement.toDo.equals(existing.getStatus())
-							|| CyberRequirement.omit.equals(existing.getStatus())) {
-						switch (r.getStatus()) {
-						case CyberRequirement.toDo:
-						case CyberRequirement.omit:
-							// do nothing
-							break;
-						case CyberRequirement.add:
-							// add to model
-							System.out.println("Requirement " + r.getId());
-							r.insertClaimDefinition();
-							if (r.getFormalize()) {
-								r.insertAgree();
-							}
-							implementationClassifiersToUpdate.add(classifierQualifiedName);
-							break;
-						default:
-							// Unknown status; signal error
-							throw new RuntimeException("Updated requirement has invalid status : " + r);
-						}
-					} else if (CyberRequirement.add.equals(existing.getStatus())) {
-						switch (r.getStatus()) {
-						case CyberRequirement.toDo:
-						case CyberRequirement.omit:
-							if (r.isMitigated() && !Dialog.askQuestion("Requirements Manager", "Requirement "
-									+ r.getId()
-									+ " has already been mitigated in the model.  Removing this requirement will not undo the mitigation.  Remove anyway?")) {
-								continue;
-							}
-							// remove resolute claim definition and claim call
-							r.removeClaimDefinition();
-							if (existing.getFormalize()) {
-								r.removeAgree();
-							}
-							implementationClassifiersToUpdate.add(classifierQualifiedName);
-							break;
-						case CyberRequirement.add:
-							if (existing.getFormalize() && !r.getFormalize()) {
-								r.removeAgree();
-							} else if (!existing.getFormalize() && r.getFormalize()) {
-								r.insertAgree();
-							}
-							break;
-						default:
-							// Unknown status; signal error
-							throw new RuntimeException("Updated requirement has invalid status : " + r);
-						}
-					} else {
-						// Unknown status; signal error
-						throw new RuntimeException("Existing requirement has invalid status : " + existing);
-					}
-				}
-				reqDb.updateRequirement(r);
-			} catch (Exception e) {
-				BriefcaseNotifier.printError(e.getMessage());
-				return false;
+			final String[] parts = r.getContext().split("\\.");
+			// Capture just the implementation name
+			String classifierQualifiedName = parts[0];
+			if (parts.length > 1) {
+				classifierQualifiedName += "." + parts[1];
 			}
+
+			final CyberRequirement existing = reqDb.get(r);
+			if (existing == null) {
+				// not possible; signal error
+				throw new RuntimeException("Updated requirement not found in requirements database : " + r);
+			} else {
+				if (CyberRequirement.toDo.equals(existing.getStatus())
+						|| CyberRequirement.omit.equals(existing.getStatus())) {
+					switch (r.getStatus()) {
+					case CyberRequirement.toDo:
+					case CyberRequirement.omit:
+						// do nothing
+						break;
+					case CyberRequirement.add:
+						// add to model
+						System.out.println("Requirement " + r.getId());
+						r.insertClaimDefinition();
+						if (r.getFormalize()) {
+							r.insertAgree();
+						}
+						caseRequirementsUpdated = true;
+						implementationClassifiersToUpdate.add(classifierQualifiedName);
+						break;
+					default:
+						// Unknown status; signal error
+						throw new RuntimeException("Updated requirement has invalid status : " + r);
+					}
+				} else if (CyberRequirement.add.equals(existing.getStatus())) {
+					switch (r.getStatus()) {
+					case CyberRequirement.toDo:
+					case CyberRequirement.omit:
+						if (r.isMitigated() && !Dialog.askQuestion("Requirements Manager", "Requirement " + r.getId()
+								+ " has already been mitigated in the model.  Removing this requirement will not undo the mitigation.  Remove anyway?")) {
+							continue;
+						}
+						// remove resolute claim definition and claim call
+						r.removeClaimDefinition();
+						if (existing.getFormalize()) {
+							r.removeAgree();
+						}
+						caseRequirementsUpdated = true;
+						implementationClassifiersToUpdate.add(classifierQualifiedName);
+						break;
+					case CyberRequirement.add:
+						if (existing.getFormalize() && !r.getFormalize()) {
+							r.removeAgree();
+							caseRequirementsUpdated = true;
+						} else if (!existing.getFormalize() && r.getFormalize()) {
+							r.insertAgree();
+							caseRequirementsUpdated = true;
+						}
+						break;
+					default:
+						// Unknown status; signal error
+						throw new RuntimeException("Updated requirement has invalid status : " + r);
+					}
+				} else {
+					// Unknown status; signal error
+					throw new RuntimeException("Existing requirement has invalid status : " + existing);
+				}
+			}
+			reqDb.updateRequirement(r);
 		}
+
 		for (String implementationClassifier : implementationClassifiersToUpdate) {
 			CyberRequirement.updateClaimCall(implementationClassifier);
 		}
 		reqDb.saveRequirementsDatabase();
-		CaseUtils.formatCaseRequirements();
-		return true;
+		if (caseRequirementsUpdated) {
+			CaseUtils.formatCaseRequirements();
+		}
+
+		return !implementationClassifiersToUpdate.isEmpty();
 	}
 
 

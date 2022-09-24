@@ -57,15 +57,15 @@ public class ModelHashcode {
 		// referred to by this resource (recursively)
 		collectResourceFiles(thisResource, files);
 
-		MessageDigest md = MessageDigest.getInstance("MD5");
-		Vector<InputStream> fileStreams = new Vector<>();
+		final MessageDigest md = MessageDigest.getInstance("MD5");
+		final Vector<InputStream> fileStreams = new Vector<>();
 		for (IFile f : files) {
 			fileStreams.add(f.getContents());
 		}
 
 		DigestInputStream dis = null;
 		try {
-			SequenceInputStream sequenceInputStream = new SequenceInputStream(fileStreams.elements());
+			final SequenceInputStream sequenceInputStream = new SequenceInputStream(fileStreams.elements());
 			dis = new DigestInputStream(sequenceInputStream, md);
 			dis.on(true);
 			while (dis.read() >= 0) {
@@ -88,8 +88,8 @@ public class ModelHashcode {
 	private static void collectResourceFiles(Resource resource, Set<IFile> files) throws Exception {
 
 		final IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
-		URI uri = resource.getURI();
-		IFile file = workspaceRoot.getFile(new Path(uri.toPlatformString(true)));
+		final URI uri = resource.getURI();
+		final IFile file = workspaceRoot.getFile(new Path(uri.toPlatformString(true)));
 
 		if (uri.segment(0).equals("plugin")) {
 			// We're going to ignore these
@@ -101,7 +101,7 @@ public class ModelHashcode {
 		}
 
 		// Get the resources that are referred to (via the 'with' statement)
-		EList<EObject> resourceContents = resource.getContents();
+		final EList<EObject> resourceContents = resource.getContents();
 		for (EObject eObj : resourceContents) {
 			if (eObj instanceof AadlPackage) {
 				AadlPackage aadlPackage = (AadlPackage) eObj;
@@ -110,7 +110,7 @@ public class ModelHashcode {
 				if (aadlPackage.getOwnedPublicSection() != null) {
 					final EList<ModelUnit> importedUnits = aadlPackage.getPublicSection().getImportedUnits();
 					for (ModelUnit mUnit : importedUnits) {
-						IFile resourceFile = workspaceRoot
+						final IFile resourceFile = workspaceRoot
 								.getFile(new Path(mUnit.eResource().getURI().toPlatformString(true)));
 						if (!files.contains(resourceFile)) {
 							collectResourceFiles(mUnit.eResource(), files);
@@ -121,7 +121,7 @@ public class ModelHashcode {
 				if (aadlPackage.getOwnedPrivateSection() != null) {
 					final EList<ModelUnit> importedUnits = aadlPackage.getPrivateSection().getImportedUnits();
 					for (ModelUnit mUnit : importedUnits) {
-						IFile resourceFile = workspaceRoot
+						final IFile resourceFile = workspaceRoot
 								.getFile(new Path(mUnit.eResource().getURI().toPlatformString(true)));
 						if (!files.contains(resourceFile)) {
 							collectResourceFiles(mUnit.eResource(), files);

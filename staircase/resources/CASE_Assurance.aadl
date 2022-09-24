@@ -44,7 +44,7 @@ private
 			strategy: "Argue over the required properties of the components and platform";
 			deployed_sw_components_satisfy_requirements(sys) and 
 			platform_components_guarantee_required_properties(sys) and 
-			system_implementation_satisfies_security_requirements()
+			system_implementation_satisfies_security_requirements(sys)
 			
 		goal deployed_sw_components_satisfy_requirements(sys : system) <=
 			** "Deployed software components satisfy their requirements" **
@@ -154,9 +154,9 @@ private
 			** "Platform components guarantee required properties" **
 			BriefCASE.platform_components_guarantee_required_properties(sys)
 			
-		goal system_implementation_satisfies_security_requirements() <=
+		goal system_implementation_satisfies_security_requirements(sys : system) <=
 			** "The implementation of the system model satisfies the requirements" **
-			undeveloped
+			BriefCASE.system_implementation_satisfies_security_requirements(sys)
 
 	**};
 end CASE_Assurance;

@@ -69,6 +69,7 @@ public class Assurance extends ResoluteExternalFunctionLibrary {
 		case AssuranceType.DEPLOYED_COMPONENT_SATISFIES_FUNCTIONAL_REQUIREMENTS:
 		case AssuranceType.DEPLOYED_COMPONENT_SATISFIES_INTRA_COMPONENT_FLOWS:
 		case AssuranceType.PLATFORM_COMPONENTS_GUARANTEE_REQUIRED_PROPERTIES:
+		case AssuranceType.SYSTEM_IMPLEMENTATION_SATISFIES_SECURITY_REQUIREMENTS:
 			return evaluate_artifact(function, args);
 		}
 
