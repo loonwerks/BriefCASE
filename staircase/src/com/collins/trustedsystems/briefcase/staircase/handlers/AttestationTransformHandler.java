@@ -609,7 +609,7 @@ public class AttestationTransformHandler extends AadlHandler {
 				if (compCategory == ComponentCategory.THREAD && !attestationManagerExecutionTime.isEmpty()) {
 					final Property executionTimeProp = GetProperties.lookupPropertyDefinition(attestationManagerImpl,
 							TimingProperties._NAME, TimingProperties.COMPUTE_EXECUTION_TIME);
-					String[] parts = attestationManagerExecutionTime.split("\\.\\.");
+					final String[] parts = attestationManagerExecutionTime.split("\\.\\.");
 					final UnitLiteral unitMin = Aadl2Factory.eINSTANCE.createUnitLiteral();
 					unitMin.setName(parts[0].replaceAll("[\\d]", "").trim());
 					final IntegerLiteral executionTimeMin = Aadl2Factory.eINSTANCE.createIntegerLiteral();
@@ -885,17 +885,19 @@ public class AttestationTransformHandler extends AadlHandler {
 				if (compCategory == ComponentCategory.THREAD && !attestationGateExecutionTime.isEmpty()) {
 					final Property executionTimeProp = GetProperties.lookupPropertyDefinition(attestationGateImpl,
 							TimingProperties._NAME, TimingProperties.COMPUTE_EXECUTION_TIME);
-					String[] parts = attestationGateExecutionTime.split("\\.\\.");
-					final UnitLiteral unit = Aadl2Factory.eINSTANCE.createUnitLiteral();
-					unit.setName(attestationGateExecutionTime.replaceAll("[\\d]", "").trim());
+					final String[] parts = attestationGateExecutionTime.split("\\.\\.");
+					final UnitLiteral unitMin = Aadl2Factory.eINSTANCE.createUnitLiteral();
+					unitMin.setName(parts[0].replaceAll("[\\d]", "").trim());
 					final IntegerLiteral executionTimeMin = Aadl2Factory.eINSTANCE.createIntegerLiteral();
 					executionTimeMin.setBase(0);
 					executionTimeMin.setValue(Long.parseLong(parts[0].replaceAll("[\\D]", "").trim()));
-					executionTimeMin.setUnit(unit);
+					executionTimeMin.setUnit(unitMin);
+					final UnitLiteral unitMax = Aadl2Factory.eINSTANCE.createUnitLiteral();
+					unitMax.setName(parts[1].replaceAll("[\\d]", "").trim());
 					final IntegerLiteral executionTimeMax = Aadl2Factory.eINSTANCE.createIntegerLiteral();
-					executionTimeMin.setBase(0);
-					executionTimeMin.setValue(Long.parseLong(parts[1].replaceAll("[\\D]", "").trim()));
-					executionTimeMin.setUnit(unit);
+					executionTimeMax.setBase(0);
+					executionTimeMax.setValue(Long.parseLong(parts[1].replaceAll("[\\D]", "").trim()));
+					executionTimeMax.setUnit(unitMax);
 					final RangeValue executionTimeRange = Aadl2Factory.eINSTANCE.createRangeValue();
 					executionTimeRange.setMinimum(executionTimeMin);
 					executionTimeRange.setMaximum(executionTimeMax);

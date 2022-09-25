@@ -20,8 +20,10 @@ ARISING FROM, OUT OF OR IN CONNECTION WITH THE DATA OR THE USE OR OTHER DEALINGS
 */
 package com.collins.trustedsystems.briefcase.attestation;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -65,14 +67,14 @@ public class AttestationAccess {
 					.getDefaultString(BriefcasePreferenceConstants.KU_IMPL_FOLDER);
 		}
 		URI uri = URI.createPlatformResourceURI(project.getFullPath().toString(), true);
-		Filesystem.createFolder(uri, new String[] { componentSourceFolderName, kuImplFolderName });
+		Filesystem.createFolder(uri, new String[] { componentSourceFolderName, kuImplFolderName, BUILD });
 		uri = URI.createURI(project.getLocation().toString()).appendSegment(componentSourceFolderName)
 				.appendSegment(kuImplFolderName);
-		File destinationDirectory = new File(uri.toString());
+		final File destinationDirectory = new File(uri.toString());
 
 		// Copy attestation implementation
 		try {
-			File sourceDirectory = new File(getSourceDirectory());
+			final File sourceDirectory = new File(getSourceDirectory());
 			Filesystem.copyDirectory(sourceDirectory, destinationDirectory);
 			project.refreshLocal(IResource.DEPTH_INFINITE, new NullProgressMonitor());
 		} catch (IOException e) {
@@ -113,38 +115,89 @@ public class AttestationAccess {
 					.getPreferenceStore()
 					.getDefaultString(BriefcasePreferenceConstants.KU_IMPL_FOLDER);
 		}
-		final URI buildUri = URI.createURI(project.getLocation().toString())
+		final URI buildUri = URI.createURI(project.getLocation().toString(), true)
 				.appendSegment(componentSourceFolderName)
 				.appendSegment(kuImplFolderName)
 				.appendSegment(BUILD);
-		// If build dir doesn't exist, create it
-		final File buildDir = new File(buildUri.toString());
-		if (!buildDir.exists()) {
-			Filesystem.createFolder(buildUri.trimSegments(1), new String[] { BUILD });
-		}
 
 		final List<String> cmdLineArgs = new ArrayList<>();
 		cmdLineArgs.add("cmake");
-		cmdLineArgs.add("..");
+		cmdLineArgs.add(buildUri.trimSegments(1).toString());
 
 		try {
 
-			final Runtime rt = Runtime.getRuntime();
-			rt.exec("chmod a+x " + buildUri.toString());
-			final String[] subCmds = cmdLineArgs.toArray(new String[cmdLineArgs.size()]);
-			final Process clientProcess = Runtime.getRuntime().exec(subCmds);
-
-			final int exitVal = clientProcess.waitFor();
-			if (exitVal == 0) {
-				return true;
-			} else {
-				return false;
-			}
+			new Runner(cmdLineArgs, new File(buildUri.toString()));
+			project.refreshLocal(IResource.DEPTH_INFINITE, new NullProgressMonitor());
+			return true;
 		} catch (Exception e) {
 			return false;
 		}
 
 	}
+	
+	public static class Runner {
+		protected Process process;
+		protected BufferedReader fromProcess;
+
+		Runner(List<String> args, File directory) throws Exception {
+
+			ProcessBuilder processBuilder = new ProcessBuilder(args);
+			processBuilder.directory(directory);
+			processBuilder.redirectErrorStream(true);
+
+			try {
+				process = processBuilder.start();
+			} catch (IOException e) {
+				final Exception generalException = new Exception(
+						"Unable to start UnBBayes by executing: " + String.join(" ", processBuilder.command()), e);
+				throw generalException;
+			}
+			addShutdownHook();
+			fromProcess = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+			String s = "";
+			while ((s = fromProcess.readLine()) != null) {
+				System.out.println(s);
+			}
+
+			if (process != null) {
+				process.waitFor();
+			}
+		}
+
+		private final Thread shutdownHook = new Thread("shutdown-hook") {
+			@Override
+			public void run() {
+				Runner.this.stop();
+			}
+		};
+
+		private void addShutdownHook() {
+			Runtime.getRuntime().addShutdownHook(shutdownHook);
+		}
+
+		private void removeShutdownHook() {
+			try {
+				Runtime.getRuntime().removeShutdownHook(shutdownHook);
+			} catch (IllegalStateException e) {
+				// Ignore, we are already shutting down
+			}
+		}
+
+		public synchronized void stop() {
+			/**
+			 * This must be synchronized since two threads (an Engine or a shutdown
+			 * hook) may try to stop the process at the same time
+			 */
+
+			if (process != null) {
+				process.destroy();
+				process = null;
+			}
+
+			removeShutdownHook();
+		}
+	};
 
 	private static String getSourceDirectory() {
 

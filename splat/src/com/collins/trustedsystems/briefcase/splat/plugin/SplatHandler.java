@@ -171,6 +171,9 @@ public class SplatHandler extends AadlHandler {
 
 			int exitVal = clientProcess.waitFor();
 			if (exitVal == 0) {
+				
+				// refresh project directory
+				project.refreshLocal(IResource.DEPTH_INFINITE, new NullProgressMonitor());
 
 				// Compile
 				exitVal = compileCakeSource(componentSourceDirectories);
@@ -212,24 +215,17 @@ public class SplatHandler extends AadlHandler {
 
 			final String comp = compDir.replace(outputDir + "/", "");
 			final List<String> cmdLineArgs = new ArrayList<>();
-			cmdLineArgs.add("bash");
-			cmdLineArgs.add("make.sh");
-			cmdLineArgs.add(comp);
+			cmdLineArgs.add("/usr/bin/bash");
+			cmdLineArgs.add("-c");
+			cmdLineArgs.add(compDir + "/make.sh " + comp);
 
 			try {
 				out.print("Compiling CakeML code for " + comp + "... ");
-				final Runtime rt = Runtime.getRuntime();
-				rt.exec("chmod a+x " + compDir);
-				final String[] subCmds = cmdLineArgs.toArray(new String[cmdLineArgs.size()]);
-				final Process clientProcess = Runtime.getRuntime().exec(subCmds);
+				
+				new Runner(cmdLineArgs, new File(compDir));
 
-				final int exitVal = clientProcess.waitFor();
-				if (exitVal == 0) {
-					out.println("Success");
-				} else {
-					out.println("Failure");
-					status = -1;
-				}
+				out.println("Success");
+
 			} catch (Exception e) {
 				out.println("Failure");
 				out.println("\t" + e.getMessage());
@@ -238,6 +234,70 @@ public class SplatHandler extends AadlHandler {
 		}
 		return status;
 	}
+	
+	public class Runner {
+		protected Process process;
+		protected BufferedReader fromProcess;
+
+		Runner(List<String> args, File directory) throws Exception {
+
+			ProcessBuilder processBuilder = new ProcessBuilder(args);
+			processBuilder.directory(directory);
+			processBuilder.redirectErrorStream(true);
+
+			try {
+				process = processBuilder.start();
+			} catch (IOException e) {
+				final Exception generalException = new Exception(
+						"Unable to start UnBBayes by executing: " + String.join(" ", processBuilder.command()), e);
+				throw generalException;
+			}
+			addShutdownHook();
+			fromProcess = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+			String s = "";
+			while ((s = fromProcess.readLine()) != null) {
+				System.out.println(s);
+			}
+
+			if (process != null) {
+				process.waitFor();
+			}
+		}
+
+		private final Thread shutdownHook = new Thread("shutdown-hook") {
+			@Override
+			public void run() {
+				Runner.this.stop();
+			}
+		};
+
+		private void addShutdownHook() {
+			Runtime.getRuntime().addShutdownHook(shutdownHook);
+		}
+
+		private void removeShutdownHook() {
+			try {
+				Runtime.getRuntime().removeShutdownHook(shutdownHook);
+			} catch (IllegalStateException e) {
+				// Ignore, we are already shutting down
+			}
+		}
+
+		public synchronized void stop() {
+			/**
+			 * This must be synchronized since two threads (an Engine or a shutdown
+			 * hook) may try to stop the process at the same time
+			 */
+
+			if (process != null) {
+				process.destroy();
+				process = null;
+			}
+
+			removeShutdownHook();
+		}
+	};
 
 
 	private void insertSourceCodeLocation(List<String> componentSourceDirectories) {
