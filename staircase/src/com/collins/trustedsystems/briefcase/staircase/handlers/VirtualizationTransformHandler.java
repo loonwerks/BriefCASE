@@ -73,6 +73,11 @@ public class VirtualizationTransformHandler extends AadlHandler {
 	private Map<String, Subcomponent> virtualizationSubNameMap = new HashMap<>();
 
 	@Override
+	protected String getJobName() {
+		return "Virtualization transform";
+	}
+
+	@Override
 	protected void runCommand(EObject eObj) {
 
 		// ASSUMPTIONS:

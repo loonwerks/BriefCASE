@@ -132,6 +132,11 @@ public class AttestationTransformHandler extends AadlHandler {
 	private boolean isSel4Process = false;
 
 	@Override
+	protected String getJobName() {
+		return "Attestation transform";
+	}
+
+	@Override
 	protected void runCommand(EObject eObj) {
 
 		// Check if selection is a subcomponent

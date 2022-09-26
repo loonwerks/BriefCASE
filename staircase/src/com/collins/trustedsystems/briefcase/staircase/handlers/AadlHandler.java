@@ -4,6 +4,7 @@ import java.util.Collection;
 
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -46,6 +47,8 @@ public abstract class AadlHandler extends AbstractHandler {
 	static final String OUTLINE_VIEW_PART_ID = "org.eclipse.ui.views.ContentOutline";
 	protected ExecutionEvent executionEvent;
 
+	abstract protected String getJobName();
+
 	@Override
 	public Object execute(ExecutionEvent event) {
 
@@ -74,8 +77,20 @@ public abstract class AadlHandler extends AbstractHandler {
 			return null;
 		}
 
-		// Run the command in the handler
-		runCommand(getEObject(uri));
+		final WorkbenchJob job = new WorkbenchJob(getJobName()) {
+			@Override
+			public IStatus runInUIThread(IProgressMonitor monitor) {
+				monitor.beginTask(getJobName(), IProgressMonitor.UNKNOWN);
+
+				// Run the command in the handler
+				runCommand(getEObject(uri));
+
+				monitor.done();
+				return Status.OK_STATUS;
+			}
+		};
+		job.setRule(ResourcesPlugin.getWorkspace().getRoot());
+		job.schedule();
 
 		return null;
 	}
@@ -130,7 +145,7 @@ public abstract class AadlHandler extends AbstractHandler {
 		return null;
 	}
 
-	protected static boolean saveChanges(boolean prompt) {
+	protected boolean saveChanges(boolean prompt) {
 
 		final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
 		if (window == null) {

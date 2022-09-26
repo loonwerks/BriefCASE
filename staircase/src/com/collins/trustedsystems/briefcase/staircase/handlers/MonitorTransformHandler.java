@@ -99,6 +99,11 @@ public class MonitorTransformHandler extends AadlHandler {
 	private boolean isSel4Process = false;
 
 	@Override
+	protected String getJobName() {
+		return "Monitor transform";
+	}
+
+	@Override
 	protected void runCommand(EObject eObj) {
 
 		Connection selectedConnection = null;

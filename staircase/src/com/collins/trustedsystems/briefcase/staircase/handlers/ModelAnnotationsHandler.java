@@ -26,6 +26,11 @@ public class ModelAnnotationsHandler extends AadlHandler {
 	private Map<Property, PropertyExpression> annotations;
 
 	@Override
+	protected String getJobName() {
+		return "Model annotations";
+	}
+
+	@Override
 	protected void runCommand(EObject eObj) {
 		// Check that it is a component type
 		if (!(eObj instanceof NamedElement)) {

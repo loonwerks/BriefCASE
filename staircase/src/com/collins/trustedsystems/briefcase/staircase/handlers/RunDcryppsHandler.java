@@ -77,6 +77,11 @@ public class RunDcryppsHandler extends AadlHandler {
 	private final static String PCC = "pcc";
 
 	@Override
+	protected String getJobName() {
+		return "Run DCRYPPS";
+	}
+
+	@Override
 	protected void runCommand(EObject eObj) {
 
 		// Check if a component implementation is selected

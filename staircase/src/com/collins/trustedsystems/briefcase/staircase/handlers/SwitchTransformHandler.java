@@ -72,6 +72,11 @@ public class SwitchTransformHandler extends AadlHandler {
 	private String switchAgreeProperty;
 
 	@Override
+	protected String getJobName() {
+		return "Switch transform";
+	}
+
+	@Override
 	protected void runCommand(EObject eObj) {
 
 		// Check if it is a connection

@@ -26,6 +26,11 @@ public class SelectImplementationHandler extends AadlHandler {
 	private String legacyComponentImplementationLocation = "";
 
 	@Override
+	protected String getJobName() {
+		return "Select implementation";
+	}
+
+	@Override
 	public void runCommand(EObject eObj) {
 
 		// Make sure selection is a process or thread

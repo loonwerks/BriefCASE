@@ -85,6 +85,11 @@ public class FilterTransformHandler extends AadlHandler {
 	private boolean isSel4Process = false;
 
 	@Override
+	protected String getJobName() {
+		return "Filter transform";
+	}
+
+	@Override
 	protected void runCommand(EObject eObj) {
 
 		Connection selectedConnection = null;

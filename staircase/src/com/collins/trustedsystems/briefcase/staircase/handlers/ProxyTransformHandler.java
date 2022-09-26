@@ -87,6 +87,11 @@ public class ProxyTransformHandler extends AadlHandler {
 	private boolean isSel4Process = false;
 
 	@Override
+	protected String getJobName() {
+		return "Proxy transform";
+	}
+
+	@Override
 	protected void runCommand(EObject eObj) {
 
 		// Check if it is a component implementation

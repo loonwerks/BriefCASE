@@ -98,6 +98,11 @@ public class Sel4TransformHandler extends AadlHandler {
 	private String sel4Requirement;
 
 	@Override
+	protected String getJobName() {
+		return "seL4 transform";
+	}
+
+	@Override
 	protected void runCommand(EObject eObj) {
 
 		// Selection must be a system or process subcomponent

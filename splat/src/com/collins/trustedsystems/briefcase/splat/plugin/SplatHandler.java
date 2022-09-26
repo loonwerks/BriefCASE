@@ -69,6 +69,11 @@ public class SplatHandler extends AadlHandler {
 	private String componentSourceFolderName = "";
 	private MessageConsoleStream out = null;
 
+	@Override
+	protected String getJobName() {
+		return "SPLAT";
+	}
+
 	private MessageConsole findConsole(String name) {
 		final ConsolePlugin plugin = ConsolePlugin.getDefault();
 		final IConsoleManager conMan = plugin.getConsoleManager();
@@ -171,7 +176,7 @@ public class SplatHandler extends AadlHandler {
 
 			int exitVal = clientProcess.waitFor();
 			if (exitVal == 0) {
-				
+
 				// refresh project directory
 				project.refreshLocal(IResource.DEPTH_INFINITE, new NullProgressMonitor());
 
@@ -221,7 +226,7 @@ public class SplatHandler extends AadlHandler {
 
 			try {
 				out.print("Compiling CakeML code for " + comp + "... ");
-				
+
 				new Runner(cmdLineArgs, new File(compDir));
 
 				out.println("Success");
@@ -234,7 +239,7 @@ public class SplatHandler extends AadlHandler {
 		}
 		return status;
 	}
-	
+
 	public class Runner {
 		protected Process process;
 		protected BufferedReader fromProcess;
