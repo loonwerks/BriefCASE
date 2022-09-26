@@ -1,5 +1,6 @@
 package com.collins.trustedsystems.briefcase.util;
 
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.mylyn.commons.ui.dialogs.AbstractNotificationPopup;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -20,6 +21,26 @@ import org.eclipse.ui.console.MessageConsoleStream;
 public class BriefcaseNotifier {
 
 	public final static String CONSOLE_NAME = "BriefCASE";
+
+	public BriefcaseNotifier(String message) {
+		println(message);
+	}
+
+	public BriefcaseNotifier(String message, int severity) {
+		if (severity == IStatus.INFO) {
+			printInfo(message);
+		} else if (severity == IStatus.WARNING) {
+			printWarning(message);
+		} else if (severity == IStatus.ERROR) {
+			printError(message);
+		} else {
+			println(message);
+		}
+	}
+
+	public BriefcaseNotifier(String title, String message) {
+		notify(title, message);
+	}
 
 	public static void notify(String title, String message) {
 
