@@ -126,7 +126,13 @@ public class AttestationAccess {
 
 		try {
 
-			new Runner(cmdLineArgs, new File(buildUri.toString()));
+			final File runDirectory = new File(buildUri.toString());
+			new Runner(cmdLineArgs, runDirectory);
+			project.refreshLocal(IResource.DEPTH_INFINITE, new NullProgressMonitor());
+			cmdLineArgs.clear();
+			cmdLineArgs.add("make");
+			cmdLineArgs.add("heli_am");
+			new Runner(cmdLineArgs, runDirectory);
 			project.refreshLocal(IResource.DEPTH_INFINITE, new NullProgressMonitor());
 			return true;
 		} catch (Exception e) {
@@ -134,7 +140,7 @@ public class AttestationAccess {
 		}
 
 	}
-	
+
 	public static class Runner {
 		protected Process process;
 		protected BufferedReader fromProcess;
@@ -163,6 +169,8 @@ public class AttestationAccess {
 			if (process != null) {
 				process.waitFor();
 			}
+
+			stop();
 		}
 
 		private final Thread shutdownHook = new Thread("shutdown-hook") {
@@ -205,7 +213,7 @@ public class AttestationAccess {
 		try {
 			return (FileLocator.toFileURL(FileLocator.find(bundle, new Path("resources"), null))).getFile();
 		} catch (Exception e) {
-			throw new IllegalArgumentException("Unable to extract AC Validation from plug-in", e);
+			throw new IllegalArgumentException("Unable to locate Attestation Manager source code", e);
 		}
 	}
 
