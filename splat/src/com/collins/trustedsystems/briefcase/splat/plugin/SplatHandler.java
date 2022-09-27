@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
@@ -152,13 +153,17 @@ public class SplatHandler extends AadlHandler {
 
 			cmdLineArgs.add(jsonPath);
 
-			final Runtime rt = Runtime.getRuntime();
-			rt.exec("chmod a+x " + splatPath);
-			final String[] subCmds = cmdLineArgs.toArray(new String[cmdLineArgs.size()]);
-			final String[] environmentVars = { "LD_LIBRARY_PATH=" + splatDir };
-			final Process clientProcess = Runtime.getRuntime().exec(subCmds, environmentVars);
+			final ProcessBuilder processBuilder = new ProcessBuilder(cmdLineArgs);
+			processBuilder.environment().put("LD_LIBRARY_PATH", splatDir);
+			processBuilder.redirectErrorStream(true);
+			Process process = null;
+			try {
+				process = processBuilder.start();
+			} catch (IOException e) {
+				throw new Exception();
+			}
 
-			final BufferedReader stdErr = new BufferedReader(new InputStreamReader(clientProcess.getErrorStream()));
+			final BufferedReader stdErr = new BufferedReader(new InputStreamReader(process.getErrorStream()));
 
 			out.println(String.join(" ", cmdLineArgs) + " " + "LD_LIBRARY_PATH=" + splatDir);
 
@@ -173,7 +178,7 @@ public class SplatHandler extends AadlHandler {
 				out.println(s);
 			}
 
-			int exitVal = clientProcess.waitFor();
+			int exitVal = process.waitFor();
 			if (exitVal == 0) {
 
 				// refresh project directory
@@ -225,11 +230,11 @@ public class SplatHandler extends AadlHandler {
 			try {
 				out.print("Compiling CakeML code for " + comp + "... ");
 
-				new Runner(cmdLineArgs, new File(compDir));
+				new Runner(cmdLineArgs, null, new File(compDir));
 
 				cmdLineArgs.set(2, "mv " + compDir + "/" + compDir + ".S " + compDir + "/"
 						+ compDir.replace(AadlUtil.getContainingPackage(ci).getName() + "_", "") + ".S");
-				new Runner(cmdLineArgs, new File(compDir));
+				new Runner(cmdLineArgs, null, new File(compDir));
 
 				out.println("Success");
 
@@ -247,17 +252,22 @@ public class SplatHandler extends AadlHandler {
 		protected Process process;
 		protected BufferedReader fromProcess;
 
-		Runner(List<String> args, File directory) throws Exception {
+		Runner(List<String> args, Map<String, String> environment, File directory) throws Exception {
 
 			ProcessBuilder processBuilder = new ProcessBuilder(args);
-			processBuilder.directory(directory);
+			if (environment != null) {
+				processBuilder.environment().putAll(environment);
+			}
+			if (directory != null) {
+				processBuilder.directory(directory);
+			}
 			processBuilder.redirectErrorStream(true);
 
 			try {
 				process = processBuilder.start();
 			} catch (IOException e) {
 				final Exception generalException = new Exception(
-						"Unable to start UnBBayes by executing: " + String.join(" ", processBuilder.command()), e);
+						"Unable to execute: " + String.join(" ", processBuilder.command()), e);
 				throw generalException;
 			}
 			addShutdownHook();
