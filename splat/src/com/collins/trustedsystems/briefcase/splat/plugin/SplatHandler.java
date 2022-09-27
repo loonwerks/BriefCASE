@@ -7,10 +7,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
@@ -48,6 +46,7 @@ import org.osate.aadl2.AadlPackage;
 import org.osate.aadl2.ComponentImplementation;
 import org.osate.aadl2.Property;
 import org.osate.aadl2.StringLiteral;
+import org.osate.aadl2.modelsupport.util.AadlUtil;
 import org.osate.ui.dialogs.Dialog;
 import org.osate.xtext.aadl2.properties.util.GetProperties;
 import org.osate.xtext.aadl2.properties.util.ProgrammingProperties;
@@ -181,13 +180,13 @@ public class SplatHandler extends AadlHandler {
 				project.refreshLocal(IResource.DEPTH_INFINITE, new NullProgressMonitor());
 
 				// Compile
-				exitVal = compileCakeSource(componentSourceDirectories);
+				exitVal = compileCakeSource(ci, componentSourceDirectories);
 
 				// refresh project directory
 				project.refreshLocal(IResource.DEPTH_INFINITE, new NullProgressMonitor());
 
 				// Insert the location of the source code into the filter component implementations in the model
-				insertSourceCodeLocation(componentSourceDirectories);
+				insertSourceCodeLocation(ci, componentSourceDirectories);
 
 				// update log
 				if (Activator.getDefault().getPreferenceStore()
@@ -213,7 +212,7 @@ public class SplatHandler extends AadlHandler {
 		return;
 	}
 
-	private int compileCakeSource(List<String> componentSourceDirectories) {
+	private int compileCakeSource(ComponentImplementation ci, List<String> componentSourceDirectories) {
 
 		int status = 0;
 		for (String compDir : componentSourceDirectories) {
@@ -223,10 +222,13 @@ public class SplatHandler extends AadlHandler {
 			cmdLineArgs.add("/usr/bin/bash");
 			cmdLineArgs.add("-c");
 			cmdLineArgs.add(compDir + "/make.sh " + comp);
-
 			try {
 				out.print("Compiling CakeML code for " + comp + "... ");
 
+				new Runner(cmdLineArgs, new File(compDir));
+
+				cmdLineArgs.set(2, "mv " + compDir + "/" + compDir + ".S " + compDir + "/"
+						+ compDir.replace(AadlUtil.getContainingPackage(ci).getName() + "_", "") + ".S");
 				new Runner(cmdLineArgs, new File(compDir));
 
 				out.println("Success");
@@ -236,6 +238,7 @@ public class SplatHandler extends AadlHandler {
 				out.println("\t" + e.getMessage());
 				status = -1;
 			}
+
 		}
 		return status;
 	}
@@ -305,98 +308,74 @@ public class SplatHandler extends AadlHandler {
 	};
 
 
-	private void insertSourceCodeLocation(List<String> componentSourceDirectories) {
+	private void insertSourceCodeLocation(ComponentImplementation ci, List<String> componentSourceDirectories) {
 
-		// Get all the folders in the output directory
-		final Map<AadlPackage, List<String>> pkgMap = new HashMap<>();
-
-		for (AadlPackage pkg : TraverseProject.getPackagesInProject(TraverseProject.getCurrentProject())) {
-			final List<String> compNames = new ArrayList<>();
-			for (String d : componentSourceDirectories) {
-				if (d.replace(outputDir + "/", "").startsWith(pkg.getName() + "_")) {
-					compNames.add(d.replace(outputDir + "/", "").substring(pkg.getName().length() + 1));
-				}
+		final AadlPackage pkg = AadlUtil.getContainingPackage(ci);
+		final List<String> compNames = new ArrayList<>();
+		for (String d : componentSourceDirectories) {
+			if (d.replace(outputDir + "/", "").startsWith(pkg.getName() + "_")) {
+				compNames.add(d.replace(outputDir + "/", "").substring(pkg.getName().length() + 1));
 			}
-
-			if (compNames.isEmpty()) {
-				continue;
-			}
-
-			List<String> pkgComps = new ArrayList<>();
-			if (pkgMap.containsKey(pkg)) {
-				pkgComps = pkgMap.get(pkg);
-			}
-			pkgComps.addAll(compNames);
-			pkgMap.put(pkg, pkgComps);
-
 		}
 
+		final XtextResourceSet resourceSet = new XtextResourceSet();
+		resourceSet.addLoadOption(XtextResource.OPTION_RESOLVE_ALL, Boolean.TRUE);
+		final AadlPackage aadlPackage = (AadlPackage) resourceSet.getEObject(EcoreUtil.getURI(pkg), true);
 
-		// Iterate through project packages
-		for (AadlPackage pkg : pkgMap.keySet()) {
+		final Resource aadlResource = aadlPackage.eResource();
+		final TransactionalEditingDomain domain = WorkspaceEditingDomainFactory.INSTANCE
+				.createEditingDomain(resourceSet);
 
-			final XtextResourceSet resourceSet = new XtextResourceSet();
-			resourceSet.addLoadOption(XtextResource.OPTION_RESOLVE_ALL, Boolean.TRUE);
-			final AadlPackage aadlPackage = (AadlPackage) resourceSet.getEObject(EcoreUtil.getURI(pkg), true);
+		// We execute this command on the command stack because otherwise, we will not
+		// have write permissions on the editing domain.
+		final Command cmd = new RecordingCommand(domain) {
 
-			final Resource aadlResource = aadlPackage.eResource();
-			final TransactionalEditingDomain domain = WorkspaceEditingDomainFactory.INSTANCE
-					.createEditingDomain(resourceSet);
+			@Override
+			protected void doExecute() {
 
-			// We execute this command on the command stack because otherwise, we will not
-			// have write permissions on the editing domain.
-			final Command cmd = new RecordingCommand(domain) {
+				for (ComponentImplementation ci : EcoreUtil2.getAllContentsOfType(aadlPackage,
+						ComponentImplementation.class)) {
 
-				@Override
-				protected void doExecute() {
+					if (compNames.contains(ci.getType().getName())) {
+						// Insert language property
+						CasePropertyUtils.setCompLanguage(ci, "CakeML");
 
-					for (ComponentImplementation ci : EcoreUtil2.getAllContentsOfType(aadlPackage,
-							ComponentImplementation.class)) {
+						// Insert source text property
+						final String compSourceText = componentSourceFolderName + "/" + aadlPackage.getName()
+								+ FOLDER_PACKAGE_DELIMITER + ci.getType().getName() + "/" + ci.getType().getName()
+								+ ".S";
+						final String ffiSourceText = componentSourceFolderName + "/" + aadlPackage.getName()
+								+ FOLDER_PACKAGE_DELIMITER + ci.getType().getName() + "/basis_ffi.c";
 
-						if (pkgMap.get(pkg).contains(ci.getType().getName())) {
-							// Insert language property
-							CasePropertyUtils.setCompLanguage(ci, "CakeML");
+						final Property sourceTextProp = GetProperties.lookupPropertyDefinition(ci,
+								ProgrammingProperties._NAME, ProgrammingProperties.SOURCE_TEXT);
 
-							// Insert source text property
-							final String compSourceText = componentSourceFolderName + "/" + aadlPackage.getName()
-									+ FOLDER_PACKAGE_DELIMITER
-									+ ci.getType().getName() + "/" + aadlPackage.getName() + FOLDER_PACKAGE_DELIMITER
-									+ ci.getType().getName() + ".S";
-							final String ffiSourceText = componentSourceFolderName + "/" + aadlPackage.getName()
-									+ FOLDER_PACKAGE_DELIMITER + ci.getType().getName() + "/basis_ffi.c";
+						final List<StringLiteral> listVal = new ArrayList<>();
+						final StringLiteral compSourceTextLit = Aadl2Factory.eINSTANCE.createStringLiteral();
+						compSourceTextLit.setValue(compSourceText);
+						listVal.add(compSourceTextLit);
+						final StringLiteral ffiSourceTextLit = Aadl2Factory.eINSTANCE.createStringLiteral();
+						ffiSourceTextLit.setValue(ffiSourceText);
+						listVal.add(ffiSourceTextLit);
 
-							final Property sourceTextProp =
-									GetProperties.lookupPropertyDefinition(ci, ProgrammingProperties._NAME,
-											ProgrammingProperties.SOURCE_TEXT);
+						ci.setPropertyValue(sourceTextProp, listVal);
 
-							final List<StringLiteral> listVal = new ArrayList<>();
-							final StringLiteral compSourceTextLit = Aadl2Factory.eINSTANCE.createStringLiteral();
-							compSourceTextLit.setValue(compSourceText);
-							listVal.add(compSourceTextLit);
-							final StringLiteral ffiSourceTextLit = Aadl2Factory.eINSTANCE.createStringLiteral();
-							ffiSourceTextLit.setValue(ffiSourceText);
-							listVal.add(ffiSourceTextLit);
-
-							ci.setPropertyValue(sourceTextProp, listVal);
-
-						}
 					}
-
 				}
 
-			};
-
-			try {
-				((TransactionalCommandStack) domain.getCommandStack()).execute(cmd, null);
-
-				// We're done: Save the model
-				aadlResource.save(SaveOptions.newBuilder().format().getOptions().toOptionsMap());
-			} catch (Exception e) {
-				e.printStackTrace();
 			}
-			domain.dispose();
 
+		};
+
+		try {
+			((TransactionalCommandStack) domain.getCommandStack()).execute(cmd, null);
+
+			// We're done: Save the model
+			aadlResource.save(SaveOptions.newBuilder().format().getOptions().toOptionsMap());
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
+		domain.dispose();
 
 	}
 
