@@ -107,14 +107,15 @@ public class SplatHandler extends AadlHandler {
 		}
 		final ComponentImplementation ci = (ComponentImplementation) eObj;
 
-		runSplat(ci);
-
-		format(true);
+		if (runSplat(ci)) {
+			format(true);
+		}
 
 	}
 
-	private void runSplat(ComponentImplementation ci) {
+	private boolean runSplat(ComponentImplementation ci) {
 
+		boolean pkgModified = false;
 		try {
 
 			final IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindow(executionEvent);
@@ -154,7 +155,7 @@ public class SplatHandler extends AadlHandler {
 					.toString();
 			if (project.getLocation().toString().contains(".")) {
 				Dialog.showError("SPLAT", "SPLAT is unable to run on projects that contain '.' in the project path:\n" + project.getLocation().toString());
-				return;
+				return false;
 			}
 			cmdLineArgs.add(outputDir);
 			cmdLineArgs.add(jsonPath);
@@ -191,6 +192,7 @@ public class SplatHandler extends AadlHandler {
 
 				// Insert the location of the source code into the filter component implementations in the model
 				insertSourceCodeLocation(ci, componentSourceDirectories);
+				pkgModified = true;
 
 				// update log
 				if (Activator.getDefault().getPreferenceStore()
@@ -208,12 +210,12 @@ public class SplatHandler extends AadlHandler {
 		} catch (Exception e) {
 			Dialog.showError("SPLAT", "SPLAT has encountered an error and was unable to complete.");
 			e.printStackTrace();
-			return;
+			return pkgModified;
 		}
 
 		BriefcaseNotifier.notify("SPLAT", "SPLAT completed.");
 
-		return;
+		return pkgModified;
 	}
 
 	private int compileCakeSource(ComponentImplementation ci, List<String> componentSourceDirectories) {
