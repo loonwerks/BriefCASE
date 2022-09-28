@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -48,6 +49,7 @@ import org.osate.aadl2.ComponentImplementation;
 import org.osate.aadl2.Property;
 import org.osate.aadl2.StringLiteral;
 import org.osate.aadl2.modelsupport.util.AadlUtil;
+import org.osate.aadl2.util.Aadl2Util;
 import org.osate.ui.dialogs.Dialog;
 import org.osate.xtext.aadl2.properties.util.GetProperties;
 import org.osate.xtext.aadl2.properties.util.ProgrammingProperties;
@@ -115,23 +117,24 @@ public class SplatHandler extends AadlHandler {
 
 		try {
 
+			final IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindow(executionEvent);
+			final IWorkbenchPage page = window.getActivePage();
+			final IConsoleView view = (IConsoleView) page.showView(IConsoleConstants.ID_CONSOLE_VIEW);
+			final MessageConsole console = findConsole("SPLAT");
+			view.display(console);
+			out = console.newMessageStream();
+			
+			out.println("Generating json representation for " + Aadl2Util.getPackageName(ci.getQualifiedName()));
 			final URI jsonURI = Aadl2Json.createJson();
 			final IFile file = ResourcesPlugin.getWorkspace()
 					.getRoot()
 					.getFile(new Path(jsonURI.toPlatformString(true)));
 			final String jsonPath = file.getRawLocation().toOSString();
-
 			final Bundle bundle = Platform.getBundle(bundleId);
 			final String splatDir = (FileLocator.toFileURL(FileLocator.find(bundle, new Path("resources"), null)))
 					.getFile();
 			final String splatPath = (FileLocator
 					.toFileURL(FileLocator.find(bundle, new Path("resources/splat"), null))).getFile();
-
-			final IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindow(executionEvent);
-			final IWorkbenchPage page = window.getActivePage();
-			final IConsoleView view = (IConsoleView) page.showView(IConsoleConstants.ID_CONSOLE_VIEW);
-			final MessageConsole console = findConsole("SPLAT");
-			out = console.newMessageStream();
 
 			// command line parameters
 			final List<String> cmdLineArgs = new ArrayList<>();
@@ -149,36 +152,32 @@ public class SplatHandler extends AadlHandler {
 			final IProject project = TraverseProject.getCurrentProject();
 			outputDir = URI.createURI(project.getLocation().toString()).appendSegment(componentSourceFolderName)
 					.toString();
-			cmdLineArgs.add(outputDir);
-
-			cmdLineArgs.add(jsonPath);
-
-			final ProcessBuilder processBuilder = new ProcessBuilder(cmdLineArgs);
-			processBuilder.environment().put("LD_LIBRARY_PATH", splatDir);
-			processBuilder.redirectErrorStream(true);
-			Process process = null;
-			try {
-				process = processBuilder.start();
-			} catch (IOException e) {
-				throw new Exception();
+			if (project.getLocation().toString().contains(".")) {
+				Dialog.showError("SPLAT", "SPLAT is unable to run on projects that contain '.' in the project path:\n" + project.getLocation().toString());
+				return;
 			}
-
-			final BufferedReader stdErr = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-
+			cmdLineArgs.add(outputDir);
+			cmdLineArgs.add(jsonPath);
+			
 			out.println(String.join(" ", cmdLineArgs) + " " + "LD_LIBRARY_PATH=" + splatDir);
 
-			view.display(console);
-
-			String s = null;
 			final List<String> componentSourceDirectories = new ArrayList<>();
-			while ((s = stdErr.readLine()) != null) {
-				if (s.startsWith("Code written to directory: ")) {
-					componentSourceDirectories.add(s.replace("Code written to directory: ", ""));
+			final Map<String, String> environment = new HashMap<>();
+			environment.put("LD_LIBRARY_PATH", splatDir);
+			final Runner runner = new Runner(cmdLineArgs, environment, null) {
+				@Override
+				protected void processOutput() throws Exception {
+					String s = null;
+					while ((s = fromProcess.readLine()) != null) {
+						if (s.startsWith("Code written to directory: ")) {
+							componentSourceDirectories.add(s.replace("Code written to directory: ", ""));
+						}
+						out.println(s);
+					}
 				}
-				out.println(s);
-			}
+			};
 
-			int exitVal = process.waitFor();
+			int exitVal = runner.getExitVal();
 			if (exitVal == 0) {
 
 				// refresh project directory
@@ -232,8 +231,8 @@ public class SplatHandler extends AadlHandler {
 
 				new Runner(cmdLineArgs, null, new File(compDir));
 
-				cmdLineArgs.set(2, "mv " + compDir + "/" + compDir + ".S " + compDir + "/"
-						+ compDir.replace(AadlUtil.getContainingPackage(ci).getName() + "_", "") + ".S");
+				cmdLineArgs.set(2, "mv " + compDir + "/" + comp + ".S " + compDir + "/"
+						+ comp.replace(AadlUtil.getContainingPackage(ci).getName() + "_", "") + ".S");
 				new Runner(cmdLineArgs, null, new File(compDir));
 
 				out.println("Success");
@@ -251,6 +250,7 @@ public class SplatHandler extends AadlHandler {
 	public class Runner {
 		protected Process process;
 		protected BufferedReader fromProcess;
+		private int exitVal = -1;
 
 		Runner(List<String> args, Map<String, String> environment, File directory) throws Exception {
 
@@ -266,20 +266,23 @@ public class SplatHandler extends AadlHandler {
 			try {
 				process = processBuilder.start();
 			} catch (IOException e) {
-				final Exception generalException = new Exception(
+				throw new Exception(
 						"Unable to execute: " + String.join(" ", processBuilder.command()), e);
-				throw generalException;
 			}
 			addShutdownHook();
 			fromProcess = new BufferedReader(new InputStreamReader(process.getInputStream()));
 
+			processOutput();
+
+			if (process != null) {
+				exitVal = process.waitFor();
+			}
+		}
+		
+		protected void processOutput() throws Exception {
 			String s = "";
 			while ((s = fromProcess.readLine()) != null) {
 				System.out.println(s);
-			}
-
-			if (process != null) {
-				process.waitFor();
 			}
 		}
 
@@ -300,6 +303,10 @@ public class SplatHandler extends AadlHandler {
 			} catch (IllegalStateException e) {
 				// Ignore, we are already shutting down
 			}
+		}
+		
+		public int getExitVal() {
+			return exitVal;
 		}
 
 		public synchronized void stop() {
