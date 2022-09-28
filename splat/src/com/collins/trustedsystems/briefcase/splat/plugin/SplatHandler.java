@@ -137,6 +137,9 @@ public class SplatHandler extends AadlHandler {
 			final String splatPath = (FileLocator
 					.toFileURL(FileLocator.find(bundle, new Path("resources/splat"), null))).getFile();
 
+			// Make splat executable
+			Runtime.getRuntime().exec("chmod a+x " + splatPath);
+			
 			// command line parameters
 			final List<String> cmdLineArgs = new ArrayList<>();
 			cmdLineArgs.add(splatPath);

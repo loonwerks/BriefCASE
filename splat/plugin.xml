@@ -15,11 +15,13 @@
       <handler
             class="com.collins.trustedsystems.briefcase.splat.plugin.SplatHandler"
             commandId="com.collins.trustedsystems.briefcase.splat.plugin.RunSplat">
-         <enabledWhen>
+<!--         
+		 <enabledWhen>
             <reference
                   definitionId="org.osate.xtext.aadl2.Aadl2.Editor.opened">
             </reference>
          </enabledWhen>
+-->
       </handler>
    </extension>
 
