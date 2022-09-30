@@ -345,9 +345,11 @@ public class ModelTransformUtils {
 			if (modelUnit instanceof AadlPackage) {
 				final AadlPackage aadlPkg = (AadlPackage) modelUnit;
 				classifiers.clear();
-				for (Classifier c : aadlPkg.getOwnedPublicSection().getOwnedClassifiers()) {
-					if (c instanceof DataClassifier) {
-						classifiers.add((DataClassifier) c);
+				if (aadlPkg.getOwnedPublicSection() != null) {
+					for (Classifier c : aadlPkg.getOwnedPublicSection().getOwnedClassifiers()) {
+						if (c instanceof DataClassifier) {
+							classifiers.add((DataClassifier) c);
+						}
 					}
 				}
 				if (!classifiers.isEmpty()) {

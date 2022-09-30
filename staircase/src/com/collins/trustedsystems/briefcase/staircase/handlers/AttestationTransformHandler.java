@@ -36,6 +36,7 @@ import org.osate.aadl2.DataPort;
 import org.osate.aadl2.DataSubcomponentType;
 import org.osate.aadl2.DefaultAnnexSubclause;
 import org.osate.aadl2.DirectedFeature;
+import org.osate.aadl2.Element;
 import org.osate.aadl2.EnumerationLiteral;
 import org.osate.aadl2.EventDataPort;
 import org.osate.aadl2.EventPort;
@@ -247,13 +248,17 @@ public class AttestationTransformHandler extends AadlHandler {
 
 			// Add attestation implementation and compile cakeml, if requested
 			if (useKUImplementation) {
-				if (!AttestationAccess.createSourceDirectory()) {
+//				BriefcaseNotifier.printInfo("Inserting Attestation Manager implementation code");
+				if (!AttestationAccess.createSourceDirectory((Element)eObj)) {
 					Dialog.showWarning("Attestation Transform",
 							"Attestation components were added to the model, but the KU implementation source code could not be copied into the project");
-				} else if (!AttestationAccess.compileCakeSource()) {
-					Dialog.showWarning("Attestation Transform",
-							"Attestation components were added to the model, but the KU implementation source code could not be compiled");
 				}
+				
+//				BriefcaseNotifier.printInfo("Compiling Attestation Manager implementation code");
+//				if (!AttestationAccess.compileCakeSource((Element)eObj)) {
+//					Dialog.showWarning("Attestation Transform",
+//							"Attestation components were added to the model, but the KU implementation source code could not be compiled");
+//				}
 			}
 
 			// Format and save

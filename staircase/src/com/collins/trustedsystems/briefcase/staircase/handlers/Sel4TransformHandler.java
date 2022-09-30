@@ -87,6 +87,11 @@ import com.collins.trustedsystems.briefcase.staircase.utils.CasePropertyUtils;
 import com.collins.trustedsystems.briefcase.staircase.utils.ComponentCreateHelper;
 import com.collins.trustedsystems.briefcase.staircase.utils.ModelTransformUtils;
 import com.collins.trustedsystems.briefcase.util.BriefcaseNotifier;
+import com.rockwellcollins.atc.agree.agree.AgreeContract;
+import com.rockwellcollins.atc.agree.agree.AgreeContractSubclause;
+import com.rockwellcollins.atc.agree.agree.AgreeFactory;
+import com.rockwellcollins.atc.agree.agree.AgreeSubclause;
+import com.rockwellcollins.atc.agree.agree.LiftContractStatement;
 
 public class Sel4TransformHandler extends AadlHandler {
 
@@ -856,12 +861,20 @@ public class Sel4TransformHandler extends AadlHandler {
 		// if an AGREE annex is present.
 		if (liftContract) {
 			// Add lift contract
-			final String agreeClause = "{**" + System.lineSeparator() + "lift contract;" + System.lineSeparator()
-					+ "**}";
+//			final String agreeClause = "{**" + System.lineSeparator() + "lift contract;" + System.lineSeparator()
+//					+ "**}";
 			final DefaultAnnexSubclause defaultAnnexSubclause = ComponentCreateHelper
 					.createOwnedAnnexSubclause(transformImpl);
 			defaultAnnexSubclause.setName("agree");
-			defaultAnnexSubclause.setSourceText(agreeClause);
+//			defaultAnnexSubclause.setSourceText(agreeClause);
+			defaultAnnexSubclause.setSourceText("{** **}");
+			
+			final AgreeContractSubclause agreeContractSubclause = AgreeFactory.eINSTANCE.createAgreeContractSubclause();
+			final AgreeContract agreeContract = AgreeFactory.eINSTANCE.createAgreeContract();
+			final LiftContractStatement liftContractStatement = AgreeFactory.eINSTANCE.createLiftContractStatement();
+			agreeContract.getSpecs().add(liftContractStatement);
+			agreeContractSubclause.setContract(agreeContract);
+			defaultAnnexSubclause.setParsedAnnexSubclause(agreeContractSubclause);
 		}
 
 //		// Put it in the correct place (after transformed component type)

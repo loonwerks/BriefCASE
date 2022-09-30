@@ -77,20 +77,20 @@ public abstract class AadlHandler extends AbstractHandler {
 			return null;
 		}
 
-		final WorkbenchJob job = new WorkbenchJob(getJobName()) {
-			@Override
-			public IStatus runInUIThread(IProgressMonitor monitor) {
-				monitor.beginTask(getJobName(), IProgressMonitor.UNKNOWN);
+//		final WorkbenchJob job = new WorkbenchJob(getJobName()) {
+//			@Override
+//			public IStatus runInUIThread(IProgressMonitor monitor) {
+//				monitor.beginTask(getJobName(), IProgressMonitor.UNKNOWN);
 
 				// Run the command in the handler
 				runCommand(getEObject(uri));
 
-				monitor.done();
-				return Status.OK_STATUS;
-			}
-		};
-		job.setRule(ResourcesPlugin.getWorkspace().getRoot());
-		job.schedule();
+//				monitor.done();
+//				return Status.OK_STATUS;
+//			}
+//		};
+//		job.setRule(ResourcesPlugin.getWorkspace().getRoot());
+//		job.schedule();
 
 		return null;
 	}
@@ -168,7 +168,7 @@ public abstract class AadlHandler extends AbstractHandler {
 	}
 
 	/**
-	 * Formats files (Shift-Ctrl-F) since for some reason the xtext formatter is doing that
+	 * Formats files (Shift-Ctrl-F) since for some reason the xtext formatter isn't doing that
 	 */
 	public static void format(boolean saveAfterFormat) {
 		WorkbenchJob refreshJob = new WorkbenchJob("Format") {
@@ -178,6 +178,7 @@ public abstract class AadlHandler extends AbstractHandler {
 				final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
 				if (window == null) {
 					return null;
+//					return;
 				}
 				for (IEditorReference ref : window.getActivePage().getEditorReferences()) {
 					final IEditorPart editor = ref.getEditor(false);

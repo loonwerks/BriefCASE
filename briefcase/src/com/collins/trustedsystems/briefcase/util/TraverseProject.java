@@ -21,6 +21,16 @@ import org.osate.aadl2.modelsupport.FileNameConstants;
 import org.osate.aadl2.modelsupport.util.AadlUtil;
 
 public class TraverseProject {
+	
+	public static IProject getProject(Element element) {
+		try {
+			return Filesystem.getFile(element.eResource().getURI()).getProject();
+		} catch (Exception e) {
+			
+		}
+	
+		return null;
+	}
 
 	public static IEditorPart getCurrentEditor() {
 		return PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActiveEditor();

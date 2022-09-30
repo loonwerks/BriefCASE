@@ -188,10 +188,10 @@ public class SplatHandler extends AadlHandler {
 				project.refreshLocal(IResource.DEPTH_INFINITE, new NullProgressMonitor());
 
 				// Compile
-				exitVal = compileCakeSource(ci, componentSourceDirectories);
+//				exitVal = compileCakeSource(ci, componentSourceDirectories);
 
 				// refresh project directory
-				project.refreshLocal(IResource.DEPTH_INFINITE, new NullProgressMonitor());
+//				project.refreshLocal(IResource.DEPTH_INFINITE, new NullProgressMonitor());
 
 				// Insert the location of the source code into the filter component implementations in the model
 				insertSourceCodeLocation(ci, componentSourceDirectories);

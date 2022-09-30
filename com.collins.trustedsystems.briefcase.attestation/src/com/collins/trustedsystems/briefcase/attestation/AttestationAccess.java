@@ -36,6 +36,7 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.emf.common.util.URI;
+import org.osate.aadl2.Element;
 import org.osgi.framework.Bundle;
 
 import com.collins.trustedsystems.briefcase.Activator;
@@ -48,8 +49,11 @@ public class AttestationAccess {
 
 	private final static String BUILD = "build";
 
-	public static boolean createSourceDirectory() {
-		final IProject project = TraverseProject.getCurrentProject();
+	public static boolean createSourceDirectory(Element element) {
+		final IProject project = TraverseProject.getProject(element);
+		if (project == null) {
+			return false;
+		}
 		String componentSourceFolderName = Activator.getDefault()
 				.getPreferenceStore()
 				.getString(BriefcasePreferenceConstants.COMPONENT_SOURCE_FOLDER);
@@ -89,7 +93,7 @@ public class AttestationAccess {
 		return true;
 	}
 
-	public static boolean compileCakeSource() {
+	public static boolean compileCakeSource(Element element) {
 
 		// This only works on linux
 		if (!System.getProperty("os.name", "generic").toLowerCase(Locale.ENGLISH).contains("nux")) {
@@ -98,7 +102,10 @@ public class AttestationAccess {
 			return false;
 		}
 
-		final IProject project = TraverseProject.getCurrentProject();
+		final IProject project = TraverseProject.getProject(element);
+		if (project == null) {
+			return false;
+		}
 		String componentSourceFolderName = Activator.getDefault()
 				.getPreferenceStore()
 				.getString(BriefcasePreferenceConstants.COMPONENT_SOURCE_FOLDER);
@@ -154,9 +161,8 @@ public class AttestationAccess {
 			try {
 				process = processBuilder.start();
 			} catch (IOException e) {
-				final Exception generalException = new Exception(
-						"Unable to start UnBBayes by executing: " + String.join(" ", processBuilder.command()), e);
-				throw generalException;
+				throw new Exception(
+						"Unable to start execute process: " + String.join(" ", processBuilder.command()), e);
 			}
 			addShutdownHook();
 			fromProcess = new BufferedReader(new InputStreamReader(process.getInputStream()));
