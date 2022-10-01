@@ -284,12 +284,16 @@ public class RequirementsManager {
 		try {
 			final ComponentImplementation ci = reqDb
 					.getComponentImplementationInCurrentEditor(jsonFile.getImplementation());
-			if (ci == null || !jsonFile.getHashcode().contentEquals(ModelHashcode.getHashcode(ci))) {
-				throw new Exception();
+			if (ci == null) {
+				BriefcaseNotifier.printError("The system implementation specified in requirements file was not found in the current AADL package.");
+				return null;
+			} else if (!jsonFile.getHashcode().contentEquals(ModelHashcode.getHashcode(ci))) {
+				throw new Exception("The model has changed since the cyber analysis was run");
 			}
 		} catch (Exception e) {
+			e.printStackTrace();
 			if (!Dialog.askQuestion("Requirements Manager",
-					"The model has changed since requirements in file " + reqFile.getName()
+					"The model has changed since the requirements in file " + reqFile.getName()
 							+ " were generated, and therefore may no longer be applicable.  Import anyway?")) {
 				return null;
 			}
