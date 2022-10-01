@@ -20,6 +20,7 @@ import org.eclipse.emf.ecore.resource.Resource;
 import org.osate.aadl2.AadlPackage;
 import org.osate.aadl2.Element;
 import org.osate.aadl2.ModelUnit;
+import org.osate.aadl2.NamedElement;
 
 public class ModelHashcode {
 
@@ -45,7 +46,7 @@ public class ModelHashcode {
 	 */
 	public static String getHashcode(Element root) throws Exception {
 
-		SortedSet<IFile> files = new TreeSet<IFile>((f1, f2) -> f2.getName().compareTo(f1.getName()));
+		final SortedSet<IFile> files = new TreeSet<IFile>((f1, f2) -> f2.getName().compareTo(f1.getName()));
 
 		// Get the file containing the component instance under evaluation
 		final Resource thisResource = root.eResource();
@@ -75,8 +76,9 @@ public class ModelHashcode {
 		} finally {
 			dis.close();
 		}
-
-		return new String(md.digest()).trim().replace("\\", "\\\\").replace("\"", "\\\"");
+		
+		final String result = Integer.toString(new String(md.digest()).trim().replace("\\", "\\\\").replace("\"", "\\\"").hashCode());
+		return result;
 	}
 
 	/**
