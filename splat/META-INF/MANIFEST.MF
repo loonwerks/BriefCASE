@@ -22,4 +22,4 @@ Import-Package: org.eclipse.emf.transaction,
 Bundle-ClassPath: .
 Bundle-ActivationPolicy: lazy
 Bundle-Activator: com.collins.trustedsystems.briefcase.splat.Activator
-Export-Package: com.collins.trustedsystems.briefcase.splat.preferences
+Export-Package: com.collins.trustedsystems.briefcase.splat.preferences;version="0.9.0"

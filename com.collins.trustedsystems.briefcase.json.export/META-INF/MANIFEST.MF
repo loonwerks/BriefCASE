@@ -22,5 +22,5 @@ Import-Package: org.eclipse.mylyn.commons.ui.dialogs,
  org.eclipse.ui
 Bundle-ClassPath: .,
  lib/gson-2.8.5.jar
-Export-Package: com.collins.trustedsystems.briefcase.json.export,
+Export-Package: com.collins.trustedsystems.briefcase.json.export;version="0.8.100",
  com.google.gson

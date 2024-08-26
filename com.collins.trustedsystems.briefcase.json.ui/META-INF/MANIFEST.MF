@@ -23,20 +23,20 @@ Require-Bundle: com.collins.trustedsystems.briefcase.json;bundle-version="[0.8.0
  org.apache.log4j;bundle-version="[1.2.0,2.0.0)",
  org.eclipse.compare;bundle-version="[3.7.0,4.0.0)"
 Bundle-RequiredExecutionEnvironment: JavaSE-11
-Export-Package: com.collins.trustedsystems.briefcase.json.ui;
+Export-Package: com.collins.trustedsystems.briefcase.json.ui;version="0.8.100";
   uses:="org.osgi.framework,
    com.google.inject,
    org.eclipse.xtext.ui,
    org.eclipse.xtext.ui.guice,
    org.eclipse.ui.plugin",
- com.collins.trustedsystems.briefcase.json.ui.contentassist;
+ com.collins.trustedsystems.briefcase.json.ui.contentassist;version="0.8.100";
   uses:="org.eclipse.emf.ecore,
    org.eclipse.xtext.ui.editor.contentassist,
    org.osate.xtext.aadl2.properties.ui.contentassist,
    org.eclipse.xtext",
- com.collins.trustedsystems.briefcase.json.ui.quickfix;uses:="org.osate.xtext.aadl2.properties.ui.quickfix",
- com.collins.trustedsystems.briefcase.json.ide.contentassist.antlr.lexer,
- com.collins.trustedsystems.briefcase.json.ide.contentassist.antlr.internal,
- com.collins.trustedsystems.briefcase.json.ide.contentassist.antlr
+ com.collins.trustedsystems.briefcase.json.ui.quickfix;version="0.8.100";uses:="org.osate.xtext.aadl2.properties.ui.quickfix",
+ com.collins.trustedsystems.briefcase.json.ide.contentassist.antlr.lexer;version="0.8.100",
+ com.collins.trustedsystems.briefcase.json.ide.contentassist.antlr.internal;version="0.8.100",
+ com.collins.trustedsystems.briefcase.json.ide.contentassist.antlr;version="0.8.100"
 Bundle-Activator: com.collins.trustedsystems.briefcase.json.ui.internal.JsonActivator
 Import-Package: org.apache.log4j;version="[1.2.0,2.0.0)"

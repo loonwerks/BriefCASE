@@ -21,9 +21,9 @@ Import-Package: org.eclipse.debug.ui.console,
  org.osate.workspace
 Bundle-ClassPath: .,
  dependencies/gson-2.8.5.jar
-Export-Package: com.collins.trustedsystems.briefcase,
- com.collins.trustedsystems.briefcase.preferences,
- com.collins.trustedsystems.briefcase.util,
+Export-Package: com.collins.trustedsystems.briefcase;version="0.9.0",
+ com.collins.trustedsystems.briefcase.preferences;version="0.9.0",
+ com.collins.trustedsystems.briefcase.util;version="0.9.0",
  com.google.gson,
  com.google.gson.stream
 Bundle-Activator: com.collins.trustedsystems.briefcase.Activator

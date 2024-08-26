@@ -18,17 +18,17 @@ Require-Bundle: org.eclipse.xtext;bundle-version="[2.25.0,3.0.0)";visibility:=re
  org.antlr.runtime;bundle-version="[3.2.0,3.2.1)",
  org.eclipse.xtext.xbase.lib;bundle-version="[2.14.0,3.0.0)"
 Bundle-RequiredExecutionEnvironment: JavaSE-11
-Export-Package: com.collins.trustedsystems.briefcase.json,
- com.collins.trustedsystems.briefcase.json.services,
- com.collins.trustedsystems.briefcase.json.json,
- com.collins.trustedsystems.briefcase.json.json.impl,
- com.collins.trustedsystems.briefcase.json.json.util,
- com.collins.trustedsystems.briefcase.json.serializer,
- com.collins.trustedsystems.briefcase.json.parser.antlr,
- com.collins.trustedsystems.briefcase.json.parser.antlr.internal,
- com.collins.trustedsystems.briefcase.json.parser.antlr.lexer,
- com.collins.trustedsystems.briefcase.json.validation,
- com.collins.trustedsystems.briefcase.json.scoping,
- com.collins.trustedsystems.briefcase.json.formatting2
+Export-Package: com.collins.trustedsystems.briefcase.json;version="0.8.100",
+ com.collins.trustedsystems.briefcase.json.services;version="0.8.100",
+ com.collins.trustedsystems.briefcase.json.json;version="0.8.100",
+ com.collins.trustedsystems.briefcase.json.json.impl;version="0.8.100",
+ com.collins.trustedsystems.briefcase.json.json.util;version="0.8.100",
+ com.collins.trustedsystems.briefcase.json.serializer;version="0.8.100",
+ com.collins.trustedsystems.briefcase.json.parser.antlr;version="0.8.100",
+ com.collins.trustedsystems.briefcase.json.parser.antlr.internal;version="0.8.100",
+ com.collins.trustedsystems.briefcase.json.parser.antlr.lexer;version="0.8.100",
+ com.collins.trustedsystems.briefcase.json.validation;version="0.8.100",
+ com.collins.trustedsystems.briefcase.json.scoping;version="0.8.100",
+ com.collins.trustedsystems.briefcase.json.formatting2;version="0.8.100"
 Import-Package: org.apache.log4j;version="[1.2.0,2.0.0)",
  org.eclipse.xtext.xbase.lib;version="[2.25.0,3.0.0)"

@@ -40,8 +40,8 @@ Import-Package: com.collins.trustedsystems.briefcase,
  org.eclipse.emf.transaction,
  org.eclipse.emf.workspace
 Bundle-Activator: com.collins.trustedsystems.briefcase.staircase.Activator
-Export-Package: com.collins.trustedsystems.briefcase.staircase,
- com.collins.trustedsystems.briefcase.staircase.handlers,
- com.collins.trustedsystems.briefcase.staircase.requirements,
- com.collins.trustedsystems.briefcase.staircase.utils
+Export-Package: com.collins.trustedsystems.briefcase.staircase;version="0.9.0",
+ com.collins.trustedsystems.briefcase.staircase.handlers;version="0.9.0",
+ com.collins.trustedsystems.briefcase.staircase.requirements;version="0.9.0",
+ com.collins.trustedsystems.briefcase.staircase.utils;version="0.9.0"
 Bundle-ActivationPolicy: lazy
