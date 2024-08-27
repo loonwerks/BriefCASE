@@ -27,8 +27,8 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<maven.compiler.source>11</maven.compiler.source>
-		<maven.compiler.target>11</maven.compiler.target>
+		<maven.compiler.source>17</maven.compiler.source>
+		<maven.compiler.target>17</maven.compiler.target>
 		<!-- Tycho settings -->
 		<tycho.version>2.7.5</tycho.version>
 		<tycho-extras.version>2.7.5</tycho-extras.version>
@@ -38,7 +38,7 @@
 		<systemProperties />
 		<tycho.testArgLine />
 		<eclipse.mirror>http://download.eclipse.org</eclipse.mirror>
-		<xtext-version>2.20.0</xtext-version>
+		<xtext-version>2.30.0</xtext-version>
 	</properties>
 
 	<profiles>
@@ -156,6 +156,8 @@
 							<version>${project.parent.version}</version>
 						</artifact>
 					</target>
+					<executionEnvironment>JavaSE-17</executionEnvironment>
+					<resolveWithExecutionEnvironmentConstraints>false</resolveWithExecutionEnvironmentConstraints>
 					<environments>
 						<environment>
 							<os>win32</os>
@@ -390,13 +392,13 @@
 		<repository>
 			<id>Eclipse</id>
 			<layout>p2</layout>
-			<url>${eclipse.mirror}/releases/2021-03/</url>
+			<url>${eclipse.mirror}/releases/2023-03/</url>
 		</repository>
 		<repository>
 			<id>Osate2</id>
 			<layout>p2</layout>
 			<!-- <url>https://osate-build.sei.cmu.edu/download/osate/testing/updates/</url> -->
-			<url>https://osate-build.sei.cmu.edu/download/osate/stable/2.10.2/updates/</url>
+			<url>https://osate-build.sei.cmu.edu/download/osate/stable/2.13.0/updates/</url>
 		</repository>
 		<repository>
 			<id>Formal-Methods-Workbench-Updates</id>
