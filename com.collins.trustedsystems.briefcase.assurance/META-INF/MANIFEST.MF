@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: com.collins.trustedsystems.briefcase.assurance
 Bundle-SymbolicName: com.collins.trustedsystems.briefcase.assurance;singleton:=true
-Bundle-Version: 0.9.0
+Bundle-Version: 0.9.0.qualifier
 Bundle-Activator: com.collins.trustedsystems.briefcase.assurance.Activator
 Bundle-Vendor: COLLINS
 Require-Bundle: org.eclipse.ui;bundle-version="[3.0.0,4.0.0)",
