@@ -433,8 +433,8 @@
 	</pluginRepositories>
 
 	<scm>
-		<connection>scm:git:git@github.com:loonwerks/BriefCASE.git</connection>
-		<developerConnection>scm:git:git@github.com:loonwerks/BriefCASE.git</developerConnection>
+		<connection>scm:git:https://github.com/loonwerks/BriefCASE.git</connection>
+		<developerConnection>scm:git:https://github.com/loonwerks/BriefCASE.git</developerConnection>
 		<tag>HEAD</tag>
 	</scm>
 
