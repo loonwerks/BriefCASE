@@ -49,6 +49,9 @@ public class AttestationAccess {
 
 	private final static String BUILD = "build";
 
+	/**
+	 * @since 1.0
+	 */
 	public static boolean createSourceDirectory(Element element) {
 		final IProject project = TraverseProject.getProject(element);
 		if (project == null) {
@@ -93,6 +96,9 @@ public class AttestationAccess {
 		return true;
 	}
 
+	/**
+	 * @since 1.0
+	 */
 	public static boolean compileCakeSource(Element element) {
 
 		// This only works on linux
@@ -148,6 +154,9 @@ public class AttestationAccess {
 
 	}
 
+	/**
+	 * @since 1.0
+	 */
 	public static class Runner {
 		protected Process process;
 		protected BufferedReader fromProcess;
