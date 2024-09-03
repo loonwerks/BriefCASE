@@ -26,7 +26,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: p2-artifact
-        path: ${{ github.workspace }}/com.rockwellcollins.atc.briefcase.site/target/repository/
+        path: ${{ github.workspace }}/com.collins.trustedsystems.briefcase.site/target/repository/
 
   publish:
     runs-on: ubuntu-latest
@@ -53,14 +53,14 @@ jobs:
         name: p2-artifact
         path: ${{ github.workspace }}/p2-artifact
     - name: Parse version number
-      run: echo "SNAPSHOT_VERSION=$(ls ${{ github.workspace }}/p2-artifact/features/com.rockwellcollins.atc.briefcase.feature_*.jar | grep -o "[0-9]\\+\\.[0-9]\\+\\.[0-9]\\+\\.[0-9]\\{12\\}")" >> $GITHUB_ENV
+      run: echo "SNAPSHOT_VERSION=$(ls ${{ github.workspace }}/p2-artifact/features/com.collins.trustedsystems.briefcase.feature_*.jar | grep -o "[0-9]\\+\\.[0-9]\\+\\.[0-9]\\+\\.[0-9]\\{12\\}")" >> $GITHUB_ENV
     - name: Rename p2-artifact and move to snapshot directory
       run: |
           mv ${{ github.workspace }}/p2-artifact ${{ github.workspace }}/${{ env.SNAPSHOT_VERSION }}
           mkdir -p ${{ github.workspace }}/Briefcase-Updates/snapshots
           mv ${{ github.workspace }}/${{ env.SNAPSHOT_VERSION }} ${{ github.workspace }}/Briefcase-Updates/snapshots
     - name: Build with Ant
-      run: java -jar $(find /snap/eclipse -name org.eclipse.equinox.launcher_*.jar) -application org.eclipse.ant.core.antRunner -buildfile  ${{ github.workspace }}/com.rockwellcollins.atc.briefcase.site/packaging-p2composite.ant p2.composite.add.snapshot -Dcomposite.base.dir=${{ github.workspace }}/Briefcase-Updates -Dfull.version=${{ env.SNAPSHOT_VERSION }}
+      run: java -jar $(find /snap/eclipse -name org.eclipse.equinox.launcher_*.jar) -application org.eclipse.ant.core.antRunner -buildfile  ${{ github.workspace }}/com.collins.trustedsystems.briefcase.site/packaging-p2composite.ant p2.composite.add.snapshot -Dcomposite.base.dir=${{ github.workspace }}/Briefcase-Updates -Dfull.version=${{ env.SNAPSHOT_VERSION }}
     - name: Push new snapshot to Briefcase-Updates
       run: | 
           cd Briefcase-Updates
@@ -153,7 +153,7 @@ jobs:
           cd Briefcase-Updates
           git config --global user.name 'GitHub Actions'
           git config --global user.email 'GH_Actions@users.noreply.github.com'
-          java -jar $(find /snap/eclipse -name org.eclipse.equinox.launcher_*.jar) -application org.eclipse.ant.core.antRunner -buildfile  ${{ github.workspace }}/com.rockwellcollins.atc.briefcase.site/packaging-p2composite.ant p2.composite.remove.snapshot -Dcomposite.base.dir=${{ github.workspace }}/Briefcase-Updates -Dfull.version=${{ matrix.version }}
+          java -jar $(find /snap/eclipse -name org.eclipse.equinox.launcher_*.jar) -application org.eclipse.ant.core.antRunner -buildfile  ${{ github.workspace }}/com.collins.trustedsystems.briefcase.site/packaging-p2composite.ant p2.composite.remove.snapshot -Dcomposite.base.dir=${{ github.workspace }}/Briefcase-Updates -Dfull.version=${{ matrix.version }}
           git add .
           git commit -m 'Delete Snapshot ${{ matrix.version }}'
           git push

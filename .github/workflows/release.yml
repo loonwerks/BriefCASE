@@ -37,7 +37,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: p2-artifact
-        path: ${{ github.workspace }}/com.rockwellcollins.atc.briefcase.site/target/repository/
+        path: ${{ github.workspace }}/com.collins.trustedsystems.briefcase.site/target/repository/
 
   parse_version:
     runs-on: ubuntu-latest
@@ -51,7 +51,7 @@ jobs:
         name: p2-artifact
         path: ${{ github.workspace }}/p2-artifact
     - name: Parse version number
-      run: echo "RELEASE_VERSION=$(ls ${{ github.workspace }}/p2-artifact/features/com.rockwellcollins.atc.briefcase.feature_*.jar | grep -o "[0-9]\\+\\.[0-9]\\+\\.[0-9]")" >> $GITHUB_ENV
+      run: echo "RELEASE_VERSION=$(ls ${{ github.workspace }}/p2-artifact/features/com.collins.trustedsystems.briefcase.feature_*.jar | grep -o "[0-9]\\+\\.[0-9]\\+\\.[0-9]")" >> $GITHUB_ENV
 
   publish:
     runs-on: ubuntu-latest
@@ -85,7 +85,7 @@ jobs:
           mkdir -p ${{ github.workspace }}/Briefcase-Updates/releases
           mv ${{ github.workspace }}/${{ needs.parse_tag.outputs.version }} ${{ github.workspace }}/Briefcase-Updates/releases
     - name: Build with Ant
-      run: java -jar $(find /snap/eclipse -name org.eclipse.equinox.launcher_*.jar) -application org.eclipse.ant.core.antRunner -buildfile  ${{ github.workspace }}/com.rockwellcollins.atc.briefcase.site/packaging-p2composite.ant p2.composite.add.release -Dcomposite.base.dir=${{ github.workspace }}/Briefcase-Updates -Dfull.version=${{ needs.parse_tag.outputs.version }}
+      run: java -jar $(find /snap/eclipse -name org.eclipse.equinox.launcher_*.jar) -application org.eclipse.ant.core.antRunner -buildfile  ${{ github.workspace }}/com.collins.trustedsystems.briefcase.site/packaging-p2composite.ant p2.composite.add.release -Dcomposite.base.dir=${{ github.workspace }}/Briefcase-Updates -Dfull.version=${{ needs.parse_tag.outputs.version }}
     - name: Push new release to Briefcase-Updates
       run: | 
           cd Briefcase-Updates
@@ -111,12 +111,12 @@ jobs:
       uses: thedoctor0/zip-release@0.7.1
       with:
         type: 'zip'
-        filename: 'com.rockwellcollins.atc.briefcase.repository-${{ needs.parse_tag.outputs.version }}.zip'
+        filename: 'com.collins.trustedsystems.briefcase.repository-${{ needs.parse_tag.outputs.version }}.zip'
     - name: Create Release
       uses: ncipollo/release-action@v1
       with:
         name: Release ${{ needs.parse_tag.outputs.version }}
-        artifacts: 'com.rockwellcollins.atc.briefcase.repository-${{ needs.parse_tag.outputs.version }}.zip'
+        artifacts: 'com.collins.trustedsystems.briefcase.repository-${{ needs.parse_tag.outputs.version }}.zip'
         body: |
               # Version ${{ needs.parse_tag.outputs.version }}
 
