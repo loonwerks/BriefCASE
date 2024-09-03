@@ -23,6 +23,7 @@
 		<module>feature</module>
 		<module>target-platform</module>
 		<module>repository</module>
+		<module>com.collins.trustedsystems.briefcase.site</module>
 	</modules>
 
 	<properties>
