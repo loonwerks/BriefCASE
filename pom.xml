@@ -4,7 +4,7 @@
 
 	<groupId>com.collins.trustedsystems.briefcase</groupId>
 	<artifactId>com.collins.trustedsystems.briefcase.parent</artifactId>
-	<version>0.9.0</version>
+	<version>0.9.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<modules>
@@ -22,7 +22,7 @@
 		<module>com.collins.trustedsystems.briefcase.modelaccess</module>
 		<module>feature</module>
 		<module>target-platform</module>
-		<module>repository</module>
+		<!-- <module>repository</module> -->
 		<module>com.collins.trustedsystems.briefcase.site</module>
 	</modules>
 

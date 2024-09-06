@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: com.collins.trustedsystems.briefcase.json.export
 Bundle-SymbolicName: com.collins.trustedsystems.briefcase.json.export;singleton:=true
-Bundle-Version: 0.8.100.qualifier
+Bundle-Version: 0.8.101.qualifier
 Automatic-Module-Name: com.collins.trustedsystems.briefcase.json.export
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Require-Bundle: org.eclipse.jface;bundle-version="[3.22.0,4.0.0)",
@@ -22,5 +22,5 @@ Import-Package: org.eclipse.mylyn.commons.ui.dialogs,
  org.eclipse.ui
 Bundle-ClassPath: .,
  lib/gson-2.8.5.jar
-Export-Package: com.collins.trustedsystems.briefcase.json.export;version="0.8.100",
+Export-Package: com.collins.trustedsystems.briefcase.json.export;version="0.8.101",
  com.google.gson
