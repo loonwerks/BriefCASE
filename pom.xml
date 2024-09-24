@@ -39,7 +39,7 @@
 		<systemProperties />
 		<tycho.testArgLine />
 		<eclipse.mirror>http://download.eclipse.org</eclipse.mirror>
-		<xtext-version>2.30.0</xtext-version>
+		<xtext-version>2.33.0</xtext-version>
 	</properties>
 
 	<profiles>
@@ -418,13 +418,13 @@
 		<repository>
 			<id>Eclipse</id>
 			<layout>p2</layout>
-			<url>${eclipse.mirror}/releases/2023-03/</url>
+			<url>${eclipse.mirror}/releases/2023-12/</url>
 		</repository>
 		<repository>
 			<id>Osate2</id>
 			<layout>p2</layout>
 			<!-- <url>https://osate-build.sei.cmu.edu/download/osate/testing/updates/</url> -->
-			<url>https://osate-build.sei.cmu.edu/download/osate/stable/2.13.0/updates/</url>
+			<url>https://osate-build.sei.cmu.edu/download/osate/stable/2.14.0/updates/</url>
 		</repository>
 		<repository>
 			<id>Formal-Methods-Workbench-Updates</id>

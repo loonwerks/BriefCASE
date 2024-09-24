@@ -67,7 +67,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <import plugin="org.eclipse.emf.workspace" version="1.5.0" match="compatible"/>
       <import plugin="org.eclipse.equinox.common" version="3.5.0" match="compatible"/>
       <import plugin="org.eclipse.jface" version="3.22.0" match="compatible"/>
-      <import plugin="org.eclipse.mylyn.commons.ui" version="3.25.0" match="compatible"/>
+      <import plugin="org.eclipse.mylyn.commons.ui" version="4.0.0" match="compatible"/>
       <import plugin="org.eclipse.ui" version="3.119.0" match="compatible"/>
       <import plugin="org.eclipse.ui.ide" version="3.16.100" match="compatible"/>
       <import plugin="org.eclipse.ui.console" version="3.10.0" match="compatible"/>
@@ -98,86 +98,50 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
    <plugin
          id="com.collins.trustedsystems.briefcase"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="com.collins.trustedsystems.briefcase.assurance"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="com.collins.trustedsystems.briefcase.attestation"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="com.collins.trustedsystems.briefcase.splat"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="com.collins.trustedsystems.briefcase.staircase"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="com.collins.trustedsystems.briefcase.toolcheck"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="com.collins.trustedsystems.briefcase.json"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="com.collins.trustedsystems.briefcase.json.ui"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="com.collins.trustedsystems.briefcase.json.export"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="com.collins.trustedsystems.briefcase.agreecheck"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="com.collins.trustedsystems.briefcase.agreelib"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="com.collins.trustedsystems.briefcase.modelaccess"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
 </feature>
