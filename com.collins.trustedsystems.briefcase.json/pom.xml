@@ -7,6 +7,6 @@
 		<version>0.9.1-SNAPSHOT</version>
 	</parent>
 	<artifactId>com.collins.trustedsystems.briefcase.json</artifactId>
-	<version>0.8.101-SNAPSHOT</version>
+	<version>0.9.0-SNAPSHOT</version>
 	<packaging>eclipse-plugin</packaging>
 </project>

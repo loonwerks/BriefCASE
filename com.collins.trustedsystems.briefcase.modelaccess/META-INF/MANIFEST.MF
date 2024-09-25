@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: com.collins.trustedsystems.briefcase.modelaccess
 Bundle-SymbolicName: com.collins.trustedsystems.briefcase.modelaccess;singleton:=true
-Bundle-Version: 0.8.101.qualifier
+Bundle-Version: 0.9.0.qualifier
 Bundle-Activator: com.collins.trustedsystems.briefcase.modelaccess.Activator
 Bundle-Vendor: COLLINS
 Require-Bundle: org.eclipse.ui;bundle-version="[3.119.0,4.0.0)",
