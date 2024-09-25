@@ -4,7 +4,7 @@
 
 	<groupId>com.collins.trustedsystems.briefcase</groupId>
 	<artifactId>com.collins.trustedsystems.briefcase.parent</artifactId>
-	<version>0.9.1-SNAPSHOT</version>
+	<version>0.10.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<modules>
@@ -31,15 +31,15 @@
 		<maven.compiler.source>17</maven.compiler.source>
 		<maven.compiler.target>17</maven.compiler.target>
 		<!-- Tycho settings -->
-		<tycho.version>2.7.5</tycho.version>
-		<tycho-extras.version>2.7.5</tycho-extras.version>
+		<tycho.version>3.0.5</tycho.version>
+		<tycho-extras.version>3.0.5</tycho-extras.version>
 		<!-- Define overridable properties for tycho-surefire-plugin -->
 		<platformSystemProperties />
 		<moduleProperties />
 		<systemProperties />
 		<tycho.testArgLine />
 		<eclipse.mirror>http://download.eclipse.org</eclipse.mirror>
-		<xtext-version>2.30.0</xtext-version>
+		<xtext-version>2.33.0</xtext-version>
 	</properties>
 
 	<profiles>
@@ -148,18 +148,10 @@
 							<goal>plugin-source</goal>
 						</goals>
 					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.eclipse.tycho.extras</groupId>
-				<artifactId>tycho-source-feature-plugin</artifactId>
-				<version>${tycho.version}</version>
-				<executions>
 					<execution>
-						<id>source-feature</id>
-						<phase>package</phase>
+						<id>feature-source</id>
 						<goals>
-							<goal>source-feature</goal>
+							<goal>feature-source</goal>
 						</goals>
 					</execution>
 				</executions>
@@ -274,8 +266,7 @@
 							<configuration>
 								<includes>**/META-INF/MANIFEST.MF,**/feature.xml,**/*.product,**/category.xml</includes>
 								<excludes>**/target/**</excludes>
-								<message>Changing the version to reflect the pom versions for
-									the release</message>
+								<message>Changing the version to reflect the pom versions for the release</message>
 							</configuration>
 						</execution>
 					</executions>
@@ -412,8 +403,7 @@
 					<version>${tycho.version}</version>
 					<configuration>
 						<!-- THE FOLLOWING LINE MUST NOT BE BROKEN BY AUTOFORMATTING -->
-						<argLine>${tycho.testArgLine} ${platformSystemProperties}
-							${systemProperties} ${moduleProperties}</argLine>
+						<argLine>${tycho.testArgLine} ${platformSystemProperties} ${systemProperties} ${moduleProperties}</argLine>
 						<failIfNoTests>false</failIfNoTests>
 						<useUIHarness>false</useUIHarness>
 					</configuration>
@@ -426,18 +416,23 @@
 		<repository>
 			<id>Eclipse</id>
 			<layout>p2</layout>
-			<url>${eclipse.mirror}/releases/2023-03/</url>
+			<url>${eclipse.mirror}/releases/2023-12/</url>
 		</repository>
 		<repository>
 			<id>Osate2</id>
 			<layout>p2</layout>
 			<!-- <url>https://osate-build.sei.cmu.edu/download/osate/testing/updates/</url> -->
-			<url>https://osate-build.sei.cmu.edu/download/osate/stable/2.13.0/updates/</url>
+			<url>https://osate-build.sei.cmu.edu/download/osate/stable/2.14.0-vfinal/updates/</url>
 		</repository>
 		<repository>
-			<id>Formal-Methods-Workbench-Updates</id>
+			<id>AGREE-Updates</id>
 			<layout>p2</layout>
-			<url>https://raw.githubusercontent.com/loonwerks/formal-methods-workbench-updates/master/</url>
+			<url>https://loonwerks.github.io/AGREE-Updates/</url>
+		</repository>
+		<repository>
+			<id>Resolute-Updates</id>
+			<layout>p2</layout>
+			<url>https://loonwerks.github.io/Resolute-Updates/</url>
 		</repository>
 		<repository>
 			<id>codehaus-snapshots</id>
