@@ -424,12 +424,17 @@
 			<id>Osate2</id>
 			<layout>p2</layout>
 			<!-- <url>https://osate-build.sei.cmu.edu/download/osate/testing/updates/</url> -->
-			<url>https://osate-build.sei.cmu.edu/download/osate/stable/2.14.0/updates/</url>
+			<url>https://osate-build.sei.cmu.edu/download/osate/stable/2.14.0-vfinal/updates/</url>
 		</repository>
 		<repository>
-			<id>Formal-Methods-Workbench-Updates</id>
+			<id>AGREE-Updates</id>
 			<layout>p2</layout>
-			<url>https://raw.githubusercontent.com/loonwerks/formal-methods-workbench-updates/master/</url>
+			<url>https://loonwerks.github.io/AGREE-Updates/</url>
+		</repository>
+		<repository>
+			<id>Resolute-Updates</id>
+			<layout>p2</layout>
+			<url>https://loonwerks.github.io/Resolute-Updates/</url>
 		</repository>
 		<repository>
 			<id>codehaus-snapshots</id>
