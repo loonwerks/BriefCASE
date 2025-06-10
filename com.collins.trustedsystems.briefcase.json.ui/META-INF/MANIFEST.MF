@@ -22,7 +22,7 @@ Require-Bundle: com.collins.trustedsystems.briefcase.json;bundle-version="[0.8.0
  org.osate.xtext.aadl2.ui;bundle-version="[6.0.0,8.0.0)",
  org.apache.log4j;bundle-version="[1.2.0,2.0.0)",
  org.eclipse.compare;bundle-version="[3.7.0,4.0.0)"
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-17
 Export-Package: com.collins.trustedsystems.briefcase.json.ui;version="0.8.101";
   uses:="org.osgi.framework,
    com.google.inject,

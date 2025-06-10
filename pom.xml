@@ -31,15 +31,15 @@
 		<maven.compiler.source>17</maven.compiler.source>
 		<maven.compiler.target>17</maven.compiler.target>
 		<!-- Tycho settings -->
-		<tycho.version>2.7.5</tycho.version>
-		<tycho-extras.version>2.7.5</tycho-extras.version>
+		<tycho.version>3.0.5</tycho.version>
+		<tycho-extras.version>3.0.5</tycho-extras.version>
 		<!-- Define overridable properties for tycho-surefire-plugin -->
 		<platformSystemProperties />
 		<moduleProperties />
 		<systemProperties />
 		<tycho.testArgLine />
 		<eclipse.mirror>http://download.eclipse.org</eclipse.mirror>
-		<xtext-version>2.30.0</xtext-version>
+		<xtext-version>2.33.0</xtext-version>
 	</properties>
 
 	<profiles>
@@ -148,18 +148,10 @@
 							<goal>plugin-source</goal>
 						</goals>
 					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.eclipse.tycho.extras</groupId>
-				<artifactId>tycho-source-feature-plugin</artifactId>
-				<version>${tycho.version}</version>
-				<executions>
 					<execution>
-						<id>source-feature</id>
-						<phase>package</phase>
+						<id>feature-source</id>
 						<goals>
-							<goal>source-feature</goal>
+							<goal>feature-source</goal>
 						</goals>
 					</execution>
 				</executions>
@@ -426,13 +418,13 @@
 		<repository>
 			<id>Eclipse</id>
 			<layout>p2</layout>
-			<url>${eclipse.mirror}/releases/2023-03/</url>
+			<url>${eclipse.mirror}/releases/2023-12/</url>
 		</repository>
 		<repository>
 			<id>Osate2</id>
 			<layout>p2</layout>
 			<!-- <url>https://osate-build.sei.cmu.edu/download/osate/testing/updates/</url> -->
-			<url>https://osate-build.sei.cmu.edu/download/osate/stable/2.13.0/updates/</url>
+			<url>https://osate-build.sei.cmu.edu/download/osate/stable/2.14.0/updates/</url>
 		</repository>
 		<repository>
 			<id>Formal-Methods-Workbench-Updates</id>
@@ -450,6 +442,11 @@
 				<enabled>false</enabled>
 			</snapshots>
 		</repository>
+	    <repository>
+    	    <id>project.local</id>
+        	<name>project</name>
+	        <url>file:${project.basedir}/packages</url>
+    	</repository>
 	</repositories>
 	<pluginRepositories>
 		<pluginRepository>
