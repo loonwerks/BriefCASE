@@ -2,7 +2,7 @@
 <feature
       id="com.collins.trustedsystems.briefcase.feature"
       label="BriefCASE"
-      version="0.9.1.qualifier"
+      version="0.9.2"
       provider-name="ROCKWELLCOLLINS">
 
    <description url="http://www.example.com/description">
@@ -42,14 +42,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    </license>
 
    <requires>
-      <import feature="org.osate.core.feature" version="2.7.0" match="greaterOrEqual"/>
+      <import feature="org.osate.core.feature" version="11.1.0" match="compatible"/>
       <import plugin="com.collins.trustedsystems.jkindapi" version="4.0.0" match="compatible"/>
-      <import plugin="com.rockwellcollins.atc.agree" version="2.4.2"/>
-      <import plugin="com.rockwellcollins.atc.agree.analysis" version="2.4.1"/>
-      <import plugin="com.rockwellcollins.atc.agree.ui" version="2.4.2"/>
-      <import plugin="com.rockwellcollins.atc.resolute" version="4.0.0"/>
+      <import plugin="com.rockwellcollins.atc.agree" version="4.0.0" match="compatible"/>
+      <import plugin="com.rockwellcollins.atc.agree.analysis" version="2.10.0" match="compatible"/>
+      <import plugin="com.rockwellcollins.atc.agree.ui" version="4.0.0" match="compatible"/>
+      <import plugin="com.rockwellcollins.atc.resolute" version="5.0.0" match="compatible"/>
       <import plugin="com.rockwellcollins.atc.resolute.analysis" version="3.0.0" match="compatible"/>
-      <import plugin="com.rockwellcollins.atc.resolute.ui" version="2.4.2"/>
+      <import plugin="com.rockwellcollins.atc.resolute.ui" version="5.0.0" match="compatible"/>
       <import plugin="org.antlr.runtime" version="3.2.0" match="compatible"/>
       <import plugin="org.apache.httpcomponents.httpclient" version="4.5.0" match="compatible"/>
       <import plugin="org.apache.httpcomponents.httpcore" version="4.4.0" match="compatible"/>
@@ -67,7 +67,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <import plugin="org.eclipse.emf.workspace" version="1.5.0" match="compatible"/>
       <import plugin="org.eclipse.equinox.common" version="3.5.0" match="compatible"/>
       <import plugin="org.eclipse.jface" version="3.22.0" match="compatible"/>
-      <import plugin="org.eclipse.mylyn.commons.ui" version="3.25.0" match="compatible"/>
+      <import plugin="org.eclipse.mylyn.commons.ui" version="3.25.0" match="greaterOrEqual"/>
       <import plugin="org.eclipse.ui" version="3.119.0" match="compatible"/>
       <import plugin="org.eclipse.ui.ide" version="3.16.100" match="compatible"/>
       <import plugin="org.eclipse.ui.console" version="3.10.0" match="compatible"/>
@@ -82,102 +82,66 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <import plugin="org.eclipse.xtext.util" version="2.25.0" match="compatible"/>
       <import plugin="org.eclipse.xtext.xbase.lib" version="2.14.0" match="compatible"/>
       <import plugin="org.osate.aadl2" version="5.0.0" match="compatible"/>
-      <import plugin="org.osate.aadl2.instantiation" version="1.0.1"/>
-      <import plugin="org.osate.aadl2.modelsupport" version="5.0.0"/>
-      <import plugin="org.osate.annexsupport" version="3.0.0"/>
+      <import plugin="org.osate.aadl2.instantiation" version="3.0.0" match="compatible"/>
+      <import plugin="org.osate.aadl2.modelsupport" version="7.0.0" match="compatible"/>
+      <import plugin="org.osate.annexsupport" version="4.0.0"/>
       <import plugin="org.osate.ge" version="3.0.0" match="compatible"/>
       <import plugin="org.osate.ge.diagram" version="2.0.0" match="compatible"/>
-      <import plugin="org.osate.pluginsupport" version="5.0.0"/>
+      <import plugin="org.osate.pluginsupport" version="7.0.0" match="compatible"/>
       <import plugin="org.osate.ui" version="6.3.1" match="compatible"/>
       <import plugin="org.osate.workspace"/>
-      <import plugin="org.osate.xtext.aadl2" version="5.0.0"/>
+      <import plugin="org.osate.xtext.aadl2" version="7.0.0" match="compatible"/>
       <import plugin="org.osate.xtext.aadl2.properties" version="3.0.0" match="compatible"/>
       <import plugin="org.osate.xtext.aadl2.properties.ui" version="4.0.0" match="compatible"/>
-      <import plugin="org.osate.xtext.aadl2.ui" version="6.0.0"/>
+      <import plugin="org.osate.xtext.aadl2.ui" version="7.0.0" match="compatible"/>
    </requires>
 
    <plugin
          id="com.collins.trustedsystems.briefcase"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="com.collins.trustedsystems.briefcase.assurance"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="com.collins.trustedsystems.briefcase.attestation"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="com.collins.trustedsystems.briefcase.splat"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="com.collins.trustedsystems.briefcase.staircase"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="com.collins.trustedsystems.briefcase.toolcheck"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="com.collins.trustedsystems.briefcase.json"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="com.collins.trustedsystems.briefcase.json.ui"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="com.collins.trustedsystems.briefcase.json.export"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="com.collins.trustedsystems.briefcase.agreecheck"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="com.collins.trustedsystems.briefcase.agreelib"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="com.collins.trustedsystems.briefcase.modelaccess"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
 </feature>
