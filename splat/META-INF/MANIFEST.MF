@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: com.collins.trustedsystems.briefcase.splat
 Bundle-SymbolicName: com.collins.trustedsystems.briefcase.splat;singleton:=true
-Bundle-Version: 0.9.1.qualifier
+Bundle-Version: 0.9.2
 Automatic-Module-Name: com.collins.trustedsystems.briefcase.splat
 Bundle-RequiredExecutionEnvironment: JavaSE-17
 Require-Bundle: org.osate.aadl2;bundle-version="[4.0.0,6.0.0)",
@@ -22,4 +22,4 @@ Import-Package: org.eclipse.emf.transaction,
 Bundle-ClassPath: .
 Bundle-ActivationPolicy: lazy
 Bundle-Activator: com.collins.trustedsystems.briefcase.splat.Activator
-Export-Package: com.collins.trustedsystems.briefcase.splat.preferences;version="0.9.1"
+Export-Package: com.collins.trustedsystems.briefcase.splat.preferences;version="0.9.2"

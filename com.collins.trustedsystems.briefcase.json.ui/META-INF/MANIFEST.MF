@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Automatic-Module-Name: com.collins.trustedsystems.briefcase.json.ui
 Bundle-ManifestVersion: 2
 Bundle-Name: com.collins.trustedsystems.briefcase.json.ui
-Bundle-Version: 0.8.101.qualifier
+Bundle-Version: 0.8.200
 Bundle-SymbolicName: com.collins.trustedsystems.briefcase.json.ui;singleton:=true
 Bundle-ActivationPolicy: lazy
 Require-Bundle: com.collins.trustedsystems.briefcase.json;bundle-version="[0.8.0,1.0.0)",
@@ -23,20 +23,20 @@ Require-Bundle: com.collins.trustedsystems.briefcase.json;bundle-version="[0.8.0
  org.apache.log4j;bundle-version="[1.2.0,2.0.0)",
  org.eclipse.compare;bundle-version="[3.7.0,4.0.0)"
 Bundle-RequiredExecutionEnvironment: JavaSE-17
-Export-Package: com.collins.trustedsystems.briefcase.json.ui;version="0.8.101";
+Export-Package: com.collins.trustedsystems.briefcase.json.ui;version="0.8.200";
   uses:="org.osgi.framework,
    com.google.inject,
    org.eclipse.xtext.ui,
    org.eclipse.xtext.ui.guice,
    org.eclipse.ui.plugin",
- com.collins.trustedsystems.briefcase.json.ui.contentassist;version="0.8.101";
+ com.collins.trustedsystems.briefcase.json.ui.contentassist;version="0.8.200";
   uses:="org.eclipse.emf.ecore,
    org.eclipse.xtext.ui.editor.contentassist,
    org.osate.xtext.aadl2.properties.ui.contentassist,
    org.eclipse.xtext",
- com.collins.trustedsystems.briefcase.json.ui.quickfix;version="0.8.101";uses:="org.osate.xtext.aadl2.properties.ui.quickfix",
- com.collins.trustedsystems.briefcase.json.ide.contentassist.antlr.lexer;version="0.8.101",
- com.collins.trustedsystems.briefcase.json.ide.contentassist.antlr.internal;version="0.8.101",
- com.collins.trustedsystems.briefcase.json.ide.contentassist.antlr;version="0.8.101"
+ com.collins.trustedsystems.briefcase.json.ui.quickfix;version="0.8.200";uses:="org.osate.xtext.aadl2.properties.ui.quickfix",
+ com.collins.trustedsystems.briefcase.json.ide.contentassist.antlr.lexer;version="0.8.200",
+ com.collins.trustedsystems.briefcase.json.ide.contentassist.antlr.internal;version="0.8.200",
+ com.collins.trustedsystems.briefcase.json.ide.contentassist.antlr;version="0.8.200"
 Bundle-Activator: com.collins.trustedsystems.briefcase.json.ui.internal.JsonActivator
 Import-Package: org.apache.log4j;version="[1.2.0,2.0.0)"
